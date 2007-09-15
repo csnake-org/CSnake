@@ -108,7 +108,7 @@ class Generator:
         f = open(fileCMakeLists, 'w')
         
         # write header and some cmake fields
-        f.write( "# CMakeLists.txt generated automatically by GBuild.py.\n" )
+        f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
@@ -200,10 +200,10 @@ class Generator:
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
-        templateFilename = root + "/GBuild/Win32Header.h"
+        templateFilename = root + "/CSnake/Win32Header.h"
         templateOutputFilename = "%s/%s/%sWin32Header.h" % (_binaryFolder, _targetProject.binarySubfolder, _targetProject.name)
 
-        assert os.path.exists(templateFilename), "File not found %s\n" % (templateFile)
+        assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
         f = open(templateFilename, 'r')
         template = f.read()
         template = template.replace('${PROJECTNAME_UPPERCASE}', _targetProject.name.upper())
@@ -489,7 +489,7 @@ class Project:
         f = open(fileConfig, 'w')
         
         # write header and some cmake fields
-        f.write( "# File generated automatically by GBuild.py.\n" )
+        f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, Join(self.publicIncludeFolders)) )
@@ -504,7 +504,7 @@ class Project:
         f = open(fileUse, 'w')
         
         # write header and some cmake fields
-        f.write( "# File generated automatically by GBuild.py.\n" )
+        f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "INCLUDE_DIRECTORIES(${%s_INCLUDE_DIRS})\n" % (self.name) )
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.name) )
