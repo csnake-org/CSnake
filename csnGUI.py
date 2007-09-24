@@ -4,6 +4,7 @@
 
 import wx
 import csnGUIHandler
+import csnBuild
 
 class CSnakeGUIFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -39,7 +40,9 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnStartNewProject, self.btnCreateProject)
         self.Bind(wx.EVT_BUTTON, self.OnConfigureProjectToBinFolder, self.btnBuildProject)
         # end wxGlade
+        
         self.handler = csnGUIHandler.Handler
+        self.generator = csnBuild.Generator()
 
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
@@ -119,10 +122,14 @@ class CSnakeGUIFrame(wx.Frame):
         event.Skip()
 
     def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-    	csnGUIHandler.CreateCSnakeProject(self.txtProjectFolder.GetValue(), self.txtProjectRoot.GetValue(), self.txtNewProjectName.GetValue(), self.cmbNewProjectType.GetValue().lower())
+        mapping = dict()
+        mapping["Dll"] = "dll"
+        mapping["Static library"] = "library"
+        mapping["Executable"] = "executable"
+    	csnGUIHandler.CreateCSnakeProject(self.txtProjectFolder.GetValue(), self.txtProjectRoot.GetValue(), self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
     def OnConfigureProjectToBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        print "Event handler `OnConfigureProjectToBinFolder' not implemented"
+        print "Event handler `OnTypingProjectFolder' not implemented"
         event.Skip()
 
     def OnTypingProjectFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>

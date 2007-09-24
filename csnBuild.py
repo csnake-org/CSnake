@@ -1,5 +1,6 @@
 from os import makedirs
 import os.path
+import warnings
 import sys
 import re
 import glob
@@ -93,10 +94,14 @@ class Generator:
         if HasBackSlash(_binaryFolder):
             raise SyntaxError, "Error, backslash found in binary folder %s" % _binaryFolder
         
+        if( _targetProject.type == "third party" ):
+            warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
+            return
+            
         # create binary project folder
         binaryProjectFolder = _binaryFolder + "/" + _targetProject.binarySubfolder
         os.path.exists(binaryProjectFolder) or os.makedirs(binaryProjectFolder)
-        
+    
         # create Win32Header
         if( _targetProject.type != "executable" ):
 			self.__GenerateWin32Header(_targetProject, _binaryFolder)
@@ -132,8 +137,8 @@ class Generator:
         for project in projectsToUse:
           # include config and use file
             f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(${BINARY_DIR}/%s)\n" % (project.configFileSubpath) )
-            f.write( "INCLUDE(${BINARY_DIR}/%s)\n" % (project.useFileSubpath) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder)) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(_binaryFolder)) )
 
         # generate moc files
         cmakeMocInputVar = ""
@@ -174,7 +179,7 @@ class Generator:
         for project in dependendChildProjects:
             # determine if we must Generate the project. If a child project will generate it, then leave it to the child.
             # This will prevent multiple generation of the same project.
-            generateProject = not project in _generatedList
+            generateProject = not project in _generatedList and project.type != "third party"
             if( generateProject ):
                 for childProject in _targetProject.childProjects:
                     if( childProject.DependsOn(project) ):
@@ -225,7 +230,7 @@ class Project:
     """
     Contains the data for the makefile (or vcproj) for a project.
     _name -- Name of the project, e.g. \"SampleApp\"
-    _type -- Type of the project, should be \"executable\", \"library\" or \"dll\"
+    _type -- Type of the project, should be \"executable\", \"library\", \"dll\" or \"third party\"
 
     Config and use file:
     CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
@@ -240,12 +245,12 @@ class Project:
     The constructors initialises these member variables:
     self.binarySubfolder -- Direct subfolder - within the binary folder - for this project. Is either 'executable' or 'library'.
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
-    self.configFileSubpath -- The config file for the project. See above.
+    self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
     self.definitions -- Dictionary (public/private -> WIN32/NOT WIN32/ALL -> definition) with definitions to be used by the pre-processor when building this target. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.dlls -- Dlls to be installed in the binary folder for this target.
-    self.useFileSubpath -- The use file of the project. See above.
+    self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
     self.childProjects -- Set of project instances. These projects have been added to self using AddProject.
     self.childProjectsNonDependend = Subset of self.childProjects. Contains projects that self doesn't depend on.
@@ -276,8 +281,8 @@ class Project:
             self.binarySubfolder = "library/%s" % (_name)
         else:
             self.binarySubfolder = "%s/%s" % (self.type, _name)
-        self.configFileSubpath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
-        self.useFileSubpath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
+        self.configFilePath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
+        self.useFilePath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
         self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
         self.childProjects = set()
         self.childProjectsNonDependend = set()
@@ -503,7 +508,7 @@ class Project:
         """
         Generates the XXXConfig.cmake file for this project.
         """
-        fileConfig = "%s/%s" % (_binaryFolder, self.configFileSubpath)
+        fileConfig = "%s/%s" % (_binaryFolder, self.configFilePath)
         f = open(fileConfig, 'w')
         
         # write header and some cmake fields
@@ -518,7 +523,7 @@ class Project:
         """
         Generates the UseXXX.cmake file for this project.
         """
-        fileUse = "%s/%s" % (_binaryFolder, self.useFileSubpath)
+        fileUse = "%s/%s" % (_binaryFolder, self.useFilePath)
         f = open(fileUse, 'w')
         
         # write header and some cmake fields
@@ -537,3 +542,21 @@ class Project:
         if( len(self.definitions["ALL"]["public"]) ):
         	f.write( "ADD_DEFINITIONS(%s)\n" % Join(self.definitions["ALL"]["public"]) )
    
+    def GetPathToConfigFile(self, _binaryFolder):
+        """ 
+        Returns self.useFilePath if it is absolute. Otherwise, returns _binaryFolder + self.useFilePath.
+        """
+        if( os.path.isabs(self.configFilePath) ):
+            return self.configFilePath
+        else:
+            return "%s/%s" % (_binaryFolder, self.configFilePath)
+
+    def GetPathToUseFile(self, _binaryFolder):
+        """ 
+        Returns self.useFilePath if it is absolute. Otherwise, returns _binaryFolder + self.useFilePath.
+        """
+        if( os.path.isabs(self.useFilePath) ):
+            return self.useFilePath
+        else:
+            return "%s/%s" % (_binaryFolder, self.useFilePath)
+        
