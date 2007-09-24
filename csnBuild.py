@@ -349,9 +349,12 @@ class Project:
     def AddPublicLibraries(self, _type, _listOfLibraries):
         """
         Adds items to self.publicLibraries. 
-        _type - Should be \"debug\", \"optimzed\" or \"\".
+        _type - Should be \"debug\", \"optimized\" or \"all\".
         """
-        assert _type in ("debug", "optimized", ""), "%s not any of (\"debug\", \"optimized\", \"\"" % (_type)
+        assert _type in ("debug", "optimized", "all"), "%s not any of (\"debug\", \"optimized\", \"all\"" % (_type)
+        if( _type == "all" ):
+        	_type = ""
+        	
         for library in _listOfLibraries:
         	self.publicLibraries.append("%s %s" % (_type, library))
             
