@@ -42,27 +42,30 @@ class ProjectTest(unittest.TestCase):
 		self.dummyDll = csnBuild.Project("DummyDll", "dll")
 		self.dummyDll.AddPublicIncludeFolders(["DummyDll"])
 		self.dummyDll.AddSources(["DummyDll/DummyDll.cpp", "DummyDll/DummyDll.h"])
+		self.dummyDll.AddDefinitions(["DummyDllDefPrivateWin32"], _private = 1, _WIN32 = 1)
 
 		self.dummyLib = csnBuild.Project("DummyLib", "library")
 		self.dummyLib.AddPublicIncludeFolders(["DummyLib"])
 		self.dummyLib.AddSources(["DummyLib/DummyLib.cpp", "DummyLib/DummyLib.h"])
 		self.dummyLib.AddProject(self.dummyDll)
 		self.dummyLib.AddDlls(["DummyLib/lib/ExtraLib.dll"])
+		self.dummyDll.AddDefinitions(["DummyLibDefPublicWin32"], _private = 0, _WIN32 = 1)
 		
 		self.dummyExe = csnBuild.Project("DummyExe", "executable")
 		self.dummyExe.AddPublicIncludeFolders(["DummyExe"])
 		self.dummyExe.AddSources(["DummyExe/DummyExe.cpp"])
 		self.dummyExe.AddProject(self.dummyLib)
+		self.dummyExe.AddDefinitions(["DummyExeDefPrivate"], _private = 1)
 		
 	def stearDown(self):
 		self.globalTestSetup.tearDown()
 		
-	def stestHasBackSlash(self):
+	def testHasBackSlash(self):
 		""" Test HasBackSlash function. """
 		assert csnBuild.HasBackSlash("c:\\hallo")
 		assert not csnBuild.HasBackSlash("c://hallo")
 		
-	def stestGenerate(self):
+	def testGenerate(self):
 		""" Test configuring the dummy project. """
 		
 		# generate cmake files
@@ -94,49 +97,49 @@ class ProjectTest(unittest.TestCase):
 		ret = os.system(exeFilename)
 		assert ret == 6, "DummyExe.exe did not return the correct calculation result."
 		
-	def stestInit(self):
+	def testInit(self):
 		self.assertEqual(self.dummyLib.name, "DummyLib")
 
-	def stestSourceRootFolder(self):
+	def testSourceRootFolder(self):
 		""" Test that the source root folder, containing csnBuildTest.py, is deduced correctly by the parent class csnBuild.Project. """
 		self.assertEqual(os.path.abspath(self.dummyLib.sourceRootFolder), os.path.abspath(os.path.dirname(__file__)))
 	
-	def stestSelfDependency(self):
+	def testSelfDependency(self):
 		""" Test that a project cannot depend on itself. """
 		self.assertRaises(csnBuild.DependencyError, self.dummyExe.AddProject, self.dummyExe)
 		
-	def stestAddProjectTwice(self):
+	def testAddProjectTwice(self):
 		""" Test that adding a project twice has no effect. """
 		i = len(self.dummyExe.childProjects)
 		self.dummyExe.AddProject(self.dummyLib)
 		self.assertEqual(i, len(self.dummyExe.childProjects))
 
-	def stestCyclicDependency(self):
+	def testCyclicDependency(self):
 		""" Test that a cylic dependency is detected. """
 		self.assertRaises( csnBuild.DependencyError, self.dummyDll.AddProject, self.dummyExe)
 
-	def stestNonExistingSourceFile(self):
+	def testNonExistingSourceFile(self):
 		""" Test that a non-existing source file is detected. """
 		self.assertRaises(IOError, self.dummyDll.AddSources, ["main.cpp"])
 		
-	def stestNonExistingIncludeFolder(self):
+	def testNonExistingIncludeFolder(self):
 		""" Test that a non-existing include folder is detected. """
 		self.assertRaises(IOError, self.dummyDll.AddPublicIncludeFolders, ["include"])
 	
-	def stestBuildBinFolderSlashes(self):
+	def testBuildBinFolderSlashes(self):
 		""" Test that build bin folder may not contain any backward slashes. """
 		generator = csnBuild.Generator()
 		thisPath = os.path.abspath(os.path.dirname(__file__)).replace("\\", "/")
 		binFolder = "%s\\%s" % (thisPath, "temp_bin")
 		self.assertRaises(csnBuild.SyntaxError, generator.Generate, self.dummyExe, binFolder)
 
-	def stestGlob(self):
+	def testGlob(self):
 		""" Test that globbing source files works. """
 		p = csnBuild.Project("DummyDll", "dll")
 		p.AddSources(["Dummy*/*.h"])
 		assert len(p.sources) == 2, csnBuild.Join(p.sources)
 		
-	def stestNameConflict(self):
+	def testNameConflict(self):
 		""" Test that two projects cannot have the same name. """
 		dummyLib = csnBuild.Project("DummyLib", "library")
 		dummyLib.AddPublicIncludeFolders(["DummyLib"])

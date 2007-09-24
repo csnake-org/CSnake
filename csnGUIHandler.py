@@ -42,6 +42,10 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
 	nameList = list(_name)
 	instanceName = nameList[0].lower() + ''.join(nameList[1:])
 	filename = "%s/csn%s.py" % (_folder, _name)
+	
+	if os.path.exists(filename):
+		raise IOError, "Project file %s already exists\n" % (filename)
+		
 	f = open(filename, 'w')
 	f.write( "# Used to configure %s\n" % (_name) )
 	f.write( "import csnBuild\n" )

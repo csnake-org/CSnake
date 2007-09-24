@@ -55,7 +55,7 @@ def Caller(up=0):
     """
     f = traceback.extract_stack(limit=up+2)
     return f[0]
-
+		
 class Generator:
     """
     Generates the CMakeLists.txt for a csnBuild.Project.
@@ -147,8 +147,13 @@ class Generator:
             f.write( "\n# Add target\n" )
             
             # add definitions
-            if( len(_targetProject.privateDefinitions) ):
-            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(_targetProject.privateDefinitions) )
+            for cat in ["WIN32", "NOT WIN32"]:
+	            if( len(_targetProject.definitions[cat]["private"]) ):
+	            	f.write( "IF(%s)\n" % (cat))
+	            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(_targetProject.definitions[cat]["private"]) )
+	            	f.write( "ENDIF(%s)\n" % (cat))
+            if( len(_targetProject.definitions["ALL"]["private"]) ):
+            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(_targetProject.definitions["ALL"]["private"]) )
             
             # add sources
             if(_targetProject.type == "executable" ):
@@ -237,8 +242,7 @@ class Project:
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
     self.configFileSubpath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
-    self.privateDefinitions -- Definitions to be used by the pre-processor (only) when building this target.
-    self.publicDefinitions -- Definitions to be used by the pre-processor when building this target or dependend targets.
+    self.definitions -- Dictionary (public/private -> WIN32/NOT WIN32/ALL -> definition) with definitions to be used by the pre-processor when building this target. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.dlls -- Dlls to be installed in the binary folder for this target.
     self.useFileSubpath -- The use file of the project. See above.
@@ -255,8 +259,13 @@ class Project:
         self.publicLibraryFolders = []
         self.publicLibraries = []
         self.sources = []
-        self.privateDefinitions = []
-        self.publicDefinitions = []
+
+        self.definitions = dict()
+        for cat in ["WIN32", "NOT WIN32", "ALL"]:
+            self.definitions[cat] = dict()
+            self.definitions[cat]["public"] = list()
+            self.definitions[cat]["private"] = list()
+
         self.sourcesToBeMoced = []
         self.name = _name
         self.dlls = []
@@ -316,18 +325,24 @@ class Project:
 				raise IOError, "Path file not found %s" % (dll)
 			self.dlls.extend( dlls )
 				
-    def AddPrivateDefinitions(self, _listOfDefinitions):
+    def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
         Adds items to self.definitions. 
         """
-        self.privateDefinitions.extend(_listOfDefinitions)
-                
-    def AddPublicDefinitions(self, _listOfDefinitions):
-        """
-        Adds items to self.definitions. 
-        """
-        self.publicDefinitions.extend(_listOfDefinitions)
-                
+        if( _WIN32 and _NOT_WIN32 ):
+            _WIN32 = _NOT_WIN32 = 0
+        compiler = "ALL"
+        if( _WIN32 ):
+            compiler = "WIN32"
+        elif( _NOT_WIN32 ):
+            compiler = "NOT WIN32"
+    
+        mode = "public"
+        if( _private ):
+            mode = "private"
+        
+        self.definitions[compiler][mode].extend(_listOfDefinitions)
+		
     def AddPublicIncludeFolders(self, _listOfIncludeFolders):
         """
         Adds items to self.publicIncludeFolders. 
@@ -512,6 +527,13 @@ class Project:
         f.write( "INCLUDE_DIRECTORIES(${%s_INCLUDE_DIRS})\n" % (self.name) )
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.name) )
         f.write( "LINK_LIBRARIES(${%s_LIBRARIES})\n" % (self.name) )
-        if( len(self.publicDefinitions) ):
-        	f.write( "ADD_DEFINITIONS(%s)\n" % (Join(self.publicDefinitions)) )
-     
+
+        # write definitions     
+        for cat in ["WIN32", "NOT WIN32"]:
+            if( len(self.definitions[cat]["public"]) ):
+            	f.write( "IF(%s)\n" % (cat))
+            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(self.definitions[cat]["public"]) )
+            	f.write( "ENDIF(%s)\n" % (cat))
+        if( len(self.definitions["ALL"]["public"]) ):
+        	f.write( "ADD_DEFINITIONS(%s)\n" % Join(self.definitions["ALL"]["public"]) )
+   
