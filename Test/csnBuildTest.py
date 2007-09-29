@@ -47,14 +47,14 @@ class ProjectTest(unittest.TestCase):
 		self.dummyLib = csnBuild.Project("DummyLib", "library")
 		self.dummyLib.AddPublicIncludeFolders(["DummyLib"])
 		self.dummyLib.AddSources(["DummyLib/DummyLib.cpp", "DummyLib/DummyLib.h"])
-		self.dummyLib.AddProject(self.dummyDll)
+		self.dummyLib.AddProjects([self.dummyDll])
 		self.dummyLib.AddDlls(["DummyLib/lib/ExtraLib.dll"])
 		self.dummyDll.AddDefinitions(["DummyLibDefPublicWin32"], _private = 0, _WIN32 = 1)
 		
 		self.dummyExe = csnBuild.Project("DummyExe", "executable")
 		self.dummyExe.AddPublicIncludeFolders(["DummyExe"])
 		self.dummyExe.AddSources(["DummyExe/DummyExe.cpp"])
-		self.dummyExe.AddProject(self.dummyLib)
+		self.dummyExe.AddProjects([self.dummyLib])
 		self.dummyExe.AddDefinitions(["DummyExeDefPrivate"], _private = 1)
 		
 	def stearDown(self):
@@ -106,17 +106,17 @@ class ProjectTest(unittest.TestCase):
 	
 	def testSelfDependency(self):
 		""" Test that a project cannot depend on itself. """
-		self.assertRaises(csnBuild.DependencyError, self.dummyExe.AddProject, self.dummyExe)
+		self.assertRaises(csnBuild.DependencyError, self.dummyExe.AddProjects, [self.dummyExe])
 		
 	def testAddProjectTwice(self):
 		""" Test that adding a project twice has no effect. """
 		i = len(self.dummyExe.childProjects)
-		self.dummyExe.AddProject(self.dummyLib)
+		self.dummyExe.AddProjects([self.dummyLib])
 		self.assertEqual(i, len(self.dummyExe.childProjects))
 
 	def testCyclicDependency(self):
 		""" Test that a cylic dependency is detected. """
-		self.assertRaises( csnBuild.DependencyError, self.dummyDll.AddProject, self.dummyExe)
+		self.assertRaises( csnBuild.DependencyError, self.dummyDll.AddProject, [self.dummyExe])
 
 	def testNonExistingSourceFile(self):
 		""" Test that a non-existing source file is detected. """
@@ -144,7 +144,7 @@ class ProjectTest(unittest.TestCase):
 		dummyLib = csnBuild.Project("DummyLib", "library")
 		dummyLib.AddPublicIncludeFolders(["DummyLib"])
 		dummyLib.AddSources(["DummyLib/DummyLib.cpp", "DummyLib/DummyLib.h"])
-		self.dummyExe.AddProject(dummyLib)
+		self.dummyExe.AddProject([dummyLib])
 		generator = csnBuild.Generator()
 		self.assertRaises(NameError, generator.Generate, self.dummyExe, self.globalTestSetup.binFolder)
 		

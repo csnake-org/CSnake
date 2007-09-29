@@ -10,6 +10,6 @@ mitk = csnBuild.Project("Mitk", "library")
 mitk.publicIncludePaths = ["MitkIncludePath"]
 mitk.publicLibraryPaths = ["MitkLibraryPath"]
 mitk.publicLibraries = ["Mitk"]
-mitk.AddProject(itk)
+mitk.AddProjects([itk])
 
 

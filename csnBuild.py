@@ -1,41 +1,24 @@
 from os import makedirs
+import csnUtility
 import os.path
 import warnings
 import sys
 import re
 import glob
-import shutil
 import traceback
 
 # ToDo:
 # - Have public and private child projects (hide the include paths from its clients)
 # - Support copying dlls automatically to the "install" folder of the binary folder. This should be a separate option from the GUI.
-# - Create GUI
-# = Use environment variables to work around the cmake propagation behaviour
+# - Use environment variables to work around the cmake propagation behaviour
+# - Support precompiled headers somehow
+# - Awkward: moc one header file, and include *.h as source will result in double header files in solution
+# - Maybe csn python modules can contain option widgets that are loaded into CSnakeGUI!
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
 if( not root in sys.path ):
     sys.path.append(root)
-
-def Log(logString):
-        f = open("c:\\log.txt", 'a')
-        f.write(logString)
-        f.close()
-
-def HasBackSlash(_path):
-    p = re.compile(r"[^\\]*\\")
-    m = p.match( _path )
-    return m
-
-def Join(theList):
-    """
-    Returns a string that contains the items of theList separated by spaces.
-    """
-    all = ""
-    for x in theList:
-        all = all + str(x) + " "
-    return all
 
 class DependencyError(StandardError):
     pass
@@ -81,17 +64,17 @@ class Generator:
         else:
         	_knownProjectNames.append(_targetProject.name)
             
-        # Log("Generate %s\n" % (_targetProject.name))
+        # csnUtility.Log("Generate %s\n" % (_targetProject.name))
         # for project in _generatedList:
-        #     Log("Already generated %s\n" % (project.name))
-        # Log("---\n")
+        #     csnUtility.Log("Already generated %s\n" % (project.name))
+        # csnUtility.Log("---\n")
         
         # trying to Generate a project twice indicates a logical error in the code        
         assert not _targetProject in _generatedList, "Target project name = %s" % (_targetProject.name)
         _generatedList.append(_targetProject)
         
         # check for backward slashes
-        if HasBackSlash(_binaryFolder):
+        if csnUtility.HasBackSlash(_binaryFolder):
             raise SyntaxError, "Error, backslash found in binary folder %s" % _binaryFolder
         
         if( _targetProject.type == "third party" ):
@@ -104,9 +87,9 @@ class Generator:
     
         # create Win32Header
         if( _targetProject.type != "executable" ):
-			self.__GenerateWin32Header(_targetProject, _binaryFolder)
-			assert not binaryProjectFolder in _targetProject.publicIncludeFolders
-			_targetProject.publicIncludeFolders.append(binaryProjectFolder)
+            self.__GenerateWin32Header(_targetProject, _binaryFolder)
+            assert not binaryProjectFolder in _targetProject.publicIncludeFolders
+            _targetProject.publicIncludeFolders.append(binaryProjectFolder)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolder, _targetProject.cmakeListsSubpath)
@@ -145,7 +128,7 @@ class Generator:
         if( len(_targetProject.sourcesToBeMoced) ):
             cmakeMocInputVarName = "MOC_%s" % (_targetProject.name)
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
-            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, Join(_targetProject.sourcesToBeMoced)) )
+            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced)) )
             
         # write section that is specific for the project type        
         if( len(_targetProject.sources) ):
@@ -155,20 +138,20 @@ class Generator:
             for cat in ["WIN32", "NOT WIN32"]:
 	            if( len(_targetProject.definitions[cat]["private"]) ):
 	            	f.write( "IF(%s)\n" % (cat))
-	            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(_targetProject.definitions[cat]["private"]) )
+	            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions[cat]["private"]) )
 	            	f.write( "ENDIF(%s)\n" % (cat))
             if( len(_targetProject.definitions["ALL"]["private"]) ):
-            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(_targetProject.definitions["ALL"]["private"]) )
+            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions["ALL"]["private"]) )
             
             # add sources
             if(_targetProject.type == "executable" ):
-                f.write( "ADD_EXECUTABLE(%s %s %s)\n" % (_targetProject.name, cmakeMocInputVar, Join(_targetProject.sources)) )
+                f.write( "ADD_EXECUTABLE(%s %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
                 
             elif(_targetProject.type == "library" ):
-                f.write( "ADD_LIBRARY(%s STATIC %s %s)\n" % (_targetProject.name, cmakeMocInputVar, Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s STATIC %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
             
             elif(_targetProject.type == "dll" ):
-                f.write( "ADD_LIBRARY(%s SHARED %s %s)\n" % (_targetProject.name, cmakeMocInputVar, Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s SHARED %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
                 
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
@@ -211,26 +194,30 @@ class Generator:
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
         templateFilename = root + "/CSnake/Win32Header.h"
+        if( _targetProject.type == "library" ):
+	        templateFilename = root + "/CSnake/Win32Header.lib.h"
         templateOutputFilename = "%s/%s/%sWin32Header.h" % (_binaryFolder, _targetProject.binarySubfolder, _targetProject.name)
-
+        
         assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
         f = open(templateFilename, 'r')
         template = f.read()
         template = template.replace('${PROJECTNAME_UPPERCASE}', _targetProject.name.upper())
         template = template.replace('${PROJECTNAME}', _targetProject.name)
-
-        # template.replace('${PROJECTNAME}', _targetProject.name())
         f.close()
         
-        f = open(templateOutputFilename, 'w')
-        f.write(template)
-        f.close()
+        # don't overwrite the existing file if it contains the same text, because this will trigger a source recompile later!
+        if( csnUtility.FileToString(templateOutputFilename) != template ):
+            f = open(templateOutputFilename, 'w')
+            f.write(template)
+            f.close()
         
 class Project:
     """
     Contains the data for the makefile (or vcproj) for a project.
     _name -- Name of the project, e.g. \"SampleApp\"
     _type -- Type of the project, should be \"executable\", \"library\", \"dll\" or \"third party\"
+    _callerDepth - This (advanced) parameter determines who is calling the constructor. The name of the caller is used
+    to fill the value of self.sourceRootFolder. Normally, you don't need to change this parameter.
 
     Config and use file:
     CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
@@ -252,14 +239,14 @@ class Project:
     self.dlls -- Dlls to be installed in the binary folder for this target.
     self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
-    self.childProjects -- Set of project instances. These projects have been added to self using AddProject.
+    self.childProjects -- Set of project instances. These projects have been added to self using AddProjects.
     self.childProjectsNonDependend = Subset of self.childProjects. Contains projects that self doesn't depend on.
     self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
     self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
     self.publicLibraries -- List of linker inputs required to build a target that uses this project.
     """
     
-    def __init__(self, _name, _type):
+    def __init__(self, _name, _type, _callerDepth = 1):
         self.publicIncludeFolders = []
         self.publicLibraryFolders = []
         self.publicLibraries = []
@@ -275,7 +262,7 @@ class Project:
         self.name = _name
         self.dlls = []
         self.type = _type
-        self.sourceRootFolder = os.path.normpath(os.path.dirname(Caller(1)[0])).replace("\\", "/")
+        self.sourceRootFolder = os.path.normpath(os.path.dirname(Caller(_callerDepth)[0])).replace("\\", "/")
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
@@ -287,21 +274,22 @@ class Project:
         self.childProjects = set()
         self.childProjectsNonDependend = set()
         
-    def AddProject(self, _childProject, _dependency = 1):
+    def AddProjects(self, _childProjects, _dependency = 1):
         """ 
-        Adds otherProject as a child. Adds all children of otherProject as children of self. 
+        Adds projects in _childProjects as children.
         _dependency - Flag that states that self target is dependent on the _childProject target.
         Raises StandardError in case of a cyclic dependency.
         """
-        if( self is _childProject ):
-            raise DependencyError, "Project %s cannot be added to itself" % (_childProject.name)
-            
-        if( not _childProject in self.childProjects ):
-            if( _dependency and _childProject.DependsOn(self) ):
-                raise DependencyError, "Circular dependency detected during %s.AddProject(%s)" % (self.name, _childProject.name)
-            self.childProjects.add( _childProject )
-            if( not _dependency ):
-                self.childProjectsNonDependend.add( _childProject )
+        for childProject in _childProjects:
+            if( self is childProject ):
+                raise DependencyError, "Project %s cannot be added to itself" % (childProject.name)
+                
+            if( not childProject in self.childProjects ):
+                if( _dependency and childProject.DependsOn(self) ):
+                    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.name, childProject.name)
+                self.childProjects.add( childProject )
+                if( not _dependency ):
+                    self.childProjectsNonDependend.add( childProject )
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _checkExists = 1):
         """
@@ -311,7 +299,7 @@ class Project:
         If _checkExists, then added sources (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
         """
         for sourceFile in _listOfSourceFiles:
-			sources = self.__Glob(sourceFile)
+			sources = self.Glob(sourceFile)
 			if( _checkExists and not len(sources) ):
 				raise IOError, "Path file not found %s" % (sourceFile)
 			self.sources.extend( sources )
@@ -325,7 +313,7 @@ class Project:
         If _checkExists, then added dlls (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
         """
         for dll in _listOfDlls:
-			dlls = self.__Glob(dll)
+			dlls = self.Glob(dll)
 			if( _checkExists and not len(dlls) ):
 				raise IOError, "Path file not found %s" % (dll)
 			self.dlls.extend( dlls )
@@ -384,19 +372,19 @@ class Project:
         Returns an absolute path, containing only forward slashes.
         Throws IOError if path was not found.
         """
-        # Log( "Finding %s in %s\n" % (_path, self.sourceRootFolder) )
+        # csnUtility.Log( "Finding %s in %s\n" % (_path, self.sourceRootFolder) )
         
         path = _path
         if( not os.path.isabs(path) ):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
         if( not os.path.exists(path) ):
-            raise IOError, "Path file not found %s" % (_path)
+            raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
         path = path.replace("\\", "/")
-        assert not HasBackSlash(path), path
+        assert not csnUtility.HasBackSlash(path), path
         return path
         
-    def __Glob(self, _path):
+    def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
@@ -515,9 +503,9 @@ class Project:
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, Join(self.publicIncludeFolders)) )
-        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, Join(self.publicLibraryFolders)) )
-        f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, Join(self.publicLibraries)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders)) )
+        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders)) )
+        f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries)) )
 
     def GenerateUseFile(self, _binaryFolder):
         """
@@ -537,10 +525,10 @@ class Project:
         for cat in ["WIN32", "NOT WIN32"]:
             if( len(self.definitions[cat]["public"]) ):
             	f.write( "IF(%s)\n" % (cat))
-            	f.write( "ADD_DEFINITIONS(%s)\n" % Join(self.definitions[cat]["public"]) )
+            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions[cat]["public"]) )
             	f.write( "ENDIF(%s)\n" % (cat))
         if( len(self.definitions["ALL"]["public"]) ):
-        	f.write( "ADD_DEFINITIONS(%s)\n" % Join(self.definitions["ALL"]["public"]) )
+        	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions["ALL"]["public"]) )
    
     def GetPathToConfigFile(self, _binaryFolder):
         """ 
