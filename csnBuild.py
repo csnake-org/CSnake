@@ -13,7 +13,8 @@ import traceback
 # - Use environment variables to work around the cmake propagation behaviour
 # - Support precompiled headers somehow
 # - Awkward: moc one header file, and include *.h as source will result in double header files in solution
-# - Maybe csn python modules can contain option widgets that are loaded into CSnakeGUI!
+# - csn python modules can contain option widgets that are loaded into CSnakeGUI!
+# - Applications and Demos projects need a dummy.cpp file. Supply a standard one
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
