@@ -8,13 +8,11 @@ import glob
 import traceback
 
 # ToDo:
-# - Have public and private child projects (hide the include paths from its clients)
+# - Have public and private related projects (hide the include paths from its clients)
 # - Support copying dlls automatically to the "install" folder of the binary folder. This should be a separate option from the GUI.
 # - Use environment variables to work around the cmake propagation behaviour
 # - Support precompiled headers somehow
-# - Awkward: moc one header file, and include *.h as source will result in double header files in solution
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI!
-# - Applications and Demos projects need a dummy.cpp file. Supply a standard one
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -40,7 +38,7 @@ def Caller(up=0):
     """
     f = traceback.extract_stack(limit=up+2)
     return f[0]
-		
+        
 class Generator:
     """
     Generates the CMakeLists.txt for a csnBuild.Project.
@@ -63,7 +61,7 @@ class Generator:
         if( _targetProject.name in _knownProjectNames):
             raise NameError, "Each project of must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
         else:
-        	_knownProjectNames.append(_targetProject.name)
+            _knownProjectNames.append(_targetProject.name)
             
         # csnUtility.Log("Generate %s\n" % (_targetProject.name))
         # for project in _generatedList:
@@ -114,10 +112,10 @@ class Generator:
         _targetProject.GenerateConfigFile( _binaryFolder)
         _targetProject.GenerateUseFile(_binaryFolder)
         
-        # get child projects to be 'used' in the sense of including the use and config file.
+        # get related projects to be 'used' in the sense of including the use and config file.
         projectsToUse = _targetProject.GetProjectsToUse()
         
-        # find and use child projects
+        # find and use related projects
         for project in projectsToUse:
           # include config and use file
             f.write( "\n# use %s\n" % (project.name) )
@@ -131,60 +129,72 @@ class Generator:
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
             f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced)) )
             
+        # generate ui files
+        cmakeUIHInputVar = ""
+        cmakeUICppInputVar = ""
+        if( len(_targetProject.sourcesToBeUIed) ):
+            cmakeUIHInputVarName = "UI_H_%s" % (_targetProject.name)
+            cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
+            cmakeUICppInputVarName = "UI_CPP_%s" % (_targetProject.name)
+            cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
+            f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (_targetProject.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(_targetProject.sourcesToBeUIed)) )
+            
         # write section that is specific for the project type        
         if( len(_targetProject.sources) ):
             f.write( "\n# Add target\n" )
             
             # add definitions
             for cat in ["WIN32", "NOT WIN32"]:
-	            if( len(_targetProject.definitions[cat]["private"]) ):
-	            	f.write( "IF(%s)\n" % (cat))
-	            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions[cat]["private"]) )
-	            	f.write( "ENDIF(%s)\n" % (cat))
+                if( len(_targetProject.definitions[cat]["private"]) ):
+                    f.write( "IF(%s)\n" % (cat))
+                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions[cat]["private"]) )
+                    f.write( "ENDIF(%s)\n" % (cat))
             if( len(_targetProject.definitions["ALL"]["private"]) ):
-            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions["ALL"]["private"]) )
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions["ALL"]["private"]) )
             
             # add sources
             if(_targetProject.type == "executable" ):
-                f.write( "ADD_EXECUTABLE(%s %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
                 
             elif(_targetProject.type == "library" ):
-                f.write( "ADD_LIBRARY(%s STATIC %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
             
             elif(_targetProject.type == "dll" ):
-                f.write( "ADD_LIBRARY(%s SHARED %s %s)\n" % (_targetProject.name, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
                 
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = set()
-        dependendChildProjects = _targetProject.DependendChildProjects(_recursive = 1)        
-        for project in dependendChildProjects:
-            # determine if we must Generate the project. If a child project will generate it, then leave it to the child.
-            # This will prevent multiple generation of the same project.
-            generateProject = not project in _generatedList and project.type != "third party"
+        requiredProjects = _targetProject.RequiredProjects(_recursive = 1)        
+        for projectToGenerate in requiredProjects:
+            # determine if we must Generate the project. If a required project will generate it, 
+            # then leave it to the required project. This will prevent multiple generation of the same project.
+            # If a non-required project will generate it, then still generate the project 
+            # (the non-required project may depend on target project to generate project, creating a race condition).
+            generateProject = not projectToGenerate in _generatedList and projectToGenerate.type != "third party"
             if( generateProject ):
-                for childProject in _targetProject.childProjects:
-                    if( childProject.DependsOn(project) ):
+                for requiredProject in _targetProject.RequiredProjects(_recursive = 0):
+                    if( requiredProject.DependsOn(projectToGenerate) ):
                         generateProject = 0
             if( generateProject ):
-                projectsToGenerate.add(project)
+                projectsToGenerate.add(projectToGenerate)
         f.write( "\n" )
         
-        # add non-dependend child projects that have not yet been generated to projectsToGenerate
-        for project in _targetProject.childProjectsNonDependend:
+        # add non-required projects that have not yet been generated to projectsToGenerate
+        for project in _targetProject.projectsNonRequired:
             if( not project in _generatedList ):
                 projectsToGenerate.add(project)
 
-        # generate child projects, and add a line with ADD_SUBDIRECTORY
+        # generate projects, and add a line with ADD_SUBDIRECTORY
         for project in projectsToGenerate:
             f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
             self.Generate(project, _binaryFolder, _generatedList, _knownProjectNames)
            
         # add dependencies
         f.write( "\n" )
-        for project in dependendChildProjects:
+        for project in requiredProjects:
             if( len(project.sources) ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
         
@@ -194,9 +204,9 @@ class Generator:
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
-        templateFilename = root + "/CSnake/Win32Header.h"
+        templateFilename = root + "/CSnake/TemplateSourceFiles/Win32Header.h"
         if( _targetProject.type == "library" ):
-	        templateFilename = root + "/CSnake/Win32Header.lib.h"
+            templateFilename = root + "/CSnake/TemplateSourceFiles/Win32Header.lib.h"
         templateOutputFilename = "%s/%s/%sWin32Header.h" % (_binaryFolder, _targetProject.binarySubfolder, _targetProject.name)
         
         assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
@@ -237,11 +247,12 @@ class Project:
     self.sources -- Sources to be compiled for this target.
     self.definitions -- Dictionary (public/private -> WIN32/NOT WIN32/ALL -> definition) with definitions to be used by the pre-processor when building this target. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
+    self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.dlls -- Dlls to be installed in the binary folder for this target.
     self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
-    self.childProjects -- Set of project instances. These projects have been added to self using AddProjects.
-    self.childProjectsNonDependend = Subset of self.childProjects. Contains projects that self doesn't depend on.
+    self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
+    self.projectsNonRequired = Subset of self.projects. Contains projects that self doesn't depend on.
     self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
     self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
     self.publicLibraries -- List of linker inputs required to build a target that uses this project.
@@ -260,6 +271,7 @@ class Project:
             self.definitions[cat]["private"] = list()
 
         self.sourcesToBeMoced = []
+        self.sourcesToBeUIed = []
         self.name = _name
         self.dlls = []
         self.type = _type
@@ -272,40 +284,47 @@ class Project:
         self.configFilePath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
         self.useFilePath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
         self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
-        self.childProjects = set()
-        self.childProjectsNonDependend = set()
+        self.projects = set()
+        self.projectsNonRequired = set()
         
-    def AddProjects(self, _childProjects, _dependency = 1):
+    def AddProjects(self, _projects, _dependency = 1):
         """ 
-        Adds projects in _childProjects as children.
-        _dependency - Flag that states that self target is dependent on the _childProject target.
+        Adds projects in _projects as required projects.
+        _dependency - Flag that states that self target requires (is dependent on) _projects.
         Raises StandardError in case of a cyclic dependency.
         """
-        for childProject in _childProjects:
-            if( self is childProject ):
-                raise DependencyError, "Project %s cannot be added to itself" % (childProject.name)
+        for projectToAdd in _projects:
+            if( self is projectToAdd ):
+                raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
-            if( not childProject in self.childProjects ):
-                if( _dependency and childProject.DependsOn(self) ):
-                    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.name, childProject.name)
-                self.childProjects.add( childProject )
+            if( not projectToAdd in self.projects ):
+                if( _dependency and projectToAdd.DependsOn(self) ):
+                    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.name, projectToAdd.name)
+                self.projects.add( projectToAdd )
                 if( not _dependency ):
-                    self.childProjectsNonDependend.add( childProject )
+                    self.projectsNonRequired.add( projectToAdd )
 
-    def AddSources(self, _listOfSourceFiles, _moc = 0, _checkExists = 1):
+    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _checkExists = 1):
         """
         Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
         Entries of _listOfSourceFiles may contain wildcards, such as src/*/*.h.
         If _moc, then a moc file is generated for each header file in _listOfSourceFiles.
+        If _ui, then qt's ui.exe is run for the file.
         If _checkExists, then added sources (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
         """
         for sourceFile in _listOfSourceFiles:
-			sources = self.Glob(sourceFile)
-			if( _checkExists and not len(sources) ):
-				raise IOError, "Path file not found %s" % (sourceFile)
-			self.sources.extend( sources )
-			if( _moc ):
-				self.sourcesToBeMoced.extend(sources)
+            sources = self.Glob(sourceFile)
+            if( _checkExists and not len(sources) ):
+                raise IOError, "Path file not found %s" % (sourceFile)
+            
+            for source in sources:
+                if( not source in self.sources and not source in self.sourcesToBeUIed ):
+                    if( _moc ):
+                        self.sourcesToBeMoced.append(source)
+                    if( _ui ):
+                        self.sourcesToBeUIed.append(source)
+                    else:
+                        self.sources.append(source)
 
     def AddDlls(self, _listOfDlls, _checkExists = 1):
         """
@@ -314,11 +333,11 @@ class Project:
         If _checkExists, then added dlls (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
         """
         for dll in _listOfDlls:
-			dlls = self.Glob(dll)
-			if( _checkExists and not len(dlls) ):
-				raise IOError, "Path file not found %s" % (dll)
-			self.dlls.extend( dlls )
-				
+            dlls = self.Glob(dll)
+            if( _checkExists and not len(dlls) ):
+                raise IOError, "Path file not found %s" % (dll)
+            self.dlls.extend( dlls )
+                
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
         Adds items to self.definitions. 
@@ -336,7 +355,13 @@ class Project:
             mode = "private"
         
         self.definitions[compiler][mode].extend(_listOfDefinitions)
-		
+        
+    #def AddLinkerFlags(self, _listOfFlags ):
+    #    """
+    #    Adds items to self.definitions. 
+    #    """
+    #    self.linkerFlags.extend(_listOfFlags)
+        
     def AddPublicIncludeFolders(self, _listOfIncludeFolders):
         """
         Adds items to self.publicIncludeFolders. 
@@ -362,10 +387,10 @@ class Project:
         """
         assert _type in ("debug", "optimized", "all"), "%s not any of (\"debug\", \"optimized\", \"all\"" % (_type)
         if( _type == "all" ):
-        	_type = ""
-        	
+            _type = ""
+            
         for library in _listOfLibraries:
-        	self.publicLibraries.append("%s %s" % (_type, library))
+            self.publicLibraries.append("%s %s" % (_type, library))
             
     def __FindPath(self, _path):
         """ 
@@ -392,7 +417,7 @@ class Project:
         """
         path = _path
         if not os.path.isabs(_path):
-        	path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
+            path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
         return [x.replace("\\", "/") for x in glob.glob(path)]
     
     def DependsOn(self, _otherProject, _skipList = None):
@@ -406,23 +431,23 @@ class Project:
         assert not self in _skipList, "%s should not be in stoplist" % (self.name)
         _skipList.append(self)
         
-        for childProject in self.DependendChildProjects():
-            if childProject in _skipList:
+        for requiredProject in self.RequiredProjects():
+            if requiredProject in _skipList:
                 continue
-            if childProject is _otherProject or childProject.DependsOn(_otherProject, _skipList ):
+            if requiredProject is _otherProject or requiredProject.DependsOn(_otherProject, _skipList ):
                 return 1
         return 0
         
-    def DependendChildProjects(self, _recursive = 0):
+    def RequiredProjects(self, _recursive = 0):
         """
-        Return a set of childProjects that self depends upon.
-        If recursive is true, then dependend child projects of dependend child projects are also retrieved.
+        Return a set of projects that self depends upon.
+        If recursive is true, then required projects of required projects are also retrieved.
         """
-        result = self.childProjects - self.childProjectsNonDependend
+        result = self.projects - self.projectsNonRequired
         if( _recursive ):
             moreResults = set()
             for project in result:
-                moreResults.update( project.DependendChildProjects(_recursive) )
+                moreResults.update( project.RequiredProjects(_recursive) )
             result.update(moreResults)
         return result
         
@@ -431,44 +456,36 @@ class Project:
         Indicate that self must be used before _otherProjects in a cmake file. 
         Throws DependencyError if _otherProject wants to be used before self.
         """
-        if( _otherProjects.WantsToBeUsedBefore(self) ):
+        if( _otherProject.WantsToBeUsedBefore(self) ):
             raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, _otherProject.name)
-        self.useBefore.add(_otherProject)
+        self.useBefore.append(_otherProject)
         
-    def WantsToBeUsedBefore(self, _otherProject, _stopList = None):
+    def WantsToBeUsedBefore(self, _otherProject):
         """ 
         Return true if self wants to be used before _otherProject.
-        _stopList - Used for robustness. Breaks the recursion in case of a cyclic dependency. 
-        In this case, an assertion is raised, because this situation should never occur logically.
         """
-        if _stopList is None:
-            _stopList = []
-        
-        assert not self in _stopList
-        _stopList.append(self)
-
         if( self is _otherProject ):
             return 0
             
         if( _otherProject in self.useBefore ):
             return 1
             
-        for childProject in self.DependendChildProjects():
-            if childProject.WantsToBeUsedBefore(_otherProject, _stopList):
+        for requiredProject in self.RequiredProjects(1):
+            if( _otherProject in requiredProject.useBefore ):
                 return 1
                 
         return 0
            
     def GetProjectsToUse(self):
         """
-        Determine a list of child projects to must be used (meaning: include the config and use file) to generate this project.
+        Determine a list of projects that must be used (meaning: include the config and use file) to generate this project.
         Note that self is also included in this list.
         The list is sorted in the correct order, using Project.WantsToBeUsedBefore.
         """
         result = []
         
-        projectsToUse = [project for project in self.DependendChildProjects(_recursive = 1)]
-        assert not self in projectsToUse
+        projectsToUse = [project for project in self.RequiredProjects(_recursive = 1)]
+        assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
         projectsToUse.append(self)
         
         (count, maxCount) = (0, 1)
@@ -525,11 +542,11 @@ class Project:
         # write definitions     
         for cat in ["WIN32", "NOT WIN32"]:
             if( len(self.definitions[cat]["public"]) ):
-            	f.write( "IF(%s)\n" % (cat))
-            	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions[cat]["public"]) )
-            	f.write( "ENDIF(%s)\n" % (cat))
+                f.write( "IF(%s)\n" % (cat))
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions[cat]["public"]) )
+                f.write( "ENDIF(%s)\n" % (cat))
         if( len(self.definitions["ALL"]["public"]) ):
-        	f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions["ALL"]["public"]) )
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions["ALL"]["public"]) )
    
     def GetPathToConfigFile(self, _binaryFolder):
         """ 
