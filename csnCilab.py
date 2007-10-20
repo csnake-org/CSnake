@@ -9,9 +9,10 @@ def LoadThirdPartyModule(_subFolder, _name):
 
 def AddCilabLibraryModules(_project, _libModules):
     """ 
-    Creates _project from a set of libmodules. Used to build libraries in CilabModules.
-    It is assumed that _libModules is a list of subfolders of the _project.sourceRootFolder/libmodules folder.
-    All sources files in these subfolders are added to _project,
+    Adds source files (anything matching *.c??) and public include folders to _project, using a set of libmodules. 
+    It is assumed that the root folder of _project has a subfolder called libmodules. The subfolders of libmodules should
+    contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
+    _libModules - a list of subfolders of the libmodules folder that should be 'added' to _project.
     """
     # add sources    
     for libModule in _libModules:
@@ -31,9 +32,8 @@ def AddCilabLibraryModules(_project, _libModules):
 
 def AddCilabWidgetModules(_project, _widgetModules):
     """ 
-    Creates _project from a set of widget modules. Used to build widget libraries for GIMIAS plugins.
-    It is assumed that _widgetModules is a list of subfolders of the _project.sourceRootFolder/widgets folder.
-    All sources files in these subfolders are added to _project,
+    Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to _project.
+    Also adds rules for qt's ui and moc executables.
     """
     # add sources    
     for widgetModule in _widgetModules:
@@ -52,12 +52,16 @@ def AddCilabWidgetModules(_project, _widgetModules):
             
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
     """ 
-    Creates application projects from _modulesFolder and adds them to _holderProject.
+    Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
+    project does not depend on these application projects.
     It is assumed that _modules is a list containing subfolders of _modulesFolder.
     Each subfolder in _modules should contain source files (.cpp, .cxx or .cc), where each source file corresponds to a single application.
-    Hence, each source file is used to create a new application project. This application project is added to _holderProject,
-    using _holderProject.AddProject.
+    Hence, each source file is used to create a new application project. For example, assuming that the _modulesFolder
+    is called 'Applications', the file 'Applications/Small/Tiny.cpp' will be used to build the 'Tiny' application.
+    
     _applicationDependenciesList - List of projects that each new application project is dependent on.
+    _modulesFolder - Folder containing subfolders with applications.
+    _modules = List of subfolders of _modulesFolder that should be processed.
     """
     for module in _modules:
         moduleFolder = "%s/%s" % (_modulesFolder, module)
@@ -103,9 +107,8 @@ class CilabModuleProject(csnBuild.Project):
 
 class GimiasPluginProject(csnBuild.Project):
     """
-    This class is used to build a library coming from the CilabModules folder. Use AddLibraryModules to create libraries
-    from source in the libmodules subfolder of a cilab module. Use AddDemos and AddApplications to add executable projects
-    based on sources in the 'demos' and 'Applications' subfolders.
+    This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
+    modules to the plugin.
     """
     def __init__(self, _name, _callerDepth = 1):
         csnBuild.Project.__init__(self, _name, "dll", _callerDepth + 1)

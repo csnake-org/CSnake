@@ -22,19 +22,32 @@ def Join(theList):
         all = all + str(x) + " "
     return all
 
+# used by LoadModule
+loadedModules = dict()
+
 def LoadModule(_folder, _name):
-    """ Loads python module _name from _folder """
-    found = imp.find_module(_name, [_folder])
-    
+    """ 
+    Loads python module _name from _folder, or returns previously loaded module from the loadedModules variable (see above).
+    Adds module to loadedModules (if it is not already there).
+    """
+    key = os.path.normpath(_folder) + "_WITH_NAME_" + _name
     result = None
-    if found:
-        (file, pathname, description) = found
-        try:
-            result = imp.load_module(_name, file, pathname, description)
-        finally:
-            file.close()
+    if loadedModules.has_key(key):
+        result = loadedModules[key]
+    else:
+        found = imp.find_module(_name, [_folder])
+        if found:
+            (file, pathname, description) = found
+            try:
+                result = imp.load_module(_name, file, pathname, description)
+                loadedModules[key] = result
+            finally:
+                file.close()
     return result
 
+def UnloadAllModules():
+    loadedModules.clear()
+    
 def FileToString(_filename):
     x = ""
     if( os.path.exists(_filename) ):

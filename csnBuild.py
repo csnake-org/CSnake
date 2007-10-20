@@ -87,8 +87,8 @@ class Generator:
         # create Win32Header
         if( _targetProject.type != "executable" ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
-            assert not binaryProjectFolder in _targetProject.publicIncludeFolders
-            _targetProject.publicIncludeFolders.append(binaryProjectFolder)
+            if not binaryProjectFolder in _targetProject.publicIncludeFolders:
+                _targetProject.publicIncludeFolders.append(binaryProjectFolder)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolder, _targetProject.cmakeListsSubpath)
@@ -501,6 +501,7 @@ class Project:
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
                 if( otherProject.WantsToBeUsedBefore(project) ):
+                    #print ("%s wants to be before %s\n" % (otherProject.name, project.name))
                     skipThisProjectForNow = 1
             if( skipThisProjectForNow ):
                 projectsToUse.insert(0, project)
