@@ -9,10 +9,13 @@ import traceback
 
 # ToDo:
 # - Have public and private related projects (hide the include paths from its clients)
-# - Support copying dlls automatically to the "install" folder of the binary folder. This should be a separate option from the GUI.
+# - Unloading all modules in csnCilab.LoadModule does not work (it will reload the >cached< module). This makes it impossible
+# to use changed csn files while the GUI is still running. Need to replace imp. Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
 # - Use environment variables to work around the cmake propagation behaviour
 # - Support precompiled headers somehow
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI!
+# - create convenience module csnCilab3rdParty with attributes csnThirdParty.itk, csnThirdParty.vtk, etc
+# - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -44,7 +47,7 @@ class Generator:
     Generates the CMakeLists.txt for a csnBuild.Project.
     """
 
-    def Generate(self, _targetProject, _binaryFolder, _generatedList = None, _knownProjectNames = None):
+    def Generate(self, _targetProject, _binaryFolder, _installFolder = "", _generatedList = None, _knownProjectNames = None):
         """
         Generates the CMakeLists.txt for a csnBuild.Project in _binaryFolder.
         All binaries are placed in _binaryFolder/bin.
@@ -52,6 +55,7 @@ class Generator:
         _generatedList -- List of projects for which Generate was already called
         """
 
+        isTopLevelProject = _generatedList is None
         if( _generatedList is None ):
             _generatedList = []
 
@@ -101,12 +105,12 @@ class Generator:
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
         f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolder) )
         
-        binaryBinFolder = "%s/bin" % (_binaryFolder)
+        binaryBinFolder = "%s/bin/%s" % (_binaryFolder, _targetProject.installSubFolder)
         
         f.write( "\n# All binary outputs are written to the same folder.\n" )
         f.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
         f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % (binaryBinFolder) )
-        f.write( "SET( LIBRARY_OUTPUT_PATH  \"%s\")\n" % (binaryBinFolder) )
+        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % (binaryBinFolder) )
     
         # create config and use files, and include them
         _targetProject.GenerateConfigFile( _binaryFolder)
@@ -165,6 +169,12 @@ class Generator:
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
+            # add install rule
+            if( _installFolder != "" and _targetProject.type != "library"):
+                destination = "%s/%s" % (_installFolder, _targetProject.installSubFolder)
+                f.write( "\n# Rule for installing files in location %s\n" % destination)
+                f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (_targetProject.name, destination) )
+                
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = set()
         requiredProjects = _targetProject.RequiredProjects(_recursive = 1)        
@@ -190,7 +200,7 @@ class Generator:
         # generate projects, and add a line with ADD_SUBDIRECTORY
         for project in projectsToGenerate:
             f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
-            self.Generate(project, _binaryFolder, _generatedList, _knownProjectNames)
+            self.Generate(project, _binaryFolder, _installFolder, _generatedList, _knownProjectNames)
            
         # add dependencies
         f.write( "\n" )
@@ -198,6 +208,20 @@ class Generator:
             if( len(project.sources) ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
         
+        # if top level project, add install rules for all the filesToInstall
+        if isTopLevelProject:
+            for mode in ("debug", "release"):
+                for project in _targetProject.GetProjectsToUse():
+                    # iterate over filesToInstall to be copied in this mode
+                    for location in project.filesToInstall[mode].keys():
+                        files = ""
+                        for file in project.filesToInstall[mode][location]:
+                            files += "%s " % file.replace("\\", "/")
+                        if files != "":
+                            destination = "%s/%s" % (_installFolder, location)
+                            f.write( "\n# Rule for installing files in location %s\n" % destination)
+                            f.write("INSTALL(FILES %s DESTINATION %s CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
+                        
         f.close()
 
     def __GenerateWin32Header(self, _targetProject, _binaryFolder):
@@ -242,13 +266,16 @@ class Project:
     
     The constructors initialises these member variables:
     self.binarySubfolder -- Direct subfolder - within the binary folder - for this project. Is either 'executable' or 'library'.
+    self.installSubfolder -- Direct subfolder - within the install folder - for targets generated by this project.
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
     self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
     self.definitions -- Dictionary (public/private -> WIN32/NOT WIN32/ALL -> definition) with definitions to be used by the pre-processor when building this target. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
-    self.dlls -- Dlls to be installed in the binary folder for this target.
+    self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
+    For example: if self.filesToInstall[\"debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
+    then c:/one.txt and c:/two.txt must be installed in the data subfolder of the binary folder when in debug mode.
     self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
@@ -273,7 +300,9 @@ class Project:
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
         self.name = _name
-        self.dlls = []
+        self.filesToInstall = dict()
+        self.filesToInstall["debug"] = dict()
+        self.filesToInstall["release"] = dict()
         self.type = _type
         self.sourceRootFolder = os.path.normpath(os.path.dirname(Caller(_callerDepth)[0])).replace("\\", "/")
         self.useBefore = []
@@ -281,6 +310,7 @@ class Project:
             self.binarySubfolder = "library/%s" % (_name)
         else:
             self.binarySubfolder = "%s/%s" % (self.type, _name)
+        self.installSubFolder = ""
         self.configFilePath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
         self.useFilePath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
         self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
@@ -326,17 +356,26 @@ class Project:
                     else:
                         self.sources.append(source)
 
-    def AddDlls(self, _listOfDlls, _checkExists = 1):
+    def AddFilesToInstall(self, _listOfFiles, _location = '.', _debugOnly = 0, _releaseOnly = 0):
         """
-        Adds items to self.dlls. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
-        Entries of _listOfDlls may contain wildcards, such as lib/*/*.dll.
-        If _checkExists, then added dlls (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
+        Adds items to self.filesToInstall.
+        Entries of _listOfFiles may contain wildcards, such as lib/*/*.dll.
+        Relative paths in _listOfFiles are assumed to be relative to the root of the binary folder where the targets 
+        are created.
+        _debugOnly - If true, then the dll is only installed to the debug install folder.
+        _releaseOnly - If true, then the dll is only installed to the release install folder.
         """
-        for dll in _listOfDlls:
-            dlls = self.Glob(dll)
-            if( _checkExists and not len(dlls) ):
-                raise IOError, "Path file not found %s" % (dll)
-            self.dlls.extend( dlls )
+        for dll in _listOfFiles:
+            if not _debugOnly:
+                if not self.filesToInstall["release"].has_key(_location):
+                    self.filesToInstall["release"][_location] = []
+                if not dll in self.filesToInstall["release"][_location]:
+                    self.filesToInstall["release"][_location].append( dll )
+            if not _releaseOnly:
+                if not self.filesToInstall["debug"].has_key(_location):
+                    self.filesToInstall["debug"][_location] = []
+                if not dll in self.filesToInstall["debug"][_location]:
+                    self.filesToInstall["debug"][_location].append( dll )
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
@@ -355,12 +394,6 @@ class Project:
             mode = "private"
         
         self.definitions[compiler][mode].extend(_listOfDefinitions)
-        
-    #def AddLinkerFlags(self, _listOfFlags ):
-    #    """
-    #    Adds items to self.definitions. 
-    #    """
-    #    self.linkerFlags.extend(_listOfFlags)
         
     def AddPublicIncludeFolders(self, _listOfIncludeFolders):
         """
@@ -566,4 +599,18 @@ class Project:
             return self.useFilePath
         else:
             return "%s/%s" % (_binaryFolder, self.useFilePath)
+        
+    def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder):
+        """ This function replaces relative paths and wildcards in self.filesToInstall with absolute paths without wildcards. """
+        for mode in ("debug", "release"):
+            for project in self.GetProjectsToUse():
+                for location in project.filesToInstall[mode].keys():
+                    newList = []
+                    for dllPattern in project.filesToInstall[mode][location]:
+                        path = dllPattern.replace("\\", "/")
+                        if not os.path.isabs(path):
+                            path = "%s/%s" % (_thirdPartyBinFolder, path)
+                        for dll in glob.glob(path):
+                            newList.append(dll)
+                    project.filesToInstall[mode][location] = newList
         

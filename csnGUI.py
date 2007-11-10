@@ -6,20 +6,27 @@ import wx
 import csnGUIHandler
 import pickle
 import os.path
+import sys
 
 thisFolder = "%s" % (os.path.dirname(__file__))
 thisFolder = thisFolder.replace("\\", "/")
 recentFilesFilename = "%s/recentFiles" % thisFolder
 
+class RedirectText:
+    def __init__(self,aWxTextCtrl):
+		self.out=aWxTextCtrl
+
+    def write(self,string):
+		self.out.WriteText(string)
+
 class CSnakeGUIRecentFiles:
     def __init__(self):    
         self.source2BinaryFolder = dict()
+        self.source2InstallFolder = dict()
         self.thirdPartySource2BinaryFolder = dict()
         self.projectFolder = ""
         self.rootFolder = ""
-        self.binFolder = ""
         self.thirdPartyRootFolder = ""
-        self.thirdPartyBinFolder = ""
         self.instance = ""
     
 class CSnakeGUIFrame(wx.Frame):
@@ -41,15 +48,18 @@ class CSnakeGUIFrame(wx.Frame):
         self.label_1_copy = wx.StaticText(self.panelSource, -1, "Bin Folder\n")
         self.txtBinFolder = wx.TextCtrl(self.panelSource, -1, "")
         self.btnSelectBinFolder = wx.Button(self.panelSource, -1, "...")
+        self.label_2 = wx.StaticText(self.panelSource, -1, "Install Folder\n")
+        self.txtInstallFolder = wx.TextCtrl(self.panelSource, -1, "")
+        self.btnSelectInstallFolder = wx.Button(self.panelSource, -1, "...")
         self.label_1_copy_1 = wx.StaticText(self.panelThirdParty, -1, "ThirdParty Root\n Folder")
         self.txtThirdPartyRootFolder = wx.TextCtrl(self.panelThirdParty, -1, "")
         self.btnSelectThirdPartyRootFolder = wx.Button(self.panelThirdParty, -1, "...")
         self.label_1_copy_copy = wx.StaticText(self.panelThirdParty, -1, "ThirdParty Bin Folder\n")
         self.txtThirdPartyBinFolder = wx.TextCtrl(self.panelThirdParty, -1, "")
         self.btnSelectThirdPartyBinFolder = wx.Button(self.panelThirdParty, -1, "...")
-        self.text_ctrl_1 = wx.TextCtrl(self, -1, "Tip: it is convenient to have the Project Root and Bin Folder as subfolders of a common parent folder. For example, \n\nProject Root = <somepath>/TextEditorProject/source, \nBin Folder = <somepath>/TextEditorProject/bin. \nProject Folder = <somepath>/TextEditorProject/source/TextEditorGUI.", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP)
+        self.textLog = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP)
         self.btnDoAction = wx.Button(self, -1, "Do -->")
-        self.cmbAction = wx.ComboBox(self, -1, choices=["Create CMake files and run CMake", "Only create CMake files", "Copy ThirdParty Dlls to Bin Folder"], style=wx.CB_DROPDOWN)
+        self.cmbAction = wx.ComboBox(self, -1, choices=["Create CMake files and run CMake", "Only create CMake files", "Install files to Bin Folder", "Configure ThirdParty Folder"], style=wx.CB_DROPDOWN)
 
         self.__set_properties()
         self.__do_layout()
@@ -60,6 +70,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_TEXT, self.OnTypingRootFolder, self.txtRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectProjectRoot, self.btnSelectRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectBinFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectInstallFolder, self.btnSelectInstallFolder)
         self.Bind(wx.EVT_TEXT, self.OnTypingThirdPartyRootFolder, self.txtThirdPartyRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectProjectRoot, self.btnSelectThirdPartyRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectThirdPartyBinFolder)
@@ -67,6 +78,15 @@ class CSnakeGUIFrame(wx.Frame):
         # end wxGlade
         
         self.handler = csnGUIHandler.Handler()
+        redir=RedirectText(self.textLog)
+        sys.stdout=redir
+        sys.stderr=redir
+        print "Tip: it is convenient to have the Project Root and Bin Folder as subfolders of a common parent folder. For example,\n"
+        print "Project Root = <somepath>/TextEditorProject/source, \n"
+        print "Bin Folder = <somepath>/TextEditorProject/bin. \n"
+        print "Project Folder = <somepath>/TextEditorProject/source/TextEditorGUI.\n"
+        
+        self.commandCounter = 0
 
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
@@ -84,6 +104,9 @@ class CSnakeGUIFrame(wx.Frame):
         self.txtBinFolder.SetMinSize((-1, -1))
         self.txtBinFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectBinFolder.SetMinSize((30, -1))
+        self.txtInstallFolder.SetMinSize((-1, -1))
+        self.txtInstallFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
+        self.btnSelectInstallFolder.SetMinSize((30, -1))
         self.txtThirdPartyRootFolder.SetMinSize((-1, -1))
         self.txtThirdPartyRootFolder.SetToolTipString("Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.")
         self.btnSelectThirdPartyRootFolder.SetMinSize((30, -1))
@@ -102,6 +125,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.txtRootFolder.SetValue(self.recentFiles.rootFolder)
             self.txtThirdPartyRootFolder.SetValue(self.recentFiles.thirdPartyRootFolder)
             self.txtBinFolder.SetValue( self.recentFiles.source2BinaryFolder[self.txtRootFolder.GetValue()] )
+            self.txtInstallFolder.SetValue( self.recentFiles.source2InstallFolder[self.txtRootFolder.GetValue()] )
             self.txtThirdPartyBinFolder.SetValue( self.recentFiles.thirdPartySource2BinaryFolder[self.txtThirdPartyRootFolder.GetValue()] )
             self.txtInstance.SetValue(self.recentFiles.instance)
 
@@ -113,6 +137,7 @@ class CSnakeGUIFrame(wx.Frame):
         boxThirdPartyBinFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxThirdPartyRoot = wx.BoxSizer(wx.HORIZONTAL)
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        boxBinFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxBinFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxRootFolder = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
@@ -126,7 +151,7 @@ class CSnakeGUIFrame(wx.Frame):
         boxRootFolder_copy.Add(self.txtInstance, 2, wx.FIXED_MINSIZE, 0)
         sizer_3.Add(boxRootFolder_copy, 1, wx.EXPAND, 0)
         self.panelProjectAndInstance.SetSizer(sizer_3)
-        boxSettings.Add(self.panelProjectAndInstance, 1, wx.EXPAND, 0)
+        boxSettings.Add(self.panelProjectAndInstance, 0, wx.EXPAND, 0)
         boxRootFolder.Add(self.label_1, 0, wx.RIGHT, 5)
         boxRootFolder.Add(self.txtRootFolder, 2, wx.FIXED_MINSIZE, 0)
         boxRootFolder.Add(self.btnSelectRootFolder, 0, 0, 0)
@@ -135,8 +160,12 @@ class CSnakeGUIFrame(wx.Frame):
         boxBinFolder.Add(self.txtBinFolder, 2, wx.FIXED_MINSIZE, 0)
         boxBinFolder.Add(self.btnSelectBinFolder, 0, 0, 0)
         sizer_1.Add(boxBinFolder, 1, wx.EXPAND, 0)
+        boxBinFolder_copy.Add(self.label_2, 0, wx.RIGHT, 5)
+        boxBinFolder_copy.Add(self.txtInstallFolder, 2, wx.FIXED_MINSIZE, 0)
+        boxBinFolder_copy.Add(self.btnSelectInstallFolder, 0, 0, 0)
+        sizer_1.Add(boxBinFolder_copy, 1, wx.EXPAND, 0)
         self.panelSource.SetSizer(sizer_1)
-        boxSettings.Add(self.panelSource, 1, wx.EXPAND, 0)
+        boxSettings.Add(self.panelSource, 0, wx.EXPAND, 0)
         boxThirdPartyRoot.Add(self.label_1_copy_1, 0, wx.RIGHT, 5)
         boxThirdPartyRoot.Add(self.txtThirdPartyRootFolder, 2, wx.FIXED_MINSIZE, 0)
         boxThirdPartyRoot.Add(self.btnSelectThirdPartyRootFolder, 0, 0, 0)
@@ -146,8 +175,8 @@ class CSnakeGUIFrame(wx.Frame):
         boxThirdPartyBinFolder.Add(self.btnSelectThirdPartyBinFolder, 0, 0, 0)
         sizer_2.Add(boxThirdPartyBinFolder, 1, wx.EXPAND, 0)
         self.panelThirdParty.SetSizer(sizer_2)
-        boxSettings.Add(self.panelThirdParty, 1, wx.EXPAND, 0)
-        boxSettings.Add(self.text_ctrl_1, 2, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
+        boxSettings.Add(self.panelThirdParty, 0, wx.EXPAND, 0)
+        boxSettings.Add(self.textLog, 1, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
         boxBuildProject.Add(self.btnDoAction, 0, 0, 0)
         boxBuildProject.Add(self.cmbAction, 2, 0, 0)
         boxSettings.Add(boxBuildProject, 0, wx.EXPAND, 0)
@@ -158,14 +187,12 @@ class CSnakeGUIFrame(wx.Frame):
     def OnSelectProjectRoot(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Project Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            pass
-        event.Skip()
+            txtProjectRoot.SetValue(dlg.GetPath())
 
     def OnSelectBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Binary Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            pass
-        event.Skip()
+            txtBinFolder.SetValue(dlg.GetPath())
 
     def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         mapping = dict()
@@ -176,6 +203,7 @@ class CSnakeGUIFrame(wx.Frame):
 
     def StoreRecentFilesData(self):
         self.recentFiles.source2BinaryFolder[ self.txtRootFolder.GetValue() ] = self.txtBinFolder.GetValue()
+        self.recentFiles.source2InstallFolder[ self.txtRootFolder.GetValue() ] = self.txtInstallFolder.GetValue()
         self.recentFiles.thirdPartySource2BinaryFolder[ self.txtThirdPartyRootFolder.GetValue() ] = self.txtThirdPartyBinFolder.GetValue()
         self.recentFiles.projectFolder = self.txtProjectPath.GetValue()
         self.recentFiles.rootFolder = self.txtRootFolder.GetValue()
@@ -192,6 +220,8 @@ class CSnakeGUIFrame(wx.Frame):
     def OnTypingRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         if self.recentFiles.source2BinaryFolder.has_key(self.txtRootFolder.GetValue()):
             self.txtBinFolder.SetValue( self.recentFiles.source2BinaryFolder[self.txtRootFolder.GetValue()] )
+        if self.recentFiles.source2InstallFolder.has_key(self.txtRootFolder.GetValue()):
+            self.txtInstallFolder.SetValue( self.recentFiles.source2InstallFolder[self.txtRootFolder.GetValue()] )
 
     def OnTypingThirdPartyRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         if self.recentFiles.thirdPartySource2BinaryFolder.has_key(self.txtThirdPartyRootFolder.GetValue()):
@@ -203,20 +233,45 @@ class CSnakeGUIFrame(wx.Frame):
             pass
 
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
         self.StoreRecentFilesData()
-
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
+            
         if configureProject:
             self.handler.ConfigureProjectToBinFolder(
-                self.txtProjectPath.GetValue(), 
+                self.txtProjectPath.GetValue().replace("\\", "/"), 
                 self.txtInstance.GetValue(),
-                self.txtRootFolder.GetValue(),
-                self.txtBinFolder.GetValue(),
-                self.txtThirdPartyRootFolder.GetValue(),
-                self.txtThirdPartyBinFolder.GetValue(),
+                self.txtRootFolder.GetValue().replace("\\", "/"),
+                self.txtBinFolder.GetValue().replace("\\", "/"),
+                self.txtInstallFolder.GetValue().replace("\\", "/"),
+                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
+                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"),
                 alsoRunCMake)
-            
+
+        copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
+        if copyDlls:
+            self.handler.InstallThirdPartyBinariesToBinFolder(
+                self.txtProjectPath.GetValue().replace("\\", "/"), 
+                self.txtInstance.GetValue(),
+                self.txtRootFolder.GetValue().replace("\\", "/"),
+                self.txtBinFolder.GetValue().replace("\\", "/"),
+                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
+                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"))
+                
+        configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
+        if( configureThirdPartyFolder ):
+            self.handler.ConfigureThirdPartyFolder(
+                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
+                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"))
+
+        print "--- Done (command counter: %s) ---" % self.commandCounter
+        self.commandCounter += 1
+                
+    def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select Install Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            txtInstallFolder.SetValue(dlg.GetPath())
 
 # end of class CSnakeGUIFrame
 
@@ -234,3 +289,4 @@ class CSnakeGUIApp(wx.App):
 if __name__ == "__main__":
     app = CSnakeGUIApp(0)
     app.MainLoop()
+

@@ -2,6 +2,7 @@ import os.path
 import re
 import imp
 import csnBuild
+import sys
 
 def Log(logString):
         f = open("c:\\log.txt", 'a')
@@ -62,3 +63,5 @@ def GetDummyCppFilename():
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
     return csnBuild.root + "/CSnake/TemplateSourceFiles/csnake_dummy.cpp"
+
+UnloadAllModules()

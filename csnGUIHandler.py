@@ -1,7 +1,10 @@
 import os
 import sys
+import shutil
 import csnUtility
 import csnBuild
+import csnCilab
+import glob
 
 class RootNotFound(IOError):
     pass
@@ -64,10 +67,12 @@ class Handler:
     def Test():
         pass
         
-    def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
+    def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
+        """ Instantiates and returns the _instance in _projectPath. """
         (projectFolder, name) = os.path.split(_projectPath)
         (name, ext) = os.path.splitext(name)
-        binFolder = _binFolder.replace("\\", "/")
+        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder + "/thirdParty"
+        csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
         # extend python path with project folder, source root and third party root
         addedToPythonPath = set()
@@ -79,13 +84,52 @@ class Handler:
         csnUtility.UnloadAllModules()
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
-        generator = csnBuild.Generator()
-        generator.Generate(instance, binFolder)
-    
+
         # undo additions to the python path
         for path in addedToPythonPath:
             sys.path.remove(path)
             
+        return instance
+        
+    def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
+        logString = ""
+        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        generator = csnBuild.Generator()
+        instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
+        generator.Generate(instance, _binFolder, _installFolder)
+            
         if _alsoRunCMake:
-            fileCMakeLists = "%s/%s" % (binFolder, instance.cmakeListsSubpath)
-            os.system('cmake %s' % os.path.dirname(fileCMakeLists))
+            folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
+            os.chdir(_binFolder)
+            print os.popen('cmake %s' % folderCMakeLists).read()
+            
+    def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
+        """ 
+        This function copies all third party dlls to the binary folder, so that you can run the executables in the
+        binary folder without having to build the INSTALL target.
+        """
+        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        folders = dict()
+        folders["debug"] = "%s/bin/Debug" % _binFolder
+        folders["release"] = "%s/bin/Release" % _binFolder
+
+        instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
+        for mode in ("debug", "release"):
+            os.path.exists(folders[mode]) or os.makedirs(folders[mode])
+            for project in instance.GetProjectsToUse():
+                # print "%s\n" % project.name
+                for location in project.filesToInstall[mode].keys():
+                    for file in project.filesToInstall[mode][location]:
+                        absLocation = "%s/%s" % (folders[mode], location)
+                        # print "Copy %s to %s\n" % (file, absLocation)
+                        os.path.exists(absLocation) or os.makedirs(absLocation)
+                        shutil.copy(file, absLocation)
+             
+    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
+        """ 
+        Runs cmake to install the libraries in the third party folder.
+        """
+        os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
+        os.chdir(_thirdPartyBinFolder)
+        print os.popen('cmake %s' % _thirdPartyRootFolder).read()
+        

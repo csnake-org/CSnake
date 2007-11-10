@@ -2,9 +2,13 @@ import csnBuild
 import csnUtility
 import os.path
 
+thirdPartyModuleFolder = ""
+thirdPartyBinFolder = ""
+
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
-    folder = "D:\\Users\\Maarten\\Code\\ThirdParty\\thirdParty\\%s" % (_subFolder)
+    assert thirdPartyModuleFolder != ""
+    folder = "%s\\%s" % (thirdPartyModuleFolder, _subFolder)
     return csnUtility.LoadModule(folder, _name)
 
 def AddCilabLibraryModules(_project, _libModules):
@@ -113,6 +117,8 @@ class GimiasPluginProject(csnBuild.Project):
     def __init__(self, _name, _callerDepth = 1):
         csnBuild.Project.__init__(self, _name, "dll", _callerDepth + 1)
         self.widgetProject = csnBuild.Project(self.name + "_Widgets", "library", _callerDepth + 1)
+        self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
+        self.AddPublicIncludeFolders(["."])
         
     def AddWidgetModules(self, _widgetModules, _dependencyProjects, _dependOnWidgetProject = 1):
         """
