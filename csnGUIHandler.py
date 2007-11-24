@@ -81,7 +81,6 @@ class Handler:
                 sys.path.append(path)
                 addedToPythonPath.add(path)
     
-        csnUtility.UnloadAllModules()
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
 

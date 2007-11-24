@@ -169,6 +169,9 @@ class Generator:
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
+            # add standard definition to allow multiply defined symbols in the linker
+            f.write( "SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")" % _targetProject.name)
+            
             # add install rule
             if( _installFolder != "" and _targetProject.type != "library"):
                 destination = "%s/%s" % (_installFolder, _targetProject.installSubFolder)
@@ -348,9 +351,10 @@ class Project:
                 raise IOError, "Path file not found %s" % (sourceFile)
             
             for source in sources:
+                if _moc and not source in self.sourcesToBeMoced:
+                    self.sourcesToBeMoced.append(source)
+                
                 if( not source in self.sources and not source in self.sourcesToBeUIed ):
-                    if( _moc ):
-                        self.sourcesToBeMoced.append(source)
                     if( _ui ):
                         self.sourcesToBeUIed.append(source)
                     else:

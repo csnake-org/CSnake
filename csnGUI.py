@@ -214,7 +214,6 @@ class CSnakeGUIFrame(wx.Frame):
         f.close()
     
     def OnTypingProjectPath(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        print "Event handler `OnTypingProjectFolder' not implemented"
         event.Skip()
 
     def OnTypingRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>

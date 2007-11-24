@@ -46,9 +46,6 @@ def LoadModule(_folder, _name):
                 file.close()
     return result
 
-def UnloadAllModules():
-    loadedModules.clear()
-    
 def FileToString(_filename):
     x = ""
     if( os.path.exists(_filename) ):
@@ -63,5 +60,3 @@ def GetDummyCppFilename():
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
     return csnBuild.root + "/CSnake/TemplateSourceFiles/csnake_dummy.cpp"
-
-UnloadAllModules()
