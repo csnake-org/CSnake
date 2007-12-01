@@ -2,10 +2,11 @@ import os.path
 import re
 import imp
 import csnBuild
+import csnUtility
 import sys
 
 def Log(logString):
-        f = open("c:\\log.txt", 'a')
+        f = open("F:\\log.txt", 'a')
         f.write(logString)
         f.close()
 
@@ -36,6 +37,7 @@ def LoadModule(_folder, _name):
     if loadedModules.has_key(key):
         result = loadedModules[key]
     else:
+        print "LoadModule %s in %s" % (_name, _folder)
         found = imp.find_module(_name, [_folder])
         if found:
             (file, pathname, description) = found
@@ -44,6 +46,7 @@ def LoadModule(_folder, _name):
                 loadedModules[key] = result
             finally:
                 file.close()
+        print "...Finished LoadModule %s in %s" % (_name, _folder)
     return result
 
 def FileToString(_filename):

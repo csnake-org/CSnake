@@ -4,6 +4,7 @@ import os.path
 
 thirdPartyModuleFolder = ""
 thirdPartyBinFolder = ""
+defaultLibType = "dll"
 
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """

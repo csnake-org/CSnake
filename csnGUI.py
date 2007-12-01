@@ -264,7 +264,8 @@ class CSnakeGUIFrame(wx.Frame):
                 self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
                 self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"))
 
-        print "--- Done (command counter: %s) ---" % self.commandCounter
+        print "--- Done (command counter: %s) ---\n" % self.commandCounter
+        print "Python module reloading not implemented.\nIf you change your configuration files then you should restart CSnake GUI (i.e. this program).\n"
         self.commandCounter += 1
                 
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>

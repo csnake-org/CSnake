@@ -169,6 +169,13 @@ class Generator:
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
+            # write section for sorting moc and ui files in a separate folder in Visual Studio
+            f.write( "\n # Create source groups \n" )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"Generated MOC Files\" REGULAR_EXPRESSION moc_[a-zA-Z0-9_]*[.]cxx$)\n")
+            f.write( "  SOURCE_GROUP(\"Forms\" REGULAR_EXPRESSION [.]ui$)\n")
+            f.write( "ENDIF(WIN32)\n\n" )
+            
             # add standard definition to allow multiply defined symbols in the linker
             f.write( "SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")" % _targetProject.name)
             
@@ -354,11 +361,10 @@ class Project:
                 if _moc and not source in self.sourcesToBeMoced:
                     self.sourcesToBeMoced.append(source)
                 
-                if( not source in self.sources and not source in self.sourcesToBeUIed ):
+                if( not source in self.sources ):
                     if( _ui ):
                         self.sourcesToBeUIed.append(source)
-                    else:
-                        self.sources.append(source)
+                    self.sources.append(source)
 
     def AddFilesToInstall(self, _listOfFiles, _location = '.', _debugOnly = 0, _releaseOnly = 0):
         """
@@ -586,6 +592,10 @@ class Project:
         if( len(self.definitions["ALL"]["public"]) ):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions["ALL"]["public"]) )
    
+        # write definitions that state whether this is a static library
+        #if self.type == "library":
+        #    f.write( "ADD_DEFINITIONS(%sSTATIC)\n" % self.name )
+            
     def GetPathToConfigFile(self, _binaryFolder):
         """ 
         Returns self.useFilePath if it is absolute. Otherwise, returns _binaryFolder + self.useFilePath.
