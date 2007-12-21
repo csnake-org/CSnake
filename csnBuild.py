@@ -89,7 +89,7 @@ class Generator:
         os.path.exists(binaryProjectFolder) or os.makedirs(binaryProjectFolder)
     
         # create Win32Header
-        if( _targetProject.type != "executable" ):
+        if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
             if not binaryProjectFolder in _targetProject.publicIncludeFolders:
                 _targetProject.publicIncludeFolders.append(binaryProjectFolder)
@@ -293,6 +293,7 @@ class Project:
     self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
     self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
     self.publicLibraries -- List of linker inputs required to build a target that uses this project.
+    self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     """
     
     def __init__(self, _name, _type, _callerDepth = 1):
@@ -326,6 +327,7 @@ class Project:
         self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
         self.projects = set()
         self.projectsNonRequired = set()
+        self.generateWin32Header = 1
         
     def AddProjects(self, _projects, _dependency = 1):
         """ 
@@ -627,4 +629,10 @@ class Project:
                         for dll in glob.glob(path):
                             newList.append(dll)
                     project.filesToInstall[mode][location] = newList
-        
+    
+    def SetGenerateWin32Header(self, _flag):
+        self.generateWin32Header = _flag
+
+    def GetGenerateWin32Header(self):
+        return self.generateWin32Header
+           

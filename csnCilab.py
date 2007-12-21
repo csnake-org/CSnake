@@ -73,6 +73,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
         sourceFiles = _holderProject.Glob("%s/*.cpp" % (moduleFolder))
         sourceFiles.extend(_holderProject.Glob("%s/*.cxx" % (moduleFolder)))
         sourceFiles.extend(_holderProject.Glob("%s/*.cc" % (moduleFolder)))
+        headerFiles = _holderProject.Glob("%s/*.h" % (moduleFolder))
         
         for sourceFile in sourceFiles:
             if os.path.isdir(sourceFile):
@@ -82,8 +83,11 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             app.AddPublicIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])
+            # add header files so that they appear in visual studio
+            app.AddSources(headerFiles)
             _holderProject.AddProjects([app])
 
+        
 class CilabModuleProject(csnBuild.Project):
     """
     This class is used to build a library coming from the CilabModules folder. Use AddLibraryModules to create libraries
