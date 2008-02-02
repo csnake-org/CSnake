@@ -8,7 +8,7 @@ import pickle
 import os.path
 import sys
 
-thisFolder = "%s" % (os.path.dirname(__file__))
+thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
 thisFolder = thisFolder.replace("\\", "/")
 recentFilesFilename = "%s/recentFiles" % thisFolder
 

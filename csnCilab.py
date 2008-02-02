@@ -26,6 +26,8 @@ def AddCilabLibraryModules(_project, _libModules):
         if( os.path.exists(srcFolderAbs) ):
             _project.AddPublicIncludeFolders([srcFolder])
             _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
+            _project.AddSources(["%s/*.h" % srcFolder], _checkExists = 0)
+            _project.AddSources(["%s/*.hpp" % srcFolder], _checkExists = 0)
         if( len(_project.sources) == 0 ):
             _project.AddSources([csnUtility.GetDummyCppFilename()])
             

@@ -16,6 +16,7 @@ import traceback
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI!
 # - create convenience module csnCilab3rdParty with attributes csnThirdParty.itk, csnThirdParty.vtk, etc
 # - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
+# - install msvcp.dll and mitkstatemachine.xml
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -131,7 +132,7 @@ class Generator:
         if( len(_targetProject.sourcesToBeMoced) ):
             cmakeMocInputVarName = "MOC_%s" % (_targetProject.name)
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
-            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced)) )
+            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced, _addQuotes = 1)) )
             
         # generate ui files
         cmakeUIHInputVar = ""
@@ -141,7 +142,7 @@ class Generator:
             cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
             cmakeUICppInputVarName = "UI_CPP_%s" % (_targetProject.name)
             cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
-            f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (_targetProject.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(_targetProject.sourcesToBeUIed)) )
+            f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (_targetProject.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(_targetProject.sourcesToBeUIed, _addQuotes = 1)) )
             
         # write section that is specific for the project type        
         if( len(_targetProject.sources) ):
@@ -158,13 +159,13 @@ class Generator:
             
             # add sources
             if(_targetProject.type == "executable" ):
-                f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
                 
             elif(_targetProject.type == "library" ):
-                f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
             
             elif(_targetProject.type == "dll" ):
-                f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources)) )
+                f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
                 
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
@@ -360,6 +361,7 @@ class Project:
                 raise IOError, "Path file not found %s" % (sourceFile)
             
             for source in sources:
+                # csnUtility.Log("Adding %s\n" % (source))
                 if _moc and not source in self.sourcesToBeMoced:
                     self.sourcesToBeMoced.append(source)
                 
@@ -567,9 +569,9 @@ class Project:
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders)) )
-        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders)) )
-        f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries, _addQuotes = 1)) )
 
     def GenerateUseFile(self, _binaryFolder):
         """

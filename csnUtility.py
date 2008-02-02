@@ -15,13 +15,18 @@ def HasBackSlash(_path):
     m = p.match( _path )
     return m
 
-def Join(theList):
+def Join(_theList, _addQuotes = 0):
     """
     Returns a string that contains the items of theList separated by spaces.
+    _addQuotes - If true, then each item is also placed in "quotes".
     """
     all = ""
-    for x in theList:
-        all = all + str(x) + " "
+    
+    for x in _theList:
+        item = str(x)
+        if _addQuotes:
+            item = '"' + item + '"'
+        all = all + item + " "
     return all
 
 # used by LoadModule

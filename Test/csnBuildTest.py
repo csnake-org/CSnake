@@ -137,7 +137,7 @@ class ProjectTest(unittest.TestCase):
 		""" Test that globbing source files works. """
 		p = csnBuild.Project("DummyDll", "dll")
 		p.AddSources(["Dummy*/*.h"])
-		assert len(p.sources) == 2, csnBuild.Join(p.sources)
+		assert len(p.sources) == 2, csnBuild.Join(p.sources, _addQuotes = 1)
 		
 	def testNameConflict(self):
 		""" Test that two projects cannot have the same name. """
