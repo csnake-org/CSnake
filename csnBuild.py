@@ -65,16 +65,16 @@ class Generator:
         if( _knownProjectNames is None ):
             _knownProjectNames = []
 
+        #csnUtility.Log("Generate %s\n" % (_targetProject.name))
+        #for project in _generatedList:
+        #    csnUtility.Log("Already generated %s\n" % (project.name))
+        #csnUtility.Log("---\n")
+
         if( _targetProject.name in _knownProjectNames):
-            raise NameError, "Each project of must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
+            raise NameError, "Each project must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
         else:
             _knownProjectNames.append(_targetProject.name)
             
-        # csnUtility.Log("Generate %s\n" % (_targetProject.name))
-        # for project in _generatedList:
-        #     csnUtility.Log("Already generated %s\n" % (project.name))
-        # csnUtility.Log("---\n")
-        
         # trying to Generate a project twice indicates a logical error in the code        
         assert not _targetProject in _generatedList, "Target project name = %s" % (_targetProject.name)
         _generatedList.append(_targetProject)
@@ -212,8 +212,10 @@ class Generator:
 
         # generate projects, and add a line with ADD_SUBDIRECTORY
         for project in projectsToGenerate:
-            f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
-            self.Generate(project, _binaryFolder, _installFolder, _generatedList, _knownProjectNames)
+            # check again if a previous iteration of this loop didn't add project to the generated list
+            if not project in _generatedList:
+                f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
+                self.Generate(project, _binaryFolder, _installFolder, _generatedList, _knownProjectNames)
            
         # add dependencies
         f.write( "\n" )
