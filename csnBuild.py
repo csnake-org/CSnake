@@ -9,14 +9,16 @@ import traceback
 
 # ToDo:
 # - Have public and private related projects (hide the include paths from its clients)
-# - Unloading all modules in csnCilab.LoadModule does not work (it will reload the >cached< module). This makes it impossible
-# to use changed csn files while the GUI is still running. Need to replace imp. Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
+# - Unloading all modules in csnCilab.LoadModule does not work (it will reload the >cached< module). 
+# This makes it impossible to use changed csn files while the GUI is still running. 
+# Need to replace the 'imp' approach. 
+# Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
 # - Use environment variables to work around the cmake propagation behaviour
 # - Support precompiled headers somehow
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI!
-# - create convenience module csnCilab3rdParty with attributes csnThirdParty.itk, csnThirdParty.vtk, etc
 # - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
 # - install msvcp.dll and mitkstatemachine.xml
+# - extend csnGUI with the option of additional root folders
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -215,7 +217,7 @@ class Generator:
            
         # add dependencies
         f.write( "\n" )
-        for project in requiredProjects:
+        for project in _targetProject.RequiredProjects(_recursive = 0):
             if( len(project.sources) ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
         
@@ -293,21 +295,22 @@ class Project:
     self.projectsNonRequired = Subset of self.projects. Contains projects that self doesn't depend on.
     self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
     self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
-    self.publicLibraries -- List of linker inputs required to build a target that uses this project.
+    self.publicLibraries -- Dictionary (WIN32/NOT WIN32/ALL -> libraries) of linker inputs required to build a target that uses this project.
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     """
     
     def __init__(self, _name, _type, _callerDepth = 1):
         self.publicIncludeFolders = []
         self.publicLibraryFolders = []
-        self.publicLibraries = []
         self.sources = []
 
         self.definitions = dict()
+        self.publicLibraries = dict()
         for cat in ["WIN32", "NOT WIN32", "ALL"]:
             self.definitions[cat] = dict()
             self.definitions[cat]["public"] = list()
             self.definitions[cat]["private"] = list()
+            self.publicLibraries[cat] = list()
 
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
@@ -395,13 +398,7 @@ class Project:
         """
         Adds items to self.definitions. 
         """
-        if( _WIN32 and _NOT_WIN32 ):
-            _WIN32 = _NOT_WIN32 = 0
-        compiler = "ALL"
-        if( _WIN32 ):
-            compiler = "WIN32"
-        elif( _NOT_WIN32 ):
-            compiler = "NOT WIN32"
+        compiler = self.__GetCompilerCategory(_WIN32, _NOT_WIN32)            
     
         mode = "public"
         if( _private ):
@@ -427,7 +424,7 @@ class Project:
         for libraryFolder in _listOfLibraryFolders:
             self.publicLibraryFolders.append( self.__FindPath(libraryFolder) )
         
-    def AddPublicLibraries(self, _type, _listOfLibraries):
+    def AddPublicLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.publicLibraries. 
         _type - Should be \"debug\", \"optimized\" or \"all\".
@@ -435,10 +432,25 @@ class Project:
         assert _type in ("debug", "optimized", "all"), "%s not any of (\"debug\", \"optimized\", \"all\"" % (_type)
         if( _type == "all" ):
             _type = ""
+
+        compilerCat = self.__GetCompilerCategory(_WIN32, _NOT_WIN32)            
             
         for library in _listOfLibraries:
-            self.publicLibraries.append("%s %s" % (_type, library))
+            self.publicLibraries[compilerCat].append("%s %s" % (_type, library))
             
+    def __GetCompilerCategory(self, _WIN32, _NOT_WIN32):
+        """
+        Returns "ALL", "WIN32" or "NOT WIN32" 
+        """
+        if( _WIN32 and _NOT_WIN32 ):
+            _WIN32 = _NOT_WIN32 = 0
+        compiler = "ALL"
+        if( _WIN32 ):
+            compiler = "WIN32"
+        elif( _NOT_WIN32 ):
+            compiler = "NOT WIN32"
+        return compiler
+        
     def __FindPath(self, _path):
         """ 
         Tries to locate _path as an absolute path or as a path relative to self.sourceRootFolder. 
@@ -555,7 +567,7 @@ class Project:
                 continue
             else:
                 result.append(project)
-                
+          
         return result
         
     def GenerateConfigFile(self, _binaryFolder):
@@ -571,7 +583,13 @@ class Project:
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders, _addQuotes = 1)) )
-        f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries, _addQuotes = 1)) )
+        for cat in ["WIN32", "NOT WIN32"]:
+            if( len(self.publicLibraries[cat]) ):
+                f.write( "IF(%s)\n" % (cat))
+                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries[cat], _addQuotes = 1)) )
+                f.write( "ENDIF(%s)\n" % (cat))
+        if( len(self.publicLibraries["ALL"]) ):
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(self.publicLibraries["ALL"], _addQuotes = 1)) )
 
     def GenerateUseFile(self, _binaryFolder):
         """
