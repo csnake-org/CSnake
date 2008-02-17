@@ -49,14 +49,21 @@ def Caller(up=0):
     f = traceback.extract_stack(limit=up+2)
     return f[0]
         
+class OpSysSection:
+    """ 
+    Helper class for OpSys 
+    """
+    def __init__(self):
+        self.definitions = list()
+        self.libraries = list()
+
 class OpSys:
     """ 
     Helper class that contains the settings on an operating system 
     """
     def __init__(self):
-        self.publicDefinitions = list()
-        self.privateDefinitions = list()
-        self.publicLibraries = list()
+        self.public = OpSysSection()
+        self.private = OpSysSection()
             
 class Generator:
     """
@@ -99,7 +106,10 @@ class Generator:
         if( _targetProject.type == "third party" ):
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
-            
+         
+        # this is the OpSys instance for all operating systems
+        opSysAll = _targetProject.opSystems["ALL"]
+           
         # create binary project folder
         binaryProjectFolder = _binaryFolder + "/" + _targetProject.binarySubfolder
         os.path.exists(binaryProjectFolder) or os.makedirs(binaryProjectFolder)
@@ -166,13 +176,12 @@ class Generator:
             # add definitions
             for opSysName in ["WIN32", "NOT WIN32"]:
                 opSys = _targetProject.opSystems[opSysName]
-                if( len(opSys.privateDefinitions) ):
+                if( len(opSys.private.definitions) ):
                     f.write( "IF(%s)\n" % (opSysName))
-                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.privateDefinitions) )
+                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.private.definitions) )
                     f.write( "ENDIF(%s)\n" % (opSysName))
-            opSys = _targetProject.opSystems["ALL"]
-            if( len(opSys.privateDefinitions) ):
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.privateDefinitions) )
+            if( len(opSysAll.private.definitions) ):
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSysAll.private.definitions) )
             
             # add sources
             if(_targetProject.type == "executable" ):
@@ -414,9 +423,9 @@ class Project:
         opSystemName = self.__GetOpSysName(_WIN32, _NOT_WIN32)            
         opSys = self.opSystems[opSystemName]
         if( _private ):
-            opSys.privateDefinitions.extend(_listOfDefinitions)
+            opSys.private.definitions.extend(_listOfDefinitions)
         else:
-            opSys.publicDefinitions.extend(_listOfDefinitions)
+            opSys.public.definitions.extend(_listOfDefinitions)
         
     def AddPublicIncludeFolders(self, _listOfIncludeFolders):
         """
@@ -449,7 +458,7 @@ class Project:
         opSys = self.opSystems[opSysName]            
             
         for library in _listOfLibraries:
-            opSys.publicLibraries.append("%s %s" % (_type, library))
+            opSys.public.libraries.append("%s %s" % (_type, library))
             
     def __GetOpSysName(self, _WIN32, _NOT_WIN32):
         """
@@ -598,13 +607,13 @@ class Project:
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders, _addQuotes = 1)) )
         for opSysName in ["WIN32", "NOT WIN32"]:
             opSys = self.opSystems[opSysName]
-            if( len(opSys.publicLibraries) ):
+            if( len(opSys.public.libraries) ):
                 f.write( "IF(%s)\n" % (opSysName))
-                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(opSys.publicLibraries, _addQuotes = 1)) )
+                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(opSys.public.libraries, _addQuotes = 1)) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        opSys = self.opSystems["ALL"]
-        if( len(opSys.publicLibraries) ):
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(opSys.publicLibraries, _addQuotes = 1)) )
+        opSysAll = self.opSystems["ALL"]
+        if( len(opSysAll.public.libraries) ):
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(opSysAll.public.libraries, _addQuotes = 1)) )
 
     def GenerateUseFile(self, _binaryFolder):
         """
@@ -623,13 +632,13 @@ class Project:
         # write definitions     
         for opSysName in ["WIN32", "NOT WIN32"]:
             opSys = self.opSystems[opSysName]
-            if( len(opSys.publicDefinitions) ):
+            if( len(opSys.public.definitions) ):
                 f.write( "IF(%s)\n" % (opSysName))
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.publicDefinitions) )
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.public.definitions) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        opSys = self.opSystems["ALL"]
-        if( len(opSys.publicDefinitions) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.publicDefinitions) )
+        opSysAll = self.opSystems["ALL"]
+        if( len(opSysAll.public.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSysAll.public.definitions) )
    
         # write definitions that state whether this is a static library
         #if self.type == "library":
