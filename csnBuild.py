@@ -319,6 +319,12 @@ PrecompiledHeaderFile="%s"
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 """ % pchCppFilename             
@@ -520,7 +526,9 @@ class Project:
         If _precompiledHeader is not "", then precompiled headers are used in Visual Studio (Windows) with
         this filename. 
         """
-        self.precompiledHeader = _precompiledHeader
+        globResult = self.Glob(_precompiledHeader)
+        assert len(globResult) == 1, "Error locating precompiled header file %s" % _precompiledHeader
+        self.precompiledHeader = globResult[0]
         
     def AddPublicLibraryFolders(self, _listOfLibraryFolders):
         """
