@@ -13,12 +13,16 @@ import traceback
 # This makes it impossible to use changed csn files while the GUI is still running. 
 # Need to replace the 'imp' approach. 
 # Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
-# - Use environment variables to work around the cmake propagation behaviour
-# - Support precompiled headers somehow
-# - csn python modules can contain option widgets that are loaded into CSnakeGUI!
+# - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
+# - Support precompiled headers by patching the produces vcproj files
+# - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add
+# selection of desired toolkit modules in csnGIMIAS
 # - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
 # - install msvcp.dll and mitkstatemachine.xml
 # - extend csnGUI with the option of additional root folders
+# - support installing subtrees to the binfolder, so that the cardiacplugin functions correctly 
+# (it needs bin/debug/plugins/cardiacsegmpl/data)
+
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -45,6 +49,15 @@ def Caller(up=0):
     f = traceback.extract_stack(limit=up+2)
     return f[0]
         
+class OpSys:
+    """ 
+    Helper class that contains the settings on an operating system 
+    """
+    def __init__(self):
+        self.publicDefinitions = list()
+        self.privateDefinitions = list()
+        self.publicLibraries = list()
+            
 class Generator:
     """
     Generates the CMakeLists.txt for a csnBuild.Project.
@@ -151,13 +164,15 @@ class Generator:
             f.write( "\n# Add target\n" )
             
             # add definitions
-            for cat in ["WIN32", "NOT WIN32"]:
-                if( len(_targetProject.definitions[cat]["private"]) ):
-                    f.write( "IF(%s)\n" % (cat))
-                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions[cat]["private"]) )
-                    f.write( "ENDIF(%s)\n" % (cat))
-            if( len(_targetProject.definitions["ALL"]["private"]) ):
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(_targetProject.definitions["ALL"]["private"]) )
+            for opSysName in ["WIN32", "NOT WIN32"]:
+                opSys = _targetProject.opSystems[opSysName]
+                if( len(opSys.privateDefinitions) ):
+                    f.write( "IF(%s)\n" % (opSysName))
+                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.privateDefinitions) )
+                    f.write( "ENDIF(%s)\n" % (opSysName))
+            opSys = _targetProject.opSystems["ALL"]
+            if( len(opSys.privateDefinitions) ):
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.privateDefinitions) )
             
             # add sources
             if(_targetProject.type == "executable" ):
@@ -219,7 +234,7 @@ class Generator:
            
         # add dependencies
         f.write( "\n" )
-        for project in _targetProject.RequiredProjects(_recursive = 0):
+        for project in requiredProjects:
             if( len(project.sources) ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
         
@@ -285,7 +300,7 @@ class Project:
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
     self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
-    self.definitions -- Dictionary (public/private -> WIN32/NOT WIN32/ALL -> definition) with definitions to be used by the pre-processor when building this target. 
+    self.opSystems -- Dictionary (WIN32/NOT WIN32/ALL -> OpSys) with definitions to be used for different operating systems. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
@@ -297,7 +312,6 @@ class Project:
     self.projectsNonRequired = Subset of self.projects. Contains projects that self doesn't depend on.
     self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
     self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
-    self.publicLibraries -- Dictionary (WIN32/NOT WIN32/ALL -> libraries) of linker inputs required to build a target that uses this project.
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     """
     
@@ -306,13 +320,10 @@ class Project:
         self.publicLibraryFolders = []
         self.sources = []
 
-        self.definitions = dict()
-        self.publicLibraries = dict()
-        for cat in ["WIN32", "NOT WIN32", "ALL"]:
-            self.definitions[cat] = dict()
-            self.definitions[cat]["public"] = list()
-            self.definitions[cat]["private"] = list()
-            self.publicLibraries[cat] = list()
+        self.opSystems = dict()
+        for opSysName in ["WIN32", "NOT WIN32", "ALL"]:
+            opSys = OpSys()
+            self.opSystems[opSysName] = opSys
 
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
@@ -398,15 +409,14 @@ class Project:
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
-        Adds items to self.definitions. 
+        Adds definitions to self.opSystems. 
         """
-        compiler = self.__GetCompilerCategory(_WIN32, _NOT_WIN32)            
-    
-        mode = "public"
+        opSystemName = self.__GetOpSysName(_WIN32, _NOT_WIN32)            
+        opSys = self.opSystems[opSystemName]
         if( _private ):
-            mode = "private"
-        
-        self.definitions[compiler][mode].extend(_listOfDefinitions)
+            opSys.privateDefinitions.extend(_listOfDefinitions)
+        else:
+            opSys.publicDefinitions.extend(_listOfDefinitions)
         
     def AddPublicIncludeFolders(self, _listOfIncludeFolders):
         """
@@ -435,12 +445,13 @@ class Project:
         if( _type == "all" ):
             _type = ""
 
-        compilerCat = self.__GetCompilerCategory(_WIN32, _NOT_WIN32)            
+        opSysName = self.__GetOpSysName(_WIN32, _NOT_WIN32)
+        opSys = self.opSystems[opSysName]            
             
         for library in _listOfLibraries:
-            self.publicLibraries[compilerCat].append("%s %s" % (_type, library))
+            opSys.publicLibraries.append("%s %s" % (_type, library))
             
-    def __GetCompilerCategory(self, _WIN32, _NOT_WIN32):
+    def __GetOpSysName(self, _WIN32, _NOT_WIN32):
         """
         Returns "ALL", "WIN32" or "NOT WIN32" 
         """
@@ -585,13 +596,15 @@ class Project:
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders, _addQuotes = 1)) )
-        for cat in ["WIN32", "NOT WIN32"]:
-            if( len(self.publicLibraries[cat]) ):
-                f.write( "IF(%s)\n" % (cat))
-                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(self.publicLibraries[cat], _addQuotes = 1)) )
-                f.write( "ENDIF(%s)\n" % (cat))
-        if( len(self.publicLibraries["ALL"]) ):
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(self.publicLibraries["ALL"], _addQuotes = 1)) )
+        for opSysName in ["WIN32", "NOT WIN32"]:
+            opSys = self.opSystems[opSysName]
+            if( len(opSys.publicLibraries) ):
+                f.write( "IF(%s)\n" % (opSysName))
+                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(opSys.publicLibraries, _addQuotes = 1)) )
+                f.write( "ENDIF(%s)\n" % (opSysName))
+        opSys = self.opSystems["ALL"]
+        if( len(opSys.publicLibraries) ):
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(opSys.publicLibraries, _addQuotes = 1)) )
 
     def GenerateUseFile(self, _binaryFolder):
         """
@@ -608,13 +621,15 @@ class Project:
         f.write( "LINK_LIBRARIES(${%s_LIBRARIES})\n" % (self.name) )
 
         # write definitions     
-        for cat in ["WIN32", "NOT WIN32"]:
-            if( len(self.definitions[cat]["public"]) ):
-                f.write( "IF(%s)\n" % (cat))
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions[cat]["public"]) )
-                f.write( "ENDIF(%s)\n" % (cat))
-        if( len(self.definitions["ALL"]["public"]) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.definitions["ALL"]["public"]) )
+        for opSysName in ["WIN32", "NOT WIN32"]:
+            opSys = self.opSystems[opSysName]
+            if( len(opSys.publicDefinitions) ):
+                f.write( "IF(%s)\n" % (opSysName))
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.publicDefinitions) )
+                f.write( "ENDIF(%s)\n" % (opSysName))
+        opSys = self.opSystems["ALL"]
+        if( len(opSys.publicDefinitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.publicDefinitions) )
    
         # write definitions that state whether this is a static library
         #if self.type == "library":
