@@ -56,6 +56,8 @@ class OpSysSection:
     def __init__(self):
         self.definitions = list()
         self.libraries = list()
+        self.includeFolders = list()
+        self.libraryFolders = list()
 
 class OpSys:
     """ 
@@ -117,8 +119,8 @@ class Generator:
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
-            if not binaryProjectFolder in _targetProject.publicIncludeFolders:
-                _targetProject.publicIncludeFolders.append(binaryProjectFolder)
+            if not binaryProjectFolder in opSysAll.public.includeFolders:
+                opSysAll.public.includeFolders.append(binaryProjectFolder)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolder, _targetProject.cmakeListsSubpath)
@@ -319,14 +321,10 @@ class Project:
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
     self.projectsNonRequired = Subset of self.projects. Contains projects that self doesn't depend on.
-    self.publicIncludeFolders -- List of include search folders required to build a target that uses this project.
-    self.publicLibraryFolders -- List of library search folders required to build a target that uses this project.
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     """
     
     def __init__(self, _name, _type, _callerDepth = 1):
-        self.publicIncludeFolders = []
-        self.publicLibraryFolders = []
         self.sources = []
 
         self.opSystems = dict()
@@ -433,8 +431,9 @@ class Project:
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added include paths must exist on the filesystem.
         """
+        opSysAll = self.opSystems["ALL"]
         for includeFolder in _listOfIncludeFolders:
-            self.publicIncludeFolders.append( self.__FindPath(includeFolder) )
+            opSysAll.public.includeFolders.append( self.__FindPath(includeFolder) )
         
     def AddPublicLibraryFolders(self, _listOfLibraryFolders):
         """
@@ -442,8 +441,9 @@ class Project:
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
+        opSysAll = self.opSystems["ALL"]
         for libraryFolder in _listOfLibraryFolders:
-            self.publicLibraryFolders.append( self.__FindPath(libraryFolder) )
+            opSysAll.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
     def AddPublicLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
         """
@@ -599,12 +599,14 @@ class Project:
         fileConfig = "%s/%s" % (_binaryFolder, self.configFilePath)
         f = open(fileConfig, 'w')
         
+        opSysAll = self.opSystems["ALL"]
+        
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicIncludeFolders, _addQuotes = 1)) )
-        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(self.publicLibraryFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.includeFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.libraryFolders, _addQuotes = 1)) )
         for opSysName in ["WIN32", "NOT WIN32"]:
             opSys = self.opSystems[opSysName]
             if( len(opSys.public.libraries) ):
