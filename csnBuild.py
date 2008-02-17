@@ -278,18 +278,17 @@ class Generator:
         Apply post-processing after the CMake generation only for _project (not its children).
         """
         binaryProjectFolder = _binaryFolder + "/" + _project.binarySubfolder
+        # vc proj to patch
+        vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
 
-        # to do: don't patch vcproj again if the original vcproj is still the same          
-        if _project.precompiledHeader != "":
-            # vc proj to patch
-            vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
+        # if there is a vcproj, and we want a precompiled header
+        if _project.precompiledHeader != "" and os.path.exists(vcprojFilename):
             # binary pch file to generate
             pchFilename = "%s/%s.pch" % (binaryProjectFolder, _project.name)
             # this is the name of the cpp file that will build the precompiled headers
             pchCppFilename = "%sPCH.cpp" % (_project.name)
 
             # patch the vcproj            
-            assert os.path.exists(vcprojFilename), "File not found %s\n" % (vcprojFilename)
             f = open(vcprojFilename, 'r')
             vcproj = f.read()
             f.close()
