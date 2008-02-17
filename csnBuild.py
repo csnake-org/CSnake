@@ -265,6 +265,83 @@ class Generator:
                         
         f.close()
 
+    def PostProcess(self, _targetProject, _binaryFolder):
+        """
+        Apply post-processing after the CMake generation for _targetProject and all its child projects.
+        """
+        self.PostProcessOneProject(_targetProject, _binaryFolder)
+        for project in _targetProject.projects:
+            self.PostProcessOneProject(project, _binaryFolder)
+        
+    def PostProcessOneProject(self, _project, _binaryFolder):
+        """
+        Apply post-processing after the CMake generation only for _project (not its children).
+        """
+        binaryProjectFolder = _binaryFolder + "/" + _project.binarySubfolder
+
+        # to do: don't patch vcproj again if the original vcproj is still the same          
+        if _project.precompiledHeader != "":
+            # vc proj to patch
+            vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
+            # binary pch file to generate
+            pchFilename = "%s/%s.pch" % (binaryProjectFolder, _project.name)
+            # this is the name of the cpp file that will build the precompiled headers
+            pchCppFilename = "%sPCH.cpp" % (_project.name)
+
+            # patch the vcproj            
+            assert os.path.exists(vcprojFilename), "File not found %s\n" % (vcprojFilename)
+            f = open(vcprojFilename, 'r')
+            vcproj = f.read()
+            f.close()
+            vcprojOrg = vcproj 
+            
+            # add project pch settings
+            searchString = "RuntimeTypeInfo=\"TRUE\"\n"
+            replaceString = """RuntimeTypeInfo="TRUE"
+UsePrecompiledHeader="3"
+PrecompiledHeaderThrough="%s" 
+PrecompiledHeaderFile="%s"
+""" % (_project.precompiledHeader, pchFilename)
+            vcproj = vcproj.replace(searchString, replaceString)
+            
+            # add pchCpp to the solution
+            searchString = "<Files>\n"
+            replaceString = """
+    <Files>
+		<Filter
+			Name="PCH Files"
+			Filter="">
+			<File
+				RelativePath="%s">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+""" % pchCppFilename             
+            vcproj = vcproj.replace(searchString, replaceString)
+            
+            # force include of the pch header file
+            searchString = "CompileAs=\"2\"\n"
+            replaceString = """CompileAs="2"
+ForcedIncludeFiles="%s"
+""" % _project.precompiledHeader
+            vcproj = vcproj.replace(searchString, replaceString)
+
+            # create file pchCppFilename
+            f = open("%s/pchCppFilename" % binaryProjectFolder, 'w')
+            f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
+            f.write("#include \"%s\"" % _project.precompiledHeader) 
+            f.close()
+            
+            # write patched vcproj
+            f = open(vcprojFilename, 'w')
+            f.write(vcproj)
+            f.close()
+    
     def __GenerateWin32Header(self, _targetProject, _binaryFolder):
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
@@ -320,8 +397,10 @@ class Project:
     self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
-    self.projectsNonRequired = Subset of self.projects. Contains projects that self doesn't depend on.
+    self.projectsNonRequired -- Subset of self.projects. Contains projects that self doesn't depend on.
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
+    self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
+    then precompiled headers is set up.    
     """
     
     def __init__(self, _name, _type, _callerDepth = 1):
@@ -332,6 +411,7 @@ class Project:
             opSys = OpSys()
             self.opSystems[opSysName] = opSys
 
+        self.precompiledHeader = ""
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
         self.name = _name
@@ -434,6 +514,13 @@ class Project:
         opSysAll = self.opSystems["ALL"]
         for includeFolder in _listOfIncludeFolders:
             opSysAll.public.includeFolders.append( self.__FindPath(includeFolder) )
+        
+    def SetPrecompiledHeader(self, _precompiledHeader):
+        """
+        If _precompiledHeader is not "", then precompiled headers are used in Visual Studio (Windows) with
+        this filename. 
+        """
+        self.precompiledHeader = _precompiledHeader
         
     def AddPublicLibraryFolders(self, _listOfLibraryFolders):
         """
