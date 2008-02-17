@@ -134,6 +134,7 @@ class GimiasPluginProject(csnBuild.Project):
         _dependencyProjects - List of projects that the widgets project should depend on.
         _dependOnWidgetProject - If true, then the widget project is a dependency project of this project.
         """
+        assert not _dependencyProjects is self.projects, "There is an unresolved problem with setting _dependencyProjects to %s. Please try changing your code to avoid this." % self.name
         AddCilabWidgetModules(self.widgetProject, _widgetModules)
         self.widgetProject.AddProjects(_dependencyProjects)
         self.AddProjects([self.widgetProject], _dependency = _dependOnWidgetProject)

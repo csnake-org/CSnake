@@ -100,7 +100,7 @@ class Handler:
         if _alsoRunCMake:
             folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
             os.chdir(_binFolder)
-            print os.popen('cmake %s' % folderCMakeLists).read()
+            print os.popen('cmake -G "Visual Studio 7 .NET 2003" %s' % folderCMakeLists).read()
             
     def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
@@ -130,5 +130,5 @@ class Handler:
         """
         os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
         os.chdir(_thirdPartyBinFolder)
-        print os.popen('cmake %s' % _thirdPartyRootFolder).read()
+        print os.popen('cmake -G "Visual Studio 7 .NET 2003" %s' % _thirdPartyRootFolder).read()
         
