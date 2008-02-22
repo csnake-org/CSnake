@@ -81,7 +81,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             if os.path.isdir(sourceFile):
                 continue
             (name, ext) = os.path.splitext( os.path.basename(sourceFile) )
-            app = csnBuild.Project("%s.%s" % (_holderProject.name, name), "executable", 2)
+            app = csnBuild.Project("%s.%s" % (_holderProject.name, name), "executable", _callerDepth = 2)
             app.AddPublicIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])

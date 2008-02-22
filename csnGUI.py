@@ -7,7 +7,6 @@ import csnGUIHandler
 import pickle
 import os.path
 import sys
-import RollbackImporter
 
 thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
 thisFolder = thisFolder.replace("\\", "/")
@@ -241,11 +240,6 @@ class CSnakeGUIFrame(wx.Frame):
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
 
-        # undo loading of csnake modules
-        if not self.rbi is None:
-            self.rbi.uninstall()
-        self.rbi = RollbackImporter.RollbackImporter()
-                    
         if configureProject:
             self.handler.ConfigureProjectToBinFolder(
                 self.txtProjectPath.GetValue().replace("\\", "/"), 
