@@ -14,9 +14,9 @@ import traceback
 # Need to replace the 'imp' approach. 
 # Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
-# - Support precompiled headers by patching the produces vcproj files
-# - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add
-# selection of desired toolkit modules in csnGIMIAS
+# - Move to the latest CMake
+# - Start using /Y instead of patching the vcproj for supporting precompiled headers. Requires latest CMake.
+# - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 # - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
 # - install msvcp.dll and mitkstatemachine.xml
 # - extend csnGUI with the option of additional root folders
@@ -337,7 +337,7 @@ ForcedIncludeFiles="%s"
             vcproj = vcproj.replace(searchString, replaceString)
 
             # create file pchCppFilename
-            f = open("%s/pchCppFilename" % binaryProjectFolder, 'w')
+            f = open("%s/%s" % (binaryProjectFolder, pchCppFilename), 'w')
             f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
             f.write("#include \"%s\"" % _project.precompiledHeader) 
             f.close()
@@ -437,7 +437,7 @@ class Project:
         self.projects = set()
         self.projectsNonRequired = set()
         self.generateWin32Header = 1
-        
+
     def AddProjects(self, _projects, _dependency = 1):
         """ 
         Adds projects in _projects as required projects.

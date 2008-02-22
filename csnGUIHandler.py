@@ -71,12 +71,12 @@ class Handler:
         """ Instantiates and returns the _instance in _projectPath. """
         (projectFolder, name) = os.path.split(_projectPath)
         (name, ext) = os.path.splitext(name)
-        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder + "/thirdParty"
+        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
         csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
         # extend python path with project folder, source root and third party root
         addedToPythonPath = set()
-        for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder):
+        for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder, "%s/.." % _thirdPartyRootFolder):
             if not path in sys.path:
                 sys.path.append(path)
                 addedToPythonPath.add(path)
