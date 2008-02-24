@@ -81,7 +81,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             if os.path.isdir(sourceFile):
                 continue
             (name, ext) = os.path.splitext( os.path.basename(sourceFile) )
-            app = csnBuild.Project("%s.%s" % (_holderProject.name, name), "executable", _callerDepth = 2)
+            app = csnBuild.Project("%s.%s" % (_holderProject.name, name), "executable", _sourceRootFolder = _holderProject.sourceRootFolder)
             app.AddPublicIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])
@@ -96,21 +96,21 @@ class CilabModuleProject(csnBuild.Project):
     from source in the libmodules subfolder of a cilab module. Use AddDemos and AddApplications to add executable projects
     based on sources in the 'demos' and 'Applications' subfolders.
     """
-    def __init__(self, _name, _type, _callerDepth = 1):
-        csnBuild.Project.__init__(self, _name, _type, _callerDepth + 1)
+    def __init__(self, _name, _type):
+        csnBuild.Project.__init__(self, _name, _type)
         
     def AddLibraryModules(self, _libModules):
         AddCilabLibraryModules(self, _libModules)
         
     def AddDemos(self, _modules):
-        demosProject = csnBuild.Project(self.name + "Demos", "library")
+        demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
         demosProject.AddSources([csnUtility.GetDummyCppFilename()])
         AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder)
         demosProject.AddProjects([self])
         self.AddProjects([demosProject], _dependency = 0)
 
     def AddApplications(self, _modules):
-        applicationsProject = csnBuild.Project(self.name + "Applications", "library")
+        applicationsProject = csnBuild.Project(self.name + "Applications", "library", _sourceRootFolder = self.sourceRootFolder)
         applicationsProject.AddSources([csnUtility.GetDummyCppFilename()])
         AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder)
         applicationsProject.AddProjects([self])
@@ -121,9 +121,9 @@ class GimiasPluginProject(csnBuild.Project):
     This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
     modules to the plugin.
     """
-    def __init__(self, _name, _callerDepth = 1):
-        csnBuild.Project.__init__(self, _name, "dll", _callerDepth + 1)
-        self.widgetProject = csnBuild.Project(self.name + "_Widgets", "library", _callerDepth + 1)
+    def __init__(self, _name):
+        csnBuild.Project.__init__(self, _name, "dll")
+        self.widgetProject = csnBuild.Project(self.name + "_Widgets", "library", _sourceRootFolder = self.sourceRootFolder)
         self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
         self.AddPublicIncludeFolders(["."])
         

@@ -1,5 +1,6 @@
 from os import makedirs
 import csnUtility
+import inspect
 import os.path
 import warnings
 import sys
@@ -38,17 +39,6 @@ class SyntaxError(StandardError):
 class ProjectClosedError(StandardError):
     pass
     
-def Caller(up=0):
-    """
-    Get file name, line number, function name and
-    source text of the caller's caller as 4-tuple:
-    (file, line, func, text).
-    The optional argument 'up' allows retrieval of
-    a caller further back up into the call stack.
-    """
-    f = traceback.extract_stack(limit=up+2)
-    return f[0]
-        
 class OpSysSection:
     """ 
     Helper class for OpSys 
@@ -184,7 +174,7 @@ class Generator:
                     f.write( "ENDIF(%s)\n" % (opSysName))
             if( len(opSysAll.private.definitions) ):
                 f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSysAll.private.definitions) )
-            
+
             # add sources
             if(_targetProject.type == "executable" ):
                 f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
@@ -369,14 +359,9 @@ ForcedIncludeFiles="%s"
             f.write(template)
             f.close()
         
-class Project:
+class Project(object):
     """
     Contains the data for the makefile (or vcproj) for a project.
-    _name -- Name of the project, e.g. \"SampleApp\"
-    _type -- Type of the project, should be \"executable\", \"library\", \"dll\" or \"third party\"
-    _callerDepth - This (advanced) parameter determines who is calling the constructor. The name of the caller is used
-    to fill the value of self.sourceRootFolder. Normally, you don't need to change this parameter.
-
     Config and use file:
     CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
     such as SAMPLE_APP_INCLUDE_DIRECTORIES and SAMPLE_APP_LIBRARY_DIRECTORIES. The use file uses these values to add
@@ -408,7 +393,25 @@ class Project:
     then precompiled headers is set up.    
     """
     
-    def __init__(self, _name, _type, _callerDepth = 1):
+    def __new__(cls, *a, **b):
+        # Get the frame where the instantiation came from
+        frame = inspect.stack()[1]
+        # Continue with __new__ in super objects
+        o = super(Project, cls).__new__(cls, a, b)
+        # Save important frame infos in object
+        o.debug_call = list(frame[1:4]) + [frame[4][0]]
+        return o
+
+    """
+    _type -- Type of the project, should be \"executable\", \"library\", \"dll\" or \"third party\".
+    _name -- Name of the project, e.g. \"SampleApp\".
+    _sourceRootFolder -- If None, then the root folder where source files are located is derived from 
+    the call stack. For example, if this class' constructor is called in a file 
+    d:/users/me/csnMyProject.py, and you want to configure the files d:/users/me/src/hello.h and 
+    d:/users/me/src/hello.cpp with Cmake, then you do not need to pass a value for _sourceRootFolder, 
+    because it is inferred from the call stack. 
+    """    
+    def __init__(self, _name, _type, _sourceRootFolder = None ):
         self.sources = []
 
         self.opSystems = dict()
@@ -424,7 +427,12 @@ class Project:
         self.filesToInstall["debug"] = dict()
         self.filesToInstall["release"] = dict()
         self.type = _type
-        self.sourceRootFolder = os.path.normpath(os.path.dirname(Caller(_callerDepth)[0])).replace("\\", "/")
+        
+        self.sourceRootFolder = _sourceRootFolder
+        if self.sourceRootFolder is None:
+            file, line, module, source = self.debug_call
+            self.sourceRootFolder = os.path.normpath(os.path.dirname(file)).replace("\\", "/")
+            #csnUtility.Log("%s sourcerootfolder = %s\n" % (self.name, self.sourceRootFolder))
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
