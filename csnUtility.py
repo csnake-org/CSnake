@@ -29,30 +29,16 @@ def Join(_theList, _addQuotes = 0):
         all = all + item + " "
     return all
 
-# used by LoadModule
-loadedModules = dict()
-
 def LoadModule(_folder, _name):
     """ 
     Loads python module _name from _folder, or returns previously loaded module from the loadedModules variable (see above).
     Adds module to loadedModules (if it is not already there).
     """
-    key = os.path.normpath(_folder) + "_WITH_NAME_" + _name
-    result = None
-    if loadedModules.has_key(key):
-        result = loadedModules[key]
-    else:
-        #print "LoadModule %s in %s" % (_name, _folder)
-        found = imp.find_module(_name, [_folder])
-        if found:
-            (file, pathname, description) = found
-            try:
-                result = imp.load_module(_name, file, pathname, description)
-                loadedModules[key] = result
-            finally:
-                file.close()
-        #print "...Finished LoadModule %s in %s" % (_name, _folder)
-    return result
+    sys.path.append(_folder)
+    location = len(sys.path) - 1
+    result = __import__(_name)
+    sys.path.pop(location)
+    return result 
 
 def FileToString(_filename):
     x = ""

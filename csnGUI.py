@@ -85,12 +85,9 @@ class CSnakeGUIFrame(wx.Frame):
         print "Project Root = <somepath>/TextEditorProject/source, \n"
         print "Bin Folder = <somepath>/TextEditorProject/bin. \n"
         print "Project Folder = <somepath>/TextEditorProject/source/TextEditorGUI.\n"
-        
+       
         self.commandCounter = 0
 
-        # set up roll back importer
-        self.rbi = None
-        
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
         self.SetTitle("CSnake GUI")

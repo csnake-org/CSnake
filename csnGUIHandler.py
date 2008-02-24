@@ -5,6 +5,7 @@ import csnUtility
 import csnBuild
 import csnCilab
 import glob
+import RollbackImporter
 
 class RootNotFound(IOError):
     pass
@@ -69,27 +70,42 @@ class Handler:
         
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
+        
+        # set up roll back of imported modules
+        rbi = RollbackImporter.RollbackImporter()
+        
         (projectFolder, name) = os.path.split(_projectPath)
         (name, ext) = os.path.splitext(name)
         csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
         csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
         # extend python path with project folder, source root and third party root
-        addedToPythonPath = set()
-        for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder, "%s/.." % _thirdPartyRootFolder):
+        newLocationsInPythonPath = list()
+        for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder):
             if not path in sys.path:
                 sys.path.append(path)
-                addedToPythonPath.add(path)
+                location = len(sys.path) - 1
+                newLocationsInPythonPath.append(location)
     
+        for p in sys.path:
+            csnUtility.Log("Path1: %s\n" % p)
+            
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
 
         # undo additions to the python path
-        for path in addedToPythonPath:
-            sys.path.remove(path)
+        while len(newLocationsInPythonPath):
+            sys.path.pop(newLocationsInPythonPath.pop())
+            
+        # roll back imported modules
+        rbi.rollbackImports()
+        
+        for p in sys.path:
+            csnUtility.Log("Path2: %s\n" % p)
             
         return instance
         
+    
     def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
         logString = ""
         instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
