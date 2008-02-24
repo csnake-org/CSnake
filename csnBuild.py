@@ -9,18 +9,15 @@ import glob
 import traceback
 
 # ToDo:
+# - extend csnGUI with the option of additional root folders
+# - get popen output in the csnake window
+# - place csnGUI config in an XML, allow to load it (add cmdline argument)
 # - Have public and private related projects (hide the include paths from its clients)
-# - Unloading all modules in csnCilab.LoadModule does not work (it will reload the >cached< module). 
-# This makes it impossible to use changed csn files while the GUI is still running. 
-# Need to replace the 'imp' approach. 
-# Look at RollBackImporter (http://www.koders.com/python/fid3017018D7707B26F40B546EE2D1388C1A14383D3.aspx?s=%22Steve+Purcell%22)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - Move to the latest CMake
 # - Start using /Y instead of patching the vcproj for supporting precompiled headers. Requires latest CMake.
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
-# - create convenience module csnCilabAll with attributes itk, vtk, baselib, etc.
 # - install msvcp.dll and mitkstatemachine.xml
-# - extend csnGUI with the option of additional root folders
 # - support installing subtrees to the binfolder, so that the cardiacplugin functions correctly 
 # (it needs bin/debug/plugins/cardiacsegmpl/data)
 

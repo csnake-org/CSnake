@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import shutil
 import csnUtility
@@ -15,7 +16,7 @@ class NotARoot(IOError):
 
 class TypeError(StandardError):
     pass
-    
+
 def CreateCSnakeFolder(_folder, _projectRoot):
     # check that project root exists
     if not os.path.exists(_projectRoot):
@@ -62,17 +63,12 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
     f.close()
                 
 class Handler:
-    def __init__(self):
-        pass        
-        
-    def Test():
-        pass
-        
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
         
         # set up roll back of imported modules
         rbi = RollbackImporter.RollbackImporter()
+        previousPaths = sys.path
         
         (projectFolder, name) = os.path.split(_projectPath)
         (name, ext) = os.path.splitext(name)
@@ -80,29 +76,19 @@ class Handler:
         csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
         # extend python path with project folder, source root and third party root
-        newLocationsInPythonPath = list()
         for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder):
             if not path in sys.path:
                 sys.path.append(path)
-                location = len(sys.path) - 1
-                newLocationsInPythonPath.append(location)
     
-        for p in sys.path:
-            csnUtility.Log("Path1: %s\n" % p)
-            
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
 
         # undo additions to the python path
-        while len(newLocationsInPythonPath):
-            sys.path.pop(newLocationsInPythonPath.pop())
+        sys.path = previousPaths
             
         # roll back imported modules
         rbi.rollbackImports()
         
-        for p in sys.path:
-            csnUtility.Log("Path2: %s\n" % p)
-            
         return instance
         
     
@@ -115,9 +101,13 @@ class Handler:
             
         if _alsoRunCMake:
             folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
-            os.chdir(_binFolder)
-            print os.popen('cmake -G "Visual Studio 7 .NET 2003" %s' % folderCMakeLists).read()
-            generator.PostProcess(instance, _binFolder)
+            argCompiler = "Visual Studio 7 .NET 2003"
+            argList = ["cmake", "-G", argCompiler, folderCMakeLists]
+            retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
+            if retcode == 0:
+                generator.PostProcess(instance, _binFolder)
+            else:
+                print "Configuration failed.\n"   
             
     def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
@@ -146,6 +136,9 @@ class Handler:
         Runs cmake to install the libraries in the third party folder.
         """
         os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
-        os.chdir(_thirdPartyBinFolder)
-        print os.popen('cmake -G "Visual Studio 7 .NET 2003" %s' % _thirdPartyRootFolder).read()
+        argCompiler = "Visual Studio 7 .NET 2003"
+        argList = ["cmake", "-G", argCompiler, _thirdPartyRootFolder]
+        retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+        if not retcode == 0:
+            print "Configuration failed.\n"   
         

@@ -37,6 +37,7 @@ def LoadModule(_folder, _name):
     sys.path.append(_folder)
     location = len(sys.path) - 1
     result = __import__(_name)
+    assert sys.path[location] == _folder, "Expected that importing %s would not remove stuff from sys.path." % _name 
     sys.path.pop(location)
     return result 
 
