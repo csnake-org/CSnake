@@ -1,1 +1,4 @@
-# define CSNAKE_DUMMY_CPP
+void csnake_dummyFunction(void)
+{
+}
+

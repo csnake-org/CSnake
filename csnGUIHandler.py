@@ -102,12 +102,15 @@ class Handler:
         if _alsoRunCMake:
             folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
             argCompiler = "Visual Studio 7 .NET 2003"
-            argList = ["cmake", "-G", argCompiler, folderCMakeLists]
-            retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
-            if retcode == 0:
-                generator.PostProcess(instance, _binFolder)
+            if not self.CMakeIsFound():
+                print "Error: could not find cmake.exe. Check that it is in your path."
             else:
-                print "Configuration failed.\n"   
+                argList = ["cmake", "-G", argCompiler, folderCMakeLists]
+                retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
+                if retcode == 0:
+                    generator.PostProcess(instance, _binFolder)
+                else:
+                    print "Configuration failed.\n"   
             
     def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
@@ -131,14 +134,22 @@ class Handler:
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         shutil.copy(file, absLocation)
              
+    def CMakeIsFound(self):
+        retcode = subprocess.Popen("cmake").wait()
+        return retcode == 0
+    
     def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
         Runs cmake to install the libraries in the third party folder.
         """
-        os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
-        argCompiler = "Visual Studio 7 .NET 2003"
-        argList = ["cmake", "-G", argCompiler, _thirdPartyRootFolder]
-        retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
-        if not retcode == 0:
-            print "Configuration failed.\n"   
+        if not self.CMakeIsFound():
+            print "Error: could not find cmake.exe. Check that it is in your path."
+        else:
+            os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
+            argCompiler = "Visual Studio 7 .NET 2003"
+            argList = ["cmake", "-G", argCompiler, _thirdPartyRootFolder]
+            retcode1 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+            retcode2 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+            if not retcode1 == 0 and retcode2 == 0:
+                print "Configuration failed.\n"   
         

@@ -229,7 +229,7 @@ class CSnakeGUIFrame(wx.Frame):
     def OnSelectProjectPath(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select Python Project Module")
         if dlg.ShowModal() == wx.ID_OK:
-            pass
+            self.txtProjectPath.SetValue(dlg.GetPath())
 
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter

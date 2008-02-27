@@ -1,4 +1,3 @@
-from os import makedirs
 import csnUtility
 import inspect
 import os.path
@@ -6,12 +5,13 @@ import warnings
 import sys
 import re
 import glob
-import traceback
+import types
 
 # ToDo:
 # - extend csnGUI with the option of additional root folders
 # - get popen output in the csnake window
 # - place csnGUI config in an XML, allow to load it (add cmdline argument)
+# - place location of cmake in the xml config file
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - Move to the latest CMake
@@ -147,6 +147,11 @@ class Generator:
             cmakeMocInputVarName = "MOC_%s" % (_targetProject.name)
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
             f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced, _addQuotes = 1)) )
+            # write section for sorting moc files in a separate folder in Visual Studio
+            f.write( "\n # Create MOC group \n" )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"Generated MOC Files\" REGULAR_EXPRESSION moc_[a-zA-Z0-9_]*[.]cxx$)\n")
+            f.write( "ENDIF(WIN32)\n\n" )
             
         # generate ui files
         cmakeUIHInputVar = ""
@@ -157,6 +162,11 @@ class Generator:
             cmakeUICppInputVarName = "UI_CPP_%s" % (_targetProject.name)
             cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
             f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (_targetProject.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(_targetProject.sourcesToBeUIed, _addQuotes = 1)) )
+            # write section for sorting ui files in a separate folder in Visual Studio
+            f.write( "\n # Create UI group \n" )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"Forms\" REGULAR_EXPRESSION [.]ui$)\n")
+            f.write( "ENDIF(WIN32)\n\n" )
             
         # write section that is specific for the project type        
         if( len(_targetProject.sources) ):
@@ -185,13 +195,6 @@ class Generator:
             else:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
-            # write section for sorting moc and ui files in a separate folder in Visual Studio
-            f.write( "\n # Create source groups \n" )
-            f.write( "IF (WIN32)\n" )
-            f.write( "  SOURCE_GROUP(\"Generated MOC Files\" REGULAR_EXPRESSION moc_[a-zA-Z0-9_]*[.]cxx$)\n")
-            f.write( "  SOURCE_GROUP(\"Forms\" REGULAR_EXPRESSION [.]ui$)\n")
-            f.write( "ENDIF(WIN32)\n\n" )
-            
             # add standard definition to allow multiply defined symbols in the linker
             f.write( "SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")" % _targetProject.name)
             
@@ -326,7 +329,7 @@ ForcedIncludeFiles="%s"
             # create file pchCppFilename
             f = open("%s/%s" % (binaryProjectFolder, pchCppFilename), 'w')
             f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
-            f.write("#include \"%s\"" % _project.precompiledHeader) 
+            f.write("#include \"%s\"\n" % _project.precompiledHeader) 
             f.close()
             
             # write patched vcproj
@@ -396,7 +399,7 @@ class Project(object):
         # Continue with __new__ in super objects
         o = super(Project, cls).__new__(cls, a, b)
         # Save important frame infos in object
-        o.debug_call = list(frame[1:4]) + [frame[4][0]]
+        o.debug_call = frame[1]
         return o
 
     """
@@ -427,7 +430,7 @@ class Project(object):
         
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
-            file, line, module, source = self.debug_call
+            file = self.debug_call
             self.sourceRootFolder = os.path.normpath(os.path.dirname(file)).replace("\\", "/")
             #csnUtility.Log("%s sourcerootfolder = %s\n" % (self.name, self.sourceRootFolder))
         self.useBefore = []
@@ -445,11 +448,16 @@ class Project(object):
 
     def AddProjects(self, _projects, _dependency = 1):
         """ 
-        Adds projects in _projects as required projects.
+        Adds projects in _projects as required projects. If an item in _projects is a function, then
+        it is called as a function (the result of the function should be a Project).
         _dependency - Flag that states that self target requires (is dependent on) _projects.
         Raises StandardError in case of a cyclic dependency.
         """
-        for projectToAdd in _projects:
+        for project in _projects:
+            projectToAdd = project
+            if type(projectToAdd) == types.FunctionType:
+                projectToAdd = project()
+                
             if( self is projectToAdd ):
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
