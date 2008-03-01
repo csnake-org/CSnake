@@ -227,14 +227,10 @@ class CSnakeGUIFrame(wx.Frame):
         event.Skip()
 
     def OnTypingRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        if self.recentFiles.source2BinaryFolder.has_key(self.txtRootFolder.GetValue()):
-            self.txtBinFolder.SetValue( self.recentFiles.source2BinaryFolder[self.txtRootFolder.GetValue()] )
-        if self.recentFiles.source2InstallFolder.has_key(self.txtRootFolder.GetValue()):
-            self.txtInstallFolder.SetValue( self.recentFiles.source2InstallFolder[self.txtRootFolder.GetValue()] )
+        event.Skip()
 
     def OnTypingThirdPartyRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        if self.recentFiles.thirdPartySource2BinaryFolder.has_key(self.txtThirdPartyRootFolder.GetValue()):
-            self.txtThirdPartyBinFolder.SetValue( self.recentFiles.thirdPartySource2BinaryFolder[self.txtThirdPartyRootFolder.GetValue()] )
+        event.Skip()
 
     def OnSelectProjectPath(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select Python Project Module")
