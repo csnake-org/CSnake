@@ -72,12 +72,11 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectBinFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectInstallFolder, self.btnSelectInstallFolder)
         self.Bind(wx.EVT_TEXT, self.OnTypingThirdPartyRootFolder, self.txtThirdPartyRootFolder)
-        self.Bind(wx.EVT_BUTTON, self.OnSelectProjectRoot, self.btnSelectThirdPartyRootFolder)
-        self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectThirdPartyBinFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyRoot, self.btnSelectThirdPartyRootFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyBinFolder, self.btnSelectThirdPartyBinFolder)
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
         # end wxGlade
         
-        self.handler = csnGUIHandler.Handler()
         redir=RedirectText(self.textLog)
         sys.stdout=redir
         sys.stderr=redir
@@ -86,6 +85,7 @@ class CSnakeGUIFrame(wx.Frame):
         print "Bin Folder = <somepath>/TextEditorProject/bin. \n"
         print "Project Folder = <somepath>/TextEditorProject/source/TextEditorGUI.\n"
        
+        self.handler = csnGUIHandler.Handler()
         self.commandCounter = 0
 
     def __set_properties(self):
@@ -187,19 +187,29 @@ class CSnakeGUIFrame(wx.Frame):
     def OnSelectProjectRoot(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Project Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            txtProjectRoot.SetValue(dlg.GetPath())
+            self.txtRootFolder.SetValue(dlg.GetPath())
+
+    def OnSelectThirdPartyRoot(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select Third Party Root Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtThirdPartyRootFolder.SetValue(dlg.GetPath())
 
     def OnSelectBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Binary Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            txtBinFolder.SetValue(dlg.GetPath())
+            self.txtBinFolder.SetValue(dlg.GetPath())
+
+    def OnSelectThirdPartyBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select Third Party Binary Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtThirdPartyBinFolder.SetValue(dlg.GetPath())
 
     def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         mapping = dict()
         mapping["Dll"] = "dll"
         mapping["Static library"] = "library"
         mapping["Executable"] = "executable"
-    	csnGUIHandler.CreateCSnakeProject(self.txtProjectPath.GetValue(), self.txtProjectRoot.GetValue(), self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
+    	csnGUIHandler.CreateCSnakeProject(self.txtProjectPath.GetValue(), self.txtRootFolder.GetValue(), self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
     def StoreRecentFilesData(self):
         self.recentFiles.source2BinaryFolder[ self.txtRootFolder.GetValue() ] = self.txtBinFolder.GetValue()
@@ -270,7 +280,7 @@ class CSnakeGUIFrame(wx.Frame):
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Install Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            txtInstallFolder.SetValue(dlg.GetPath())
+            self.txtInstallFolder.SetValue(dlg.GetPath())
 
 # end of class CSnakeGUIFrame
 

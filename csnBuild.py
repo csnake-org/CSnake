@@ -74,11 +74,6 @@ class Generator:
         if( _knownProjectNames is None ):
             _knownProjectNames = []
 
-        #csnUtility.Log("Generate %s\n" % (_targetProject.name))
-        #for project in _generatedList:
-        #    csnUtility.Log("Already generated %s\n" % (project.name))
-        #csnUtility.Log("---\n")
-
         if( _targetProject.name in _knownProjectNames):
             raise NameError, "Each project must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
         else:
@@ -132,7 +127,7 @@ class Generator:
         _targetProject.GenerateUseFile(_binaryFolder)
         
         # get related projects to be 'used' in the sense of including the use and config file.
-        projectsToUse = _targetProject.GetProjectsToUse()
+        projectsToUse = _targetProject.ProjectsToUse()
         
         # find and use related projects
         for project in projectsToUse:
@@ -242,7 +237,7 @@ class Generator:
         # if top level project, add install rules for all the filesToInstall
         if isTopLevelProject:
             for mode in ("debug", "release"):
-                for project in _targetProject.GetProjectsToUse():
+                for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
                     for location in project.filesToInstall[mode].keys():
                         files = ""
@@ -274,7 +269,8 @@ class Generator:
         # if there is a vcproj, and we want a precompiled header
         if _project.precompiledHeader != "" and os.path.exists(vcprojFilename):
             # binary pch file to generate
-            pchFilename = "%s/%s.pch" % (binaryProjectFolder, _project.name)
+            debugPchFilename = "%s/%s.debug.pch" % (binaryProjectFolder, _project.name)
+            releasePchFilename = "%s/%s.release.pch" % (binaryProjectFolder, _project.name)
             # this is the name of the cpp file that will build the precompiled headers
             pchCppFilename = "%sPCH.cpp" % (_project.name)
 
@@ -284,14 +280,17 @@ class Generator:
             f.close()
             vcprojOrg = vcproj 
             
-            # add project pch settings
+            # add release project pch settings to all configurations
             searchString = "RuntimeTypeInfo=\"TRUE\"\n"
             replaceString = """RuntimeTypeInfo="TRUE"
 UsePrecompiledHeader="3"
 PrecompiledHeaderThrough="%s" 
 PrecompiledHeaderFile="%s"
-""" % (_project.precompiledHeader, pchFilename)
+""" % (_project.precompiledHeader, releasePchFilename)
             vcproj = vcproj.replace(searchString, replaceString)
+            
+            # in the first occurence of the release pch filename, correct it to the debug pch filename
+            vcproj = vcproj.replace(releasePchFilename, debugPchFilename, 1)
             
             # add pchCpp to the solution
             searchString = "<Files>\n"
@@ -432,7 +431,6 @@ class Project(object):
         if self.sourceRootFolder is None:
             file = self.debug_call
             self.sourceRootFolder = os.path.normpath(os.path.dirname(file)).replace("\\", "/")
-            #csnUtility.Log("%s sourcerootfolder = %s\n" % (self.name, self.sourceRootFolder))
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
@@ -482,7 +480,6 @@ class Project(object):
                 raise IOError, "Path file not found %s" % (sourceFile)
             
             for source in sources:
-                # csnUtility.Log("Adding %s\n" % (source))
                 if _moc and not source in self.sourcesToBeMoced:
                     self.sourcesToBeMoced.append(source)
                 
@@ -586,8 +583,6 @@ class Project(object):
         Returns an absolute path, containing only forward slashes.
         Throws IOError if path was not found.
         """
-        # csnUtility.Log( "Finding %s in %s\n" % (_path, self.sourceRootFolder) )
-        
         path = _path
         if( not os.path.isabs(path) ):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
@@ -639,6 +634,18 @@ class Project(object):
             result.update(moreResults)
         return result
         
+    def AllProjects(self, _recursive = 0):
+        """
+        Returns list of all projects associated with this project.
+        """
+        result = self.projects
+        if( _recursive ):
+            moreResults = set()
+            for project in result:
+                moreResults.update( project.AllProjects(_recursive) )
+            result.update(moreResults)
+        return result
+        
     def UseBefore(self, _otherProject):
         """ 
         Indicate that self must be used before _otherProjects in a cmake file. 
@@ -664,7 +671,7 @@ class Project(object):
                 
         return 0
            
-    def GetProjectsToUse(self):
+    def ProjectsToUse(self):
         """
         Determine a list of projects that must be used (meaning: include the config and use file) to generate this project.
         Note that self is also included in this list.
@@ -771,10 +778,13 @@ class Project(object):
         else:
             return "%s/%s" % (_binaryFolder, self.useFilePath)
         
-    def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder):
-        """ This function replaces relative paths and wildcards in self.filesToInstall with absolute paths without wildcards. """
+    def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder, _skipCVS = 1):
+        """ 
+        This function replaces relative paths and wildcards in self.filesToInstall with absolute paths without wildcards.
+        _skipCVS - If true, folders called CVS are automatically skipped. 
+        """
         for mode in ("debug", "release"):
-            for project in self.GetProjectsToUse():
+            for project in self.AllProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
@@ -782,7 +792,9 @@ class Project(object):
                         if not os.path.isabs(path):
                             path = "%s/%s" % (_thirdPartyBinFolder, path)
                         for dll in glob.glob(path):
-                            newList.append(dll)
+                            skip = (os.path.basename(dll) == "CVS" and _skipCVS and os.path.isdir(dll))
+                            if not skip:
+                                newList.append(dll)
                     project.filesToInstall[mode][location] = newList
     
     def SetGenerateWin32Header(self, _flag):

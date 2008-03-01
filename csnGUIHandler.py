@@ -63,6 +63,10 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
     f.close()
                 
 class Handler:
+    def __init__(self):
+        if not self.CMakeIsFound():
+            print "Error: could not find cmake.exe. Check that it is in your path."
+    
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
         
@@ -102,15 +106,12 @@ class Handler:
         if _alsoRunCMake:
             folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
             argCompiler = "Visual Studio 7 .NET 2003"
-            if not self.CMakeIsFound():
-                print "Error: could not find cmake.exe. Check that it is in your path."
+            argList = ["cmake", "-G", argCompiler, folderCMakeLists]
+            retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
+            if retcode == 0:
+                generator.PostProcess(instance, _binFolder)
             else:
-                argList = ["cmake", "-G", argCompiler, folderCMakeLists]
-                retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
-                if retcode == 0:
-                    generator.PostProcess(instance, _binFolder)
-                else:
-                    print "Configuration failed.\n"   
+                print "Configuration failed.\n"   
             
     def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
@@ -125,26 +126,49 @@ class Handler:
         instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
         for mode in ("debug", "release"):
             os.path.exists(folders[mode]) or os.makedirs(folders[mode])
-            for project in instance.GetProjectsToUse():
-                # print "%s\n" % project.name
+            for project in instance.AllProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (folders[mode], location)
-                        # print "Copy %s to %s\n" % (file, absLocation)
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         shutil.copy(file, absLocation)
              
     def CMakeIsFound(self):
-        retcode = subprocess.Popen("cmake").wait()
+        try:
+            retcode = subprocess.Popen("cmake").wait()
+        except:
+            retcode = 1
         return retcode == 0
     
     def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
         Runs cmake to install the libraries in the third party folder.
         """
-        if not self.CMakeIsFound():
-            print "Error: could not find cmake.exe. Check that it is in your path."
+        result = 1
+        messageAboutPatches = ""
+        
+        # apply MITK patch
+        originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _thirdPartyRootFolder
+        patchedMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
+        if not os.path.exists(patchedMITK):
+            print "Configuration failed. File not found: %s\n" % patchedMITK
+            result = 0
         else:
+            shutil.copy(patchedMITK, originalMITK)
+            messageAboutPatches = "Note: Applied patch to file %s\n" % originalMITK
+        
+        # apply ITK patch
+        if result:
+            originalITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in" % _thirdPartyRootFolder
+            patchedITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
+            if not os.path.exists(patchedITK):
+                print "Configuration failed. File not found: %s\n" % patchedITK
+                result = 0
+            else:
+                shutil.copy(patchedITK, originalITK)
+                messageAboutPatches = messageAboutPatches + "Note: Applied patch to file %s\n" % originalITK
+        
+        if result:
             os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
             argCompiler = "Visual Studio 7 .NET 2003"
             argList = ["cmake", "-G", argCompiler, _thirdPartyRootFolder]
@@ -152,4 +176,6 @@ class Handler:
             retcode2 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
             if not retcode1 == 0 and retcode2 == 0:
                 print "Configuration failed.\n"   
-        
+            
+        print messageAboutPatches
+        return result
