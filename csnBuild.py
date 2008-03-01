@@ -9,18 +9,13 @@ import types
 
 # ToDo:
 # - extend csnGUI with the option of additional root folders
-# - get popen output in the csnake window
 # - place csnGUI config in an XML, allow to load it (add cmdline argument)
 # - place location of cmake in the xml config file
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
-# - Move to the latest CMake
-# - Start using /Y instead of patching the vcproj for supporting precompiled headers. Requires latest CMake.
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
-# - install msvcp.dll and mitkstatemachine.xml
-# - support installing subtrees to the binfolder, so that the cardiacplugin functions correctly 
-# (it needs bin/debug/plugins/cardiacsegmpl/data)
-
+# - install msvcp.dll
+# - improve patch that creates source group for widget files
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -135,6 +130,16 @@ class Generator:
             f.write( "\n# use %s\n" % (project.name) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder)) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(_binaryFolder)) )
+
+        # generate group for widget files
+        widgetFiles = []
+        for file in _targetProject.sources:
+            if file.find("Widget") >= 0 and not (file.find("moc") >= 0 or file.find(".ui") >= 0):
+                widgetFiles.append(file)
+        f.write( "\n # Create widget group \n" )
+        f.write( "IF (WIN32)\n" )
+        f.write( "  SOURCE_GROUP(\"Widget Files\" FILES %s)\n" % csnUtility.Join(widgetFiles, _addQuotes = 1))
+        f.write( "ENDIF(WIN32)\n\n" )
 
         # generate moc files
         cmakeMocInputVar = ""

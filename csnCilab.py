@@ -123,18 +123,11 @@ class GimiasPluginProject(csnBuild.Project):
     """
     def __init__(self, _name):
         csnBuild.Project.__init__(self, _name, "dll")
-        self.widgetProject = csnBuild.Project(self.name + "_Widgets", "library", _sourceRootFolder = self.sourceRootFolder)
         self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
         self.AddPublicIncludeFolders(["."])
         
-    def AddWidgetModules(self, _widgetModules, _dependencyProjects, _dependOnWidgetProject = 1):
+    def AddWidgetModules(self, _widgetModules):
         """
-        Creates new widget project and adds _widgetModules to the widget project.
-        Adds the new widget project to this project.
-        _dependencyProjects - List of projects that the widgets project should depend on.
-        _dependOnWidgetProject - If true, then the widget project is a dependency project of this project.
+        Adds _widgetModules to this project.
         """
-        assert not _dependencyProjects is self.projects, "There is an unresolved problem with setting _dependencyProjects to %s. Please try changing your code to avoid this." % self.name
-        AddCilabWidgetModules(self.widgetProject, _widgetModules)
-        self.widgetProject.AddProjects(_dependencyProjects)
-        self.AddProjects([self.widgetProject], _dependency = _dependOnWidgetProject)
+        AddCilabWidgetModules(self, _widgetModules)
