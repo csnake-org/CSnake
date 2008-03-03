@@ -66,6 +66,8 @@ class Handler:
     def __init__(self):
         if not self.CMakeIsFound():
             print "Error: could not find cmake.exe. Check that it is in your path."
+        else:
+            print "CMake was found.\n"
     
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
@@ -151,8 +153,8 @@ class Handler:
         originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _thirdPartyRootFolder
         patchedMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
         if not os.path.exists(patchedMITK):
-            print "Configuration failed. File not found: %s\n" % patchedMITK
-            result = 0
+            print "Warning: patch failed. File not found: %s\n" % patchedMITK
+            result = 1
         else:
             shutil.copy(patchedMITK, originalMITK)
             messageAboutPatches = "Note: Applied patch to file %s\n" % originalMITK
@@ -162,8 +164,8 @@ class Handler:
             originalITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in" % _thirdPartyRootFolder
             patchedITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
             if not os.path.exists(patchedITK):
-                print "Configuration failed. File not found: %s\n" % patchedITK
-                result = 0
+                print "Warning: patch failed. File not found: %s\n" % patchedITK
+                result = 1
             else:
                 shutil.copy(patchedITK, originalITK)
                 messageAboutPatches = messageAboutPatches + "Note: Applied patch to file %s\n" % originalITK
@@ -175,6 +177,7 @@ class Handler:
             retcode1 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
             retcode2 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
             if not retcode1 == 0 and retcode2 == 0:
+                result = 0
                 print "Configuration failed.\n"   
             
         print messageAboutPatches

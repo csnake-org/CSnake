@@ -106,7 +106,7 @@ class Generator:
         # write header and some cmake fields
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
-        
+
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
         f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolder) )
         
@@ -118,7 +118,8 @@ class Generator:
         f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % (binaryBinFolder) )
     
         # create config and use files, and include them
-        _targetProject.GenerateConfigFile( _binaryFolder)
+        _targetProject.GenerateConfigFile( _binaryFolder, _public = 0)
+        _targetProject.GenerateConfigFile( _binaryFolder, _public = 1)
         _targetProject.GenerateUseFile(_binaryFolder)
         
         # get related projects to be 'used' in the sense of including the use and config file.
@@ -128,7 +129,7 @@ class Generator:
         for project in projectsToUse:
           # include config and use file
             f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder)) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder, _public = 0)) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(_binaryFolder)) )
 
         # generate group for widget files
@@ -588,14 +589,13 @@ class Project(object):
         Returns an absolute path, containing only forward slashes.
         Throws IOError if path was not found.
         """
-        path = _path
+        path = os.path.normpath(_path)
         if( not os.path.isabs(path) ):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
         if( not os.path.exists(path) ):
             raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
         path = path.replace("\\", "/")
-        assert not csnUtility.HasBackSlash(path), path
         return path
         
     def Glob(self, _path):
@@ -711,21 +711,30 @@ class Project(object):
           
         return result
         
-    def GenerateConfigFile(self, _binaryFolder):
+    def GenerateConfigFile(self, _binaryFolder, _public):
         """
         Generates the XXXConfig.cmake file for this project.
+        _public - If true, generates a config file that can be used in any cmake file. If false,
+        it generates the private config file that is used in the csnake-generated cmake files.
         """
-        fileConfig = "%s/%s" % (_binaryFolder, self.configFilePath)
+        fileConfig = self.GetPathToConfigFile(_binaryFolder, _public)
         f = open(fileConfig, 'w')
         
         opSysAll = self.opSystems["ALL"]
         
+        # create list with folder where libraries should be found. Add the bin folder where all the
+        # targets are placed to this list. 
+        publicLibraryFolders = opSysAll.public.libraryFolders
+        if _public:
+            binaryBinFolder = "%s/bin/%s" % (_binaryFolder, self.installSubFolder)
+            publicLibraryFolders.append(binaryBinFolder) 
+
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.includeFolders, _addQuotes = 1)) )
-        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.libraryFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         for opSysName in ["WIN32", "NOT WIN32"]:
             opSys = self.opSystems[opSysName]
             if( len(opSys.public.libraries) ):
@@ -736,6 +745,11 @@ class Project(object):
         if( len(opSysAll.public.libraries) ):
             f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(opSysAll.public.libraries, _addQuotes = 1)) )
 
+        # add the target of this project to the list of libraries that should be linked
+        if _public and len(self.sources) > 0 and (self.type == "library" or self.type == "dll"):
+            targetName = ["%s.lib" % self.name] 
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(targetName, _addQuotes = 1)) )
+                
     def GenerateUseFile(self, _binaryFolder):
         """
         Generates the UseXXX.cmake file for this project.
@@ -765,14 +779,23 @@ class Project(object):
         #if self.type == "library":
         #    f.write( "ADD_DEFINITIONS(%sSTATIC)\n" % self.name )
             
-    def GetPathToConfigFile(self, _binaryFolder):
+    def GetPathToConfigFile(self, _binaryFolder, _public):
         """ 
         Returns self.useFilePath if it is absolute. Otherwise, returns _binaryFolder + self.useFilePath.
+        If _public is false, and the project is not of type 'third party', then the postfix ".private" 
+        is added to the return value.
         """
         if( os.path.isabs(self.configFilePath) ):
-            return self.configFilePath
+            result = self.configFilePath
         else:
-            return "%s/%s" % (_binaryFolder, self.configFilePath)
+            result = "%s/%s" % (_binaryFolder, self.configFilePath)
+
+        postfix = ""
+        if (not self.type == "third party") and (not _public):
+            postfix = ".private"
+             
+        return result + postfix
+
 
     def GetPathToUseFile(self, _binaryFolder):
         """ 

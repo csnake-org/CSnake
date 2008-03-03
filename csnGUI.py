@@ -80,10 +80,8 @@ class CSnakeGUIFrame(wx.Frame):
         redir=RedirectText(self.textLog)
         sys.stdout=redir
         sys.stderr=redir
-        print "Tip: it is convenient to have the Project Root and Bin Folder as subfolders of a common parent folder. For example,\n"
-        print "Project Root = <somepath>/TextEditorProject/source, \n"
-        print "Bin Folder = <somepath>/TextEditorProject/bin. \n"
-        print "Project Folder = <somepath>/TextEditorProject/source/TextEditorGUI.\n"
+        print "CSnakeGUI loaded.\n"
+        print "Checking if CMake is found...\n"
        
         self.handler = csnGUIHandler.Handler()
         self.commandCounter = 0
