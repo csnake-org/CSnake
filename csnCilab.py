@@ -48,14 +48,14 @@ def AddCilabWidgetModules(_project, _widgetModules):
         srcFolderAbs = "%s/%s" % (_project.sourceRootFolder, srcFolder)
         if( os.path.exists(srcFolderAbs) ):
             _project.AddPublicIncludeFolders([srcFolder])
-            _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
-            _project.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0)
+            _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0, _sourceGroup = "Widgets")
+            _project.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
             
         includeFolder = "widgets/%s" % widgetModule
         includeFolderAbs = "%s/%s" % (_project.sourceRootFolder, includeFolder)
         if( os.path.exists(includeFolderAbs) ):
             _project.AddPublicIncludeFolders([includeFolder])
-            _project.AddSources(["%s/*.h" % includeFolder], _moc = 1, _checkExists = 0)
+            _project.AddSources(["%s/*.h" % includeFolder], _moc = 1, _checkExists = 0, _sourceGroup = "Widgets")
             
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
     """ 
@@ -104,14 +104,14 @@ class CilabModuleProject(csnBuild.Project):
         
     def AddDemos(self, _modules):
         demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
-        demosProject.AddSources([csnUtility.GetDummyCppFilename()])
+        demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder)
         demosProject.AddProjects([self])
         self.AddProjects([demosProject], _dependency = 0)
 
     def AddApplications(self, _modules):
         applicationsProject = csnBuild.Project(self.name + "Applications", "library", _sourceRootFolder = self.sourceRootFolder)
-        applicationsProject.AddSources([csnUtility.GetDummyCppFilename()])
+        applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder)
         applicationsProject.AddProjects([self])
         self.AddProjects([applicationsProject], _dependency = 0)

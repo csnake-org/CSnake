@@ -15,8 +15,6 @@ import OrderedSet
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
-# - install msvcp.dll
-# - improve patch that creates source group for widget files
 
 root = "%s/.." % (os.path.dirname(__file__))
 root = root.replace("\\", "/")
@@ -41,6 +39,7 @@ class OpSysSection:
         self.libraries = list()
         self.includeFolders = list()
         self.libraryFolders = list()
+        # self.projects = OrderedSet.OrderedSet()
 
 class OpSys:
     """ 
@@ -133,15 +132,12 @@ class Generator:
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder, _public = 0)) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(_binaryFolder)) )
 
-        # generate group for widget files
-        widgetFiles = []
-        for file in _targetProject.sources:
-            if file.find("Widget") >= 0 and not (file.find("moc") >= 0 or file.find(".ui") >= 0):
-                widgetFiles.append(file)
-        f.write( "\n # Create widget group \n" )
-        f.write( "IF (WIN32)\n" )
-        f.write( "  SOURCE_GROUP(\"Widget Files\" FILES %s)\n" % csnUtility.Join(widgetFiles, _addQuotes = 1))
-        f.write( "ENDIF(WIN32)\n\n" )
+        # generate groups for widget files
+        for groupName in _targetProject.sourceGroups:
+            f.write( "\n # Create %s group \n" % groupName )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"%s\" FILES %s)\n" % (groupName, csnUtility.Join(_targetProject.sourceGroups[groupName], _addQuotes = 1)))
+            f.write( "ENDIF(WIN32)\n\n" )
 
         # generate moc files
         cmakeMocInputVar = ""
@@ -386,6 +382,7 @@ class Project(object):
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
     self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
+    self.sourceGroups -- Dictionary (groupName -> sources) for sources that should be placed in a visual studio group.
     self.opSystems -- Dictionary (WIN32/NOT WIN32/ALL -> OpSys) with definitions to be used for different operating systems. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
@@ -421,6 +418,7 @@ class Project(object):
     """    
     def __init__(self, _name, _type, _sourceRootFolder = None ):
         self.sources = []
+        self.sourceGroups = dict()
 
         self.opSystems = dict()
         for opSysName in ["WIN32", "NOT WIN32", "ALL"]:
@@ -453,11 +451,12 @@ class Project(object):
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
 
-    def AddProjects(self, _projects, _dependency = 1):
+    def AddProjects(self, _projects, _dependency = 1): # _private = 0
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
         it is called as a function (the result of the function should be a Project).
         _dependency - Flag that states that self target requires (is dependent on) _projects.
+        _private - If true, then the dependency on this project is not propagated to other projects.
         Raises StandardError in case of a cyclic dependency.
         """
         for project in _projects:
@@ -475,7 +474,7 @@ class Project(object):
                 if( not _dependency ):
                     self.projectsNonRequired.add( projectToAdd )
 
-    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _checkExists = 1):
+    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1):
         """
         Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
         Entries of _listOfSourceFiles may contain wildcards, such as src/*/*.h.
@@ -496,7 +495,11 @@ class Project(object):
                     if( _ui ):
                         self.sourcesToBeUIed.append(source)
                     self.sources.append(source)
-
+                    if _sourceGroup != "":
+                        if not self.sourceGroups.has_key(_sourceGroup):
+                            self.sourceGroups[_sourceGroup] = []
+                        self.sourceGroups[_sourceGroup].append(source)
+                   
     def AddFilesToInstall(self, _listOfFiles, _location = '.', _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.filesToInstall.
@@ -621,7 +624,6 @@ class Project(object):
         
         assert not self in _skipList, "%s should not be in stoplist" % (self.name)
         _skipList.append(self)
-        
         for requiredProject in self.RequiredProjects():
             if requiredProject in _skipList:
                 continue
@@ -646,7 +648,7 @@ class Project(object):
             result.update(moreResults)
         return result
         
-    def AllProjects(self, _recursive = 0):
+    def AllProjects(self, _recursive = 0, _skipList = None):
         """
         Returns list of all projects associated with this project.
         """
@@ -655,7 +657,14 @@ class Project(object):
         if( _recursive ):
             moreResults = OrderedSet.OrderedSet()
             for project in result:
-                moreResults.update( project.AllProjects(_recursive) )
+                # see if project is in the skip list
+                if _skipList is None:
+                    _skipList = []
+                if project in _skipList:
+                    continue
+                # add project to the skip list, and recurse
+                _skipList.append(project)
+                moreResults.update( project.AllProjects(_recursive, _skipList) )
             result.update(moreResults)
         return result
         
