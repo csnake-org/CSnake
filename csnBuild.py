@@ -6,6 +6,7 @@ import sys
 import re
 import glob
 import types
+import OrderedSet
 
 # ToDo:
 # - extend csnGUI with the option of additional root folders
@@ -206,7 +207,7 @@ class Generator:
                 f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (_targetProject.name, destination) )
                 
         # Find projects that must be generated. A separate list is used to ease debugging.
-        projectsToGenerate = set()
+        projectsToGenerate = OrderedSet.OrderedSet()
         requiredProjects = _targetProject.RequiredProjects(_recursive = 1)        
         for projectToGenerate in requiredProjects:
             # determine if we must Generate the project. If a required project will generate it, 
@@ -239,7 +240,7 @@ class Generator:
         for project in requiredProjects:
             if( len(project.sources) ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
-        
+
         # if top level project, add install rules for all the filesToInstall
         if isTopLevelProject:
             for mode in ("debug", "release"):
@@ -332,10 +333,12 @@ ForcedIncludeFiles="%s"
             vcproj = vcproj.replace(searchString, replaceString)
 
             # create file pchCppFilename
-            f = open("%s/%s" % (binaryProjectFolder, pchCppFilename), 'w')
-            f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
-            f.write("#include \"%s\"\n" % _project.precompiledHeader) 
-            f.close()
+            precompiledHeaderCppFilename = "%s/%s" % (binaryProjectFolder, pchCppFilename); 
+            if not os.path.exists(precompiledHeaderCppFilename):
+                f = open(precompiledHeaderCppFilename, 'w')
+                f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
+                f.write("#include \"%s\"\n" % _project.precompiledHeader) 
+                f.close()
             
             # write patched vcproj
             f = open(vcprojFilename, 'w')
@@ -446,8 +449,8 @@ class Project(object):
         self.configFilePath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
         self.useFilePath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
         self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
-        self.projects = set()
-        self.projectsNonRequired = set()
+        self.projects = OrderedSet.OrderedSet()
+        self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
 
     def AddProjects(self, _projects, _dependency = 1):
@@ -631,9 +634,13 @@ class Project(object):
         Return a set of projects that self depends upon.
         If recursive is true, then required projects of required projects are also retrieved.
         """
-        result = self.projects - self.projectsNonRequired
+        result = OrderedSet.OrderedSet()
+        for project in self.projects:
+            if not project in self.projectsNonRequired:
+                result.add(project) 
+
         if( _recursive ):
-            moreResults = set()
+            moreResults = OrderedSet.OrderedSet()
             for project in result:
                 moreResults.update( project.RequiredProjects(_recursive) )
             result.update(moreResults)
@@ -643,9 +650,10 @@ class Project(object):
         """
         Returns list of all projects associated with this project.
         """
-        result = self.projects
+        result = OrderedSet.OrderedSet()
+        result.update(self.projects)
         if( _recursive ):
-            moreResults = set()
+            moreResults = OrderedSet.OrderedSet()
             for project in result:
                 moreResults.update( project.AllProjects(_recursive) )
             result.update(moreResults)
@@ -701,7 +709,6 @@ class Project(object):
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
                 if( otherProject.WantsToBeUsedBefore(project) ):
-                    #print ("%s wants to be before %s\n" % (otherProject.name, project.name))
                     skipThisProjectForNow = 1
             if( skipThisProjectForNow ):
                 projectsToUse.insert(0, project)

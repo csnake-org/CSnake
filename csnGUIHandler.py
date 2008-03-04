@@ -96,11 +96,11 @@ class Handler:
         rbi.rollbackImports()
         
         return instance
-        
     
     def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
         logString = ""
         instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
         generator.Generate(instance, _binFolder, _installFolder)
