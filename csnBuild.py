@@ -39,7 +39,7 @@ class OpSysSection:
         self.libraries = list()
         self.includeFolders = list()
         self.libraryFolders = list()
-        # self.projects = OrderedSet.OrderedSet()
+        self.projects = OrderedSet.OrderedSet()
 
 class OpSys:
     """ 
@@ -258,7 +258,7 @@ class Generator:
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
         """
         self.PostProcessOneProject(_targetProject, _binaryFolder)
-        for project in _targetProject.projects:
+        for project in _targetProject.AllProjects(_recursive = 1):
             self.PostProcessOneProject(project, _binaryFolder)
         
     def PostProcessOneProject(self, _project, _binaryFolder):
@@ -451,7 +451,7 @@ class Project(object):
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
 
-    def AddProjects(self, _projects, _dependency = 1): # _private = 0
+    def AddProjects(self, _projects, _dependency = 1): 
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
         it is called as a function (the result of the function should be a Project).
@@ -636,10 +636,7 @@ class Project(object):
         Return a set of projects that self depends upon.
         If recursive is true, then required projects of required projects are also retrieved.
         """
-        result = OrderedSet.OrderedSet()
-        for project in self.projects:
-            if not project in self.projectsNonRequired:
-                result.add(project) 
+        result = self.projects - self.projectsNonRequired
 
         if( _recursive ):
             moreResults = OrderedSet.OrderedSet()

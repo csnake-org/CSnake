@@ -19,6 +19,16 @@ class OrderedSet(object):
         self._allow_move = allow_move
         self.update(iterable)
 
+    def __sub__(self, _other):
+        """
+        Returns self - other (elements of self which are not in _other)
+        """
+        result = OrderedSet()
+        for x in self:
+            if not x in _other:
+                result.add(x)
+        return result 
+        
     def __contains__(self, element):
         return element in self._map
 
