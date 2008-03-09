@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book>
+  <title>CSnake tutorial<author>
+      <surname>Maarten Nieber</surname>
+    </author></title>
+
+  <chapter>
+    <title>What is CSnake</title>
+
+    <para>CSnake is a tool for C++ source code configuration. This means that
+    CSnake can be used to create libraries and executables out of C++ source
+    code. For this purpose, CSnake allows you to:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>define libraries and executables</para>
+      </listitem>
+
+      <listitem>
+        <para>specify which source files should be incorporated into a library
+        or executable</para>
+      </listitem>
+
+      <listitem>
+        <para>specify paths where the compiler should search for include
+        files</para>
+      </listitem>
+
+      <listitem>
+        <para>define dependencies between different libraries and executables
+        (automatically handling the paths where include files from the
+        dependent projects should be searched).</para>
+      </listitem>
+
+      <listitem>
+        <para>include <emphasis>config-files</emphasis> and
+        <emphasis>use-files</emphasis> from CMake. This is possible because
+        <emphasis role="bold">CSnake is internally using
+        CMake</emphasis>.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The output of CSnake is a set of CMake files. In most cases, you
+    will not be aware of this, because you will use CSnakeGUI to produce a set
+    of Visual Studio files (on Windows) or KDevelop files that you can
+    directly use to build your applications and libraries.</para>
+
+    <note>
+      <para>The name CSnake derives from the Python programming language (as
+      CSnake is written in Python) and CMake.</para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Installing CSnake</title>
+
+    <para>Copy the contents of
+    \\193.145.44.5\standard_software_installers\WindowsXP\GIMIAS\Other\CSnake
+    to your Program Files folder. You can start CSnakeGUI by double clicking
+    on CSnakeGUI.bat. Before experimenting with CSnakeGUI, we advise you to
+    read the next chapter on creating a CSnake project.</para>
+  </chapter>
+
+  <chapter>
+    <title>How to create a CSnake project</title>
+
+    <para>When you want to create a library (or executable) out of your source
+    code, you need to create a CSnake project for that library. This is done
+    by instantiating a Python class called csnBuild.Project. The following
+    Python file contains an example:</para>
+
+    <example>
+      <title>CSnake example: csnMyLibrary.py</title>
+
+      <para><programlisting format="linespecific" id="python" lang="python"
+      linenumbering="numbered">import csnBuild
+myLibrary = csnBuild.Project("MyLibrary", "library")
+myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
+myLibrary.AddIncludeFolders(["src"])</programlisting></para>
+
+      <para>This small Python program is sufficient to create your first
+      library using CSnake. We will step through it line by line. Line 2 tells
+      the Python interpreter to create a new csnBuild.Project for building a
+      library with the name MyLibrary. The result is stored in the variable
+      myLibrary. In line 3, you add a list of source files to your library:
+      myLibrary.cpp and myLibrary.h. The square brackets [ ] are used to
+      indicate the beginning and ending of the list. In line 4, a list of
+      include folders (containing only the folder called 'src') is added to
+      the library project.</para>
+    </example>
+
+    <note>
+      <para>This Python program only contains the specification of your
+      library. You will use CSnakeGUI to generate the Visual Studio files (or
+      KDevelop files) that can be used to build the library.</para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Generating a CSnake project using Python</title>
+
+    <note>
+      <para>This chapter explains how to generate a CSnake project (i.e.
+      produce Visual Studio files) using the Python interpreter instead of
+      CSnakeGUI. It may provide some more insight how CSnake works, but can be
+      skipped by users who only want to use CSnakeGUI.</para>
+    </note>
+
+    <para>To generate the CSnake output for our myLibrary project, add the
+    following lines to csnMyLibrary.py (or load the existing file in the
+    examples/MyLibrary subfolder of CSnake)</para>
+
+    <programlisting>if __name__ == "__main__":
+    generator = csnBuild.Generator()
+    generator.Generate(myLibrary, "./bin", "./install")</programlisting>
+
+    <para>These lines create a csnBuild.Generator, which is used to generate
+    CMake files for myLibrary. Now open a prompt in the folder holding
+    csnMyLibrary.py. We will use the PYTHONPATH variable to ensure that
+    csnBuild can be found by the interpreter (adjust the path below as
+    necessary), and then run CSnake</para>
+
+    <programlisting>&gt;set PYTHONPATH="C:\Program Files\CSnake\src"
+&gt;python csnMyLibrary.py</programlisting>
+
+    <para>After running this, CMake files have been placed in the folder
+    "./bin/libraries/MyLibrary" (a subfolder in the current path). You can now
+    use CMake and then Visual Studio to build your library. By building the
+    INSTALL project in Visual Studio, the library will be copied to the folder
+    "./install". </para>
+
+    <note>
+      <para>In general, it is not necessary to build the INSTALL project for
+      an application that is created with CSnake. Instead, you can directly
+      run the application from the bin folder.</para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Generating a CSnake project using CSnakeGUI</title>
+
+    <para>In this chapter we will use CSnakeGUI to produce the VIsual Studio
+    (or KDevelop) files for building myLibrary. Double click CSnakeGUI.bat and
+    set up the screen as below.</para>
+
+    <example>
+      <title>CSnakeGUI screenshot: building myLibrary</title>
+
+      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/MyLibrary.png"
+               format="PNG" />
+
+      <para></para>
+    </example>
+
+    <para></para>
+  </chapter>
+</book>
