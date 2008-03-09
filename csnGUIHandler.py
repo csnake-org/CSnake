@@ -59,7 +59,7 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
     f.write( "import csnBuild\n" )
     f.write( "%s = csnBuild.Project(\"%s\", \"%s\")\n" % (instanceName, _name, _type) )
     f.write( "%s.AddSources([\"src/*.h\", \"src/*.cpp\"]) # note: argument must be a python list!\n" % (instanceName) )
-    f.write( "%s.AddPublicIncludeFolders([\"src\"]) # note: argument must be a python list!\n" % (instanceName) )
+    f.write( "%s.AddIncludeFolders([\"src\"]) # note: argument must be a python list!\n" % (instanceName) )
     f.close()
                 
 class Handler:

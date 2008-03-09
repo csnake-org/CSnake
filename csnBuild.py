@@ -39,7 +39,6 @@ class OpSysSection:
         self.libraries = list()
         self.includeFolders = list()
         self.libraryFolders = list()
-        self.projects = OrderedSet.OrderedSet()
 
 class OpSys:
     """ 
@@ -234,7 +233,7 @@ class Generator:
         # add dependencies
         f.write( "\n" )
         for project in requiredProjects:
-            if( len(project.sources) ):
+            if( len(project.sources) and not project in _targetProject.doNotAddADependencyForTheseProjects ):
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
@@ -285,7 +284,8 @@ class Generator:
             
             # add release project pch settings to all configurations
             searchString = "RuntimeTypeInfo=\"TRUE\"\n"
-            replaceString = """RuntimeTypeInfo="TRUE"
+            replaceString = \
+"""RuntimeTypeInfo="TRUE"
 UsePrecompiledHeader="3"
 PrecompiledHeaderThrough="%s" 
 PrecompiledHeaderFile="%s"
@@ -297,7 +297,8 @@ PrecompiledHeaderFile="%s"
             
             # add pchCpp to the solution
             searchString = "<Files>\n"
-            replaceString = """
+            replaceString = \
+"""
     <Files>
 		<Filter
 			Name="PCH Files"
@@ -323,17 +324,22 @@ PrecompiledHeaderFile="%s"
             
             # force include of the pch header file
             searchString = "CompileAs=\"2\"\n"
-            replaceString = """CompileAs="2"
+            replaceString = \
+"""CompileAs="2"
 ForcedIncludeFiles="%s"
 """ % _project.precompiledHeader
             vcproj = vcproj.replace(searchString, replaceString)
 
             # create file pchCppFilename
-            precompiledHeaderCppFilename = "%s/%s" % (binaryProjectFolder, pchCppFilename); 
-            if not os.path.exists(precompiledHeaderCppFilename):
+            precompiledHeaderCppFilename = "%s/%s" % (binaryProjectFolder, pchCppFilename);
+            precompiledHeaderCppFilenameText = \
+"""// Automatically generated file for building the precompiled headers file. DO NOT EDIT
+#include "%s"
+""" % _project.precompiledHeader
+   
+            if( csnUtility.FileToString(precompiledHeaderCppFilename) != precompiledHeaderCppFilenameText ):
                 f = open(precompiledHeaderCppFilename, 'w')
-                f.write("// Automatically generated file for builing the precompiled headers file. DO NOT EDIT\n")
-                f.write("#include \"%s\"\n" % _project.precompiledHeader) 
+                f.write(precompiledHeaderCppFilenameText)
                 f.close()
             
             # write patched vcproj
@@ -395,7 +401,9 @@ class Project(object):
     self.projectsNonRequired -- Subset of self.projects. Contains projects that self doesn't depend on.
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
-    then precompiled headers is set up.    
+    then precompiled headers is set up.
+    self.doNotAddADependencyForTheseProjects - This ordered set is used to work around a problem with Visual Studio.
+    The project does not add a Visual Studio dependency on any project in this list.      
     """
     
     def __new__(cls, *a, **b):
@@ -450,6 +458,7 @@ class Project(object):
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
+        self.doNotAddADependencyForTheseProjects = OrderedSet.OrderedSet()
 
     def AddProjects(self, _projects, _dependency = 1): 
         """ 
@@ -474,6 +483,21 @@ class Project(object):
                 if( not _dependency ):
                     self.projectsNonRequired.add( projectToAdd )
 
+    def DoNotAddADependencyForTheseProjects(self, _projects):
+        """
+        Adds _projects to self.doNotAddADependencyForTheseProjects. This ordered set is used to work 
+        around a problem with Visual Studio.
+        The project does not add a Visual Studio dependency on any project in this list.
+        If an item in _projects is a function, then it is called as a function 
+        (the result of the function should be a Project and is 
+        added to self.doNotAddADependencyForTheseProjects).
+        """
+        for project in _projects:
+            projectToAdd = project
+            if type(projectToAdd) == types.FunctionType:
+                projectToAdd = project()
+            self.doNotAddADependencyForTheseProjects.add(projectToAdd)
+                
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1):
         """
         Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
@@ -532,7 +556,7 @@ class Project(object):
         else:
             opSys.public.definitions.extend(_listOfDefinitions)
         
-    def AddPublicIncludeFolders(self, _listOfIncludeFolders):
+    def AddIncludeFolders(self, _listOfIncludeFolders):
         """
         Adds items to self.publicIncludeFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
@@ -551,7 +575,7 @@ class Project(object):
         assert len(globResult) == 1, "Error locating precompiled header file %s" % _precompiledHeader
         self.precompiledHeader = globResult[0]
         
-    def AddPublicLibraryFolders(self, _listOfLibraryFolders):
+    def AddLibraryFolders(self, _listOfLibraryFolders):
         """
         Adds items to self.publicLibraryFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
@@ -561,7 +585,7 @@ class Project(object):
         for libraryFolder in _listOfLibraryFolders:
             opSysAll.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
-    def AddPublicLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
+    def AddLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.publicLibraries. 
         _type - Should be \"debug\", \"optimized\" or \"all\".
@@ -746,6 +770,7 @@ class Project(object):
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
+        f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.name, self.GetPathToUseFile(_binaryFolder) ) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         for opSysName in ["WIN32", "NOT WIN32"]:

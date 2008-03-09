@@ -24,7 +24,7 @@ def AddCilabLibraryModules(_project, _libModules):
         srcFolder = "libmodules/%s/src" % (libModule)
         srcFolderAbs = "%s/%s" % (_project.sourceRootFolder, srcFolder)
         if( os.path.exists(srcFolderAbs) ):
-            _project.AddPublicIncludeFolders([srcFolder])
+            _project.AddIncludeFolders([srcFolder])
             _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
             _project.AddSources(["%s/*.h" % srcFolder], _checkExists = 0)
             _project.AddSources(["%s/*.hpp" % srcFolder], _checkExists = 0)
@@ -34,7 +34,7 @@ def AddCilabLibraryModules(_project, _libModules):
         includeFolder = "libmodules/%s/include" % libModule
         includeFolderAbs = "%s/%s" % (_project.sourceRootFolder, includeFolder)
         if( os.path.exists(includeFolderAbs) ):
-            _project.AddPublicIncludeFolders([includeFolder])
+            _project.AddIncludeFolders([includeFolder])
             _project.AddSources(["%s/*.h" % includeFolder], _checkExists = 0)
 
 def AddCilabWidgetModules(_project, _widgetModules):
@@ -47,14 +47,14 @@ def AddCilabWidgetModules(_project, _widgetModules):
         srcFolder = "widgets/%s" % (widgetModule)
         srcFolderAbs = "%s/%s" % (_project.sourceRootFolder, srcFolder)
         if( os.path.exists(srcFolderAbs) ):
-            _project.AddPublicIncludeFolders([srcFolder])
+            _project.AddIncludeFolders([srcFolder])
             _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0, _sourceGroup = "Widgets")
             _project.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
             
         includeFolder = "widgets/%s" % widgetModule
         includeFolderAbs = "%s/%s" % (_project.sourceRootFolder, includeFolder)
         if( os.path.exists(includeFolderAbs) ):
-            _project.AddPublicIncludeFolders([includeFolder])
+            _project.AddIncludeFolders([includeFolder])
             _project.AddSources(["%s/*.h" % includeFolder], _moc = 1, _checkExists = 0, _sourceGroup = "Widgets")
             
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
@@ -82,7 +82,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
                 continue
             (name, ext) = os.path.splitext( os.path.basename(sourceFile) )
             app = csnBuild.Project("%s.%s" % (_holderProject.name, name), "executable", _sourceRootFolder = _holderProject.sourceRootFolder)
-            app.AddPublicIncludeFolders([moduleFolder]) 
+            app.AddIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])
             # add header files so that they appear in visual studio
@@ -124,7 +124,7 @@ class GimiasPluginProject(csnBuild.Project):
     def __init__(self, _name):
         csnBuild.Project.__init__(self, _name, "dll")
         self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
-        self.AddPublicIncludeFolders(["."])
+        self.AddIncludeFolders(["."])
         
     def AddWidgetModules(self, _widgetModules):
         """

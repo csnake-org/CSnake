@@ -40,19 +40,19 @@ class ProjectTest(unittest.TestCase):
 		self.globalTestSetup.setUp()
 
 		self.dummyDll = csnBuild.Project("DummyDll", "dll")
-		self.dummyDll.AddPublicIncludeFolders(["DummyDll"])
+		self.dummyDll.AddIncludeFolders(["DummyDll"])
 		self.dummyDll.AddSources(["DummyDll/DummyDll.cpp", "DummyDll/DummyDll.h"])
 		self.dummyDll.AddDefinitions(["DummyDllDefPrivateWin32"], _private = 1, _WIN32 = 1)
 
 		self.dummyLib = csnBuild.Project("DummyLib", "library")
-		self.dummyLib.AddPublicIncludeFolders(["DummyLib"])
+		self.dummyLib.AddIncludeFolders(["DummyLib"])
 		self.dummyLib.AddSources(["DummyLib/DummyLib.cpp", "DummyLib/DummyLib.h"])
 		self.dummyLib.AddProjects([self.dummyDll])
 		self.dummyLib.AddDlls(["DummyLib/lib/ExtraLib.dll"])
 		self.dummyDll.AddDefinitions(["DummyLibDefPublicWin32"], _private = 0, _WIN32 = 1)
 		
 		self.dummyExe = csnBuild.Project("DummyExe", "executable")
-		self.dummyExe.AddPublicIncludeFolders(["DummyExe"])
+		self.dummyExe.AddIncludeFolders(["DummyExe"])
 		self.dummyExe.AddSources(["DummyExe/DummyExe.cpp"])
 		self.dummyExe.AddProjects([self.dummyLib])
 		self.dummyExe.AddDefinitions(["DummyExeDefPrivate"], _private = 1)
@@ -124,7 +124,7 @@ class ProjectTest(unittest.TestCase):
 		
 	def testNonExistingIncludeFolder(self):
 		""" Test that a non-existing include folder is detected. """
-		self.assertRaises(IOError, self.dummyDll.AddPublicIncludeFolders, ["include"])
+		self.assertRaises(IOError, self.dummyDll.AddIncludeFolders, ["include"])
 	
 	def testBuildBinFolderSlashes(self):
 		""" Test that build bin folder may not contain any backward slashes. """
@@ -142,7 +142,7 @@ class ProjectTest(unittest.TestCase):
 	def testNameConflict(self):
 		""" Test that two projects cannot have the same name. """
 		dummyLib = csnBuild.Project("DummyLib", "library")
-		dummyLib.AddPublicIncludeFolders(["DummyLib"])
+		dummyLib.AddIncludeFolders(["DummyLib"])
 		dummyLib.AddSources(["DummyLib/DummyLib.cpp", "DummyLib/DummyLib.h"])
 		self.dummyExe.AddProject([dummyLib])
 		generator = csnBuild.Generator()
