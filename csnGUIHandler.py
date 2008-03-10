@@ -69,7 +69,7 @@ class Handler:
         else:
             print "CMake was found.\n"
     
-    def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
         
         # set up roll back of imported modules
@@ -82,10 +82,12 @@ class Handler:
         csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
         # extend python path with project folder, source root and third party root
-        for path in (_projectPath, _sourceRootFolder, _thirdPartyRootFolder):
+        newPaths = _sourceRootFolders
+        newPaths.extend([_projectPath, _thirdPartyRootFolder]) 
+        for path in newPaths:
             if not path in sys.path:
                 sys.path.append(path)
-    
+        
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
 
@@ -97,9 +99,9 @@ class Handler:
         
         return instance
     
-    def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
+    def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolders, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
         logString = ""
-        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder)
         
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
@@ -115,12 +117,12 @@ class Handler:
             else:
                 print "Configuration failed.\n"   
             
-    def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolder, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolders, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
         This function copies all third party dlls to the binary folder, so that you can run the executables in the
         binary folder without having to build the INSTALL target.
         """
-        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolder, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder)
         folders = dict()
         folders["debug"] = "%s/bin/Debug" % _binFolder
         folders["release"] = "%s/bin/Release" % _binFolder
@@ -142,7 +144,7 @@ class Handler:
             retcode = 1
         return retcode == 0
     
-    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolders, _thirdPartyBinFolder):
         """ 
         Runs cmake to install the libraries in the third party folder.
         """

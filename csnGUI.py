@@ -8,10 +8,6 @@ import pickle
 import os.path
 import sys
 
-thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
-thisFolder = thisFolder.replace("\\", "/")
-recentFilesFilename = "%s/recentFiles" % thisFolder
-
 class RedirectText:
     def __init__(self,aWxTextCtrl):
 		self.out=aWxTextCtrl
@@ -19,13 +15,13 @@ class RedirectText:
     def write(self,string):
 		self.out.WriteText(string)
 
-class CSnakeGUIRecentFiles:
-    def __init__(self):    
-        self.source2BinaryFolder = dict()
-        self.source2InstallFolder = dict()
-        self.thirdPartySource2BinaryFolder = dict()
-        self.projectFolder = ""
-        self.rootFolder = ""
+class CSnakeGUISettings:
+    def __init__(self):
+        self.binFolder = ""    
+        self.installFolder = ""    
+        self.thirdPartyBinFolder = ""
+        self.csnakeFile = ""
+        self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
     
@@ -37,14 +33,26 @@ class CSnakeGUIFrame(wx.Frame):
         self.panelThirdParty = wx.Panel(self, -1)
         self.panelSource = wx.Panel(self, -1)
         self.panelProjectAndInstance = wx.Panel(self, -1)
-        self.lblProjectPath = wx.StaticText(self.panelProjectAndInstance, -1, "Project Path\n")
-        self.txtProjectPath = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
-        self.btnSelectProjectPath = wx.Button(self.panelProjectAndInstance, -1, "...")
+        
+        # Menu Bar
+        self.frmCSnakeGUI_menubar = wx.MenuBar()
+        wxglade_tmp_menu = wx.Menu()
+        self.mnuLoadSettings = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Load Settings", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuLoadSettings)
+        self.mnuSaveSettingsAs = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Save Settings As...", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuSaveSettingsAs)
+        self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "File")
+        self.SetMenuBar(self.frmCSnakeGUI_menubar)
+        # Menu Bar end
+        self.lbCSnakeFile = wx.StaticText(self.panelProjectAndInstance, -1, "CSnake File\n")
+        self.txtCSnakeFile = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
+        self.btnSelectCSnakeFile = wx.Button(self.panelProjectAndInstance, -1, "...")
         self.labelInstance = wx.StaticText(self.panelProjectAndInstance, -1, "Instance")
         self.txtInstance = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
         self.label_1 = wx.StaticText(self.panelSource, -1, "Root Folder\n")
-        self.txtRootFolder = wx.TextCtrl(self.panelSource, -1, "")
-        self.btnSelectRootFolder = wx.Button(self.panelSource, -1, "...")
+        self.cmbRootFolders = wx.ComboBox(self.panelSource, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.btnAddRootFolder = wx.Button(self.panelSource, -1, "Add")
+        self.btnRemoveRootFolder = wx.Button(self.panelSource, -1, "Remove")
         self.label_1_copy = wx.StaticText(self.panelSource, -1, "Bin Folder\n")
         self.txtBinFolder = wx.TextCtrl(self.panelSource, -1, "")
         self.btnSelectBinFolder = wx.Button(self.panelSource, -1, "...")
@@ -64,15 +72,14 @@ class CSnakeGUIFrame(wx.Frame):
         self.__set_properties()
         self.__do_layout()
 
-        self.Bind(wx.EVT_TEXT, self.OnTypingProjectPath, self.txtProjectPath)
-        self.Bind(wx.EVT_BUTTON, self.OnSelectProjectPath, self.btnSelectProjectPath)
-        self.Bind(wx.EVT_TEXT, self.OnTypingRootFolder, self.txtInstance)
-        self.Bind(wx.EVT_TEXT, self.OnTypingRootFolder, self.txtRootFolder)
-        self.Bind(wx.EVT_BUTTON, self.OnSelectProjectRoot, self.btnSelectRootFolder)
+        self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.mnuLoadSettings)
+        self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
+        self.Bind(wx.EVT_BUTTON, self.OnAddRootFolder, self.btnAddRootFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnRemoveRootFolder, self.btnRemoveRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectBinFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectInstallFolder, self.btnSelectInstallFolder)
-        self.Bind(wx.EVT_TEXT, self.OnTypingThirdPartyRootFolder, self.txtThirdPartyRootFolder)
-        self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyRoot, self.btnSelectThirdPartyRootFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyRootFolder, self.btnSelectThirdPartyRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyBinFolder, self.btnSelectThirdPartyBinFolder)
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
         # end wxGlade
@@ -89,16 +96,12 @@ class CSnakeGUIFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
         self.SetTitle("CSnake GUI")
-        self.SetSize((500, 459))
-        self.txtProjectPath.SetMinSize((-1, -1))
-        self.txtProjectPath.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
-        self.btnSelectProjectPath.SetMinSize((30, -1))
+        self.txtCSnakeFile.SetMinSize((-1, -1))
+        self.txtCSnakeFile.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
+        self.btnSelectCSnakeFile.SetMinSize((30, -1))
         self.txtInstance.SetMinSize((-1, -1))
         self.txtInstance.SetToolTipString("Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.")
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
-        self.txtRootFolder.SetMinSize((-1, -1))
-        self.txtRootFolder.SetToolTipString("Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.")
-        self.btnSelectRootFolder.SetMinSize((30, -1))
         self.txtBinFolder.SetMinSize((-1, -1))
         self.txtBinFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectBinFolder.SetMinSize((30, -1))
@@ -114,19 +117,21 @@ class CSnakeGUIFrame(wx.Frame):
         self.panelThirdParty.SetBackgroundColour(wx.Colour(192, 191, 255))
         self.cmbAction.SetSelection(0)
         # end wxGlade
-        self.recentFiles = CSnakeGUIRecentFiles()
-        if os.path.exists( recentFilesFilename ):
-            f = open(recentFilesFilename, 'r')
-            self.recentFiles = pickle.load(f)
-            f.close()
-            self.txtProjectPath.SetValue(self.recentFiles.projectFolder)
-            self.txtRootFolder.SetValue(self.recentFiles.rootFolder)
-            self.txtThirdPartyRootFolder.SetValue(self.recentFiles.thirdPartyRootFolder)
-            self.txtBinFolder.SetValue( self.recentFiles.source2BinaryFolder[self.txtRootFolder.GetValue()] )
-            self.txtInstallFolder.SetValue( self.recentFiles.source2InstallFolder[self.txtRootFolder.GetValue()] )
-            self.txtThirdPartyBinFolder.SetValue( self.recentFiles.thirdPartySource2BinaryFolder[self.txtThirdPartyRootFolder.GetValue()] )
-            self.txtInstance.SetValue(self.recentFiles.instance)
+        self.settings = CSnakeGUISettings()
+        thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
+        thisFolder = thisFolder.replace("\\", "/")
+        self.recentFile = "%s/recentFiles" % thisFolder
+        if len(sys.argv) >= 2:
+            self.LoadSettings(sys.argv[1])
+        else:
+            self.LoadSettings()
 
+    def StoreSettingsFilename(self, lastUsedSettingsFile):
+        f = open(self.recentFile, 'w')
+        f.write(lastUsedSettingsFile)
+        f.close()
+        self.settingsFilename = lastUsedSettingsFile
+        
     def __do_layout(self):
         # begin wxGlade: CSnakeGUIFrame.__do_layout
         boxSettings = wx.BoxSizer(wx.VERTICAL)
@@ -138,12 +143,13 @@ class CSnakeGUIFrame(wx.Frame):
         boxBinFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxBinFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxRootFolder = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         boxRootFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxProjectPath = wx.BoxSizer(wx.HORIZONTAL)
-        boxProjectPath.Add(self.lblProjectPath, 0, wx.RIGHT, 5)
-        boxProjectPath.Add(self.txtProjectPath, 2, wx.FIXED_MINSIZE, 0)
-        boxProjectPath.Add(self.btnSelectProjectPath, 0, 0, 0)
+        boxProjectPath.Add(self.lbCSnakeFile, 0, wx.RIGHT, 5)
+        boxProjectPath.Add(self.txtCSnakeFile, 2, wx.FIXED_MINSIZE, 0)
+        boxProjectPath.Add(self.btnSelectCSnakeFile, 0, 0, 0)
         sizer_3.Add(boxProjectPath, 0, wx.EXPAND, 0)
         boxRootFolder_copy.Add(self.labelInstance, 0, wx.RIGHT, 5)
         boxRootFolder_copy.Add(self.txtInstance, 2, wx.FIXED_MINSIZE, 0)
@@ -151,8 +157,10 @@ class CSnakeGUIFrame(wx.Frame):
         self.panelProjectAndInstance.SetSizer(sizer_3)
         boxSettings.Add(self.panelProjectAndInstance, 0, wx.EXPAND, 0)
         boxRootFolder.Add(self.label_1, 0, wx.RIGHT, 5)
-        boxRootFolder.Add(self.txtRootFolder, 2, wx.FIXED_MINSIZE, 0)
-        boxRootFolder.Add(self.btnSelectRootFolder, 0, 0, 0)
+        boxRootFolder.Add(self.cmbRootFolders, 1, wx.EXPAND, 0)
+        sizer_5.Add(self.btnAddRootFolder, 0, 0, 0)
+        sizer_5.Add(self.btnRemoveRootFolder, 0, 0, 0)
+        boxRootFolder.Add(sizer_5, 0, wx.EXPAND, 0)
         sizer_1.Add(boxRootFolder, 1, wx.EXPAND, 0)
         boxBinFolder.Add(self.label_1_copy, 0, wx.RIGHT, 5)
         boxBinFolder.Add(self.txtBinFolder, 2, wx.FIXED_MINSIZE, 0)
@@ -179,13 +187,9 @@ class CSnakeGUIFrame(wx.Frame):
         boxBuildProject.Add(self.cmbAction, 2, 0, 0)
         boxSettings.Add(boxBuildProject, 0, wx.EXPAND, 0)
         self.SetSizer(boxSettings)
+        boxSettings.Fit(self)
         self.Layout()
         # end wxGlade
-
-    def OnSelectProjectRoot(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        dlg = wx.DirDialog(None, "Select Project Root Folder")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.txtRootFolder.SetValue(dlg.GetPath())
 
     def OnSelectThirdPartyRoot(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select Third Party Root Folder")
@@ -207,66 +211,62 @@ class CSnakeGUIFrame(wx.Frame):
         mapping["Dll"] = "dll"
         mapping["Static library"] = "library"
         mapping["Executable"] = "executable"
-    	csnGUIHandler.CreateCSnakeProject(self.txtProjectPath.GetValue(), self.txtRootFolder.GetValue(), self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
+    	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
-    def StoreRecentFilesData(self):
-        self.recentFiles.source2BinaryFolder[ self.txtRootFolder.GetValue() ] = self.txtBinFolder.GetValue()
-        self.recentFiles.source2InstallFolder[ self.txtRootFolder.GetValue() ] = self.txtInstallFolder.GetValue()
-        self.recentFiles.thirdPartySource2BinaryFolder[ self.txtThirdPartyRootFolder.GetValue() ] = self.txtThirdPartyBinFolder.GetValue()
-        self.recentFiles.projectFolder = self.txtProjectPath.GetValue()
-        self.recentFiles.rootFolder = self.txtRootFolder.GetValue()
-        self.recentFiles.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue()
-        self.recentFiles.instance = self.txtInstance.GetValue()
-        f = open(recentFilesFilename, 'w')
-        pickle.dump(self.recentFiles, f)
+    def SaveSettings(self, filename):
+        self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
+        self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
+        self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
+        self.settings.csnakeFile = self.txtCSnakeFile.GetValue().replace("\\", "/")
+        self.settings.rootFolders = []
+        for i in range( self.cmbRootFolders.GetCount() ):
+            self.settings.rootFolders.append( self.cmbRootFolders.GetString(i).replace("\\", "/") )
+        self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
+        self.settings.instance = self.txtInstance.GetValue()
+        f = open(filename, 'w')
+        pickle.dump(self.settings, f)
         f.close()
+
+        # record the settings filename in self.recentFile
+        self.StoreSettingsFilename(filename)
     
-    def OnTypingProjectPath(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        event.Skip()
-
-    def OnTypingRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        event.Skip()
-
-    def OnTypingThirdPartyRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        event.Skip()
-
-    def OnSelectProjectPath(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        dlg = wx.FileDialog(None, "Select Python Project Module")
+    def OnSelectCSnakeFile(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.FileDialog(None, "Select Python CSnake file")
         if dlg.ShowModal() == wx.ID_OK:
-            self.txtProjectPath.SetValue(dlg.GetPath())
+            self.txtCSnakeFile.SetValue(dlg.GetPath())
 
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
-        self.StoreRecentFilesData()
+        self.SaveSettings(self.settingsFilename)
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
 
         if configureProject:
             self.handler.ConfigureProjectToBinFolder(
-                self.txtProjectPath.GetValue().replace("\\", "/"), 
-                self.txtInstance.GetValue(),
-                self.txtRootFolder.GetValue().replace("\\", "/"),
-                self.txtBinFolder.GetValue().replace("\\", "/"),
-                self.txtInstallFolder.GetValue().replace("\\", "/"),
-                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
-                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"),
+                self.settings.csnakeFile, 
+                self.settings.instance,
+                self.settings.rootFolders,
+                self.settings.binFolder,
+                self.settings.installFolder,
+                self.settings.thirdPartyRootFolder,
+                self.settings.thirdPartyBinFolder,
                 alsoRunCMake)
 
         copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
         if copyDlls:
             self.handler.InstallThirdPartyBinariesToBinFolder(
-                self.txtProjectPath.GetValue().replace("\\", "/"), 
-                self.txtInstance.GetValue(),
-                self.txtRootFolder.GetValue().replace("\\", "/"),
-                self.txtBinFolder.GetValue().replace("\\", "/"),
-                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
-                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"))
+                self.settings.csnakeFile, 
+                self.settings.instance,
+                self.settings.rootFolders,
+                self.settings.binFolder,
+                self.settings.thirdPartyRootFolder,
+                self.settings.thirdPartyBinFolder)
                 
         configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
         if( configureThirdPartyFolder ):
             self.handler.ConfigureThirdPartyFolder(
-                self.txtThirdPartyRootFolder.GetValue().replace("\\", "/"),
-                self.txtThirdPartyBinFolder.GetValue().replace("\\", "/"))
+                self.settings.thirdPartyRootFolder,
+                self.settings.thirdPartyBinFolder)
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
@@ -276,6 +276,63 @@ class CSnakeGUIFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.txtInstallFolder.SetValue(dlg.GetPath())
 
+    def OnSelectThirdPartyRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select Third Party Root Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtThirdPartyRootFolder.SetValue(dlg.GetPath())
+
+    def OnSelectCSnakeFile(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.FileDialog(None, "Select CSnake file")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtCSnakeFile.SetValue(dlg.GetPath())
+
+    def OnAddRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Add Root Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.cmbRootFolders.Append(dlg.GetPath())
+
+    def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        self.cmbRootFolders.Delete(self.cmbRootFolders.GetSelection())
+
+    def OnTypingRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        event.Skip()
+
+    def OnLoadSettings(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI")
+        if dlg.ShowModal() == wx.ID_OK:
+            settingsFilename = dlg.GetPath()
+            self.LoadSettings(settingsFilename)
+
+    def OnSaveSettingsAs(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        if dlg.ShowModal() == wx.ID_OK:
+            settingsFilename = dlg.GetPath()
+            self.SaveSettings(settingsFilename)
+
+    def LoadSettings(self, filename = ""):
+        if filename == "":
+            if os.path.exists(self.recentFile):
+                f = open(self.recentFile, 'r')
+                filename = f.read()
+                f.close()
+                
+        if os.path.exists( filename ):
+            f = open(filename, 'r')
+            self.settings = pickle.load(f)
+            f.close()
+            self.txtCSnakeFile.SetValue(self.settings.csnakeFile)
+            self.cmbRootFolders.Clear()
+            for rootFolder in self.settings.rootFolders:
+                self.cmbRootFolders.Append(rootFolder)
+            self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
+            self.txtBinFolder.SetValue( self.settings.binFolder )
+            self.txtInstallFolder.SetValue( self.settings.installFolder )
+            self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
+            self.txtInstance.SetValue(self.settings.instance)
+            
+        self.StoreSettingsFilename(filename)
+
+    
 # end of class CSnakeGUIFrame
 
 

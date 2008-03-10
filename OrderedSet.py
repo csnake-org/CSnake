@@ -98,7 +98,8 @@ class OrderedSet(object):
     def update(self, iterable):
         """Extend the right side of the OrderedSet with elements from the iterable."""
         for element in iterable:
-            self.add(element)
+            if not element in self: # work around for bug with remove
+                self.add(element)
 
     def extendleft(self, iterable):
         """Extend the left side of the OrderedSet with elements from the iterable."""

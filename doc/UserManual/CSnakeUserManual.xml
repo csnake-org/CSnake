@@ -129,7 +129,7 @@ myLibrary.AddIncludeFolders(["src"])</programlisting></para>
     "./bin/libraries/MyLibrary" (a subfolder in the current path). You can now
     use CMake and then Visual Studio to build your library. By building the
     INSTALL project in Visual Studio, the library will be copied to the folder
-    "./install". </para>
+    "./install".</para>
 
     <note>
       <para>In general, it is not necessary to build the INSTALL project for
@@ -150,6 +150,17 @@ myLibrary.AddIncludeFolders(["src"])</programlisting></para>
 
       <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/MyLibrary.png"
                format="PNG" />
+
+      <para>The Project Path is the location of the Python file we created in
+      the previous chapters. In the Instance field, you should enter the name
+      of the variable that is holding the target project that you wish to
+      build. Finally, the Bin Folder is the location where the Visual Studio
+      files as well as the binary project files (the output of the compiler
+      and linker) are placed. Ensure that the option 'Create CMake files and
+      run CMake' is selected and press 'Do --&gt;' to run CSnake. When you
+      browse to the Bin Folder in your file manager, you will see a subfolder
+      'library/MyLibrary' that contains the solution file (on Windows) or
+      KDevelop file (on Linux) for building MyLibrary. </para>
 
       <para></para>
     </example>
