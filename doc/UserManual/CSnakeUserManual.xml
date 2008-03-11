@@ -61,6 +61,13 @@
     to your Program Files folder. You can start CSnakeGUI by double clicking
     on CSnakeGUI.bat. Before experimenting with CSnakeGUI, we advise you to
     read the next chapter on creating a CSnake project.</para>
+
+    <important>
+      <para>In this user guide, we will assume that CSnake is installed in
+      C:\Program Files\CSnake. If you install CSnake to a different folder
+      (for example on Linux), use this folder in the examples to
+      follow.</para>
+    </important>
   </chapter>
 
   <chapter>
@@ -160,11 +167,98 @@ myLibrary.AddIncludeFolders(["src"])</programlisting></para>
       run CMake' is selected and press 'Do --&gt;' to run CSnake. When you
       browse to the Bin Folder in your file manager, you will see a subfolder
       'library/MyLibrary' that contains the solution file (on Windows) or
-      KDevelop file (on Linux) for building MyLibrary. </para>
-
-      <para></para>
+      KDevelop file (on Linux) for building MyLibrary.</para>
     </example>
 
     <para></para>
+  </chapter>
+
+  <chapter>
+    <title>Adding dependency projects</title>
+
+    <para>In most cases, your project will depend on other projects. Let's
+    assume that MyLibrary needs another library called MyDll:</para>
+
+    <programlisting format="linespecific" id="python" lang="python"
+                    linenumbering="numbered">import csnBuild
+import csnUtility
+
+myDll = csnBuild.Project("MyDll", "dll")
+myDll.AddSources([csnUtility.GetDummyCppFilename()])
+
+myLibrary = csnBuild.Project("MyLibrary", "library")
+myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
+myLibrary.AddIncludeFolders(["src"])
+myLibrary.AddProjects([myDll])</programlisting>
+
+    <para>Since we only introduced the new project myDll for educational
+    purposes, it does not need to contain any useful C++ code. Instead of
+    adding some existing source files to myDll, we choose to use a built-in
+    CSnake feature: the <emphasis role="bold">dummy cpp file</emphasis>. This
+    source file can be added to any project to prevent the project from having
+    no source files. The path to the dummy cpp file is obtained by calling
+    csnUtility.GetDummyCppFilename(). In the last line of the example, myDll
+    was added as a dependency project of myLibrary. This means that myLib will
+    link myDll, and is able to locate and use any of its include files.</para>
+
+    <note>
+      <para>A CSnake project that has no source file cannot be generated.
+      Trying to do so will result in an error.. </para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Building the CISTIB third party libraries</title>
+
+    <para>The CISTIB toolkit comes with many libraries that can be used as
+    dependency projects. Most of the projects in the CISTIB toolkit rely on
+    third party libraries. Therefore, the first step in building the CISTIB
+    toolkit is to build the third party libraries.</para>
+
+    <para>ADD SOME STUFF ABOUT BUILDING THE TOOLKIT HERE...</para>
+
+    <para>Now that the CISTIB toolkit has been built, let's go back to the
+    myLibrary example and use itk as a dependency project:</para>
+
+    <programlisting format="linespecific" id="python" lang="python"
+                    linenumbering="numbered">import csnBuild
+import csnCISTIBToolkit
+
+myLibrary = csnBuild.Project("MyLibrary", "library")
+myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
+myLibrary.AddIncludeFolders(["src"])
+
+itk = csnCISTIBToolkit.itk()
+myLibrary.AddProjects([itk])</programlisting>
+
+    <note>
+      <para>The following examples make use of csnCISTIBToolkit, which we
+      assume to be located in E:\Code\Toolkit</para>
+    </note>
+
+    <para>The csnCISTIBToolkit Python file serves as a directory of available
+    CSnake projects. For each project in the CISTIB toolkit, it has a function
+    that returns the unique instance of that project. In the above example, we
+    use the itk() function (note that if you call the itk() function again,
+    the same itk project instance will be returned). To use csnCISTIBToolkit
+    in CSnakeGUI, use the Add button to add the <emphasis>root folder
+    </emphasis>where csnCISTIBToolkit.py can be found (in this example, the
+    location is E:\Code\Toolkit):</para>
+
+    <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/MyLibraryAndEvoLib.png"
+             format="PNG" />
+
+    <important>
+      <para>The Add and Remove button in CSnakeGUI can be used to specify
+      <emphasis>root folders</emphasis>. CSnakeGUI will add these root folders
+      to the system path of Python, so that they are used when an
+      <emphasis>import </emphasis>statement is encountered in the Python code.
+      You can also use the import statement with a subfolder of a root folder,
+      but in that case every node in the subfolder path must contain a file
+      called __init__.py (see <link
+      linkend="???">http://www.network-theory.co.uk/docs/pytut/Packages.html</link>).</para>
+
+      <address></address>
+    </important>
   </chapter>
 </book>

@@ -290,6 +290,7 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.DirDialog(None, "Add Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
             self.cmbRootFolders.Append(dlg.GetPath())
+            self.cmbRootFolders.SetSelection(self.cmbRootFolders.GetCount()-1)
 
     def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.cmbRootFolders.Delete(self.cmbRootFolders.GetSelection())

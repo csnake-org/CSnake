@@ -144,7 +144,7 @@ class Handler:
             retcode = 1
         return retcode == 0
     
-    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolders, _thirdPartyBinFolder):
+    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
         Runs cmake to install the libraries in the third party folder.
         """
