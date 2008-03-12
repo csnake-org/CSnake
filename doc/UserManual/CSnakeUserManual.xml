@@ -203,7 +203,7 @@ myLibrary.AddProjects([myDll])</programlisting>
 
     <note>
       <para>A CSnake project that has no source file cannot be generated.
-      Trying to do so will result in an error.. </para>
+      Trying to do so will result in an error..</para>
     </note>
   </chapter>
 
@@ -211,11 +211,43 @@ myLibrary.AddProjects([myDll])</programlisting>
     <title>Building the CISTIB third party libraries</title>
 
     <para>The CISTIB toolkit comes with many libraries that can be used as
-    dependency projects. Most of the projects in the CISTIB toolkit rely on
-    third party libraries. Therefore, the first step in building the CISTIB
-    toolkit is to build the third party libraries.</para>
+    dependency projects. Many of these libraries are third party libraries, or
+    CISTIB libraries that depend on third party libraries. Therefore, the
+    first step in building the CISTIB toolkit is to build the third party
+    libraries. Run CSnakeGUI.bat, and fill in the Third Party Root Folder and
+    Third Party Bin Folder (for building the third party libraries, you need
+    not care about any of the other fields at the moment). Then select the
+    option 'Configure Third Party Folder' and press 'Do --&gt;'.</para>
 
-    <para>ADD SOME STUFF ABOUT BUILDING THE TOOLKIT HERE...</para>
+    <note>
+      <para>At the moment, the Third Party Root Folder is a subfolder of the
+      CISTIB toolkit folder (see example screenshot below for setting the
+      Third Party Root Folder and Third Party Bin Folder). In the near future,
+      we will move the Third Party folder to a different location outside of
+      the CISTIB toolkit. This will allow you to update the CISTIB toolkit
+      folder from CVS without updating the third party libraries.</para>
+
+      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/BuildingThirdParties.png" />
+    </note>
+
+    <para>After this step, a solution file (or KDevelop file) has been
+    generated in the Third Party Bin Folder (i.e. in the example above, the
+    solution file is generated in F:\Bin\ThirdParty). Use Visual Studio or
+    KDevelop to build the debug and release version of the third party
+    libraries.</para>
+
+    <note>
+      <para>Building the third party libraries may give some compiler errors
+      due to incorrect dependency settings between these libraries. Keep
+      building the solution until no more errors appear. If you have
+      Incredibuild installed, try using the Batch Build function with the
+      option 'Ignore build errors' marked.</para>
+    </note>
+  </chapter>
+
+  <chapter>
+    <title>Adding a dependency to a third party library (the lengthy
+    way)</title>
 
     <para>Now that the CISTIB toolkit has been built, let's go back to the
     myLibrary example and use itk as a dependency project:</para>
@@ -257,8 +289,50 @@ myLibrary.AddProjects([itk])</programlisting>
       but in that case every node in the subfolder path must contain a file
       called __init__.py (see <link
       linkend="???">http://www.network-theory.co.uk/docs/pytut/Packages.html</link>).</para>
-
-      <address></address>
     </important>
+  </chapter>
+
+  <chapter>
+    <title>Adding a dependency to a third party library (the standard
+    way)</title>
+
+    <para>In the last example of building myLibrary, we used the function
+    csnCISTIBToolkit.itk() to obtain the instance of the ITK CSnake project.
+    In the example below, we will use less code to achieve the same
+    effect:</para>
+
+    <programlisting format="linespecific" id="python" lang="python"
+                    linenumbering="numbered">import csnBuild
+from csnCISTIBToolkit import *
+
+myLibrary = csnBuild.Project("MyLibrary", "library")
+myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
+myLibrary.AddIncludeFolders(["src"])
+
+myLibrary.AddProjects([itk()])</programlisting>
+
+    <para>Note that at line 2, we import all the symbols from csnCISTIBToolkit
+    into our CSnake file. This means that at line 8, we can now call itk()
+    instead of writing csnCISTIBToolkit.itk(). However, the following syntax
+    for line 8 will also work:</para>
+
+    <programlisting format="linespecific" id="python" lang="python"
+                    linenumbering="unnumbered">myLibrary.AddProjects([itk])</programlisting>
+
+    <para>In this version, we are passing the itk
+    <emphasis>function</emphasis> at line 8. CSnake will call this function
+    and add the result (which should be a csnBuild.Project instance) as a
+    dependency project. Arguably, this involves some <emphasis>magic
+    behaviour</emphasis> that could raise a few eyebrows, but on the other
+    hand it offers an intuitive syntax to the end users of CSnake. For this
+    reason, most of the standard CSnake files that come with the CISTIB
+    toolkit pass functions (declared in csnCISTIBToolkit) in calls to the
+    AddProjects function.</para>
+  </chapter>
+
+  <chapter>
+    <title>Tips for working with the CISTIB toolkit</title>
+
+    <para></para>
   </chapter>
 </book>
