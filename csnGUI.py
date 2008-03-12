@@ -143,12 +143,12 @@ class CSnakeGUIFrame(wx.Frame):
         print "CSnakeGUI loaded.\n"
         print "Checking if CMake is found...\n"
        
-        # set up handler
-        self.handler = csnGUIHandler.Handler()
-        self.commandCounter = 0
-
         # create settings        
         self.settings = CSnakeGUISettings()
+        
+        # init handler
+        self.handler = csnGUIHandler.Handler()
+        self.commandCounter = 0
         
         # find out location of application options file
         thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
@@ -158,9 +158,12 @@ class CSnakeGUIFrame(wx.Frame):
         # create options
         self.options = csnGUIOptions.Options()
         
-        # load options from options file, or else write the default options to the options file
-        if not self.LoadOptions():
-            self.WriteOptions()
+        # load options from options file
+        self.LoadOptions()
+        
+        # Write the default options to the options file, and pass them to the handler
+        self.WriteOptions()
+        self.PassOptionsToHandler()
             
         # load previously saved settings
         if len(sys.argv) >= 2:
@@ -180,11 +183,15 @@ class CSnakeGUIFrame(wx.Frame):
         
     def WriteOptions(self):
         """
-        Write options to the application options file. 
+        Write options to the application options file, and passes them to the handler. 
         """
         f = open(self.optionsFile, 'w')
         pickle.dump(self.options, f)
         f.close()
+
+    def PassOptionsToHandler(self):
+        self.handler.SetCompiler(self.options.compiler)
+        return self.handler.SetCMakePath(self.options.cmakePath)
         
     def LoadOptions(self):
         """
@@ -285,7 +292,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Save current configuration settings (source folder/bin folder/etc) to filename.
         """
-       self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
+        self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
         self.settings.csnakeFile = self.txtCSnakeFile.GetValue().replace("\\", "/")
@@ -310,32 +317,35 @@ class CSnakeGUIFrame(wx.Frame):
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
 
-        if configureProject:
-            self.handler.ConfigureProjectToBinFolder(
-                self.settings.csnakeFile, 
-                self.settings.instance,
-                self.settings.rootFolders,
-                self.settings.binFolder,
-                self.settings.installFolder,
-                self.settings.thirdPartyRootFolder,
-                self.settings.thirdPartyBinFolder,
-                alsoRunCMake)
-
-        copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
-        if copyDlls:
-            self.handler.InstallThirdPartyBinariesToBinFolder(
-                self.settings.csnakeFile, 
-                self.settings.instance,
-                self.settings.rootFolders,
-                self.settings.binFolder,
-                self.settings.thirdPartyRootFolder,
-                self.settings.thirdPartyBinFolder)
-                
-        configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
-        if( configureThirdPartyFolder ):
-            self.handler.ConfigureThirdPartyFolder(
-                self.settings.thirdPartyRootFolder,
-                self.settings.thirdPartyBinFolder)
+        # write application options, and pass them to the handler
+        self.WriteOptions()
+        if self.PassOptionsToHandler():
+            if configureProject:
+                self.handler.ConfigureProjectToBinFolder(
+                    self.settings.csnakeFile, 
+                    self.settings.instance,
+                    self.settings.rootFolders,
+                    self.settings.binFolder,
+                    self.settings.installFolder,
+                    self.settings.thirdPartyRootFolder,
+                    self.settings.thirdPartyBinFolder,
+                    alsoRunCMake)
+    
+            copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
+            if copyDlls:
+                self.handler.InstallThirdPartyBinariesToBinFolder(
+                    self.settings.csnakeFile, 
+                    self.settings.instance,
+                    self.settings.rootFolders,
+                    self.settings.binFolder,
+                    self.settings.thirdPartyRootFolder,
+                    self.settings.thirdPartyBinFolder)
+                    
+            configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
+            if( configureThirdPartyFolder ):
+                self.handler.ConfigureThirdPartyFolder(
+                    self.settings.thirdPartyRootFolder,
+                    self.settings.thirdPartyBinFolder)
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
@@ -428,9 +438,7 @@ class CSnakeGUIFrame(wx.Frame):
         frmEditSettings.ShowOptions(self.options)
         frmEditSettings.MakeModal()
         frmEditSettings.Show()
-        self.handler.SetCompiler(self.options.compiler)
-        self.handler.SetCMakePath(self.options.cmakePath)
-
+        
 # end of class CSnakeGUIFrame
 
 

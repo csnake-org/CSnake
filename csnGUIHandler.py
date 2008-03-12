@@ -64,11 +64,23 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
                 
 class Handler:
     def __init__(self):
-        if not self.CMakeIsFound():
-            print "Error: could not find cmake.exe. Check that it is in your path."
-        else:
-            print "CMake was found.\n"
+        self.cmakePath = ""
+        self.cmakeFound = 0 
+        pass
     
+    def SetCMakePath(self, _cmakePath):
+        if not self.cmakePath == _cmakePath:
+            self.cmakePath = _cmakePath
+            self.cmakeFound = self.CMakeIsFound() 
+            if self.cmakeFound:
+                print "CMake was found.\n"
+        if not self.cmakeFound:
+            print "Warning: %s is is not a valid path to cmake. Select path to CMake using menu Settings->Edit Settings." % self.cmakePath
+        return self.cmakeFound
+        
+    def SetCompiler(self, _compiler):
+        self.compiler = _compiler
+        
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
         
@@ -108,9 +120,12 @@ class Handler:
         generator.Generate(instance, _binFolder, _installFolder)
             
         if _alsoRunCMake:
+            if not self.cmakeFound:
+                print "Please specify correct path to CMake"
+                return
+                
             folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
-            argCompiler = "Visual Studio 7 .NET 2003"
-            argList = ["cmake", "-G", argCompiler, folderCMakeLists]
+            argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
             retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
             if retcode == 0:
                 generator.PostProcess(instance, _binFolder)
@@ -138,11 +153,14 @@ class Handler:
                         shutil.copy(file, absLocation)
              
     def CMakeIsFound(self):
-        try:
-            retcode = subprocess.Popen("cmake").wait()
-        except:
-            retcode = 1
-        return retcode == 0
+        found = os.path.exists(self.cmakePath)
+        if not found:
+            try:
+                retcode = subprocess.Popen(self.cmakePath).wait()
+            except:
+                retcode = 1
+            found = retcode == 0
+        return found
     
     def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ 
@@ -150,6 +168,10 @@ class Handler:
         """
         result = 1
         messageAboutPatches = ""
+        
+        if not self.cmakeFound:
+            print "Please specify correct path to CMake"
+            return 0
         
         # apply MITK patch
         originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _thirdPartyRootFolder
@@ -174,8 +196,7 @@ class Handler:
         
         if result:
             os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
-            argCompiler = "Visual Studio 7 .NET 2003"
-            argList = ["cmake", "-G", argCompiler, _thirdPartyRootFolder]
+            argList = [self.cmakePath, "-G", self.compiler, _thirdPartyRootFolder]
             retcode1 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
             retcode2 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
             if not retcode1 == 0 and retcode2 == 0:

@@ -18,7 +18,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.sizer_4_staticbox = wx.StaticBox(self, -1, "Compiler")
         self.cmbCompiler = wx.ComboBox(self, -1, choices=["Visual Studio 7 .NET 2003", "Visual Studio 8 2005", "Visual Studio 8 2005 Win64", "KDevelop3", "Unix Makefiles"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.button_1 = wx.Button(self, -1, "Set path to CMake")
-        self.txtCMakePath = wx.TextCtrl(self, -1, "", style=wx.TE_READONLY)
+        self.txtCMakePath = wx.TextCtrl(self, -1, "")
         self.btnClose = wx.Button(self, -1, "Close")
 
         self.__set_properties()
@@ -85,6 +85,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.ShowOptions()
 
     def OnClose(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        self.options.cmakePath = self.txtCMakePath.GetValue()
         self.MakeModal(0)
         self.Destroy()
 
