@@ -157,6 +157,7 @@ class CSnakeGUIFrame(wx.Frame):
         
         # create options
         self.options = csnGUIOptions.Options()
+        self.options.currentGUISettingsFilename = "%s/settings" % thisFolder
         
         # load options from options file
         self.LoadOptions()

@@ -561,10 +561,13 @@ class Project(object):
         Adds items to self.publicIncludeFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added include paths must exist on the filesystem.
+        If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
         opSysAll = self.opSystems["ALL"]
         for includeFolder in _listOfIncludeFolders:
-            opSysAll.public.includeFolders.append( self.__FindPath(includeFolder) )
+            for folder in self.Glob(includeFolder):
+                if (not os.path.exists(folder)) or os.path.isdir(folder):
+                    opSysAll.public.includeFolders.append( folder )
         
     def SetPrecompiledHeader(self, _precompiledHeader):
         """
