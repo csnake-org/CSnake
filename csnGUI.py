@@ -153,6 +153,8 @@ class CSnakeGUIFrame(wx.Frame):
         # find out location of application options file
         thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
         thisFolder = thisFolder.replace("\\", "/")
+        if thisFolder == "":
+            thisFolder = "."
         self.optionsFile = "%s/options" % thisFolder
         
         # create options
