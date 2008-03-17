@@ -205,3 +205,28 @@ class Handler:
             
         print messageAboutPatches
         return result
+
+    def DeletePycFiles(self, _projectPath = "", _instance = "", _sourceRootFolders = [], _thirdPartyRootFolder = ""):
+        """
+        Tries to delete all pyc files from _projectPath, _sourceRootFolders, thirdPartyRootFolder and 
+        all base folders where the CSnake files for building _instance are. 
+        However, __init__.pyc files are not removed.
+        """
+        # determine list of folders to search for pyc files
+        folderList = []
+        folderList.append(_thirdPartyRootFolder)
+        
+        if _instance != "":
+            folderList.extend(_sourceRootFolders)
+            folderList.append(_projectPath)
+            instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder = "")
+            for project in instance.AllProjects(_recursive = 1):
+                folderList.append(project.sourceRootFolder)
+                    
+        # remove pyc files
+        for folder in folderList:
+            pattern = "%s/*.pyc" % folder
+            pycFiles = [x.replace("\\", "/") for x in glob.glob(pattern)]
+            for pycFile in pycFiles:
+                if not os.path.basename(pycFile) == "__init__.pyc":
+                    os.remove(pycFile)

@@ -319,10 +319,22 @@ class CSnakeGUIFrame(wx.Frame):
         self.SaveSettings(self.options.currentGUISettingsFilename)
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
+        configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
 
         # write application options, and pass them to the handler
         self.WriteOptions()
         if self.PassOptionsToHandler():
+        
+            # delete pyc files (unless configuring the third party folder, see below)
+            if not configureThirdPartyFolder:
+                self.handler.DeletePycFiles(
+                    self.settings.csnakeFile, 
+                    self.settings.instance, 
+                    self.settings.rootFolders,
+                    self.settings.thirdPartyRootFolder
+                )
+
+            # if configuring the target project...            
             if configureProject:
                 self.handler.ConfigureProjectToBinFolder(
                     self.settings.csnakeFile, 
@@ -334,6 +346,7 @@ class CSnakeGUIFrame(wx.Frame):
                     self.settings.thirdPartyBinFolder,
                     alsoRunCMake)
     
+            # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
             if copyDlls:
                 self.handler.InstallThirdPartyBinariesToBinFolder(
@@ -344,8 +357,9 @@ class CSnakeGUIFrame(wx.Frame):
                     self.settings.thirdPartyRootFolder,
                     self.settings.thirdPartyBinFolder)
                     
-            configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
+            # if configuring the third party folder            
             if( configureThirdPartyFolder ):
+                self.handler.DeletePycFiles("", "", [], self.settings.thirdPartyRootFolder )
                 self.handler.ConfigureThirdPartyFolder(
                     self.settings.thirdPartyRootFolder,
                     self.settings.thirdPartyBinFolder)
