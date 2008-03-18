@@ -66,6 +66,7 @@ class Handler:
     def __init__(self):
         self.cmakePath = ""
         self.cmakeFound = 0 
+        self.cmakeBuildType = "None"
         pass
     
     def SetCMakePath(self, _cmakePath):
@@ -80,6 +81,9 @@ class Handler:
         
     def SetCompiler(self, _compiler):
         self.compiler = _compiler
+        
+    def SetCMakeBuildType(self, _buildType):
+        self.cmakeBuildType = _buildType
         
     def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder):
         """ Instantiates and returns the _instance in _projectPath. """
@@ -117,7 +121,7 @@ class Handler:
         
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
-        generator.Generate(instance, _binFolder, _installFolder)
+        generator.Generate(instance, _binFolder, _installFolder, self.cmakeBuildType)
             
         if _alsoRunCMake:
             if not self.cmakeFound:
@@ -197,9 +201,10 @@ class Handler:
         if result:
             os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
             argList = [self.cmakePath, "-G", self.compiler, _thirdPartyRootFolder]
-            retcode1 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
-            retcode2 = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
-            if not retcode1 == 0 and retcode2 == 0:
+            retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+            if retcode:
+                retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+            if not retcode == 0:
                 result = 0
                 print "Configuration failed.\n"   
             
@@ -230,3 +235,9 @@ class Handler:
             for pycFile in pycFiles:
                 if not os.path.basename(pycFile) == "__init__.pyc":
                     os.remove(pycFile)
+
+        # remove more pyc files from the third party root folder
+        for pycFile in [x.replace("\\", "/") for x in glob.glob("%s/*/*.pyc" % _thirdPartyRootFolder)]:
+            if not os.path.basename(pycFile) == "__init__.pyc":
+                os.remove(pycFile)
+     

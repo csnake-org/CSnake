@@ -19,6 +19,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.cmbCompiler = wx.ComboBox(self, -1, choices=["Visual Studio 7 .NET 2003", "Visual Studio 8 2005", "Visual Studio 8 2005 Win64", "KDevelop3", "Unix Makefiles"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.button_1 = wx.Button(self, -1, "Set path to CMake")
         self.txtCMakePath = wx.TextCtrl(self, -1, "")
+        self.cmbBuildType = wx.ComboBox(self, -1, choices=["Default (Debug and Release)", "Release", "Debug"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.btnClose = wx.Button(self, -1, "Close")
 
         self.__set_properties()
@@ -26,6 +27,7 @@ class CSnakeOptionsFrame(wx.Frame):
 
         self.Bind(wx.EVT_COMBOBOX, self.OnSelectCompiler, self.cmbCompiler)
         self.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, self.button_1)
+        self.Bind(wx.EVT_COMBOBOX, self.OnSelectBuildType, self.cmbBuildType)
         self.Bind(wx.EVT_BUTTON, self.OnClose, self.btnClose)
         # end wxGlade
 
@@ -37,17 +39,20 @@ class CSnakeOptionsFrame(wx.Frame):
         if not _options is None:
             self.options = _options
         self.txtCMakePath.SetValue(self.options.cmakePath)
-        count = 0
-        for compiler in self.cmbCompiler.GetStrings():
-            if compiler == self.options.compiler:
-                self.cmbCompiler.SetSelection(count)
-            count = count + 1
+        self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.options.compiler))
+        
+        buildTypes = dict()
+        buildTypes["None"] = 0
+        buildTypes["Release"] = 1
+        buildTypes["Debug"] = 2
+        self.cmbBuildType.SetSelection(buildTypes[self.options.cmakeBuildType])
         
     def __set_properties(self):
         # begin wxGlade: CSnakeOptionsFrame.__set_properties
         self.SetTitle("CSnakeGUI Options")
         self.cmbCompiler.SetSelection(-1)
         self.txtCMakePath.SetMinSize((20,20))
+        self.cmbBuildType.SetSelection(-1)
         # end wxGlade
 
     def __do_layout(self):
@@ -61,6 +66,7 @@ class CSnakeOptionsFrame(wx.Frame):
         sizer_5.Add(self.button_1, 0, 0, 0)
         sizer_5.Add(self.txtCMakePath, 1, 0, 0)
         sizer_3.Add(sizer_5, 0, wx.EXPAND, 0)
+        sizer_3.Add(self.cmbBuildType, 1, wx.EXPAND, 0)
         sizer_2.Add(sizer_3, 0, wx.EXPAND, 0)
         sizer_2.Add(self.btnClose, 0, wx.EXPAND, 0)
         self.SetSizer(sizer_2)
@@ -89,14 +95,21 @@ class CSnakeOptionsFrame(wx.Frame):
         self.MakeModal(0)
         self.Destroy()
 
-# end of class CSnakeOptionsFrame
+    def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        if self.cmbBuildType.GetSelection() == 0:
+            self.options.cmakeBuildType = "None"
+        else:
+            self.options.cmakeBuildType = "%s" % self.cmbBuildType.GetValue()
+        self.ShowOptions()
 
+# end of class CSnakeOptionsFrame
 
 class Options:
     def __init__(self):
         self.cmakePath = "CMake"    
         self.compiler = "Visual Studio 7 .NET 2003"
-        self.currentGUISettingsFilename = ""    
+        self.currentGUISettingsFilename = ""
+        self.cmakeBuildType = "None"    
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

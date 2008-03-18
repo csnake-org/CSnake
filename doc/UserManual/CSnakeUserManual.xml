@@ -367,9 +367,19 @@ myLibrary.AddProjects([itk()])</programlisting>
     Instance field enter 'gimias'. As explained in chapter 8, use the
     <emphasis role="bold">Add</emphasis> button to add the folder where
     csnCISTIBToolkit.py can be found (the root of the CISTIB toolkit source
-    folder) to the list of root folders. Edit the GIMIAS csnake file; at the
-    bottom of this file, choose the plugins that you want to use in
-    GIMIAS:</para>
+    folder) to the list of root folders. Also, set the Bin Folder to the
+    location where you want the binaries of GIMIAS to be installed. Edit the
+    GIMIAS csnake file; at the bottom of this file, choose the plugins that
+    you want to use in GIMIAS:</para>
+
+    <note>
+      <para>Not only GIMIAS, but also all the other projects of the CISTIB
+      toolkit will be placed in the Bin Folder (except for the third party
+      project binaries, which are placed in the Third Party Bin Folder). It is
+      a good idea to choose a central location for the Bin Folder (such as
+      F:/Bin/Toolkit), so that you can use the same Bin Folder for any
+      executable (not just GIMIAS) that is based on the CISTIB toolkit.</para>
+    </note>
 
     <programlisting># Used to configure gimias
 import csnBuild

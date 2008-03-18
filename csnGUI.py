@@ -194,6 +194,7 @@ class CSnakeGUIFrame(wx.Frame):
 
     def PassOptionsToHandler(self):
         self.handler.SetCompiler(self.options.compiler)
+        self.handler.SetCMakeBuildType(self.options.cmakeBuildType)
         return self.handler.SetCMakePath(self.options.cmakePath)
         
     def LoadOptions(self):
@@ -472,4 +473,3 @@ class CSnakeGUIApp(wx.App):
 if __name__ == "__main__":
     app = CSnakeGUIApp(0)
     app.MainLoop()
-

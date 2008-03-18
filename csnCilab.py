@@ -13,50 +13,11 @@ def LoadThirdPartyModule(_subFolder, _name):
     return csnUtility.LoadModule(folder, _name)
 
 def AddCilabLibraryModules(_project, _libModules):
-    """ 
-    Adds source files (anything matching *.c??) and public include folders to _project, using a set of libmodules. 
-    It is assumed that the root folder of _project has a subfolder called libmodules. The subfolders of libmodules should
-    contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
-    _libModules - a list of subfolders of the libmodules folder that should be 'added' to _project.
-    """
-    # add sources    
-    for libModule in _libModules:
-        srcFolder = "libmodules/%s/src" % (libModule)
-        srcFolderAbs = "%s/%s" % (_project.sourceRootFolder, srcFolder)
-        if( os.path.exists(srcFolderAbs) ):
-            _project.AddIncludeFolders([srcFolder])
-            _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
-            _project.AddSources(["%s/*.h" % srcFolder], _checkExists = 0)
-            _project.AddSources(["%s/*.hpp" % srcFolder], _checkExists = 0)
-        if( len(_project.sources) == 0 ):
-            _project.AddSources([csnUtility.GetDummyCppFilename()])
-            
-        includeFolder = "libmodules/%s/include" % libModule
-        includeFolderAbs = "%s/%s" % (_project.sourceRootFolder, includeFolder)
-        if( os.path.exists(includeFolderAbs) ):
-            _project.AddIncludeFolders([includeFolder])
-            _project.AddSources(["%s/*.h" % includeFolder], _checkExists = 0)
+    assert 0, "No longer supported in this way. Ask Maarten."
 
-def AddCilabWidgetModules(_project, _widgetModules):
-    """ 
-    Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to _project.
-    Also adds rules for qt's ui and moc executables.
-    """
-    # add sources    
-    for widgetModule in _widgetModules:
-        srcFolder = "widgets/%s" % (widgetModule)
-        srcFolderAbs = "%s/%s" % (_project.sourceRootFolder, srcFolder)
-        if( os.path.exists(srcFolderAbs) ):
-            _project.AddIncludeFolders([srcFolder])
-            _project.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0, _sourceGroup = "Widgets")
-            _project.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
-            
-        includeFolder = "widgets/%s" % widgetModule
-        includeFolderAbs = "%s/%s" % (_project.sourceRootFolder, includeFolder)
-        if( os.path.exists(includeFolderAbs) ):
-            _project.AddIncludeFolders([includeFolder])
-            _project.AddSources(["%s/*.h" % includeFolder], _moc = 1, _checkExists = 0, _sourceGroup = "Widgets")
-            
+def AddCilabWidgetModules(_project, _widgetModules, _useQt = 1):
+    assert 0, "No longer supported in this way. Ask Maarten."
+                 
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
@@ -100,7 +61,29 @@ class CilabModuleProject(csnBuild.Project):
         csnBuild.Project.__init__(self, _name, _type)
         
     def AddLibraryModules(self, _libModules):
-        AddCilabLibraryModules(self, _libModules)
+        """ 
+        Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
+        It is assumed that the root folder of self has a subfolder called libmodules. The subfolders of libmodules should
+        contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
+        _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
+        """
+        # add sources    
+        for libModule in _libModules:
+            srcFolder = "libmodules/%s/src" % (libModule)
+            srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
+            if( os.path.exists(srcFolderAbs) ):
+                self.AddIncludeFolders([srcFolder])
+                self.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
+                self.AddSources(["%s/*.h" % srcFolder], _checkExists = 0)
+                self.AddSources(["%s/*.hpp" % srcFolder], _checkExists = 0)
+            if( len(self.sources) == 0 ):
+                self.AddSources([csnUtility.GetDummyCppFilename()])
+                
+            includeFolder = "libmodules/%s/include" % libModule
+            includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
+            if( os.path.exists(includeFolderAbs) ):
+                self.AddIncludeFolders([includeFolder])
+                self.AddSources(["%s/*.h" % includeFolder], _checkExists = 0)
         
     def AddDemos(self, _modules):
         demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
@@ -126,8 +109,23 @@ class GimiasPluginProject(csnBuild.Project):
         self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
         self.AddIncludeFolders(["."])
         
-    def AddWidgetModules(self, _widgetModules):
+    def AddWidgetModules(self, _widgetModules, _holdingFolder = "widgets", _useQt = 1):
+        """ 
+        Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
+        _useQt - If true, adds build rules for the ui and moc files .
         """
-        Adds _widgetModules to this project.
-        """
-        AddCilabWidgetModules(self, _widgetModules)
+        # add sources    
+        for widgetModule in _widgetModules:
+            srcFolder = "%s/%s" % (_holdingFolder, widgetModule)
+            srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
+            if( os.path.exists(srcFolderAbs) ):
+                self.AddIncludeFolders([srcFolder])
+                self.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0, _sourceGroup = "Widgets")
+                if _useQt:
+                    self.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
+                
+            includeFolder = "%s/%s" % (_holdingFolder, widgetModule)
+            includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
+            if( os.path.exists(includeFolderAbs) ):
+                self.AddIncludeFolders([includeFolder])
+                self.AddSources(["%s/*.h" % includeFolder], _moc = _useQt, _checkExists = 0, _sourceGroup = "Widgets")

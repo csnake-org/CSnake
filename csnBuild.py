@@ -9,9 +9,7 @@ import types
 import OrderedSet
 
 # ToDo:
-# - extend csnGUI with the option of additional root folders
-# - place csnGUI config in an XML, allow to load it (add cmdline argument)
-# - place location of cmake in the xml config file
+# - check that of all root folders, only one contains csnCISTIBToolkit
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
@@ -53,7 +51,7 @@ class Generator:
     Generates the CMakeLists.txt for a csnBuild.Project.
     """
 
-    def Generate(self, _targetProject, _binaryFolder, _installFolder = "", _generatedList = None, _knownProjectNames = None):
+    def Generate(self, _targetProject, _binaryFolder, _installFolder = "", _cmakeBuildType = "None", _generatedList = None, _knownProjectNames = None):
         """
         Generates the CMakeLists.txt for a csnBuild.Project in _binaryFolder.
         All binaries are placed in _binaryFolder/bin.
@@ -108,6 +106,8 @@ class Generator:
 
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
         f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolder) )
+        if not _cmakeBuildType == "None":
+            f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
         
         binaryBinFolder = "%s/bin/%s" % (_binaryFolder, _targetProject.installSubFolder)
         
