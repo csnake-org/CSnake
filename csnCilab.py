@@ -9,7 +9,7 @@ defaultLibType = "dll"
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
     assert thirdPartyModuleFolder != ""
-    folder = "%s\\%s" % (thirdPartyModuleFolder, _subFolder)
+    folder = "%s/%s" % (thirdPartyModuleFolder, _subFolder)
     return csnUtility.LoadModule(folder, _name)
 
 def AddCilabLibraryModules(_project, _libModules):

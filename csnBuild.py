@@ -636,7 +636,7 @@ class Project(object):
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
         """
-        path = _path
+        path = path.replace("\\", "/")
         if not os.path.isabs(_path):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
         return [x.replace("\\", "/") for x in glob.glob(path)]
