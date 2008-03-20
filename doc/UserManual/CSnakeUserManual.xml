@@ -228,12 +228,13 @@ myLibrary.AddProjects([myDll])</programlisting>
     </note>
 
     <warning>
-      <para>CSnake (or actually: CMake) generates vcproj (or KDevelop) files
-      for the target project (in this case: myLibrary) and all the dependency
-      projects. It is advised not to open the <emphasis>dependency project
+      <para>CSnake - or actually: CMake - generates vcproj files for the
+      target project and all the dependency projects. It is advised not to
+      open the <emphasis>dependency project
       </emphasis><emphasis>files</emphasis> directly, for they may have
-      missing dependencies. Of course, for the target project there is no such
-      problem.</para>
+      missing dependencies. In the example above, using MyDll.sln directly may
+      not work. Of course, for working with MyLibrary.sln there is no such
+      problem, as it is the target project.</para>
     </warning>
   </chapter>
 

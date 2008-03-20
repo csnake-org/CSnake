@@ -448,7 +448,9 @@ class CSnakeGUIFrame(wx.Frame):
             self.txtInstallFolder.SetValue( self.settings.installFolder )
             self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
             self.cmbInstance.Clear()
-            self.cmbInstance.Append(self.settings.instance)
+            if self.settings.instance != "":
+                self.cmbInstance.Append(self.settings.instance)
+                self.cmbInstance.SetSelection(0)
             
         self.StoreSettingsFilename(filename)
     
