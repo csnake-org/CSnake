@@ -312,9 +312,8 @@ class CSnakeGUIFrame(wx.Frame):
             f = open(filename, 'w')
             pickle.dump(self.settings, f)
             f.close()
-
-        # record the settings filename in self.optionsFile
-        self.StoreSettingsFilename(filename)
+            # record the settings filename in self.optionsFile
+            self.StoreSettingsFilename(filename)
     
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
