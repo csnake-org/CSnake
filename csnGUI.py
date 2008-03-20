@@ -62,7 +62,8 @@ class CSnakeGUIFrame(wx.Frame):
         self.txtCSnakeFile = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
         self.btnSelectCSnakeFile = wx.Button(self.panelProjectAndInstance, -1, "...")
         self.labelInstance = wx.StaticText(self.panelProjectAndInstance, -1, "Instance")
-        self.txtInstance = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
+        self.cmbInstance = wx.ComboBox(self.panelProjectAndInstance, -1, choices=[], style=wx.CB_DROPDOWN)
+        self.btnUpdateListOfTargets = wx.Button(self.panelProjectAndInstance, -1, "Update")
         self.label_1 = wx.StaticText(self.panelSource, -1, "Root Folders\n")
         self.cmbRootFolders = wx.ComboBox(self.panelSource, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.btnAddRootFolder = wx.Button(self.panelSource, -1, "Add")
@@ -90,6 +91,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
         self.Bind(wx.EVT_MENU, self.OnEditSettings, self.mnuEditSettings)
         self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
+        self.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, self.btnUpdateListOfTargets)
         self.Bind(wx.EVT_BUTTON, self.OnAddRootFolder, self.btnAddRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnRemoveRootFolder, self.btnRemoveRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectBinFolder, self.btnSelectBinFolder)
@@ -106,8 +108,6 @@ class CSnakeGUIFrame(wx.Frame):
         self.txtCSnakeFile.SetMinSize((-1, -1))
         self.txtCSnakeFile.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
         self.btnSelectCSnakeFile.SetMinSize((30, -1))
-        self.txtInstance.SetMinSize((-1, -1))
-        self.txtInstance.SetToolTipString("Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.")
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
         self.cmbRootFolders.SetMinSize((-1, -1))
         self.txtBinFolder.SetMinSize((-1, -1))
@@ -228,7 +228,8 @@ class CSnakeGUIFrame(wx.Frame):
         boxProjectPath.Add(self.btnSelectCSnakeFile, 0, 0, 0)
         sizer_3.Add(boxProjectPath, 0, wx.EXPAND, 0)
         boxRootFolder_copy.Add(self.labelInstance, 0, wx.RIGHT, 5)
-        boxRootFolder_copy.Add(self.txtInstance, 2, wx.FIXED_MINSIZE, 0)
+        boxRootFolder_copy.Add(self.cmbInstance, 1, wx.EXPAND, 0)
+        boxRootFolder_copy.Add(self.btnUpdateListOfTargets, 0, 0, 0)
         sizer_3.Add(boxRootFolder_copy, 1, wx.EXPAND, 0)
         self.panelProjectAndInstance.SetSizer(sizer_3)
         boxSettings.Add(self.panelProjectAndInstance, 0, wx.EXPAND, 0)
@@ -292,9 +293,11 @@ class CSnakeGUIFrame(wx.Frame):
         mapping["Executable"] = "executable"
     	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
-    def SaveSettings(self, filename):
+    def SaveSettings(self, filename = ""):
         """
-        Save current configuration settings (source folder/bin folder/etc) to filename.
+        Copy settings from the widget controls to self.settings.
+        If filename is not "", save current configuration settings (source folder/bin folder/etc) 
+        to filename.
         """
         self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
@@ -304,10 +307,11 @@ class CSnakeGUIFrame(wx.Frame):
         for i in range( self.cmbRootFolders.GetCount() ):
             self.settings.rootFolders.append( self.cmbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
-        self.settings.instance = self.txtInstance.GetValue()
-        f = open(filename, 'w')
-        pickle.dump(self.settings, f)
-        f.close()
+        self.settings.instance = self.cmbInstance.GetValue()
+        if not filename == "":
+            f = open(filename, 'w')
+            pickle.dump(self.settings, f)
+            f.close()
 
         # record the settings filename in self.optionsFile
         self.StoreSettingsFilename(filename)
@@ -444,7 +448,8 @@ class CSnakeGUIFrame(wx.Frame):
             self.txtBinFolder.SetValue( self.settings.binFolder )
             self.txtInstallFolder.SetValue( self.settings.installFolder )
             self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
-            self.txtInstance.SetValue(self.settings.instance)
+            self.cmbInstance.Clear()
+            self.cmbInstance.Append(self.settings.instance)
             
         self.StoreSettingsFilename(filename)
     
@@ -456,6 +461,15 @@ class CSnakeGUIFrame(wx.Frame):
         frmEditSettings.ShowOptions(self.options)
         frmEditSettings.MakeModal()
         frmEditSettings.Show()
+        
+    def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        self.SaveSettings()
+        targets = self.handler.GetListOfPossibleTargets(
+            self.settings.csnakeFile, 
+            self.settings.rootFolders,
+            self.settings.thirdPartyRootFolder
+        )
+        self.cmbInstance.SetItems(targets)
         
 # end of class CSnakeGUIFrame
 

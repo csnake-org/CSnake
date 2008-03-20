@@ -104,7 +104,11 @@ Phone +34 935 421323</address>
       linenumbering="numbered">import csnBuild
 myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
-myLibrary.AddIncludeFolders(["src"])</programlisting></para>
+myLibrary.AddIncludeFolders(["src"])</programlisting><note>
+          <para>The csnMyLibrary.py file is available in the Examples
+          subfolder. Instead of using the existing file, you can create a new
+          file and paste the above lines into the empty file.</para>
+        </note></para>
 
       <para>This small Python program is sufficient to create your first
       library using CSnake. We will step through it line by line. Line 2 tells
@@ -174,7 +178,7 @@ myLibrary.AddIncludeFolders(["src"])</programlisting></para>
     <example>
       <title>CSnakeGUI screenshot: building myLibrary</title>
 
-      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/MyLibrary.png"
+      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/MyLibrary.png"
                format="PNG" />
 
       <para>The Project Path is the location of the Python file we created in
@@ -188,8 +192,6 @@ myLibrary.AddIncludeFolders(["src"])</programlisting></para>
       'library/MyLibrary' that contains the solution file (on Windows) or
       KDevelop file (on Linux) for building MyLibrary.</para>
     </example>
-
-    <para></para>
   </chapter>
 
   <chapter>
@@ -222,8 +224,17 @@ myLibrary.AddProjects([myDll])</programlisting>
 
     <note>
       <para>A CSnake project that has no source file cannot be generated.
-      Trying to do so will result in an error..</para>
+      Trying to do so will result in an error.</para>
     </note>
+
+    <warning>
+      <para>CSnake (or actually: CMake) generates vcproj (or KDevelop) files
+      for the target project (in this case: myLibrary) and all the dependency
+      projects. It is advised not to open the <emphasis>dependency project
+      </emphasis><emphasis>files</emphasis> directly, for they may have
+      missing dependencies. Of course, for the target project there is no such
+      problem.</para>
+    </warning>
   </chapter>
 
   <chapter>
@@ -246,7 +257,7 @@ myLibrary.AddProjects([myDll])</programlisting>
       the CISTIB toolkit. This will allow you to update the CISTIB toolkit
       folder from CVS without updating the third party libraries.</para>
 
-      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/BuildingThirdParties.png" />
+      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/BuildingThirdParties.png" />
     </note>
 
     <para>After this step, a solution file (or KDevelop file) has been
@@ -296,7 +307,7 @@ myLibrary.AddProjects([itk])</programlisting>
     the <emphasis>root folder </emphasis>where csnCISTIBToolkit.py can be
     found (in this example, the location is E:\Code\Toolkit):</para>
 
-    <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/CSnake/Images/MyLibraryAndEvoLib.png"
+    <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/MyLibraryAndEvoLib.png"
              format="PNG" />
 
     <important>

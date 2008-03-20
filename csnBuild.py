@@ -228,7 +228,7 @@ class Generator:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
                 f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
-                self.Generate(project, _binaryFolder, _installFolder, _generatedList, _knownProjectNames)
+                self.Generate(project, _binaryFolder, _installFolder, _cmakeBuildType, _generatedList, _knownProjectNames)
            
         # add dependencies
         f.write( "\n" )

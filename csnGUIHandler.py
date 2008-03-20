@@ -7,6 +7,7 @@ import csnBuild
 import csnCilab
 import glob
 import RollbackImporter
+import inspect
 
 class RootNotFound(IOError):
     pass
@@ -61,7 +62,36 @@ def CreateCSnakeProject(_folder, _projectRoot, _name, _type):
     f.write( "%s.AddSources([\"src/*.h\", \"src/*.cpp\"]) # note: argument must be a python list!\n" % (instanceName) )
     f.write( "%s.AddIncludeFolders([\"src\"]) # note: argument must be a python list!\n" % (instanceName) )
     f.close()
-                
+
+class RollbackHandler:
+    """
+    This helper class instantiates the RollbackImporter and extends the python search path 
+    """
+    def SetUp(self, _projectPath, _sourceRootFolders, _thirdPartyRootFolder):
+        """
+        Set up the roll back. 
+        """
+        # set up roll back of imported modules
+        self.rbi = RollbackImporter.RollbackImporter()
+        self.previousPaths = sys.path
+        
+        # extend python path with project folder, source root and third party root
+        newPaths = _sourceRootFolders
+        newPaths.extend([_projectPath, _thirdPartyRootFolder]) 
+        for path in newPaths:
+            if not path in sys.path:
+                sys.path.append(path)
+    
+    def TearDown(self):
+        """
+        Execute roll back. 
+        """
+        # roll back imported modules
+        self.rbi.rollbackImports()
+
+        # undo additions to the python path
+        sys.path = self.previousPaths
+                    
 class Handler:
     def __init__(self):
         self.cmakePath = ""
@@ -89,29 +119,19 @@ class Handler:
         """ Instantiates and returns the _instance in _projectPath. """
         
         # set up roll back of imported modules
-        rbi = RollbackImporter.RollbackImporter()
-        previousPaths = sys.path
+        rollbackHandler = RollbackHandler()
+        rollbackHandler.SetUp(_projectPath, _sourceRootFolders, _thirdPartyRootFolder)
         
-        (projectFolder, name) = os.path.split(_projectPath)
-        (name, ext) = os.path.splitext(name)
         csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
         csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
         
-        # extend python path with project folder, source root and third party root
-        newPaths = _sourceRootFolders
-        newPaths.extend([_projectPath, _thirdPartyRootFolder]) 
-        for path in newPaths:
-            if not path in sys.path:
-                sys.path.append(path)
-        
+        (projectFolder, name) = os.path.split(_projectPath)
+        (name, ext) = os.path.splitext(name)
         project = csnUtility.LoadModule(projectFolder, name)   
         exec "instance = project.%s" % _instance
 
         # undo additions to the python path
-        sys.path = previousPaths
-            
-        # roll back imported modules
-        rbi.rollbackImports()
+        rollbackHandler.TearDown()
         
         return instance
     
@@ -241,3 +261,24 @@ class Handler:
             if not os.path.basename(pycFile) == "__init__.pyc":
                 os.remove(pycFile)
      
+    def GetListOfPossibleTargets(self, _projectPath, _sourceRootFolders, _thirdPartyRootFolder):
+        """
+        Returns a list of possible targets which are defined in CSnake file _projectPath.
+        """
+        
+        rollbackHandler = RollbackHandler()
+        rollbackHandler.SetUp(_projectPath, _sourceRootFolders, _thirdPartyRootFolder)
+        result = []
+
+        # find csnake targets in the loaded module
+        (projectFolder, name) = os.path.split(_projectPath)
+        (name, ext) = os.path.splitext(name)
+        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
+        project = csnUtility.LoadModule(projectFolder, name)   
+        for member in inspect.getmembers(project):
+            if isinstance(member[1], csnBuild.Project):
+                result.append(member[0])
+        
+        rollbackHandler.TearDown()
+        return result
+        
