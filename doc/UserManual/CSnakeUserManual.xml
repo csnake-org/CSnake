@@ -70,6 +70,14 @@ Phone +34 935 421323</address>
       <para>The name CSnake derives from the Python programming language (as
       CSnake is written in Python) and CMake.</para>
     </note>
+
+    <note>
+      <para>As mentioned above, CSnake is built upon CMake. This manual will
+      often state that CSnake creates configuration files, even though the
+      actual work is performed by CMake. This is to enhance the readability,
+      and not to take credit for the good work done by the creators of CMake!
+      </para>
+    </note>
   </chapter>
 
   <chapter>
@@ -106,8 +114,8 @@ myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])</programlisting><note>
           <para>The csnMyLibrary.py file is available in the Examples
-          subfolder. Instead of using the existing file, you can create a new
-          file and paste the above lines into the empty file.</para>
+          subfolder. Instead of using the existing file, you can also create a
+          new file and paste the above lines into the empty file.</para>
         </note></para>
 
       <para>This small Python program is sufficient to create your first
@@ -139,8 +147,7 @@ myLibrary.AddIncludeFolders(["src"])</programlisting><note>
     </note>
 
     <para>To generate the CSnake output for our myLibrary project, add the
-    following lines to csnMyLibrary.py (or load the existing file in the
-    examples/MyLibrary subfolder of CSnake)</para>
+    following lines to csnMyLibrary.py:</para>
 
     <programlisting>if __name__ == "__main__":
     generator = csnBuild.Generator()
@@ -180,28 +187,38 @@ myLibrary.AddIncludeFolders(["src"])</programlisting><note>
 
       <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/MyLibrary.png"
                format="PNG" />
-
-      <para>The Project Path is the location of the Python file we created in
-      the previous chapters. In the Instance field, you should enter the name
-      of the variable that is holding the target project that you wish to
-      build. Finally, the Bin Folder is the location where the Visual Studio
-      files as well as the binary project files (the output of the compiler
-      and linker) are placed. Ensure that the option 'Create CMake files and
-      run CMake' is selected and press 'Do --&gt;' to run CSnake. When you
-      browse to the Bin Folder in your file manager, you will see a subfolder
-      'library/MyLibrary' that contains the solution file (on Windows) or
-      KDevelop file (on Linux) for building MyLibrary.</para>
     </example>
+
+    <para>The Project Path is the location of the Python file we created in
+    the previous chapters. In the Instance field, you should select the name
+    of the variable that is holding the target project that you wish to build.
+    If you press the Update button, CSnakeGUI will scan the current CSnake
+    file and create a list of possible values for the Instance field. Finally,
+    the Bin Folder is the location where the Visual Studio files as well as
+    the binary project files (the output of the compiler and linker) are
+    placed. Ensure that the option 'Create CMake files and run CMake' is
+    selected and press 'Do --&gt;' to run CSnake. When you browse to the Bin
+    Folder in your file manager, you will see a subfolder 'library/MyLibrary'
+    that contains the solution file (on Windows) or KDevelop file (on Linux)
+    for building MyLibrary.</para>
   </chapter>
 
   <chapter>
     <title>Adding dependency projects</title>
 
-    <para>In most cases, your project will depend on other projects. Let's
-    assume that MyLibrary needs another library called MyDll:</para>
+    <para></para>
 
-    <programlisting format="linespecific" id="python2" lang="python"
-                    linenumbering="numbered">import csnBuild
+    <section>
+      <title>Dependency projects</title>
+
+      <para>In most cases, your project will depend on other projects. Let's
+      assume that MyLibrary needs another library called MyDll</para>
+
+      <example>
+        <title>csnMyLibrary.2.xml</title>
+
+        <para><programlisting format="linespecific" id="python2" lang="python"
+        linenumbering="numbered">import csnBuild
 import csnUtility
 
 myDll = csnBuild.Project("MyDll", "dll")
@@ -210,32 +227,46 @@ myDll.AddSources([csnUtility.GetDummyCppFilename()])
 myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])
-myLibrary.AddProjects([myDll])</programlisting>
+myLibrary.AddProjects([myDll])</programlisting></para>
+      </example>
 
-    <para>Since we only introduced the new project myDll for educational
-    purposes, it does not need to contain any useful C++ code. Instead of
-    adding some existing source files to myDll, we choose to use a built-in
-    CSnake feature: the <emphasis role="bold">dummy cpp file</emphasis>. This
-    source file can be added to any project to prevent the project from having
-    no source files. The path to the dummy cpp file is obtained by calling
-    csnUtility.GetDummyCppFilename(). In the last line of the example, myDll
-    was added as a dependency project of myLibrary. This means that myLib will
-    link myDll, and is able to locate and use any of its include files.</para>
+      <para>Since we only introduced the new project myDll for educational
+      purposes, it does not need to contain any useful C++ code. Instead of
+      adding some existing source files to myDll, we chose to use a built-in
+      CSnake feature here: the <emphasis role="bold">dummy cpp
+      file</emphasis>. This source file can be added to any project to prevent
+      the project from having no source files. The path to the dummy cpp file
+      is obtained by calling csnUtility.GetDummyCppFilename(). In the last
+      line of the example, myDll was added as a dependency project of
+      myLibrary. This means that myLib will link myDll, and is able to locate
+      and use any of its include files.</para>
 
-    <note>
-      <para>A CSnake project that has no source file cannot be generated.
-      Trying to do so will result in an error.</para>
-    </note>
+      <note>
+        <para>A CSnake project that has no source file cannot be generated.
+        Trying to do so will result in an error.</para>
+      </note>
 
-    <warning>
-      <para>CSnake - or actually: CMake - generates vcproj files for the
-      target project and all the dependency projects. It is advised not to
-      open the <emphasis>dependency project
-      </emphasis><emphasis>files</emphasis> directly, for they may have
-      missing dependencies. In the example above, using MyDll.sln directly may
-      not work. Of course, for working with MyLibrary.sln there is no such
-      problem, as it is the target project.</para>
-    </warning>
+      <warning>
+        <para>CSnake - or actually: CMake - generates vcproj files for the
+        target project and all the dependency projects. It is advised not to
+        open the <emphasis>dependency project
+        </emphasis><emphasis>files</emphasis> directly, for they may have
+        missing dependencies. In the example above, using MyDll.sln directly
+        may not work. Of course, for working with MyLibrary.sln there is no
+        such problem, as it is the target project.</para>
+      </warning>
+    </section>
+
+    <section>
+      <title>Reusing the Bin Folder</title>
+
+      <para>If your source tree contains different executable projects, it is
+      possible - and recommended - to use the same Bin Folder for building
+      these executables. You simply change the target CSnake file in CSnakeGUI
+      and set a difference instance in the Instance field. When you then
+      configure your project, it will use the existing binaries (for
+      libraries, dlls, etc) in the Bin Folder.</para>
+    </section>
   </chapter>
 
   <chapter>
@@ -247,8 +278,8 @@ myLibrary.AddProjects([myDll])</programlisting>
     first step in building the CISTIB toolkit is to build the third party
     libraries. Run CSnakeGUI.bat, and fill in the Third Party Root Folder and
     Third Party Bin Folder (for building the third party libraries, you need
-    not care about any of the other fields at the moment). Then select the
-    option 'Configure Third Party Folder' and press 'Do --&gt;'.</para>
+    not care about any of the other fields). Then select the option 'Configure
+    Third Party Folder' and press 'Do --&gt;'.</para>
 
     <note>
       <para>At the moment, the Third Party Root Folder is a subfolder of the
@@ -283,8 +314,11 @@ myLibrary.AddProjects([myDll])</programlisting>
     <para>Now that the CISTIB toolkit has been built, let's go back to the
     myLibrary example and use itk as a dependency project:</para>
 
-    <programlisting format="linespecific" id="python3" lang=""
-                    linenumbering="numbered">import csnBuild
+    <example>
+      <title>csnMyLibrary.3.py</title>
+
+      <para><programlisting format="linespecific" id="python3" lang=""
+      linenumbering="numbered">import csnBuild
 import csnCISTIBToolkit
 
 myLibrary = csnBuild.Project("MyLibrary", "library")
@@ -292,7 +326,8 @@ myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])
 
 itk = csnCISTIBToolkit.itk()
-myLibrary.AddProjects([itk])</programlisting>
+myLibrary.AddProjects([itk])</programlisting></para>
+    </example>
 
     <note>
       <para>The following examples make use of csnCISTIBToolkit, which we
@@ -333,15 +368,19 @@ myLibrary.AddProjects([itk])</programlisting>
     In the example below, we will use less code to achieve the same
     effect:</para>
 
-    <programlisting format="linespecific" id="python4" lang="python"
-                    linenumbering="numbered">import csnBuild
+    <example>
+      <title>csnMyLibrary.4.py</title>
+
+      <para><programlisting format="linespecific" id="python4" lang="python"
+      linenumbering="numbered">import csnBuild
 from csnCISTIBToolkit import *
 
 myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])
 
-myLibrary.AddProjects([itk()])</programlisting>
+myLibrary.AddProjects([itk()])</programlisting></para>
+    </example>
 
     <para>Note that at line 2, we import all the symbols from csnCISTIBToolkit
     into our CSnake file. This means that at line 8, we can now call itk()
@@ -380,20 +419,25 @@ myLibrary.AddProjects([itk()])</programlisting>
     <emphasis role="bold">Add</emphasis> button to add the folder where
     csnCISTIBToolkit.py can be found (the root of the CISTIB toolkit source
     folder) to the list of root folders. Also, set the Bin Folder to the
-    location where you want the binaries of GIMIAS to be installed. Edit the
-    GIMIAS csnake file; at the bottom of this file, choose the plugins that
-    you want to use in GIMIAS:</para>
+    location where you want the binaries of GIMIAS to be installed.<note>
+        <para>Not only GIMIAS, but also all the other projects of the CISTIB
+        toolkit will be placed in the Bin Folder (except for the third party
+        project binaries, which are placed in the Third Party Bin Folder). It
+        is a good idea to choose a central location for the Bin Folder (such
+        as F:/Bin/Toolkit), so that you can use the same Bin Folder for any
+        executable (not just GIMIAS) that is based on the CISTIB
+        toolkit.</para>
 
-    <note>
-      <para>Not only GIMIAS, but also all the other projects of the CISTIB
-      toolkit will be placed in the Bin Folder (except for the third party
-      project binaries, which are placed in the Third Party Bin Folder). It is
-      a good idea to choose a central location for the Bin Folder (such as
-      F:/Bin/Toolkit), so that you can use the same Bin Folder for any
-      executable (not just GIMIAS) that is based on the CISTIB toolkit.</para>
-    </note>
+        <para></para>
+      </note></para>
 
-    <programlisting># Used to configure gimias
+    <para>Edit the GIMIAS csnake file; at the bottom of this file, choose the
+    plugins that you want to use in GIMIAS:</para>
+
+    <example>
+      <title>csnGimias.py</title>
+
+      <para><programlisting># Used to configure gimias
 import csnBuild
 from csnCISTIBToolkit import *
 
@@ -410,7 +454,8 @@ plugins = [
     cardiacAnalysisPlugin
 ]
 gimias.AddProjects(plugins, _dependency = 0)
-</programlisting>
+</programlisting></para>
+    </example>
 
     <para>Open csnCISTIBToolkit.py to find a list of plugins that can be
     inserted into the plugins list. Finally, select the option 'Create CMake

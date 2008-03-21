@@ -471,6 +471,8 @@ class CSnakeGUIFrame(wx.Frame):
             self.settings.thirdPartyRootFolder
         )
         self.cmbInstance.SetItems(targets)
+        if len(targets):
+            self.cmbInstance.SetSelection(0)
         
 # end of class CSnakeGUIFrame
 
