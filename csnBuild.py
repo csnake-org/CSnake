@@ -193,7 +193,7 @@ class Generator:
                 raise NameError, "Unknown project type %s" % _targetProject.type
 
             # add standard definition to allow multiply defined symbols in the linker
-			f.write( "IF(WIN32)\n" )
+            f.write( "IF(WIN32)\n" )
             f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % _targetProject.name)
             f.write( "ELSE(WIN32)\n\n" )
             f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=ignore-all \")\n" % _targetProject.name)
