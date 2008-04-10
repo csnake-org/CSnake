@@ -54,4 +54,4 @@ def GetDummyCppFilename():
     Returns name of the file that can be used in any project to prevent the project from having zero source files. 
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
-    return csnBuild.root + "/CSnake/TemplateSourceFiles/csnake_dummy.cpp"
+    return csnBuild.rootOfCSnake + "/TemplateSourceFiles/csnake_dummy.cpp"

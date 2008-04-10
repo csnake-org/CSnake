@@ -75,8 +75,8 @@ Phone +34 935 421323</address>
       <para>As mentioned above, CSnake is built upon CMake. This manual will
       often state that CSnake creates configuration files, even though the
       actual work is performed by CMake. This is to enhance the readability,
-      and not to take credit for the good work done by the creators of CMake!
-      </para>
+      and not to take credit for the good work done by the creators of
+      CMake!</para>
     </note>
   </chapter>
 
@@ -277,19 +277,18 @@ myLibrary.AddProjects([myDll])</programlisting></para>
     CISTIB libraries that depend on third party libraries. Therefore, the
     first step in building the CISTIB toolkit is to build the third party
     libraries. Run CSnakeGUI.bat, and fill in the Third Party Root Folder and
-    Third Party Bin Folder (for building the third party libraries, you need
-    not care about any of the other fields). Then select the option 'Configure
-    Third Party Folder' and press 'Do --&gt;'.</para>
+    Third Party Bin Folder as illustrated in the figure below (for building
+    the third party libraries, you need not care about any of the other
+    fields). Then select the option 'Configure Third Party Folder' and press
+    'Do --&gt;'.<graphic
+    fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/BuildingThirdParties.png" /></para>
 
     <note>
       <para>At the moment, the Third Party Root Folder is a subfolder of the
-      CISTIB toolkit folder (see example screenshot below for setting the
-      Third Party Root Folder and Third Party Bin Folder). In the near future,
-      we will move the Third Party folder to a different location outside of
-      the CISTIB toolkit. This will allow you to update the CISTIB toolkit
-      folder from CVS without updating the third party libraries.</para>
-
-      <graphic fileref="http://cilab2.upf.edu/~ftpcistibuser/UserManuals/CSnake/Images/BuildingThirdParties.png" />
+      CISTIB toolkit folder. In the near future, we will move the Third Party
+      folder to a different location outside of the CISTIB toolkit. This will
+      allow you to update the CISTIB toolkit folder from CVS without updating
+      the third party libraries.</para>
     </note>
 
     <para>After this step, a solution file (or KDevelop file) has been
@@ -303,7 +302,8 @@ myLibrary.AddProjects([myDll])</programlisting></para>
       due to incorrect dependency settings between these libraries. Keep
       building the solution until no more errors appear. If you have
       Incredibuild installed, try using the Batch Build function with the
-      option 'Ignore build errors' marked.</para>
+      option 'Ignore build errors' marked, and keep building the project until
+      no more build errors appear.</para>
     </note>
   </chapter>
 
@@ -311,7 +311,10 @@ myLibrary.AddProjects([myDll])</programlisting></para>
     <title>Adding a dependency to a third party library (the lengthy
     way)</title>
 
-    <para>Now that the CISTIB toolkit has been built, let's go back to the
+    <para><note>
+        <para>The following examples make use of csnCISTIBToolkit, which we
+        assume to be located in E:\Code\Toolkit</para>
+      </note>Now that the CISTIB toolkit has been built, let's go back to the
     myLibrary example and use itk as a dependency project:</para>
 
     <example>
@@ -328,11 +331,6 @@ myLibrary.AddIncludeFolders(["src"])
 itk = csnCISTIBToolkit.itk()
 myLibrary.AddProjects([itk])</programlisting></para>
     </example>
-
-    <note>
-      <para>The following examples make use of csnCISTIBToolkit, which we
-      assume to be located in E:\Code\Toolkit</para>
-    </note>
 
     <para>The csnCISTIBToolkit Python file serves as a directory of available
     CSnake projects. For each project in the CISTIB toolkit, it has a function
@@ -427,8 +425,6 @@ myLibrary.AddProjects([itk()])</programlisting></para>
         as F:/Bin/Toolkit), so that you can use the same Bin Folder for any
         executable (not just GIMIAS) that is based on the CISTIB
         toolkit.</para>
-
-        <para></para>
       </note></para>
 
     <para>Edit the GIMIAS csnake file; at the bottom of this file, choose the
@@ -509,4 +505,59 @@ project.AddSources("src/*.h", "src/*.cpp", _checkExists = 0)</programlisting>
       if the specified sources cannot be found.</para>
     </section>
   </chapter>
+
+  <glossary>
+    <glossdiv>
+      <title>Glossary</title>
+
+      <glossentry>
+        <glossterm>Project (CSnake)</glossterm>
+
+        <glossdef>
+          <para>A CSnake Project is a Python class that is used by the
+          Generator to create Compiler project files for a C++ library or
+          executable. This class has member functions for specifying include
+          paths, source files, etc.</para>
+        </glossdef>
+      </glossentry>
+
+      <glossentry>
+        <glossterm>Instance (CSnake Project)</glossterm>
+
+        <glossdef>
+          <para>A variable containing a CSnake Project. Remember that a CSnake
+          Project is a class, so you must create an instance to use it.</para>
+        </glossdef>
+      </glossentry>
+
+      <glossentry>
+        <glossterm>Generator</glossterm>
+
+        <glossdef>
+          <para>The class that takes a CSnake Project instance as input and
+          produces CMake output files (that can be used to generate the build
+          files).</para>
+        </glossdef>
+      </glossentry>
+
+      <glossentry>
+        <glossterm>Compiler project files</glossterm>
+
+        <glossdef>
+          <para>These files are the end results of using CSnakeGUI (or the
+          CSnake Generator and CMake). On Linux, the compiler project files
+          can be make files or KDevelop files. On Windows, the compiler
+          project files will be Visual Studio solution files.</para>
+        </glossdef>
+      </glossentry>
+
+      <glossentry>
+        <glossterm>CMake</glossterm>
+
+        <glossdef>
+          <para>This is the tool that CSnake is</para>
+        </glossdef>
+      </glossentry>
+    </glossdiv>
+  </glossary>
 </book>

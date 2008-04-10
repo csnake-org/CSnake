@@ -14,10 +14,9 @@ import OrderedSet
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 
-root = "%s/.." % (os.path.dirname(__file__))
-root = root.replace("\\", "/")
-if( not root in sys.path ):
-    sys.path.append(root)
+# create variable that contains the folder where csnake is located
+rootOfCSnake = os.path.dirname(__file__)
+rootOfCSnake = rootOfCSnake.replace("\\", "/")
 
 class DependencyError(StandardError):
     pass
@@ -259,6 +258,7 @@ class Generator:
     def PostProcess(self, _targetProject, _binaryFolder):
         """
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
+        _binaryFolder - The binary folder that was passed to the Generate member function.
         """
         self.PostProcessOneProject(_targetProject, _binaryFolder)
         for project in _targetProject.AllProjects(_recursive = 1):
@@ -355,9 +355,9 @@ ForcedIncludeFiles="%s"
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
-        templateFilename = root + "/CSnake/TemplateSourceFiles/Win32Header.h"
+        templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.h"
         if( _targetProject.type == "library" ):
-            templateFilename = root + "/CSnake/TemplateSourceFiles/Win32Header.lib.h"
+            templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.lib.h"
         templateOutputFilename = "%s/%s/%sWin32Header.h" % (_binaryFolder, _targetProject.binarySubfolder, _targetProject.name)
         
         assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
