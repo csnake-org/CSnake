@@ -13,10 +13,15 @@ import OrderedSet
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
+# - instead of hard coding the itk version in various csnake files, use a global variable that selects which version to use
+# - there is a problem with circular dependencies. When python loads a file, it starts executing code, which may lead to these circ deps.
 
-# create variable that contains the folder where csnake is located
-rootOfCSnake = os.path.dirname(__file__)
+# create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
+# the root folder is set correctly both when running the python interpreter, or when using the binary
+# CSnakeGUI executable.
+rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
 rootOfCSnake = rootOfCSnake.replace("\\", "/")
+sys.path.append(rootOfCSnake)
 
 class DependencyError(StandardError):
     pass
@@ -194,6 +199,7 @@ class Generator:
             # add standard definition to allow multiply defined symbols in the linker
             f.write( "IF(WIN32)\n" )
             f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % _targetProject.name)
+            f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/bigobj\")\n" % _targetProject.name)
             f.write( "ELSE(WIN32)\n\n" )
             f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=ignore-all \")\n" % _targetProject.name)
             f.write( "ENDIF(WIN32)\n\n" )
