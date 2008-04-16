@@ -31,9 +31,9 @@ class SyntaxError(StandardError):
 class ProjectClosedError(StandardError):
     pass
     
-class OpSysSection:
+class CompileAndLinkSettings:
     """ 
-    Helper class for OpSys 
+    Helper class for CompileAndLinkConfig 
     """
     def __init__(self):
         self.definitions = list()
@@ -41,13 +41,13 @@ class OpSysSection:
         self.includeFolders = list()
         self.libraryFolders = list()
 
-class OpSys:
+class CompileAndLinkConfig:
     """ 
     Helper class that contains the settings on an operating system 
     """
     def __init__(self):
-        self.public = OpSysSection()
-        self.private = OpSysSection()
+        self.public = CompileAndLinkSettings()
+        self.private = CompileAndLinkSettings()
             
 class Generator:
     """
@@ -86,8 +86,8 @@ class Generator:
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
          
-        # this is the OpSys instance for all operating systems
-        opSysAll = _targetProject.opSystems["ALL"]
+        # this is the CompileAndLinkConfig instance for all operating systems
+        defaultCompileAndLinkConfig = _targetProject.compileAndLinkConfigFor["ALL"]
            
         # create binary project folder
         binaryProjectFolder = _binaryFolder + "/" + _targetProject.binarySubfolder
@@ -96,8 +96,8 @@ class Generator:
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
-            if not binaryProjectFolder in opSysAll.public.includeFolders:
-                opSysAll.public.includeFolders.append(binaryProjectFolder)
+            if not binaryProjectFolder in defaultCompileAndLinkConfig.public.includeFolders:
+                defaultCompileAndLinkConfig.public.includeFolders.append(binaryProjectFolder)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolder, _targetProject.cmakeListsSubpath)
@@ -174,13 +174,13 @@ class Generator:
             
             # add definitions
             for opSysName in ["WIN32", "NOT WIN32"]:
-                opSys = _targetProject.opSystems[opSysName]
-                if( len(opSys.private.definitions) ):
+                compileAndLinkConfig = _targetProject.compileAndLinkConfigFor[opSysName]
+                if( len(compileAndLinkConfig.private.definitions) ):
                     f.write( "IF(%s)\n" % (opSysName))
-                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.private.definitions) )
+                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.private.definitions) )
                     f.write( "ENDIF(%s)\n" % (opSysName))
-            if( len(opSysAll.private.definitions) ):
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSysAll.private.definitions) )
+            if( len(defaultCompileAndLinkConfig.private.definitions) ):
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(defaultCompileAndLinkConfig.private.definitions) )
 
             # add sources
             if(_targetProject.type == "executable" ):
@@ -397,7 +397,7 @@ class Project(object):
     self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
     self.sourceGroups -- Dictionary (groupName -> sources) for sources that should be placed in a visual studio group.
-    self.opSystems -- Dictionary (WIN32/NOT WIN32/ALL -> OpSys) with definitions to be used for different operating systems. 
+    self.compileAndLinkConfigFor -- Dictionary (WIN32/NOT WIN32/ALL -> CompileAndLinkConfig) with definitions to be used for different operating systems. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
@@ -436,13 +436,13 @@ class Project(object):
         self.sources = []
         self.sourceGroups = dict()
 
-        self.opSystems = dict()
+        self.compileAndLinkConfigFor = dict()
         for opSysName in ["WIN32", "NOT WIN32", "ALL"]:
-            opSys = OpSys()
-            self.opSystems[opSysName] = opSys
+            compileAndLinkConfig = CompileAndLinkConfig()
+            self.compileAndLinkConfigFor[opSysName] = compileAndLinkConfig
 
         # by default, add the /bigobj flag in windows
-        # self.opSystems["WIN32"].private.definitions.append("/bigobj")
+        # self.compileAndLinkConfigFor["WIN32"].private.definitions.append("/bigobj")
         
         self.precompiledHeader = ""
         self.sourcesToBeMoced = []
@@ -558,14 +558,14 @@ class Project(object):
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
-        Adds definitions to self.opSystems. 
+        Adds definitions to self.compileAndLinkConfigFor. 
         """
         opSystemName = self.__GetOpSysName(_WIN32, _NOT_WIN32)            
-        opSys = self.opSystems[opSystemName]
+        compileAndLinkConfig = self.compileAndLinkConfigFor[opSystemName]
         if( _private ):
-            opSys.private.definitions.extend(_listOfDefinitions)
+            compileAndLinkConfig.private.definitions.extend(_listOfDefinitions)
         else:
-            opSys.public.definitions.extend(_listOfDefinitions)
+            compileAndLinkConfig.public.definitions.extend(_listOfDefinitions)
         
     def AddIncludeFolders(self, _listOfIncludeFolders):
         """
@@ -574,11 +574,11 @@ class Project(object):
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
-        opSysAll = self.opSystems["ALL"]
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
         for includeFolder in _listOfIncludeFolders:
             for folder in self.Glob(includeFolder):
                 if (not os.path.exists(folder)) or os.path.isdir(folder):
-                    opSysAll.public.includeFolders.append( folder )
+                    defaultCompileAndLinkConfig.public.includeFolders.append( folder )
         
     def SetPrecompiledHeader(self, _precompiledHeader):
         """
@@ -595,9 +595,9 @@ class Project(object):
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
-        opSysAll = self.opSystems["ALL"]
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
         for libraryFolder in _listOfLibraryFolders:
-            opSysAll.public.libraryFolders.append( self.__FindPath(libraryFolder) )
+            defaultCompileAndLinkConfig.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
     def AddLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
         """
@@ -609,10 +609,10 @@ class Project(object):
             _type = ""
 
         opSysName = self.__GetOpSysName(_WIN32, _NOT_WIN32)
-        opSys = self.opSystems[opSysName]            
+        compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]            
             
         for library in _listOfLibraries:
-            opSys.public.libraries.append("%s %s" % (_type, library))
+            compileAndLinkConfig.public.libraries.append("%s %s" % (_type, library))
             
     def __GetOpSysName(self, _WIN32, _NOT_WIN32):
         """
@@ -771,11 +771,11 @@ class Project(object):
         fileConfig = self.GetPathToConfigFile(_binaryFolder, _public)
         f = open(fileConfig, 'w')
         
-        opSysAll = self.opSystems["ALL"]
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
         
         # create list with folder where libraries should be found. Add the bin folder where all the
         # targets are placed to this list. 
-        publicLibraryFolders = opSysAll.public.libraryFolders
+        publicLibraryFolders = defaultCompileAndLinkConfig.public.libraryFolders
         if _public:
             binaryBinFolder = "%s/bin/%s" % (_binaryFolder, self.installSubFolder)
             publicLibraryFolders.append(binaryBinFolder) 
@@ -785,17 +785,17 @@ class Project(object):
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.name, self.GetPathToUseFile(_binaryFolder) ) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(opSysAll.public.includeFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         for opSysName in ["WIN32", "NOT WIN32"]:
-            opSys = self.opSystems[opSysName]
-            if( len(opSys.public.libraries) ):
+            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
+            if( len(compileAndLinkConfig.public.libraries) ):
                 f.write( "IF(%s)\n" % (opSysName))
-                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(opSys.public.libraries, _addQuotes = 1)) )
+                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(compileAndLinkConfig.public.libraries, _addQuotes = 1)) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        opSysAll = self.opSystems["ALL"]
-        if( len(opSysAll.public.libraries) ):
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(opSysAll.public.libraries, _addQuotes = 1)) )
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        if( len(defaultCompileAndLinkConfig.public.libraries) ):
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.libraries, _addQuotes = 1)) )
 
         # add the target of this project to the list of libraries that should be linked
         if _public and len(self.sources) > 0 and (self.type == "library" or self.type == "dll"):
@@ -818,14 +818,14 @@ class Project(object):
 
         # write definitions     
         for opSysName in ["WIN32", "NOT WIN32"]:
-            opSys = self.opSystems[opSysName]
-            if( len(opSys.public.definitions) ):
+            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
+            if( len(compileAndLinkConfig.public.definitions) ):
                 f.write( "IF(%s)\n" % (opSysName))
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSys.public.definitions) )
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.public.definitions) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        opSysAll = self.opSystems["ALL"]
-        if( len(opSysAll.public.definitions) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(opSysAll.public.definitions) )
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        if( len(defaultCompileAndLinkConfig.public.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(defaultCompileAndLinkConfig.public.definitions) )
    
         # write definitions that state whether this is a static library
         #if self.type == "library":
