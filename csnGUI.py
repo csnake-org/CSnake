@@ -129,53 +129,60 @@ class CSnakeGUIFrame(wx.Frame):
         
         self.Initialize()
         
-    def Initialize(self):
-        """
-        Initializes the application.
-        """
-    
+    def RedirectStdOut(self):
         # redirect std out
         redir=RedirectText(self.textLog)
         sys.stdout=redir
         sys.stderr=redir
-        
-        # print messages
+
+    def PrintWelcomeMessages(self):
         print "CSnakeGUI loaded.\n"
         print "Checking if CMake is found...\n"
-       
-        # create settings        
+
+    def CreateMemberVariables(self):
         self.settings = CSnakeGUISettings()
-        
-        # init handler
         self.handler = csnGUIHandler.Handler()
         self.commandCounter = 0
         
+    def CreateOptionsFilenameAndOptionsMemberVariable(self):
         # find out location of application options file
         thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
         thisFolder = thisFolder.replace("\\", "/")
         if thisFolder == "":
             thisFolder = "."
-        self.optionsFile = "%s/options" % thisFolder
+        self.optionsFilename = "%s/options" % thisFolder
         
         # create options
         self.options = csnGUIOptions.Options()
         self.options.currentGUISettingsFilename = "%s/settings" % thisFolder
-        
+
+    def InitializeOptions(self):
         # load options from options file
         self.LoadOptions()
         
         # Write the default options to the options file, and pass them to the handler
         self.WriteOptions()
         self.PassOptionsToHandler()
-            
+
+    def InitializeSettings(self):        
         # load previously saved settings
         if len(sys.argv) >= 2:
             self.LoadSettings(sys.argv[1])
         else:
             self.LoadSettings()
-            
         # init cmbRootFolders
         self.cmbRootFolders.SetSelection(self.cmbRootFolders.GetCount()-1)
+        
+    def Initialize(self):
+        """
+        Initializes the application.
+        """
+        self.RedirectStdOut()
+        self.PrintWelcomeMessages()
+        self.CreateMemberVariables()  
+        self.CreateOptionsFilenameAndOptionsMemberVariable()
+        self.InitializeOptions()    
+        self.InitializeSettings()            
 
     def StoreSettingsFilename(self, lastUsedSettingsFile):
         """
@@ -188,7 +195,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Write options to the application options file, and passes them to the handler. 
         """
-        f = open(self.optionsFile, 'w')
+        f = open(self.optionsFilename, 'w')
         pickle.dump(self.options, f)
         f.close()
 
@@ -201,9 +208,9 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Load options from the application options file. 
         """
-        result = os.path.exists(self.optionsFile)
+        result = os.path.exists(self.optionsFilename)
         if result:
-            f = open(self.optionsFile, 'r')
+            f = open(self.optionsFilename, 'r')
             self.options = pickle.load(f)
             f.close()
         return result
@@ -293,12 +300,7 @@ class CSnakeGUIFrame(wx.Frame):
         mapping["Executable"] = "executable"
     	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
-    def SaveSettings(self, filename = ""):
-        """
-        Copy settings from the widget controls to self.settings.
-        If filename is not "", save current configuration settings (source folder/bin folder/etc) 
-        to filename.
-        """
+    def CopyTextBoxContentsToSettingsVariable(self):
         self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
@@ -308,11 +310,19 @@ class CSnakeGUIFrame(wx.Frame):
             self.settings.rootFolders.append( self.cmbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
         self.settings.instance = self.cmbInstance.GetValue()
+    
+    def SaveSettings(self, filename = ""):
+        """
+        Copy settings from the widget controls to self.settings.
+        If filename is not "", save current configuration settings (source folder/bin folder/etc) 
+        to filename.
+        """
+        self.CopyTextBoxContentsToSettingsVariable()
         if not filename == "":
             f = open(filename, 'w')
             pickle.dump(self.settings, f)
             f.close()
-            # record the settings filename in self.optionsFile
+            # record the settings filename in self.optionsFilename
             self.StoreSettingsFilename(filename)
     
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
@@ -428,6 +438,20 @@ class CSnakeGUIFrame(wx.Frame):
             settingsFilename = dlg.GetPath()
             self.SaveSettings(settingsFilename)
 
+    def CopySettingsVariableToTextBoxContents(self):
+        self.txtCSnakeFile.SetValue(self.settings.csnakeFile)
+        self.cmbRootFolders.Clear()
+        for rootFolder in self.settings.rootFolders:
+            self.cmbRootFolders.Append(rootFolder)
+        self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
+        self.txtBinFolder.SetValue( self.settings.binFolder )
+        self.txtInstallFolder.SetValue( self.settings.installFolder )
+        self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
+        self.cmbInstance.Clear()
+        if self.settings.instance != "":
+            self.cmbInstance.Append(self.settings.instance)
+            self.cmbInstance.SetSelection(0)
+    
     def LoadSettings(self, filename = ""):
         """
         Load configuration settings from filename.
@@ -439,18 +463,7 @@ class CSnakeGUIFrame(wx.Frame):
             f = open(filename, 'r')
             self.settings = pickle.load(f)
             f.close()
-            self.txtCSnakeFile.SetValue(self.settings.csnakeFile)
-            self.cmbRootFolders.Clear()
-            for rootFolder in self.settings.rootFolders:
-                self.cmbRootFolders.Append(rootFolder)
-            self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
-            self.txtBinFolder.SetValue( self.settings.binFolder )
-            self.txtInstallFolder.SetValue( self.settings.installFolder )
-            self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
-            self.cmbInstance.Clear()
-            if self.settings.instance != "":
-                self.cmbInstance.Append(self.settings.instance)
-                self.cmbInstance.SetSelection(0)
+            self.CopySettingsVariableToTextBoxContents()
             
         self.StoreSettingsFilename(filename)
     
