@@ -35,6 +35,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
         moduleFolder = "%s/%s" % (_modulesFolder, module)
         sourceFiles = _holderProject.Glob("%s/*.cpp" % (moduleFolder))
         sourceFiles.extend(_holderProject.Glob("%s/*.cxx" % (moduleFolder)))
+        sourceFiles.extend(_holderProject.Glob("%s/*.txx" % (moduleFolder)))
         sourceFiles.extend(_holderProject.Glob("%s/*.cc" % (moduleFolder)))
         headerFiles = _holderProject.Glob("%s/*.h" % (moduleFolder))
         
