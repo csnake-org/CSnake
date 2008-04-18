@@ -73,10 +73,10 @@ class RollbackHandler:
         """
         # set up roll back of imported modules
         self.rbi = RollbackImporter.RollbackImporter()
-        self.previousPaths = sys.path
+        self.previousPaths = list(sys.path)
         
         # extend python path with project folder, source root and third party root
-        newPaths = _sourceRootFolders
+        newPaths = list(_sourceRootFolders)
         newPaths.extend([_projectPath, _thirdPartyRootFolder]) 
         for path in newPaths:
             if not path in sys.path:
@@ -90,7 +90,7 @@ class RollbackHandler:
         self.rbi.rollbackImports()
 
         # undo additions to the python path
-        sys.path = self.previousPaths
+        sys.path = list(self.previousPaths)
                     
 class Handler:
     def __init__(self):
@@ -238,8 +238,7 @@ class Handler:
         However, __init__.pyc files are not removed.
         """
         # determine list of folders to search for pyc files
-        folderList = []
-        folderList.append(_thirdPartyRootFolder)
+        folderList = list(_thirdPartyRootFolder)
         
         if _instance != "":
             folderList.extend(_sourceRootFolders)
