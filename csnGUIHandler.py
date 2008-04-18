@@ -127,12 +127,14 @@ class Handler:
         
         (projectFolder, name) = os.path.split(_projectPath)
         (name, ext) = os.path.splitext(name)
-        project = csnUtility.LoadModule(projectFolder, name)   
-        exec "instance = project.%s" % _instance
 
-        # undo additions to the python path
-        rollbackHandler.TearDown()
-        
+        try:
+            project = csnUtility.LoadModule(projectFolder, name)   
+            exec "instance = project.%s" % _instance
+        finally:
+            # undo additions to the python path
+            rollbackHandler.TearDown()
+
         return instance
     
     def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolders, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
