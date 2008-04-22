@@ -12,12 +12,6 @@ def LoadThirdPartyModule(_subFolder, _name):
     folder = "%s/%s" % (thirdPartyModuleFolder, _subFolder)
     return csnUtility.LoadModule(folder, _name)
 
-def AddCilabLibraryModules(_project, _libModules):
-    assert 0, "No longer supported in this way. Ask Maarten."
-
-def AddCilabWidgetModules(_project, _widgetModules, _useQt = 1):
-    assert 0, "No longer supported in this way. Ask Maarten."
-                 
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
