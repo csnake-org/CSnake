@@ -96,6 +96,7 @@ class Generator:
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
+            # add search path to the generated win32 header
             if not binaryProjectFolder in defaultCompileAndLinkConfig.public.includeFolders:
                 defaultCompileAndLinkConfig.public.includeFolders.append(binaryProjectFolder)
         
@@ -106,8 +107,8 @@ class Generator:
         # write header and some cmake fields
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
-
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
+        
         f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolder) )
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
@@ -124,89 +125,7 @@ class Generator:
         _targetProject.GenerateConfigFile( _binaryFolder, _public = 1)
         _targetProject.GenerateUseFile(_binaryFolder)
         
-        # get related projects to be 'used' in the sense of including the use and config file.
-        projectsToUse = _targetProject.ProjectsToUse()
-        
-        # find and use related projects
-        for project in projectsToUse:
-          # include config and use file
-            f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_binaryFolder, _public = 0)) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(_binaryFolder)) )
-
-        # generate groups for widget files
-        for groupName in _targetProject.sourceGroups:
-            f.write( "\n # Create %s group \n" % groupName )
-            f.write( "IF (WIN32)\n" )
-            f.write( "  SOURCE_GROUP(\"%s\" FILES %s)\n" % (groupName, csnUtility.Join(_targetProject.sourceGroups[groupName], _addQuotes = 1)))
-            f.write( "ENDIF(WIN32)\n\n" )
-
-        # generate moc files
-        cmakeMocInputVar = ""
-        if( len(_targetProject.sourcesToBeMoced) ):
-            cmakeMocInputVarName = "MOC_%s" % (_targetProject.name)
-            cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
-            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (_targetProject.name, cmakeMocInputVarName, csnUtility.Join(_targetProject.sourcesToBeMoced, _addQuotes = 1)) )
-            # write section for sorting moc files in a separate folder in Visual Studio
-            f.write( "\n # Create MOC group \n" )
-            f.write( "IF (WIN32)\n" )
-            f.write( "  SOURCE_GROUP(\"Generated MOC Files\" REGULAR_EXPRESSION moc_[a-zA-Z0-9_]*[.]cxx$)\n")
-            f.write( "ENDIF(WIN32)\n\n" )
-            
-        # generate ui files
-        cmakeUIHInputVar = ""
-        cmakeUICppInputVar = ""
-        if( len(_targetProject.sourcesToBeUIed) ):
-            cmakeUIHInputVarName = "UI_H_%s" % (_targetProject.name)
-            cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
-            cmakeUICppInputVarName = "UI_CPP_%s" % (_targetProject.name)
-            cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
-            f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (_targetProject.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(_targetProject.sourcesToBeUIed, _addQuotes = 1)) )
-            # write section for sorting ui files in a separate folder in Visual Studio
-            f.write( "\n # Create UI group \n" )
-            f.write( "IF (WIN32)\n" )
-            f.write( "  SOURCE_GROUP(\"Forms\" REGULAR_EXPRESSION [.]ui$)\n")
-            f.write( "ENDIF(WIN32)\n\n" )
-            
-        # write section that is specific for the project type        
-        if( len(_targetProject.sources) ):
-            f.write( "\n# Add target\n" )
-            
-            # add definitions
-            for opSysName in ["WIN32", "NOT WIN32"]:
-                compileAndLinkConfig = _targetProject.compileAndLinkConfigFor[opSysName]
-                if( len(compileAndLinkConfig.private.definitions) ):
-                    f.write( "IF(%s)\n" % (opSysName))
-                    f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.private.definitions) )
-                    f.write( "ENDIF(%s)\n" % (opSysName))
-            if( len(defaultCompileAndLinkConfig.private.definitions) ):
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(defaultCompileAndLinkConfig.private.definitions) )
-
-            # add sources
-            if(_targetProject.type == "executable" ):
-                f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
-                
-            elif(_targetProject.type == "library" ):
-                f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
-            
-            elif(_targetProject.type == "dll" ):
-                f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (_targetProject.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(_targetProject.sources, _addQuotes = 1)) )
-                
-            else:
-                raise NameError, "Unknown project type %s" % _targetProject.type
-
-            # add standard definition to allow multiply defined symbols in the linker
-            f.write( "IF(WIN32)\n" )
-            f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % _targetProject.name)
-            f.write( "ELSE(WIN32)\n\n" )
-            f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=ignore-all \")\n" % _targetProject.name)
-            f.write( "ENDIF(WIN32)\n\n" )
-            
-            # add install rule
-            if( _installFolder != "" and _targetProject.type != "library"):
-                destination = "%s/%s" % (_installFolder, _targetProject.installSubFolder)
-                f.write( "\n# Rule for installing files in location %s\n" % destination)
-                f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (_targetProject.name, destination) )
+        _targetProject.CreateCMakeSections(f, _binaryFolder, _installFolder)
                 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
@@ -438,8 +357,7 @@ class Project(object):
 
         self.compileAndLinkConfigFor = dict()
         for opSysName in ["WIN32", "NOT WIN32", "ALL"]:
-            compileAndLinkConfig = CompileAndLinkConfig()
-            self.compileAndLinkConfigFor[opSysName] = compileAndLinkConfig
+            self.compileAndLinkConfigFor[opSysName] = compileAndLinkConfig = CompileAndLinkConfig()
 
         # by default, add the /bigobj flag in windows
         # self.compileAndLinkConfigFor["WIN32"].private.definitions.append("/bigobj")
@@ -883,3 +801,95 @@ class Project(object):
     def GetGenerateWin32Header(self):
         return self.generateWin32Header
            
+    def CreateCMakeSection_IncludeConfigAndUseFiles(self, f, binaryFolder):
+        for project in self.ProjectsToUse():
+            f.write( "\n# use %s\n" % (project.name) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = 0)) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(binaryFolder)) )
+    
+    def CreateCMakeSection_SourceGroups(self, f):
+        for groupName in self.sourceGroups:
+            f.write( "\n # Create %s group \n" % groupName )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"%s\" FILES %s)\n" % (groupName, csnUtility.Join(self.sourceGroups[groupName], _addQuotes = 1)))
+            f.write( "ENDIF(WIN32)\n\n" )
+    
+    def CreateCMakeSection_MocRules(self, f):
+        cmakeMocInputVar = ""
+        if( len(self.sourcesToBeMoced) ):
+            cmakeMocInputVarName = "MOC_%s" % (self.name)
+            cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
+            f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (self.name, cmakeMocInputVarName, csnUtility.Join(self.sourcesToBeMoced, _addQuotes = 1)) )
+            # write section for sorting moc files in a separate folder in Visual Studio
+            f.write( "\n # Create MOC group \n" )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"Generated MOC Files\" REGULAR_EXPRESSION moc_[a-zA-Z0-9_]*[.]cxx$)\n")
+            f.write( "ENDIF(WIN32)\n\n" )
+        return cmakeMocInputVar
+    
+    def CreateCMakeSection_UicRules(self, f):
+        cmakeUIHInputVar = ""
+        cmakeUICppInputVar = ""
+        if( len(self.sourcesToBeUIed) ):
+            cmakeUIHInputVarName = "UI_H_%s" % (self.name)
+            cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
+            cmakeUICppInputVarName = "UI_CPP_%s" % (self.name)
+            cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
+            f.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (self.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(self.sourcesToBeUIed, _addQuotes = 1)) )
+            # write section for sorting ui files in a separate folder in Visual Studio
+            f.write( "\n # Create UI group \n" )
+            f.write( "IF (WIN32)\n" )
+            f.write( "  SOURCE_GROUP(\"Forms\" REGULAR_EXPRESSION [.]ui$)\n")
+            f.write( "ENDIF(WIN32)\n\n" )
+        return (cmakeUIHInputVar, cmakeUICppInputVar)
+    
+    def CreateCMakeSection_Definitions(self, f):
+        for opSysName in ["WIN32", "NOT WIN32"]:
+            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
+            if( len(compileAndLinkConfig.private.definitions) ):
+                f.write( "IF(%s)\n" % (opSysName))
+                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.private.definitions) )
+                f.write( "ENDIF(%s)\n" % (opSysName))
+        if( len(self.compileAndLinkConfigFor["ALL"].private.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compileAndLinkConfigFor["ALL"].private.definitions) )
+
+        # add standard definition to allow multiply defined symbols in the linker
+        f.write( "IF(WIN32)\n" )
+        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % self.name)
+        f.write( "ELSE(WIN32)\n\n" )
+        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=ignore-all \")\n" % self.name)
+        f.write( "ENDIF(WIN32)\n\n" )
+
+    def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
+        if(self.type == "executable" ):
+            f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+            
+        elif(self.type == "library" ):
+            f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+        
+        elif(self.type == "dll" ):
+            f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+            
+        else:
+            raise NameError, "Unknown project type %s" % self.type
+        
+    def CreateCMakeSection_InstallRules(self, f, _installFolder):
+        if( _installFolder != "" and self.type != "library"):
+            destination = "%s/%s" % (_installFolder, self.installSubFolder)
+            f.write( "\n# Rule for installing files in location %s\n" % destination)
+            f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (self.name, destination) )
+    
+    def CreateCMakeSections(self, f, _binaryFolder, _installFolder):
+        """ Writes different CMake sections for this project to the file f. """
+    
+        self.CreateCMakeSection_IncludeConfigAndUseFiles(f, _binaryFolder)
+        self.CreateCMakeSection_SourceGroups(f)
+        cmakeMocInputVar = self.CreateCMakeSection_MocRules(f)
+        (cmakeUIHInputVar, cmakeUICppInputVar) = self.CreateCMakeSection_UicRules(f)
+            
+        # write section that is specific for the project type        
+        if( len(self.sources) ):
+            f.write( "\n# Add target\n" )
+            self.CreateCMakeSection_Sources(f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
+            self.CreateCMakeSection_Definitions(f)
+            self.CreateCMakeSection_InstallRules(f, _installFolder)

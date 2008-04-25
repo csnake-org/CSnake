@@ -6,6 +6,12 @@ thirdPartyModuleFolder = ""
 thirdPartyBinFolder = ""
 defaultLibType = "dll"
 
+def GetSourceFileExtensions():
+    return ["cxx", "cc", "cpp"]
+    
+def GetIncludeFileExtensions():
+    return ["h", "hpp", "txx"]
+    
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
     assert thirdPartyModuleFolder != ""
@@ -27,11 +33,12 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
     """
     for module in _modules:
         moduleFolder = "%s/%s" % (_modulesFolder, module)
-        sourceFiles = _holderProject.Glob("%s/*.cpp" % (moduleFolder))
-        sourceFiles.extend(_holderProject.Glob("%s/*.cxx" % (moduleFolder)))
-        sourceFiles.extend(_holderProject.Glob("%s/*.txx" % (moduleFolder)))
-        sourceFiles.extend(_holderProject.Glob("%s/*.cc" % (moduleFolder)))
-        headerFiles = _holderProject.Glob("%s/*.h" % (moduleFolder))
+        sourceFiles = []
+        for extension in GetSourceFileExtensions():
+            sourceFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
+
+        for extension in GetIncludeFileExtensions():
+            headerFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
         
         for sourceFile in sourceFiles:
             if os.path.isdir(sourceFile):
@@ -68,9 +75,9 @@ class CilabModuleProject(csnBuild.Project):
             srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
             if( os.path.exists(srcFolderAbs) ):
                 self.AddIncludeFolders([srcFolder])
-                self.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0)
-                self.AddSources(["%s/*.h" % srcFolder], _checkExists = 0)
-                self.AddSources(["%s/*.hpp" % srcFolder], _checkExists = 0)
+                for extension in GetSourceFileExtensions():
+                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+
             if( len(self.sources) == 0 ):
                 self.AddSources([csnUtility.GetDummyCppFilename()])
                 
@@ -78,7 +85,8 @@ class CilabModuleProject(csnBuild.Project):
             includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
             if( os.path.exists(includeFolderAbs) ):
                 self.AddIncludeFolders([includeFolder])
-                self.AddSources(["%s/*.h" % includeFolder], _checkExists = 0)
+                for extension in GetIncludeFileExtensions():
+                    self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
     def AddDemos(self, _modules):
         demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
@@ -115,7 +123,8 @@ class GimiasPluginProject(csnBuild.Project):
             srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
             if( os.path.exists(srcFolderAbs) ):
                 self.AddIncludeFolders([srcFolder])
-                self.AddSources(["%s/*.c??" % srcFolder], _checkExists = 0, _sourceGroup = "Widgets")
+                for extension in GetSourceFileExtensions():
+                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Widgets")
                 if _useQt:
                     self.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
                 
@@ -123,4 +132,5 @@ class GimiasPluginProject(csnBuild.Project):
             includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
             if( os.path.exists(includeFolderAbs) ):
                 self.AddIncludeFolders([includeFolder])
-                self.AddSources(["%s/*.h" % includeFolder], _moc = _useQt, _checkExists = 0, _sourceGroup = "Widgets")
+                for extension in GetIncludeFileExtensions():
+                    self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
