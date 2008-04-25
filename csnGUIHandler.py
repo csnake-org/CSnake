@@ -179,7 +179,7 @@ class Handler:
                         shutil.copy(file, absLocation)
              
     def CMakeIsFound(self):
-        found = os.path.exists(self.cmakePath)
+        found = os.path.exists(self.cmakePath) and os.path.isfile(self.cmakePath)
         if not found:
             try:
                 retcode = subprocess.Popen(self.cmakePath).wait()

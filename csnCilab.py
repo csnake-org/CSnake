@@ -34,6 +34,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
     for module in _modules:
         moduleFolder = "%s/%s" % (_modulesFolder, module)
         sourceFiles = []
+        headerFiles = []
         for extension in GetSourceFileExtensions():
             sourceFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
 

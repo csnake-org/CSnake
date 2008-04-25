@@ -48,7 +48,29 @@ class CompileAndLinkConfig:
     def __init__(self):
         self.public = CompileAndLinkSettings()
         self.private = CompileAndLinkSettings()
-            
+
+class ConfigTypes:
+    def __init__(self):
+        self.all = "ALL"
+        self.win32 = "WIN32"
+        self.notWin32 = "NOT WIN32"
+
+    def List(self):
+        return [self.all, self.win32, self.notWin32]
+        
+    def GetOpSysName(self, _WIN32, _NOT_WIN32):
+        """
+        Returns a type from self.List()
+        """
+        if( _WIN32 and _NOT_WIN32 ):
+            _WIN32 = _NOT_WIN32 = 0
+        compiler = self.all
+        if( _WIN32 ):
+            compiler = self.win32
+        elif( _NOT_WIN32 ):
+            compiler = self.notWin32
+        return compiler
+                    
 class Generator:
     """
     Generates the CMakeLists.txt for a csnBuild.Project.
@@ -65,8 +87,6 @@ class Generator:
         isTopLevelProject = _generatedList is None
         if( _generatedList is None ):
             _generatedList = []
-
-        if( _knownProjectNames is None ):
             _knownProjectNames = []
 
         if( _targetProject.name in _knownProjectNames):
@@ -86,19 +106,18 @@ class Generator:
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
          
-        # this is the CompileAndLinkConfig instance for all operating systems
-        defaultCompileAndLinkConfig = _targetProject.compileAndLinkConfigFor["ALL"]
-           
         # create binary project folder
         binaryProjectFolder = _binaryFolder + "/" + _targetProject.binarySubfolder
         os.path.exists(binaryProjectFolder) or os.makedirs(binaryProjectFolder)
     
+        configTypes = ConfigTypes()
+        
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolder)
             # add search path to the generated win32 header
-            if not binaryProjectFolder in defaultCompileAndLinkConfig.public.includeFolders:
-                defaultCompileAndLinkConfig.public.includeFolders.append(binaryProjectFolder)
+            if not binaryProjectFolder in _targetProject.compileAndLinkConfigFor[configTypes.all].public.includeFolders:
+                _targetProject.compileAndLinkConfigFor[configTypes.all].public.includeFolders.append(binaryProjectFolder)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolder, _targetProject.cmakeListsSubpath)
@@ -355,13 +374,11 @@ class Project(object):
         self.sources = []
         self.sourceGroups = dict()
 
+        configTypes = ConfigTypes()
         self.compileAndLinkConfigFor = dict()
-        for opSysName in ["WIN32", "NOT WIN32", "ALL"]:
+        for opSysName in configTypes.List():
             self.compileAndLinkConfigFor[opSysName] = compileAndLinkConfig = CompileAndLinkConfig()
 
-        # by default, add the /bigobj flag in windows
-        # self.compileAndLinkConfigFor["WIN32"].private.definitions.append("/bigobj")
-        
         self.precompiledHeader = ""
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
@@ -478,7 +495,8 @@ class Project(object):
         """
         Adds definitions to self.compileAndLinkConfigFor. 
         """
-        opSystemName = self.__GetOpSysName(_WIN32, _NOT_WIN32)            
+        configTypes = ConfigTypes()
+        opSystemName = configTypes.GetOpSysName(_WIN32, _NOT_WIN32)            
         compileAndLinkConfig = self.compileAndLinkConfigFor[opSystemName]
         if( _private ):
             compileAndLinkConfig.private.definitions.extend(_listOfDefinitions)
@@ -492,7 +510,8 @@ class Project(object):
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        configTypes = ConfigTypes()
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         for includeFolder in _listOfIncludeFolders:
             for folder in self.Glob(includeFolder):
                 if (not os.path.exists(folder)) or os.path.isdir(folder):
@@ -513,7 +532,8 @@ class Project(object):
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        configTypes = ConfigTypes()
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         for libraryFolder in _listOfLibraryFolders:
             defaultCompileAndLinkConfig.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
@@ -526,24 +546,12 @@ class Project(object):
         if( _type == "all" ):
             _type = ""
 
-        opSysName = self.__GetOpSysName(_WIN32, _NOT_WIN32)
+        configTypes = ConfigTypes()
+        opSysName = configTypes.GetOpSysName(_WIN32, _NOT_WIN32)
         compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]            
             
         for library in _listOfLibraries:
             compileAndLinkConfig.public.libraries.append("%s %s" % (_type, library))
-            
-    def __GetOpSysName(self, _WIN32, _NOT_WIN32):
-        """
-        Returns "ALL", "WIN32" or "NOT WIN32" 
-        """
-        if( _WIN32 and _NOT_WIN32 ):
-            _WIN32 = _NOT_WIN32 = 0
-        compiler = "ALL"
-        if( _WIN32 ):
-            compiler = "WIN32"
-        elif( _NOT_WIN32 ):
-            compiler = "NOT WIN32"
-        return compiler
         
     def __FindPath(self, _path):
         """ 
@@ -689,7 +697,8 @@ class Project(object):
         fileConfig = self.GetPathToConfigFile(_binaryFolder, _public)
         f = open(fileConfig, 'w')
         
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        configTypes = ConfigTypes()
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         
         # create list with folder where libraries should be found. Add the bin folder where all the
         # targets are placed to this list. 
@@ -705,13 +714,13 @@ class Project(object):
         f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.name, self.GetPathToUseFile(_binaryFolder) ) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
-        for opSysName in ["WIN32", "NOT WIN32"]:
+        for opSysName in [configTypes.win32, configTypes.notWin32]:
             compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
             if( len(compileAndLinkConfig.public.libraries) ):
                 f.write( "IF(%s)\n" % (opSysName))
                 f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(compileAndLinkConfig.public.libraries, _addQuotes = 1)) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         if( len(defaultCompileAndLinkConfig.public.libraries) ):
             f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.libraries, _addQuotes = 1)) )
 
@@ -726,6 +735,7 @@ class Project(object):
         """
         fileUse = "%s/%s" % (_binaryFolder, self.useFilePath)
         f = open(fileUse, 'w')
+        configTypes = ConfigTypes()
         
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
@@ -735,13 +745,13 @@ class Project(object):
         f.write( "LINK_LIBRARIES(${%s_LIBRARIES})\n" % (self.name) )
 
         # write definitions     
-        for opSysName in ["WIN32", "NOT WIN32"]:
+        for opSysName in [configTypes.win32, configTypes.notWin32]:
             compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
             if( len(compileAndLinkConfig.public.definitions) ):
                 f.write( "IF(%s)\n" % (opSysName))
                 f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.public.definitions) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor["ALL"]
+        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         if( len(defaultCompileAndLinkConfig.public.definitions) ):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(defaultCompileAndLinkConfig.public.definitions) )
    
@@ -844,14 +854,15 @@ class Project(object):
         return (cmakeUIHInputVar, cmakeUICppInputVar)
     
     def CreateCMakeSection_Definitions(self, f):
-        for opSysName in ["WIN32", "NOT WIN32"]:
+        configTypes = ConfigTypes()
+        for opSysName in [configTypes.win32, configTypes.notWin32]:
             compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
             if( len(compileAndLinkConfig.private.definitions) ):
                 f.write( "IF(%s)\n" % (opSysName))
                 f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.private.definitions) )
                 f.write( "ENDIF(%s)\n" % (opSysName))
-        if( len(self.compileAndLinkConfigFor["ALL"].private.definitions) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compileAndLinkConfigFor["ALL"].private.definitions) )
+        if( len(self.compileAndLinkConfigFor[configTypes.all].private.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compileAndLinkConfigFor[configTypes.all].private.definitions) )
 
         # add standard definition to allow multiply defined symbols in the linker
         f.write( "IF(WIN32)\n" )
@@ -893,3 +904,12 @@ class Project(object):
             self.CreateCMakeSection_Sources(f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
             self.CreateCMakeSection_Definitions(f)
             self.CreateCMakeSection_InstallRules(f, _installFolder)
+
+    def CreateTestProject(self):
+        self.testProject = Project("%sTest" % self.name, "executable")
+        self.testProject.AddSources(["%s.cpp" % self.testProject.name])
+        self.testProject.AddRule()
+        
+    def AddTests(self, listOfTests):
+        if not hasattr(self, "testProject"):
+            self.CreateTestProject()
