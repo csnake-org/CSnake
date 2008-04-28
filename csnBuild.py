@@ -30,7 +30,21 @@ class SyntaxError(StandardError):
 
 class ProjectClosedError(StandardError):
     pass
-    
+
+class Rule:
+    def __init__(self):
+        self.workingDirectory = ""
+        self.command = ""
+
+def ToProject(project):
+    """
+    Helper function that tests if project is a function. If so, it returns the result of the function. If not, it returns project.
+    """
+    result = project
+    if type(project) == types.FunctionType:
+        result = project()
+    return result
+
 class CompileAndLinkSettings:
     """ 
     Helper class for CompileAndLinkConfig 
@@ -145,7 +159,8 @@ class Generator:
         _targetProject.GenerateUseFile(_binaryFolder)
         
         _targetProject.CreateCMakeSections(f, _binaryFolder, _installFolder)
-                
+        _targetProject.CreateDummyTestOutputFile(_binaryFolder)
+
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
         requiredProjects = _targetProject.RequiredProjects(_recursive = 1)        
@@ -335,6 +350,7 @@ class Project(object):
     self.configFilePath -- The config file for the project. See above.
     self.sources -- Sources to be compiled for this target.
     self.sourceGroups -- Dictionary (groupName -> sources) for sources that should be placed in a visual studio group.
+    self.rules - CMake rules. See AddRule function.
     self.compileAndLinkConfigFor -- Dictionary (WIN32/NOT WIN32/ALL -> CompileAndLinkConfig) with definitions to be used for different operating systems. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
@@ -387,6 +403,8 @@ class Project(object):
         self.filesToInstall["debug"] = dict()
         self.filesToInstall["release"] = dict()
         self.type = _type
+        self.rules = dict()
+        self.createIfNotExistent = dict()
         
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
@@ -415,9 +433,7 @@ class Project(object):
         Raises StandardError in case of a cyclic dependency.
         """
         for project in _projects:
-            projectToAdd = project
-            if type(projectToAdd) == types.FunctionType:
-                projectToAdd = project()
+            projectToAdd = ToProject(project)
                 
             if( self is projectToAdd ):
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
@@ -439,9 +455,7 @@ class Project(object):
         added to self.doNotAddADependencyForTheseProjects).
         """
         for project in _projects:
-            projectToAdd = project
-            if type(projectToAdd) == types.FunctionType:
-                projectToAdd = project()
+            projectToAdd = ToProject(project)
             self.doNotAddADependencyForTheseProjects.add(projectToAdd)
                 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1):
@@ -455,7 +469,7 @@ class Project(object):
         for sourceFile in _listOfSourceFiles:
             sources = self.Glob(sourceFile)
             if( _checkExists and not len(sources) ):
-                raise IOError, "Path file not found %s" % (sourceFile)
+                    raise IOError, "Path file not found %s" % (sourceFile)
             
             for source in sources:
                 if _moc and not source in self.sourcesToBeMoced:
@@ -568,30 +582,38 @@ class Project(object):
         path = path.replace("\\", "/")
         return path
         
+    def PrependSourceRootFolderToRelativePath(self, _path):
+        """ 
+        Returns _path prepended with self.sourceRootFolder, unless _path is already an absolute path (in that case, _path is returned).
+        """
+        path = _path.replace("\\", "/")
+        if not os.path.isabs(path):
+            path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
+        return path.replace("\\", "/")
+    
     def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
         """
-        path = _path.replace("\\", "/")
-        if not os.path.isabs(_path):
-            path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
-        return [x.replace("\\", "/") for x in glob.glob(path)]
+        return [x.replace("\\", "/") for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
         Returns true if self is (directly or indirectly) dependent upon _otherProject. 
+        _otherProject - May be a project, or a function returning a project.
         _skipList - Used to not process project twice during the recursion (also prevents infinite loops).
         """
         if _skipList is None:
             _skipList = []
         
+        otherProject = ToProject(_otherProject)
         assert not self in _skipList, "%s should not be in stoplist" % (self.name)
         _skipList.append(self)
         for requiredProject in self.RequiredProjects():
             if requiredProject in _skipList:
                 continue
-            if requiredProject is _otherProject or requiredProject.DependsOn(_otherProject, _skipList ):
+            if requiredProject is otherProject or requiredProject.DependsOn(otherProject, _skipList ):
                 return 1
         return 0
         
@@ -633,23 +655,27 @@ class Project(object):
         """ 
         Indicate that self must be used before _otherProjects in a cmake file. 
         Throws DependencyError if _otherProject wants to be used before self.
+        _otherProject - May be a project, or a function returning a project.
         """
-        if( _otherProject.WantsToBeUsedBefore(self) ):
-            raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, _otherProject.name)
-        self.useBefore.append(_otherProject)
+        otherProject = ToProject(_otherProject)
+        if( otherProject.WantsToBeUsedBefore(self) ):
+            raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, otherProject.name)
+        self.useBefore.append(otherProject)
         
     def WantsToBeUsedBefore(self, _otherProject):
         """ 
         Return true if self wants to be used before _otherProject.
+        _otherProject - May be a project, or a function returning a project.
         """
-        if( self is _otherProject ):
+        otherProject = ToProject(_otherProject)
+        if( self is otherProject ):
             return 0
             
-        if( _otherProject in self.useBefore ):
+        if( otherProject in self.useBefore ):
             return 1
             
         for requiredProject in self.RequiredProjects(1):
-            if( _otherProject in requiredProject.useBefore ):
+            if( otherProject in requiredProject.useBefore ):
                 return 1
                 
         return 0
@@ -890,6 +916,11 @@ class Project(object):
             f.write( "\n# Rule for installing files in location %s\n" % destination)
             f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (self.name, destination) )
     
+    def CreateCMakeSection_Rules(self, f):
+        for description, rule in self.rules.iteritems():
+            f.write("\n#Adding rule %s\n" % description)
+            f.write("ADD_CUSTOM_COMMAND( TARGET %s PRE_BUILD COMMAND %s WORKING_DIRECTORY \"%s\" COMMENT \"Running rule %s\" VERBATIM )\n" % (self.name, rule.command, rule.workingDirectory, description))
+    
     def CreateCMakeSections(self, f, _binaryFolder, _installFolder):
         """ Writes different CMake sections for this project to the file f. """
     
@@ -898,18 +929,61 @@ class Project(object):
         cmakeMocInputVar = self.CreateCMakeSection_MocRules(f)
         (cmakeUIHInputVar, cmakeUICppInputVar) = self.CreateCMakeSection_UicRules(f)
             
-        # write section that is specific for the project type        
+        # write section that is specific for the project type   
         if( len(self.sources) ):
             f.write( "\n# Add target\n" )
             self.CreateCMakeSection_Sources(f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
             self.CreateCMakeSection_Definitions(f)
             self.CreateCMakeSection_InstallRules(f, _installFolder)
+            self.CreateCMakeSection_Rules(f)
 
-    def CreateTestProject(self):
-        self.testProject = Project("%sTest" % self.name, "executable")
-        self.testProject.AddSources(["%s.cpp" % self.testProject.name])
-        self.testProject.AddRule()
+    def CreateDummyTestOutputFile(self, _binaryFolder):
+        """ 
+        Tests if this project is a test project. If so, checks if the test runner output file exists. If not, creates a dummy file.
+        This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
+        """
+        if hasattr(self, "testRunnerSourceFile"):
+            binaryProjectFolder = _binaryFolder + "/" + self.binarySubfolder
+            testRunnerSourceFile = "%s/%s" % (binaryProjectFolder, self.testRunnerSourceFile)
+            if not os.path.exists(testRunnerSourceFile):
+                f = open(testRunnerSourceFile, 'w')
+                f.write("// Test runner source file. To be created by CxxTest.py.")
+                f.close()
         
-    def AddTests(self, listOfTests):
+    def AddRule(self, description, command, workingDirectory = "."):
+        """
+        Adds a new rule to the self.rules dictionary, using description as the key.
+        """
+        rule = Rule()
+        rule.command = command
+        rule.workingDirectory = workingDirectory
+        self.rules[description] = rule
+        
+    def CreateTestProject(self, _cxxTestProject):
+        """
+        _cxxTestProject - May be the cxxTest project instance, or a function returning a cxxTest project instance.
+        """
+        cxxTestProject = ToProject(_cxxTestProject)
+        self.testProject = Project("%sTest" % self.name, "executable")
+        self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
+        pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
+        self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0)
+        
+        # todo: find out where python is located
+        pythonPath = "D:/Python24/python.exe"
+        self.testProject.AddRule("Create test runner", "%s %s --error-printer -o %s " % (pythonPath, pythonScript, self.testProject.testRunnerSourceFile))
+        self.testProject.AddProjects([cxxTestProject, self])
+        self.AddProjects([self.testProject], _dependency = 0)
+        
+    def AddTests(self, listOfTests, _cxxTestProject):
+        """
+        _cxxTestProject - May be the cxxTest project instance, or a function returning a cxxTest project instance.
+        """
+        cxxTestProject = ToProject(_cxxTestProject)
+        
         if not hasattr(self, "testProject"):
-            self.CreateTestProject()
+            self.CreateTestProject(cxxTestProject)
+            
+        rule = self.testProject.rules["Create test runner"]
+        for test in listOfTests:
+            rule.command += "\"%s\"" % self.PrependSourceRootFolderToRelativePath(test)
