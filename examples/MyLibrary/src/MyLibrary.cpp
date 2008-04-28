@@ -1,5 +1,5 @@
 #include "MyLibrary.h"
-#include <stdio>
+#include <iostream>
 
 int MyLibrary()
 {

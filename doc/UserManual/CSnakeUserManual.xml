@@ -478,6 +478,48 @@ gimias.AddProjects(plugins, _dependency = 0)
   </chapter>
 
   <chapter>
+    <title>Adding tests</title>
+
+    <para>CSnake supports the CxxTest framework for testing C++ code. Use the
+    AddTests function to add tests, as is done in the last line of the
+    following example:</para>
+
+    <programlisting format="linespecific" id="python4" lang="python"
+                    linenumbering="numbered">import csnBuild
+from csnCISTIBToolkit import *
+
+myLibrary = csnBuild.Project("MyLibrary", "library")
+myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
+myLibrary.AddIncludeFolders(["src"])
+myLibrary.AddTests([test/*.h], cxxTest)</programlisting>
+
+    <para>Note that you have to supply the cxxTest project in the call to
+    AddTests. The following lines come from test/MyLibraryTest.h, and
+    illustrate how to create a test (in this case, we test that calling the
+    MyLibrary function returns 123).</para>
+
+    <programlisting>class MyLibraryTest : public CxxTest::TestSuite 
+{
+public:
+    void TestMyLibrary()
+    {
+        TS_ASSERT_EQUALS(123, MyLibrary());
+    }
+};
+</programlisting>
+
+    <para>Now build myLibrary with CSnake. The solution will contain a project
+    called MyLibraryTest. When you build this project, all classes in the
+    TestLibTest project that are derived from CxxTest::TestSuite will be
+    automatically added to a test runner. When you execute the MyLibraryTest
+    project, the tests will be run and a report will be printed on the screen.
+    The above case shows the most basic usage of CxxTest. For more information
+    - about using more powerful assertion statements for example - please read
+    <ulink url="http://cxxtest.sourceforge.net/guide.html">the CxxTest user
+    manual.</ulink></para>
+  </chapter>
+
+  <chapter>
     <title>Advanced CSnake project features</title>
 
     <para>So far, we have covered adding source files, include folders and
