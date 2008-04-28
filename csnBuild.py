@@ -458,18 +458,21 @@ class Project(object):
             projectToAdd = ToProject(project)
             self.doNotAddADependencyForTheseProjects.add(projectToAdd)
                 
-    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1):
+    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         """
         Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
         Entries of _listOfSourceFiles may contain wildcards, such as src/*/*.h.
         If _moc, then a moc file is generated for each header file in _listOfSourceFiles.
         If _ui, then qt's ui.exe is run for the file.
         If _checkExists, then added sources (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
+        _forceAdd - If true, then each item in _listOfSourceFiles is added as a source, even if the item does not exist on the disk.
         """
         for sourceFile in _listOfSourceFiles:
             sources = self.Glob(sourceFile)
             if( _checkExists and not len(sources) ):
                     raise IOError, "Path file not found %s" % (sourceFile)
+            if( not len(sources) and _forceAdd ):
+                sources = [sourceFile]
             
             for source in sources:
                 if _moc and not source in self.sourcesToBeMoced:
@@ -967,7 +970,7 @@ class Project(object):
         self.testProject = Project("%sTest" % self.name, "executable")
         self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
         pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
-        self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0)
+        self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
         # todo: find out where python is located
         pythonPath = "D:/Python24/python.exe"
@@ -987,3 +990,4 @@ class Project(object):
         rule = self.testProject.rules["Create test runner"]
         for test in listOfTests:
             rule.command += "\"%s\"" % self.PrependSourceRootFolderToRelativePath(test)
+        self.testProject.AddSources(listOfTests, _checkExists = 0)
