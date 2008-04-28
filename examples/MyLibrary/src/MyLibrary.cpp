@@ -1,7 +1,8 @@
 #include "MyLibrary.h"
 #include <stdio>
 
-void Test()
+int MyLibrary()
 {
     std::cout << "MyLibrary" << std::endl;    
+    return 123;
 }
