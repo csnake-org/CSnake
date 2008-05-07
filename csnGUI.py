@@ -65,7 +65,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.cmbInstance = wx.ComboBox(self.panelProjectAndInstance, -1, choices=[], style=wx.CB_DROPDOWN)
         self.btnUpdateListOfTargets = wx.Button(self.panelProjectAndInstance, -1, "Update")
         self.label_1 = wx.StaticText(self.panelSource, -1, "Root Folders\n")
-        self.cmbRootFolders = wx.ComboBox(self.panelSource, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.lbRootFolders = wx.ListBox(self.panelSource, -1, choices=[], style=wx.LB_MULTIPLE)
         self.btnAddRootFolder = wx.Button(self.panelSource, -1, "Add")
         self.btnRemoveRootFolder = wx.Button(self.panelSource, -1, "Remove")
         self.label_1_copy = wx.StaticText(self.panelSource, -1, "Bin Folder\n")
@@ -109,7 +109,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.txtCSnakeFile.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
         self.btnSelectCSnakeFile.SetMinSize((30, -1))
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
-        self.cmbRootFolders.SetMinSize((-1, -1))
+        self.lbRootFolders.SetMinSize((4000, 26))
         self.txtBinFolder.SetMinSize((-1, -1))
         self.txtBinFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectBinFolder.SetMinSize((30, -1))
@@ -170,8 +170,8 @@ class CSnakeGUIFrame(wx.Frame):
             self.LoadSettings(sys.argv[1])
         else:
             self.LoadSettings()
-        # init cmbRootFolders
-        self.cmbRootFolders.SetSelection(self.cmbRootFolders.GetCount()-1)
+        # init lbRootFolders
+        self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
         
     def Initialize(self):
         """
@@ -241,11 +241,11 @@ class CSnakeGUIFrame(wx.Frame):
         self.panelProjectAndInstance.SetSizer(sizer_3)
         boxSettings.Add(self.panelProjectAndInstance, 0, wx.EXPAND, 0)
         boxRootFolder.Add(self.label_1, 0, wx.RIGHT, 5)
-        boxRootFolder.Add(self.cmbRootFolders, 2, wx.EXPAND, 0)
+        boxRootFolder.Add(self.lbRootFolders, 1, wx.EXPAND|wx.FIXED_MINSIZE, 0)
         sizer_4.Add(self.btnAddRootFolder, 0, 0, 0)
         sizer_4.Add(self.btnRemoveRootFolder, 0, 0, 0)
         boxRootFolder.Add(sizer_4, 0, wx.EXPAND, 0)
-        sizer_1.Add(boxRootFolder, 1, wx.EXPAND, 0)
+        sizer_1.Add(boxRootFolder, 0, wx.EXPAND, 0)
         boxBinFolder.Add(self.label_1_copy, 0, wx.RIGHT, 5)
         boxBinFolder.Add(self.txtBinFolder, 2, wx.FIXED_MINSIZE, 0)
         boxBinFolder.Add(self.btnSelectBinFolder, 0, 0, 0)
@@ -306,8 +306,8 @@ class CSnakeGUIFrame(wx.Frame):
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
         self.settings.csnakeFile = self.txtCSnakeFile.GetValue().replace("\\", "/")
         self.settings.rootFolders = []
-        for i in range( self.cmbRootFolders.GetCount() ):
-            self.settings.rootFolders.append( self.cmbRootFolders.GetString(i).replace("\\", "/") )
+        for i in range( self.lbRootFolders.GetCount() ):
+            self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
         self.settings.instance = self.cmbInstance.GetValue()
     
@@ -407,18 +407,18 @@ class CSnakeGUIFrame(wx.Frame):
 
     def OnAddRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Add folder where CSnake files must be searched to cmbRootFolders.
+        Add folder where CSnake files must be searched to lbRootFolders.
         """
         dlg = wx.DirDialog(None, "Add Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.cmbRootFolders.Append(dlg.GetPath())
-            self.cmbRootFolders.SetSelection(self.cmbRootFolders.GetCount()-1)
+            self.lbRootFolders.Append(dlg.GetPath())
+            self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
 
     def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Remove folder where CSnake files must be searched from cmbRootFolders.
+        Remove folder where CSnake files must be searched from lbRootFolders.
         """
-        self.cmbRootFolders.Delete(self.cmbRootFolders.GetSelection())
+        self.lbRootFolders.Delete(self.lbRootFolders.GetSelection())
 
     def OnLoadSettings(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -426,8 +426,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI")
         if dlg.ShowModal() == wx.ID_OK:
-            settingsFilename = dlg.GetPath()
-            self.LoadSettings(settingsFilename)
+            self.LoadSettings(dlg.GetPath())
 
     def OnSaveSettingsAs(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -435,14 +434,19 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
+            (root, ext) = os.path.splitext(dlg.GetPath())
+            if ext == ".CSnakeGUI":
+                settingsFilename = dlg.GetPath()
+            else:
+                settingsFilename = "%s.CSnakeGUI" % root
             settingsFilename = dlg.GetPath()
             self.SaveSettings(settingsFilename)
 
     def CopySettingsVariableToTextBoxContents(self):
         self.txtCSnakeFile.SetValue(self.settings.csnakeFile)
-        self.cmbRootFolders.Clear()
+        self.lbRootFolders.Clear()
         for rootFolder in self.settings.rootFolders:
-            self.cmbRootFolders.Append(rootFolder)
+            self.lbRootFolders.Append(rootFolder)
         self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
         self.txtBinFolder.SetValue( self.settings.binFolder )
         self.txtInstallFolder.SetValue( self.settings.installFolder )

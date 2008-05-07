@@ -491,7 +491,7 @@ from csnCISTIBToolkit import *
 myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])
-myLibrary.AddTests([test/*.h], cxxTest)</programlisting>
+myLibrary.AddTests(["test/*.h"], cxxTest)</programlisting>
 
     <para>Note that you have to supply the cxxTest project in the call to
     AddTests. The following lines come from test/MyLibraryTest.h, and

@@ -78,6 +78,8 @@ class CilabModuleProject(csnBuild.Project):
                 self.AddIncludeFolders([srcFolder])
                 for extension in GetSourceFileExtensions():
                     self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+                for extension in GetIncludeFileExtensions():
+                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
 
             if( len(self.sources) == 0 ):
                 self.AddSources([csnUtility.GetDummyCppFilename()])

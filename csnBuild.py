@@ -393,7 +393,8 @@ class Project(object):
         configTypes = ConfigTypes()
         self.compileAndLinkConfigFor = dict()
         for opSysName in configTypes.List():
-            self.compileAndLinkConfigFor[opSysName] = compileAndLinkConfig = CompileAndLinkConfig()
+            self.compileAndLinkConfigFor[opSysName] = CompileAndLinkConfig()
+        self.compileAndLinkConfigFor[configTypes.win32].private.definitions.append("/Zm200")
 
         self.precompiledHeader = ""
         self.sourcesToBeMoced = []
