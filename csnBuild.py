@@ -219,8 +219,10 @@ class Generator:
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
         _binaryFolder - The binary folder that was passed to the Generate member function.
         """
-        self.PostProcessOneProject(_targetProject, _binaryFolder)
-        for project in _targetProject.AllProjects(_recursive = 1):
+        projects = OrderedSet.OrderedSet()
+        projects.add(_targetProject)
+        projects.update( _targetProject.AllProjects(_recursive = 1) )
+        for project in projects:
             self.PostProcessOneProject(project, _binaryFolder)
         
     def PostProcessOneProject(self, _project, _binaryFolder):
@@ -965,9 +967,13 @@ class Project(object):
         rule.workingDirectory = workingDirectory
         self.rules[description] = rule
         
-    def CreateTestProject(self, _cxxTestProject):
+    def CreateTestProject(self, _cxxTestProject, _enableWxWidgets = 0):
         """
+        Creates a test project in self.testProject. This testProject will be configured by CMake, and will run the tests for this
+        project (i.e. for self).
         _cxxTestProject - May be the cxxTest project instance, or a function returning a cxxTest project instance.
+        _enableWxWidgets - If true, the CMake rule that creates the testrunner will create a test runner that initializes wxWidgets, so that
+        your tests can create wxWidgets objects.
         """
         cxxTestProject = ToProject(_cxxTestProject)
         self.testProject = Project("%sTest" % self.name, "executable")
@@ -976,20 +982,24 @@ class Project(object):
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
         # todo: find out where python is located
-        self.testProject.AddRule("Create test runner", "%s %s --error-printer -o %s " % (pythonPath, pythonScript, self.testProject.testRunnerSourceFile))
+        wxRunnerArg = ""
+        if _enableWxWidgets:
+            wxRunnerArg = "--wxrunner"
+        self.testProject.AddRule("Create test runner", "%s %s %s --error-printer -o %s " % (pythonPath, pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         
-    def AddTests(self, listOfTests, _cxxTestProject):
+    def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0):
         """
         _cxxTestProject - May be the cxxTest project instance, or a function returning a cxxTest project instance.
         """
         cxxTestProject = ToProject(_cxxTestProject)
         
         if not hasattr(self, "testProject"):
-            self.CreateTestProject(cxxTestProject)
+            self.CreateTestProject(cxxTestProject, _enableWxWidgets)
             
         rule = self.testProject.rules["Create test runner"]
         for test in listOfTests:
-            rule.command += "\"%s\"" % self.PrependSourceRootFolderToRelativePath(test)
-        self.testProject.AddSources(listOfTests, _checkExists = 0)
+            absPathToTest = self.PrependSourceRootFolderToRelativePath(test)
+            rule.command += "\"%s\"" % absPathToTest
+            self.testProject.AddSources([absPathToTest], _checkExists = 0)
