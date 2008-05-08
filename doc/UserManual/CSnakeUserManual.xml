@@ -491,12 +491,16 @@ from csnCISTIBToolkit import *
 myLibrary = csnBuild.Project("MyLibrary", "library")
 myLibrary.AddSources(["src/MyLibrary.cpp", "src/MyLibrary.h"])
 myLibrary.AddIncludeFolders(["src"])
-myLibrary.AddTests(["test/*.h"], cxxTest)</programlisting>
+myLibrary.AddTests(["test/*.h"], cxxTest, _enableWxWidgets = 0)</programlisting>
 
     <para>Note that you have to supply the cxxTest project in the call to
-    AddTests. The following lines come from test/MyLibraryTest.h, and
-    illustrate how to create a test (in this case, we test that calling the
-    MyLibrary function returns 123).</para>
+    AddTests. The argument _enableWxWidgets is optional. If you set this
+    argument to 1, then a test runner will be used that initializes wxWidgets,
+    so that you can create wxWidgets objects in your tests. </para>
+
+    <para>The following lines come from test/MyLibraryTest.h, and illustrate
+    how to create a test (in this case, we test that calling the MyLibrary
+    function returns 123).</para>
 
     <programlisting>class MyLibraryTest : public CxxTest::TestSuite 
 {
