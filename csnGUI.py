@@ -53,9 +53,9 @@ class CSnakeGUIFrame(wx.Frame):
         wxglade_tmp_menu.AppendItem(self.mnuSaveSettingsAs)
         self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "File")
         wxglade_tmp_menu = wx.Menu()
-        self.mnuEditSettings = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Edit Settings", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.AppendItem(self.mnuEditSettings)
-        self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "Settings")
+        self.mnuEditOptions = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Edit Options", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuEditOptions)
+        self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "Options")
         self.SetMenuBar(self.frmCSnakeGUI_menubar)
         # Menu Bar end
         self.lbCSnakeFile = wx.StaticText(self.panelProjectAndInstance, -1, "CSnake File\n")
@@ -65,7 +65,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.cmbInstance = wx.ComboBox(self.panelProjectAndInstance, -1, choices=[], style=wx.CB_DROPDOWN)
         self.btnUpdateListOfTargets = wx.Button(self.panelProjectAndInstance, -1, "Update")
         self.label_1 = wx.StaticText(self.panelSource, -1, "Root Folders\n")
-        self.lbRootFolders = wx.ListBox(self.panelSource, -1, choices=[], style=wx.LB_MULTIPLE)
+        self.lbRootFolders = wx.ListBox(self.panelSource, -1, choices=[], style=wx.LB_SINGLE)
         self.btnAddRootFolder = wx.Button(self.panelSource, -1, "Add")
         self.btnRemoveRootFolder = wx.Button(self.panelSource, -1, "Remove")
         self.label_1_copy = wx.StaticText(self.panelSource, -1, "Bin Folder\n")
@@ -89,7 +89,7 @@ class CSnakeGUIFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.mnuLoadSettings)
         self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
-        self.Bind(wx.EVT_MENU, self.OnEditSettings, self.mnuEditSettings)
+        self.Bind(wx.EVT_MENU, self.OnEditOptions, self.mnuEditOptions)
         self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
         self.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, self.btnUpdateListOfTargets)
         self.Bind(wx.EVT_BUTTON, self.OnAddRootFolder, self.btnAddRootFolder)
@@ -202,6 +202,7 @@ class CSnakeGUIFrame(wx.Frame):
     def PassOptionsToHandler(self):
         self.handler.SetCompiler(self.options.compiler)
         self.handler.SetCMakeBuildType(self.options.cmakeBuildType)
+        self.handler.SetPythonPath(self.options.pythonPath)
         return self.handler.SetCMakePath(self.options.cmakePath)
         
     def LoadOptions(self):
@@ -471,14 +472,14 @@ class CSnakeGUIFrame(wx.Frame):
             
         self.StoreSettingsFilename(filename)
     
-    def OnEditSettings(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def OnEditOptions(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Let user edit the application options.
         """
-        frmEditSettings = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
-        frmEditSettings.ShowOptions(self.options)
-        frmEditSettings.MakeModal()
-        frmEditSettings.Show()
+        frmEditOptions = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
+        frmEditOptions.ShowOptions(self.options)
+        frmEditOptions.MakeModal()
+        frmEditOptions.Show()
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.SaveSettings()

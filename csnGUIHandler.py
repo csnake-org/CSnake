@@ -95,6 +95,7 @@ class RollbackHandler:
 class Handler:
     def __init__(self):
         self.cmakePath = ""
+        self.pythonPath = ""
         self.cmakeFound = 0 
         self.cmakeBuildType = "None"
         pass
@@ -108,6 +109,13 @@ class Handler:
         if not self.cmakeFound:
             print "Warning: %s is is not a valid path to cmake. Select path to CMake using menu Settings->Edit Settings." % self.cmakePath
         return self.cmakeFound
+        
+    def SetPythonPath(self, path):
+        csnBuild.pythonPath = path
+        if not (os.path.exists(csnBuild.pythonPath) and os.path.isfile(csnBuild.pythonPath)):
+            print "Warning: python not found at: %s. Check the path in the Settings menu.\n" % csnBuild.pythonPath
+        
+        return 1
         
     def SetCompiler(self, _compiler):
         self.compiler = _compiler

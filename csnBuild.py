@@ -22,6 +22,8 @@ rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
 rootOfCSnake = rootOfCSnake.replace("\\", "/")
 sys.path.append(rootOfCSnake)
 
+pythonPath = "D:/Python24/python.exe"
+
 class DependencyError(StandardError):
     pass
     
@@ -974,7 +976,6 @@ class Project(object):
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
         # todo: find out where python is located
-        pythonPath = "D:/Python24/python.exe"
         self.testProject.AddRule("Create test runner", "%s %s --error-printer -o %s " % (pythonPath, pythonScript, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
