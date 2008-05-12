@@ -6,7 +6,11 @@ import sys
 import re
 import glob
 import types
+import shutil
 import OrderedSet
+
+def ForwardSlashes(x):
+    return x.replace("\\", "/")
 
 # ToDo:
 # - check that of all root folders, only one contains csnCISTIBToolkit
@@ -19,7 +23,7 @@ import OrderedSet
 # the root folder is set correctly both when running the python interpreter, or when using the binary
 # CSnakeGUI executable.
 rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
-rootOfCSnake = rootOfCSnake.replace("\\", "/")
+rootOfCSnake = ForwardSlashes(rootOfCSnake)
 sys.path.append(rootOfCSnake)
 
 pythonPath = "D:/Python24/python.exe"
@@ -161,7 +165,7 @@ class Generator:
         _targetProject.GenerateUseFile(_binaryFolder)
         
         _targetProject.CreateCMakeSections(f, _binaryFolder, _installFolder)
-        _targetProject.CreateDummyTestOutputFile(_binaryFolder)
+        _targetProject.CreateExtraSourceFilesForTesting(_binaryFolder)
 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
@@ -206,7 +210,7 @@ class Generator:
                     for location in project.filesToInstall[mode].keys():
                         files = ""
                         for file in project.filesToInstall[mode][location]:
-                            files += "%s " % file.replace("\\", "/")
+                            files += "%s " % ForwardSlashes(file)
                         if files != "":
                             destination = "%s/%s" % (_installFolder, location)
                             f.write( "\n# Rule for installing files in location %s\n" % destination)
@@ -414,7 +418,7 @@ class Project(object):
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
             file = self.debug_call
-            self.sourceRootFolder = os.path.normpath(os.path.dirname(file)).replace("\\", "/")
+            self.sourceRootFolder = ForwardSlashes(os.path.normpath(os.path.dirname(file)))
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
@@ -587,24 +591,24 @@ class Project(object):
         if( not os.path.exists(path) ):
             raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
-        path = path.replace("\\", "/")
+        path = ForwardSlashes(path)
         return path
         
     def PrependSourceRootFolderToRelativePath(self, _path):
         """ 
         Returns _path prepended with self.sourceRootFolder, unless _path is already an absolute path (in that case, _path is returned).
         """
-        path = _path.replace("\\", "/")
+        path = ForwardSlashes(_path)
         if not os.path.isabs(path):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
-        return path.replace("\\", "/")
+        return ForwardSlashes(path)
     
     def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
         """
-        return [x.replace("\\", "/") for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
+        return [ForwardSlashes(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
@@ -830,7 +834,7 @@ class Project(object):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
-                        path = dllPattern.replace("\\", "/")
+                        path = ForwardSlashes(dllPattern)
                         if not os.path.isabs(path):
                             path = "%s/%s" % (_thirdPartyBinFolder, path)
                         for dll in glob.glob(path):
@@ -945,7 +949,7 @@ class Project(object):
             self.CreateCMakeSection_InstallRules(f, _installFolder)
             self.CreateCMakeSection_Rules(f)
 
-    def CreateDummyTestOutputFile(self, _binaryFolder):
+    def CreateExtraSourceFilesForTesting(self, _binaryFolder):
         """ 
         Tests if this project is a test project. If so, checks if the test runner output file exists. If not, creates a dummy file.
         This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
@@ -957,6 +961,7 @@ class Project(object):
                 f = open(testRunnerSourceFile, 'w')
                 f.write("// Test runner source file. To be created by CxxTest.py.")
                 f.close()
+            shutil.copy("TemplateSourceFiles/wxRunner.tpl", binaryProjectFolder)
         
     def AddRule(self, description, command, workingDirectory = "."):
         """
@@ -984,8 +989,8 @@ class Project(object):
         # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
-            wxRunnerArg = "--wxrunner"
-        self.testProject.AddRule("Create test runner", "%s %s %s --error-printer -o %s " % (pythonPath, pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+            wxRunnerArg = "--template wxRunner.tpl"
+        self.testProject.AddRule("Create test runner", "%s %s %s --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         
