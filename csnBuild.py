@@ -961,7 +961,8 @@ class Project(object):
                 f = open(testRunnerSourceFile, 'w')
                 f.write("// Test runner source file. To be created by CxxTest.py.")
                 f.close()
-            shutil.copy("TemplateSourceFiles/wxRunner.tpl", binaryProjectFolder)
+            wxRunnerTemplateFile = rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl"                
+            shutil.copy(wxRunnerTemplateFile, binaryProjectFolder)
         
     def AddRule(self, description, command, workingDirectory = "."):
         """
@@ -990,7 +991,7 @@ class Project(object):
         wxRunnerArg = ""
         if _enableWxWidgets:
             wxRunnerArg = "--template wxRunner.tpl"
-        self.testProject.AddRule("Create test runner", "%s %s %s --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         
