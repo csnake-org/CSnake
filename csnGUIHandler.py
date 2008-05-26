@@ -113,7 +113,7 @@ class Handler:
     def SetPythonPath(self, path):
         csnBuild.pythonPath = path
         if not (os.path.exists(csnBuild.pythonPath) and os.path.isfile(csnBuild.pythonPath)):
-            print "Warning: python not found at: %s. Check the path in the Settings menu.\n" % csnBuild.pythonPath
+            print "Warning: python not found at: %s. Check the path in the Options menu.\n" % csnBuild.pythonPath
         
         return 1
         

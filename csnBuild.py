@@ -551,6 +551,7 @@ class Project(object):
         globResult = self.Glob(_precompiledHeader)
         assert len(globResult) == 1, "Error locating precompiled header file %s" % _precompiledHeader
         self.precompiledHeader = globResult[0]
+        self.AddSources([_precompiledHeader], _sourceGroup = "PCH Files (header)")
         
     def AddLibraryFolders(self, _listOfLibraryFolders):
         """
@@ -986,12 +987,13 @@ class Project(object):
         self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
         pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
+        self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1)
         
         # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
             wxRunnerArg = "--template wxRunner.tpl"
-        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         

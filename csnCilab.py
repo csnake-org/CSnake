@@ -112,10 +112,8 @@ class GimiasPluginProject(csnBuild.Project):
     """
     def __init__(self, _name):
         csnBuild.Project.__init__(self, _name, "dll")
+        self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
         self.AddIncludeFolders(["."])
-        pythonPath = csnBuild.ForwardSlashes(csnBuild.pythonPath)
-        pythonCommand = "import shutil; shutil.copy(%s/*.dll, ${CMAKE_CFG_INTDIR})" % self.installSubFolder
-        self.AddRule("Copy dll", "\"%s\" -c \"%s\"" % (pythonPath, pythonCommand))
         
     def AddWidgetModules(self, _widgetModules, _holdingFolder = "widgets", _useQt = 1):
         """ 

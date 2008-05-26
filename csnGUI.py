@@ -8,6 +8,7 @@ import csnGUIHandler
 import pickle
 import os.path
 import sys
+import ConfigParser
 
 class RedirectText:
     """
@@ -31,7 +32,46 @@ class CSnakeGUISettings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
-    
+
+    def Load(self, filename):
+        parser = ConfigParser.ConfigParser()
+        parser.read([filename])
+        section = "CSnake"
+        rootFolderSection = "RootFolders"
+        self.binFolder = parser.get(section, "binFolder")
+        self.installFolder = parser.get(section, "installFolder")
+        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
+        self.csnakeFile = parser.get(section, "csnakeFile")
+        count = 0
+        self.rootFolders = []
+        while parser.has_option(rootFolderSection, "RootFolder%s" % count):
+            self.rootFolders.append( parser.get(rootFolderSection, "RootFolder%s" % count) )
+            count += 1
+        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
+        self.instance = parser.get(section, "instance")
+        return 1
+        
+    def Save(self, filename):
+        parser = ConfigParser.ConfigParser()
+        section = "CSnake"
+        rootFolderSection = "RootFolders"
+        parser.add_section(section)
+        parser.add_section(rootFolderSection)
+
+        parser.set(section, "binFolder", self.binFolder)
+        parser.set(section, "installFolder", self.installFolder)
+        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
+        parser.set(section, "csnakeFile", self.csnakeFile)
+        count = 0
+        while count < len(self.rootFolders):
+            parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
+            count += 1
+        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
+        parser.set(section, "instance", self.instance)
+        f = open(filename, 'w')
+        parser.write(f)
+        f.close()
+            
 class CSnakeGUIFrame(wx.Frame):
     """
     The main application frame.
@@ -195,9 +235,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Write options to the application options file, and passes them to the handler. 
         """
-        f = open(self.optionsFilename, 'w')
-        pickle.dump(self.options, f)
-        f.close()
+        self.options.Save(self.optionsFilename)
 
     def PassOptionsToHandler(self):
         self.handler.SetCompiler(self.options.compiler)
@@ -209,12 +247,13 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Load options from the application options file. 
         """
-        result = os.path.exists(self.optionsFilename)
-        if result:
+        try:
+            return self.options.Load(self.optionsFilename)
+        except:
             f = open(self.optionsFilename, 'r')
             self.options = pickle.load(f)
             f.close()
-        return result
+            return 1
         
     def __do_layout(self):
         # begin wxGlade: CSnakeGUIFrame.__do_layout
@@ -320,9 +359,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         self.CopyTextBoxContentsToSettingsVariable()
         if not filename == "":
-            f = open(filename, 'w')
-            pickle.dump(self.settings, f)
-            f.close()
+            self.settings.Save(filename)
             # record the settings filename in self.optionsFilename
             self.StoreSettingsFilename(filename)
     
@@ -465,9 +502,12 @@ class CSnakeGUIFrame(wx.Frame):
             filename = self.options.currentGUISettingsFilename
                 
         if os.path.exists( filename ):
-            f = open(filename, 'r')
-            self.settings = pickle.load(f)
-            f.close()
+            try:
+                self.settings.Load(filename)
+            except:
+                f = open(filename, 'r')
+                self.settings = pickle.load(f)
+                f.close()
             self.CopySettingsVariableToTextBoxContents()
             
         self.StoreSettingsFilename(filename)
