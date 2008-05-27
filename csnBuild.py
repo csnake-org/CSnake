@@ -549,7 +549,7 @@ class Project(object):
         this filename. 
         """
         globResult = self.Glob(_precompiledHeader)
-        assert len(globResult) == 1, "Error locating precompiled header file %s" % _precompiledHeader
+        assert len(globResult) == 1, "Error locating precompiled header file %s (source root folder = %s)" % (_precompiledHeader, self.sourceRootFolder)
         self.precompiledHeader = globResult[0]
         self.AddSources([_precompiledHeader], _sourceGroup = "PCH Files (header)")
         
@@ -983,7 +983,7 @@ class Project(object):
         your tests can create wxWidgets objects.
         """
         cxxTestProject = ToProject(_cxxTestProject)
-        self.testProject = Project("%sTest" % self.name, "executable")
+        self.testProject = Project("%sTest" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder)
         self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
         pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)

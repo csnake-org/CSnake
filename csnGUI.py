@@ -71,7 +71,7 @@ class CSnakeGUISettings:
         f = open(filename, 'w')
         parser.write(f)
         f.close()
-            
+
 class CSnakeGUIFrame(wx.Frame):
     """
     The main application frame.
@@ -379,42 +379,21 @@ class CSnakeGUIFrame(wx.Frame):
         
             # delete pyc files (unless configuring the third party folder, see below)
             if not configureThirdPartyFolder:
-                self.handler.DeletePycFiles(
-                    self.settings.csnakeFile, 
-                    self.settings.instance, 
-                    self.settings.rootFolders,
-                    self.settings.thirdPartyRootFolder
-                )
+                self.handler.DeletePycFiles(self.settings)
 
             # if configuring the target project...            
             if configureProject:
-                self.handler.ConfigureProjectToBinFolder(
-                    self.settings.csnakeFile, 
-                    self.settings.instance,
-                    self.settings.rootFolders,
-                    self.settings.binFolder,
-                    self.settings.installFolder,
-                    self.settings.thirdPartyRootFolder,
-                    self.settings.thirdPartyBinFolder,
-                    alsoRunCMake)
+                self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake)
     
             # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
             if copyDlls:
-                self.handler.InstallThirdPartyBinariesToBinFolder(
-                    self.settings.csnakeFile, 
-                    self.settings.instance,
-                    self.settings.rootFolders,
-                    self.settings.binFolder,
-                    self.settings.thirdPartyRootFolder,
-                    self.settings.thirdPartyBinFolder)
+                self.handler.InstallThirdPartyBinariesToBinFolder(self.settings)
                     
             # if configuring the third party folder            
             if( configureThirdPartyFolder ):
-                self.handler.DeletePycFiles("", "", [], self.settings.thirdPartyRootFolder )
-                self.handler.ConfigureThirdPartyFolder(
-                    self.settings.thirdPartyRootFolder,
-                    self.settings.thirdPartyBinFolder)
+                self.handler.DeletePycFiles(self.settings, _onlyThirdPartyRootFolder = 1 )
+                self.handler.ConfigureThirdPartyFolder(self.settings)
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
@@ -523,11 +502,7 @@ class CSnakeGUIFrame(wx.Frame):
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.SaveSettings()
-        targets = self.handler.GetListOfPossibleTargets(
-            self.settings.csnakeFile, 
-            self.settings.rootFolders,
-            self.settings.thirdPartyRootFolder
-        )
+        targets = self.handler.GetListOfPossibleTargets(self.settings)
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)

@@ -17,7 +17,7 @@ class NotARoot(IOError):
 
 class TypeError(StandardError):
     pass
-
+    
 def CreateCSnakeFolder(_folder, _projectRoot):
     # check that project root exists
     if not os.path.exists(_projectRoot):
@@ -123,60 +123,60 @@ class Handler:
     def SetCMakeBuildType(self, _buildType):
         self.cmakeBuildType = _buildType
         
-    def __GetProjectInstance(self, _projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(_projectPath, _sourceRootFolders, _thirdPartyRootFolder)
+        rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
         
-        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
-        csnCilab.thirdPartyBinFolder = _thirdPartyBinFolder
+        csnCilab.thirdPartyModuleFolder = _settings.thirdPartyRootFolder
+        csnCilab.thirdPartyBinFolder = _settings.thirdPartyBinFolder
         
-        (projectFolder, name) = os.path.split(_projectPath)
+        (projectFolder, name) = os.path.split(_settings.csnakeFile)
         (name, ext) = os.path.splitext(name)
 
         try:
             project = csnUtility.LoadModule(projectFolder, name)   
-            exec "instance = project.%s" % _instance
+            exec "instance = project.%s" % _settings.instance
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
 
         return instance
     
-    def ConfigureProjectToBinFolder(self, _projectPath, _instance, _sourceRootFolders, _binFolder, _installFolder, _thirdPartyRootFolder, _thirdPartyBinFolder, _alsoRunCMake):
+    def ConfigureProjectToBinFolder(self, _settings, _alsoRunCMake):
         logString = ""
-        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        instance = self.__GetProjectInstance(_settings)
         
         generator = csnBuild.Generator()
-        instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
-        generator.Generate(instance, _binFolder, _installFolder, self.cmakeBuildType)
+        instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
+        generator.Generate(instance, _settings.binFolder, _settings.installFolder, self.cmakeBuildType)
             
         if _alsoRunCMake:
             if not self.cmakeFound:
                 print "Please specify correct path to CMake"
                 return
                 
-            folderCMakeLists = "%s/%s/" % (_binFolder, instance.cmakeListsSubpath)
+            folderCMakeLists = "%s/%s/" % (_settings.binFolder, instance.cmakeListsSubpath)
             argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
-            retcode = subprocess.Popen(argList, cwd = _binFolder).wait()
+            retcode = subprocess.Popen(argList, cwd = _settings.binFolder).wait()
             if retcode == 0:
-                generator.PostProcess(instance, _binFolder)
+                generator.PostProcess(instance, _settings.binFolder)
             else:
                 print "Configuration failed.\n"   
             
-    def InstallThirdPartyBinariesToBinFolder(self, _projectPath, _instance, _sourceRootFolders, _binFolder, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def InstallThirdPartyBinariesToBinFolder(self, _settings):
         """ 
         This function copies all third party dlls to the binary folder, so that you can run the executables in the
         binary folder without having to build the INSTALL target.
         """
-        instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder)
+        instance = self.__GetProjectInstance(_settings)
         folders = dict()
-        folders["debug"] = "%s/bin/Debug" % _binFolder
-        folders["release"] = "%s/bin/Release" % _binFolder
+        folders["debug"] = "%s/bin/Debug" % _settings.binFolder
+        folders["release"] = "%s/bin/Release" % _settings.binFolder
 
-        instance.ResolvePathsOfFilesToInstall(_thirdPartyBinFolder)
+        instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         for mode in ("debug", "release"):
             os.path.exists(folders[mode]) or os.makedirs(folders[mode])
             for project in instance.AllProjects(_recursive = 1):
@@ -196,7 +196,7 @@ class Handler:
             found = retcode == 0
         return found
     
-    def ConfigureThirdPartyFolder(self, _thirdPartyRootFolder, _thirdPartyBinFolder):
+    def ConfigureThirdPartyFolder(self, _settings):
         """ 
         Runs cmake to install the libraries in the third party folder.
         """
@@ -208,8 +208,8 @@ class Handler:
             return 0
         
         # apply MITK patch
-        originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _thirdPartyRootFolder
-        patchedMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
+        originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _settings.thirdPartyRootFolder
+        patchedMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in.patchedForCSnake" % _settings.thirdPartyRootFolder
         if not os.path.exists(patchedMITK):
             print "Warning: patch failed. File not found: %s\n" % patchedMITK
             result = 1
@@ -219,8 +219,8 @@ class Handler:
         
         # apply ITK patch
         if result:
-            originalITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in" % _thirdPartyRootFolder
-            patchedITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in.patchedForCSnake" % _thirdPartyRootFolder
+            originalITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in" % _settings.thirdPartyRootFolder
+            patchedITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in.patchedForCSnake" % _settings.thirdPartyRootFolder
             if not os.path.exists(patchedITK):
                 print "Warning: patch failed. File not found: %s\n" % patchedITK
                 result = 1
@@ -229,11 +229,11 @@ class Handler:
                 messageAboutPatches = messageAboutPatches + "Note: Applied patch to file %s\n" % originalITK
         
         if result:
-            os.path.exists(_thirdPartyBinFolder) or os.makedirs(_thirdPartyBinFolder)
-            argList = [self.cmakePath, "-G", self.compiler, _thirdPartyRootFolder]
-            retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+            os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
+            argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
+            retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
             if retcode:
-                retcode = subprocess.Popen(argList, cwd = _thirdPartyBinFolder).wait()
+                retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
             if not retcode == 0:
                 result = 0
                 print "Configuration failed.\n"   
@@ -241,19 +241,19 @@ class Handler:
         print messageAboutPatches
         return result
 
-    def DeletePycFiles(self, _projectPath = "", _instance = "", _sourceRootFolders = [], _thirdPartyRootFolder = ""):
+    def DeletePycFiles(self, _settings, _onlyThirdPartyRootFolder = 0):
         """
         Tries to delete all pyc files from _projectPath, _sourceRootFolders, thirdPartyRootFolder and 
         all base folders where the CSnake files for building _instance are. 
         However, __init__.pyc files are not removed.
         """
         # determine list of folders to search for pyc files
-        folderList = list(_thirdPartyRootFolder)
+        folderList = list(_settings.thirdPartyRootFolder)
         
-        if _instance != "":
-            folderList.extend(_sourceRootFolders)
-            folderList.append(_projectPath)
-            instance = self.__GetProjectInstance(_projectPath, _instance, _sourceRootFolders, _thirdPartyRootFolder, _thirdPartyBinFolder = "")
+        if not _onlyThirdPartyRootFolder:
+            folderList.extend(_settings.rootFolders)
+            folderList.append(_settings.csnakeFile)
+            instance = self.__GetProjectInstance(_settings)
             for project in instance.AllProjects(_recursive = 1):
                 folderList.append(project.sourceRootFolder)
                     
@@ -266,23 +266,23 @@ class Handler:
                     os.remove(pycFile)
 
         # remove more pyc files from the third party root folder
-        for pycFile in [x.replace("\\", "/") for x in glob.glob("%s/*/*.pyc" % _thirdPartyRootFolder)]:
+        for pycFile in [x.replace("\\", "/") for x in glob.glob("%s/*/*.pyc" % _settings.thirdPartyRootFolder)]:
             if not os.path.basename(pycFile) == "__init__.pyc":
                 os.remove(pycFile)
      
-    def GetListOfPossibleTargets(self, _projectPath, _sourceRootFolders, _thirdPartyRootFolder):
+    def GetListOfPossibleTargets(self, _settings):
         """
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
         
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(_projectPath, _sourceRootFolders, _thirdPartyRootFolder)
+        rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
         result = []
 
         # find csnake targets in the loaded module
-        (projectFolder, name) = os.path.split(_projectPath)
+        (projectFolder, name) = os.path.split(_settings.csnakeFile)
         (name, ext) = os.path.splitext(name)
-        csnCilab.thirdPartyModuleFolder = _thirdPartyRootFolder
+        csnCilab.thirdPartyModuleFolder = _settings.thirdPartyRootFolder
         project = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(project):
             if isinstance(member[1], csnBuild.Project):
