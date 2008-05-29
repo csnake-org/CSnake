@@ -19,5 +19,5 @@ bool CxxTestApp::OnInit()
 {
 	wxInitAllImageHandlers();
 	CxxTest::ErrorPrinter().run();
-	return true;
+	return false;
 }
