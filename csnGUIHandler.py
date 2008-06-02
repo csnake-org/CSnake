@@ -137,6 +137,11 @@ class Handler:
         (projectFolder, name) = os.path.split(_settings.csnakeFile)
         (name, ext) = os.path.splitext(name)
 
+        pycFilename = os.path.join(projectFolder, name + ".pyc")
+        if os.path.exists(pycFilename):
+            os.remove(pycFilename)
+            print "Removed %s\n" % pycFilename
+        
         try:
             project = csnUtility.LoadModule(projectFolder, name)   
             exec "instance = project.%s" % _settings.instance

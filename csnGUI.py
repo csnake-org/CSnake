@@ -510,6 +510,7 @@ class CSnakeGUIFrame(wx.Frame):
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.SaveSettings()
+        self.handler.DeletePycFiles(self.settings)
         targets = self.handler.GetListOfPossibleTargets(self.settings)
         self.cmbInstance.SetItems(targets)
         if len(targets):
