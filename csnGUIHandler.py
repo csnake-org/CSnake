@@ -124,8 +124,19 @@ class Handler:
     def SetCMakeBuildType(self, _buildType):
         self.cmakeBuildType = _buildType
         
+    def __DeleteTopLevelPycFile(self, _settings):
+        (projectFolder, name) = os.path.split(_settings.csnakeFile)
+        (name, ext) = os.path.splitext(name)
+
+        pycFilename = os.path.join(projectFolder, name + ".pyc")
+        if os.path.exists(pycFilename):
+            os.remove(pycFilename)
+            print "Removed %s\n" % pycFilename
+    
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
+
+        self.__DeleteTopLevelPycFile(_settings)
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
@@ -136,11 +147,6 @@ class Handler:
         
         (projectFolder, name) = os.path.split(_settings.csnakeFile)
         (name, ext) = os.path.splitext(name)
-
-        pycFilename = os.path.join(projectFolder, name + ".pyc")
-        if os.path.exists(pycFilename):
-            os.remove(pycFilename)
-            print "Removed %s\n" % pycFilename
         
         try:
             project = csnUtility.LoadModule(projectFolder, name)   
@@ -280,6 +286,8 @@ class Handler:
         """
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
+        
+        self.__DeleteTopLevelPycFile(_settings)
         
         rollbackHandler = RollbackHandler()
         rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
