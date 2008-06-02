@@ -18,7 +18,7 @@ def LoadThirdPartyModule(_subFolder, _name):
     folder = "%s/%s" % (thirdPartyModuleFolder, _subFolder)
     return csnUtility.LoadModule(folder, _name)
 
-def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder):
+def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = ""):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
     project does not depend on these application projects.
@@ -30,6 +30,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
     _applicationDependenciesList - List of projects that each new application project is dependent on.
     _modulesFolder - Folder containing subfolders with applications.
     _modules = List of subfolders of _modulesFolder that should be processed.
+    _pch - If not "", this is the C++ include file which is used for building a precompiled header file for each application.
     """
     for module in _modules:
         moduleFolder = "%s/%s" % (_modulesFolder, module)
@@ -51,6 +52,8 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             app.AddSources([sourceFile])
             # add header files so that they appear in visual studio
             app.AddSources(headerFiles)
+            if( _pch != "" ):
+                app.SetPrecompiledHeader(_pch)
             _holderProject.AddProjects([app])
 
         
@@ -91,17 +94,25 @@ class CilabModuleProject(csnBuild.Project):
                 for extension in GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-    def AddDemos(self, _modules):
+    def AddDemos(self, _modules, _pch = ""):
+        """
+        Creates extra CSnake projects, each project building one demo in the demos subfolder of the current project.
+        _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
+        _pch - If not "", this is the include file used to generate a precompiled header for each demo.
+        """
         demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
         demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder)
+        AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder, _pch)
         demosProject.AddProjects([self])
         self.AddProjects([demosProject], _dependency = 0)
 
-    def AddApplications(self, _modules):
+    def AddApplications(self, _modules, _pch = ""):
+        """
+        Similar to AddDemos, but works on the Applications subfolder.
+        """
         applicationsProject = csnBuild.Project(self.name + "Applications", "library", _sourceRootFolder = self.sourceRootFolder)
         applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder)
+        AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder, _pch)
         applicationsProject.AddProjects([self])
         self.AddProjects([applicationsProject], _dependency = 0)
 

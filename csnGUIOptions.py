@@ -8,7 +8,7 @@ import pickle
 
 # begin wxGlade: extracode
 # end wxGlade
-
+    
 wxID_btnSetCMakePath = 23423
 wxID_btnSetPythonPath = wxID_btnSetCMakePath + 1
 
@@ -27,6 +27,8 @@ class CSnakeOptionsFrame(wx.Frame):
         self.cmbBuildType = wx.ComboBox(self, -1, choices=["Default (Debug and Release)", "Release", "Debug"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.btnSetPythonPath = wx.Button(self, wxID_btnSetPythonPath, "Set path to Python")
         self.txtPythonPath = wx.TextCtrl(self, -1, "")
+        self.chkAskToLaunchVisualStudio = wx.CheckBox(self, -1, "Ask to launch VisualStudio from:")
+        self.txtVisualStudioPath = wx.TextCtrl(self, -1, "")
         self.btnClose = wx.Button(self, -1, "Close")
 
         self.__set_properties()
@@ -48,6 +50,11 @@ class CSnakeOptionsFrame(wx.Frame):
             self.options = _options
         self.txtCMakePath.SetValue(self.options.cmakePath)
         self.txtPythonPath.SetValue(self.options.pythonPath)
+        self.txtVisualStudioPath.SetValue(self.options.visualStudioPath)
+        if self.options.askToLaunchVisualStudio:
+            self.chkAskToLaunchVisualStudio.SetValue(True)
+        else:
+            self.chkAskToLaunchVisualStudio.SetValue(False)
         self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.options.compiler))
         
         buildTypes = dict()
@@ -63,6 +70,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.txtCMakePath.SetMinSize((20,20))
         self.cmbBuildType.SetSelection(-1)
         self.txtPythonPath.SetMinSize((20,20))
+        self.txtVisualStudioPath.SetMinSize((20,20))
         # end wxGlade
 
     def __do_layout(self):
@@ -82,6 +90,8 @@ class CSnakeOptionsFrame(wx.Frame):
         sizer_5_copy.Add(self.btnSetPythonPath, 0, 0, 0)
         sizer_5_copy.Add(self.txtPythonPath, 1, 0, 0)
         sizer_2.Add(sizer_5_copy, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.chkAskToLaunchVisualStudio, 0, 0, 0)
+        sizer_2.Add(self.txtVisualStudioPath, 1, wx.EXPAND, 0)
         sizer_2.Add(self.btnClose, 0, wx.EXPAND, 0)
         self.SetSizer(sizer_2)
         sizer_2.Fit(self)
@@ -107,6 +117,8 @@ class CSnakeOptionsFrame(wx.Frame):
     def OnClose(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.options.cmakePath = self.txtCMakePath.GetValue()
         self.options.pythonPath = self.txtPythonPath.GetValue()
+        self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
+        self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
         self.MakeModal(0)
         self.Destroy()
 
@@ -132,6 +144,8 @@ class Options:
         self.compiler = "Visual Studio 7 .NET 2003"
         self.currentGUISettingsFilename = ""
         self.cmakeBuildType = "None"    
+        self.askToLaunchVisualStudio = False
+        self.visualStudioPath = ""
 
     def Load(self, filename):
         try:        
@@ -143,6 +157,11 @@ class Options:
             self.compiler = parser.get(section, "compiler")
             self.currentGUISettingsFilename = parser.get(section, "currentGUISettingsFilename")
             self.cmakeBuildType = parser.get(section, "cmakeBuildType")
+            if parser.has_option(section, "askToLaunchVisualStudio"):
+                self.askToLaunchVisualStudio = parser.get(section, "askToLaunchVisualStudio")
+            if parser.has_option(section, "visualStudioPath"):
+                self.visualStudioPath = parser.get(section, "visualStudioPath")
+
             return 1
         except:
             try:
@@ -162,6 +181,8 @@ class Options:
         parser.set(section, "compiler", self.compiler)
         parser.set(section, "currentGUISettingsFilename", self.currentGUISettingsFilename)
         parser.set(section, "cmakeBuildType", self.cmakeBuildType)
+        parser.set(section, "askToLaunchVisualStudio", self.askToLaunchVisualStudio)
+        parser.set(section, "visualStudioPath", self.visualStudioPath)
         f = open(filename, 'w')
         parser.write(f)
         f.close()

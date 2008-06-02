@@ -8,6 +8,7 @@ import csnCilab
 import glob
 import RollbackImporter
 import inspect
+import string
 
 class RootNotFound(IOError):
     pass
@@ -291,3 +292,35 @@ class Handler:
         rollbackHandler.TearDown()
         return result
         
+    def GetListOfSpuriousPluginDlls(self, _settings):
+        """
+        Determines a list of GIMIAS plugin dlls that were found in _settings.binFolder, and returns a list of filenames containing those 
+        plugin dlls which are not built by the current configuration (in _settings).
+        """
+        result = []
+        instance = self.__GetProjectInstance(_settings)
+        if not instance.name.lower() == "gimias":
+            return result
+    
+        configuredPluginNames = [project.name for project in instance.AllProjects(_recursive = 1) ]
+        for configuration in ("Debug", "Release"):
+            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.binFolder, configuration)
+
+            for pluginFolder in glob.glob( pluginsFolder ):
+                pluginName = os.path.basename(pluginFolder)
+                if not os.path.isdir(pluginFolder) or pluginName in configuredPluginNames:
+                    continue
+                    
+                searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+                if os.path.exists( searchPath ):
+                    result.append( searchPath )
+                    
+        return result
+
+    def GetTargetSolutionPath(self, _settings):
+        instance = self.__GetProjectInstance(_settings)
+        binaryProjectFolder = _settings.binFolder + "/" + instance.binarySubfolder
+        return "%s/%s.sln" % (binaryProjectFolder, instance.name)
+
+    def GetThirdPartySolutionPath(self, _settings):
+        return "%s/CILAB_TOOLKIT.sln" % (_settings.thirdPartyBinFolder)

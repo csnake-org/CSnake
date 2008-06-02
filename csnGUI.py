@@ -8,6 +8,7 @@ import csnGUIHandler
 import pickle
 import os.path
 import sys
+import subprocess
 import ConfigParser
 
 class RedirectText:
@@ -384,6 +385,11 @@ class CSnakeGUIFrame(wx.Frame):
             # if configuring the target project...            
             if configureProject:
                 self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake)
+                if self.settings.instance.lower() == "gimias":
+                    self.ProposeToDeletePluginDlls()
+                if self.options.askToLaunchVisualStudio:
+                    self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
+
     
             # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
@@ -394,6 +400,8 @@ class CSnakeGUIFrame(wx.Frame):
             if( configureThirdPartyFolder ):
                 self.handler.DeletePycFiles(self.settings, _onlyThirdPartyRootFolder = 1 )
                 self.handler.ConfigureThirdPartyFolder(self.settings)
+                if self.options.askToLaunchVisualStudio:
+                    self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
@@ -506,7 +514,31 @@ class CSnakeGUIFrame(wx.Frame):
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)
-        
+
+    def ProposeToDeletePluginDlls(self):
+        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls(self.settings)
+        if len(spuriousDlls) == 0:
+            return
+            
+        dllMessage = ""
+        for x in spuriousDlls:
+            dllMessage += ("%s\n" % x)
+            
+        message = "In the Bin folder, CSnake found GIMIAS plugins that have not been configured.\nThe following plugin dlls may crash GIMIAS:\n\n%s\nDelete them?" % dllMessage
+        dlg = wx.MessageDialog(self, message, style = wx.YES_NO)
+        if dlg.ShowModal() != wx.ID_YES:
+            return
+            
+        for dll in spuriousDlls:
+            os.remove(dll)
+
+    def AskToLaunchVisualStudio(self, pathToSolution):
+        message = "Launch Visual Studio with solution %s?" % pathToSolution
+        dlg = wx.MessageDialog(self, message, style = wx.YES_NO)
+        if dlg.ShowModal() == wx.ID_YES:
+            argList = [self.options.visualStudioPath, pathToSolution]
+            retcode = subprocess.Popen(argList)
+                
 # end of class CSnakeGUIFrame
 
 
