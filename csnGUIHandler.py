@@ -131,7 +131,6 @@ class Handler:
         pycFilename = os.path.join(projectFolder, name + ".pyc")
         if os.path.exists(pycFilename):
             os.remove(pycFilename)
-            print "Removed %s\n" % pycFilename
     
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
@@ -149,8 +148,8 @@ class Handler:
         (name, ext) = os.path.splitext(name)
         
         try:
-            project = csnUtility.LoadModule(projectFolder, name)   
-            exec "instance = project.%s" % _settings.instance
+            project = csnUtility.LoadModule(projectFolder, name)
+            exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
