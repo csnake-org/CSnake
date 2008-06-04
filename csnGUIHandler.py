@@ -124,18 +124,10 @@ class Handler:
     def SetCMakeBuildType(self, _buildType):
         self.cmakeBuildType = _buildType
         
-    def __DeleteTopLevelPycFile(self, _settings):
-        (projectFolder, name) = os.path.split(_settings.csnakeFile)
-        (name, ext) = os.path.splitext(name)
-
-        pycFilename = os.path.join(projectFolder, name + ".pyc")
-        if os.path.exists(pycFilename):
-            os.remove(pycFilename)
-    
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
 
-        self.__DeleteTopLevelPycFile(_settings)
+        self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
@@ -252,42 +244,34 @@ class Handler:
         print messageAboutPatches
         return result
 
-    def DeletePycFiles(self, _settings, _onlyThirdPartyRootFolder = 0):
+    def DeletePycFiles(self, _settings):
         """
-        Tries to delete all pyc files from _projectPath, _sourceRootFolders, thirdPartyRootFolder and 
-        all base folders where the CSnake files for building _instance are. 
+        Tries to delete all pyc files from _projectPath, _sourceRootFolders and thirdPartyRootFolder.
         However, __init__.pyc files are not removed.
         """
         # determine list of folders to search for pyc files
-        folderList = list(_settings.thirdPartyRootFolder)
-        
-        if not _onlyThirdPartyRootFolder:
-            folderList.extend(_settings.rootFolders)
-            folderList.append(_settings.csnakeFile)
-            instance = self.__GetProjectInstance(_settings)
-            for project in instance.AllProjects(_recursive = 1):
-                folderList.append(project.sourceRootFolder)
+        folderList = [_settings.thirdPartyRootFolder]
+        folderList.extend(_settings.rootFolders)
                     
         # remove pyc files
-        for folder in folderList:
-            pattern = "%s/*.pyc" % folder
-            pycFiles = [x.replace("\\", "/") for x in glob.glob(pattern)]
-            for pycFile in pycFiles:
-                if not os.path.basename(pycFile) == "__init__.pyc":
-                    os.remove(pycFile)
+        while len(folderList) > 0:
+            newFolders = []
+            for folder in folderList:
+                pycFiles = [x.replace("\\", "/") for x in glob.glob("%s/*.pyc" % folder)]
+                for pycFile in pycFiles:
+                    if not os.path.basename(pycFile) == "__init__.pyc":
+                        os.remove(pycFile)
 
-        # remove more pyc files from the third party root folder
-        for pycFile in [x.replace("\\", "/") for x in glob.glob("%s/*/*.pyc" % _settings.thirdPartyRootFolder)]:
-            if not os.path.basename(pycFile) == "__init__.pyc":
-                os.remove(pycFile)
-     
+                newFolders.extend( [os.path.dirname(x).replace("\\", "/") for x in glob.glob("%s/*/__init__.py" % folder)] )
+            folderList = list(newFolders)
+        
     def GetListOfPossibleTargets(self, _settings):
         """
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
-        
-        self.__DeleteTopLevelPycFile(_settings)
-        
+
+        self.DeletePycFiles(_settings)
+                
         rollbackHandler = RollbackHandler()
         rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
         result = []

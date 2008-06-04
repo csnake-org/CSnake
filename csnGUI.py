@@ -378,10 +378,6 @@ class CSnakeGUIFrame(wx.Frame):
         self.WriteOptions()
         if self.PassOptionsToHandler():
         
-            # delete pyc files (unless configuring the third party folder, see below)
-            if not configureThirdPartyFolder:
-                self.handler.DeletePycFiles(self.settings)
-
             # if configuring the target project...            
             if configureProject:
                 self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake)
@@ -398,7 +394,6 @@ class CSnakeGUIFrame(wx.Frame):
                     
             # if configuring the third party folder            
             if( configureThirdPartyFolder ):
-                self.handler.DeletePycFiles(self.settings, _onlyThirdPartyRootFolder = 1 )
                 self.handler.ConfigureThirdPartyFolder(self.settings)
                 if self.options.askToLaunchVisualStudio:
                     self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
