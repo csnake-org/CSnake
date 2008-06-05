@@ -987,7 +987,8 @@ class Project(object):
         self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
         pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
-        self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1)
+        self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
+        self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
         
         # todo: find out where python is located
         wxRunnerArg = ""
