@@ -127,7 +127,7 @@ class Generator:
             return
          
         # create binary project folder
-        binaryProjectFolder = _binaryFolder + "/" + _targetProject.binarySubfolder
+        binaryProjectFolder = _targetProject.AbsoluteBinaryFolder(_binaryFolder)
         os.path.exists(binaryProjectFolder) or os.makedirs(binaryProjectFolder)
     
         configTypes = ConfigTypes()
@@ -233,7 +233,8 @@ class Generator:
         """
         Apply post-processing after the CMake generation only for _project (not its children).
         """
-        binaryProjectFolder = _binaryFolder + "/" + _project.binarySubfolder
+        binaryProjectFolder = _project.AbsoluteBinaryFolder(_binaryFolder)
+        
         # vc proj to patch
         vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
 
@@ -323,7 +324,7 @@ ForcedIncludeFiles="%s"
         templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.h"
         if( _targetProject.type == "library" ):
             templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.lib.h"
-        templateOutputFilename = "%s/%s/%sWin32Header.h" % (_binaryFolder, _targetProject.binarySubfolder, _targetProject.name)
+        templateOutputFilename = "%s/%sWin32Header.h" % (_targetProject.AbsoluteBinaryFolder(_binaryFolder), _targetProject.name)
         
         assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
         f = open(templateFilename, 'r')
@@ -956,14 +957,12 @@ class Project(object):
         This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
         """
         if hasattr(self, "testRunnerSourceFile"):
-            binaryProjectFolder = _binaryFolder + "/" + self.binarySubfolder
+            binaryProjectFolder = self.AbsoluteBinaryFolder(_binaryFolder) 
             testRunnerSourceFile = "%s/%s" % (binaryProjectFolder, self.testRunnerSourceFile)
             if not os.path.exists(testRunnerSourceFile):
                 f = open(testRunnerSourceFile, 'w')
                 f.write("// Test runner source file. To be created by CxxTest.py.")
                 f.close()
-            wxRunnerTemplateFile = rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl"                
-            shutil.copy(wxRunnerTemplateFile, binaryProjectFolder)
         
     def AddRule(self, description, command, workingDirectory = "."):
         """
@@ -993,7 +992,7 @@ class Project(object):
         # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
-            wxRunnerArg = "--template wxRunner.tpl"
+            wxRunnerArg = "--template %s" % (rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl")
         self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
@@ -1012,3 +1011,10 @@ class Project(object):
             absPathToTest = self.PrependSourceRootFolderToRelativePath(test)
             rule.command += "\"%s\"" % absPathToTest
             self.testProject.AddSources([absPathToTest], _checkExists = 0)
+
+    def AbsoluteBinaryFolder(self, _rootBinaryFolder):
+        """
+        Returns the bin folder for storing binary files for this project.
+        _rootBinFolder - The binary folder for building the entire solution.
+        """
+        return _rootBinaryFolder + "/" + self.binarySubfolder
