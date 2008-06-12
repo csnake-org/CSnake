@@ -380,12 +380,11 @@ class CSnakeGUIFrame(wx.Frame):
         
             # if configuring the target project...            
             if configureProject:
-                self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake)
-                if self.settings.instance.lower() == "gimias":
-                    self.ProposeToDeletePluginDlls()
-                if self.options.askToLaunchVisualStudio:
-                    self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
-
+                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
+                    if self.settings.instance.lower() == "gimias":
+                        self.ProposeToDeletePluginDlls()
+                    if self.options.askToLaunchVisualStudio:
+                        self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
     
             # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
@@ -499,7 +498,7 @@ class CSnakeGUIFrame(wx.Frame):
         Let user edit the application options.
         """
         frmEditOptions = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
-        frmEditOptions.ShowOptions(self.options)
+        frmEditOptions.ShowOptions(self.options, self.optionsFilename)
         frmEditOptions.MakeModal()
         frmEditOptions.Show()
         

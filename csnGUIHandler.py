@@ -159,15 +159,17 @@ class Handler:
         if _alsoRunCMake:
             if not self.cmakeFound:
                 print "Please specify correct path to CMake"
-                return
+                return False
                 
             folderCMakeLists = "%s/%s/" % (_settings.binFolder, instance.cmakeListsSubpath)
             argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
             retcode = subprocess.Popen(argList, cwd = _settings.binFolder).wait()
             if retcode == 0:
                 generator.PostProcess(instance, _settings.binFolder)
+                return True
             else:
                 print "Configuration failed.\n"   
+                return False
             
     def InstallThirdPartyBinariesToBinFolder(self, _settings):
         """ 
@@ -199,9 +201,11 @@ class Handler:
             found = retcode == 0
         return found
     
-    def ConfigureThirdPartyFolder(self, _settings):
+    def ConfigureThirdPartyFolder(self, _settings, _nrOfTimes = 2):
         """ 
         Runs cmake to install the libraries in the third party folder.
+        By default, the third party folder is configured twice because this works around
+        some problems with incomplete configurations.
         """
         result = 1
         messageAboutPatches = ""
@@ -235,11 +239,12 @@ class Handler:
             os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
             argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
             retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
-            if retcode:
-                retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
-            if not retcode == 0:
-                result = 0
-                print "Configuration failed.\n"   
+            for i in range(0, _nrOfTimes):
+                if retcode:
+                    retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
+                if not retcode == 0:
+                    result = 0
+                    print "Configuration failed.\n"   
             
         print messageAboutPatches
         return result

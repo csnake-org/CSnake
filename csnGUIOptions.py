@@ -27,7 +27,8 @@ class CSnakeOptionsFrame(wx.Frame):
         self.cmbBuildType = wx.ComboBox(self, -1, choices=["Default (Debug and Release)", "Release", "Debug"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.btnSetPythonPath = wx.Button(self, wxID_btnSetPythonPath, "Set path to Python")
         self.txtPythonPath = wx.TextCtrl(self, -1, "")
-        self.chkAskToLaunchVisualStudio = wx.CheckBox(self, -1, "Ask to launch VisualStudio from:")
+        self.chkAskToLaunchVisualStudio = wx.CheckBox(self, -1, "Ask to launch VisualStudio")
+        self.btnSetVisualStudioPath = wx.Button(self, wxID_btnSetPythonPath, "Set path to Visual Studio")
         self.txtVisualStudioPath = wx.TextCtrl(self, -1, "")
         self.btnClose = wx.Button(self, -1, "Close")
 
@@ -38,16 +39,18 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=wxID_btnSetCMakePath)
         self.Bind(wx.EVT_COMBOBOX, self.OnSelectBuildType, self.cmbBuildType)
         self.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, id=wxID_btnSetPythonPath)
+        self.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, id=wxID_btnSetPythonPath)
         self.Bind(wx.EVT_BUTTON, self.OnClose, self.btnClose)
         # end wxGlade
 
-    def ShowOptions(self, _options = None):
+    def ShowOptions(self, _options = None, _optionsFilename = None):
         """
         If _options is not None, then sets _options as the options edited by this frame.
         Displays the current options.
         """
+        self.optionsFilename = _optionsFilename
         if not _options is None:
-            self.options = _options
+        	self.options = _options
         self.txtCMakePath.SetValue(self.options.cmakePath)
         self.txtPythonPath.SetValue(self.options.pythonPath)
         self.txtVisualStudioPath.SetValue(self.options.visualStudioPath)
@@ -66,6 +69,7 @@ class CSnakeOptionsFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: CSnakeOptionsFrame.__set_properties
         self.SetTitle("CSnakeGUI Options")
+        self.SetSize((600, -1))
         self.cmbCompiler.SetSelection(-1)
         self.txtCMakePath.SetMinSize((20,20))
         self.cmbBuildType.SetSelection(-1)
@@ -76,6 +80,7 @@ class CSnakeOptionsFrame(wx.Frame):
     def __do_layout(self):
         # begin wxGlade: CSnakeOptionsFrame.__do_layout
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        sizer_5_copy_copy = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5_copy = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
@@ -91,10 +96,11 @@ class CSnakeOptionsFrame(wx.Frame):
         sizer_5_copy.Add(self.txtPythonPath, 1, 0, 0)
         sizer_2.Add(sizer_5_copy, 0, wx.EXPAND, 0)
         sizer_2.Add(self.chkAskToLaunchVisualStudio, 0, 0, 0)
-        sizer_2.Add(self.txtVisualStudioPath, 1, wx.EXPAND, 0)
+        sizer_5_copy_copy.Add(self.btnSetVisualStudioPath, 0, 0, 0)
+        sizer_5_copy_copy.Add(self.txtVisualStudioPath, 1, 0, 0)
+        sizer_2.Add(sizer_5_copy_copy, 0, wx.EXPAND, 0)
         sizer_2.Add(self.btnClose, 0, wx.EXPAND, 0)
         self.SetSizer(sizer_2)
-        sizer_2.Fit(self)
         self.Layout()
         # end wxGlade
 
@@ -120,6 +126,8 @@ class CSnakeOptionsFrame(wx.Frame):
         self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
         self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
         self.MakeModal(0)
+        if not self.optionsFilename is None:
+            self.options.Save(self.optionsFilename)
         self.Destroy()
 
     def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -133,6 +141,12 @@ class CSnakeOptionsFrame(wx.Frame):
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
             self.options.pythonPath = dlg.GetPath()
+            self.ShowOptions()
+
+    def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        dlg = wx.FileDialog(None, "Select path to Python")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.options.visualStudioPath = dlg.GetPath()
             self.ShowOptions()
 
 # end of class CSnakeOptionsFrame
