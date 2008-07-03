@@ -205,6 +205,10 @@ class CSnakeGUIFrame(wx.Frame):
         self.WriteOptions()
         self.PassOptionsToHandler()
 
+        iconFile = "Laticauda_colubrina.ico"
+        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
+        self.SetIcon(icon1)
+        
     def InitializeSettings(self):        
         # load previously saved settings
         if len(sys.argv) >= 2:

@@ -100,7 +100,7 @@ class CilabModuleProject(csnBuild.Project):
         _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
         _pch - If not "", this is the include file used to generate a precompiled header for each demo.
         """
-        demosProject = csnBuild.Project(self.name + "Demos", "library", _sourceRootFolder = self.sourceRootFolder)
+        demosProject = csnBuild.Project(self.name + "Demos", "dll", _sourceRootFolder = self.sourceRootFolder)
         demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder, _pch)
         demosProject.AddProjects([self])
@@ -110,7 +110,7 @@ class CilabModuleProject(csnBuild.Project):
         """
         Similar to AddDemos, but works on the Applications subfolder.
         """
-        applicationsProject = csnBuild.Project(self.name + "Applications", "library", _sourceRootFolder = self.sourceRootFolder)
+        applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.sourceRootFolder)
         applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder, _pch)
         applicationsProject.AddProjects([self])

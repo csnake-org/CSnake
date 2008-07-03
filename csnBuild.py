@@ -850,11 +850,16 @@ class Project(object):
 
     def GetGenerateWin32Header(self):
         return self.generateWin32Header
-           
+
+    def IsRunningOnWindows():
+        """ Returns true if the python script is not running on Windows """
+        return os.environ['OS'] != "Windows_NT"
+        
+                   
     def CreateCMakeSection_IncludeConfigAndUseFiles(self, f, binaryFolder):
         for project in self.ProjectsToUse():
             f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = 0)) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (not self.IsRunningOnWindows())) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(binaryFolder)) )
     
     def CreateCMakeSection_SourceGroups(self, f):
@@ -908,7 +913,7 @@ class Project(object):
         f.write( "IF(WIN32)\n" )
         f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % self.name)
         f.write( "ELSE(WIN32)\n\n" )
-        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=ignore-all \")\n" % self.name)
+        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols-report-all \")\n" % self.name)
         f.write( "ENDIF(WIN32)\n\n" )
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
@@ -992,7 +997,7 @@ class Project(object):
         # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
-            wxRunnerArg = "--template %s" % (rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl")
+            wxRunnerArg = "--template \"%s\"" % (rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl")
         self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
