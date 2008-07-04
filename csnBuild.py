@@ -12,6 +12,10 @@ import OrderedSet
 def ForwardSlashes(x):
     return x.replace("\\", "/")
 
+def IsRunningOnWindows():
+    """ Returns true if the python script is not running on Windows """
+    return sys.platform == "win32"
+
 # ToDo:
 # - check that of all root folders, only one contains csnCISTIBToolkit
 # - Have public and private related projects (hide the include paths from its clients)
@@ -60,7 +64,7 @@ class CompileAndLinkSettings:
         self.libraries = list()
         self.includeFolders = list()
         self.libraryFolders = list()
-
+        
 class CompileAndLinkConfig:
     """ 
     Helper class that contains the settings on an operating system 
@@ -766,8 +770,8 @@ class Project(object):
 
         # add the target of this project to the list of libraries that should be linked
         if _public and len(self.sources) > 0 and (self.type == "library" or self.type == "dll"):
-            targetName = ["%s.lib" % self.name] 
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(targetName, _addQuotes = 1)) )
+            targetName = self.name
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join([targetName], _addQuotes = 1)) )
                 
     def GenerateUseFile(self, _binaryFolder):
         """
@@ -850,16 +854,11 @@ class Project(object):
 
     def GetGenerateWin32Header(self):
         return self.generateWin32Header
-
-    def IsRunningOnWindows():
-        """ Returns true if the python script is not running on Windows """
-        return os.environ['OS'] != "Windows_NT"
-        
                    
     def CreateCMakeSection_IncludeConfigAndUseFiles(self, f, binaryFolder):
         for project in self.ProjectsToUse():
             f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (not self.IsRunningOnWindows())) )
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (self.name != project.name and not IsRunningOnWindows())) ))
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(binaryFolder)) )
     
     def CreateCMakeSection_SourceGroups(self, f):
@@ -913,7 +912,7 @@ class Project(object):
         f.write( "IF(WIN32)\n" )
         f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % self.name)
         f.write( "ELSE(WIN32)\n\n" )
-        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols-report-all \")\n" % self.name)
+        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=report-all \")\n" % self.name)
         f.write( "ENDIF(WIN32)\n\n" )
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
@@ -1023,3 +1022,16 @@ class Project(object):
         _rootBinFolder - The binary folder for building the entire solution.
         """
         return _rootBinaryFolder + "/" + self.binarySubfolder
+
+    def WriteDependencyStructureToXML(self, filename):
+        f = open(filename, 'w')
+        self.WriteDependencyStructureToXMLImp(f)
+        f.close()
+
+    def WriteDependencyStructureToXMLImp(self, f, indent = 0):
+        for i in range(indent):
+            f.write(' ')
+        f.write("<%s>" % self.name)
+        for project in self.RequiredProjects():
+            project.WriteDependencyStructureToXMLImp(f, indent + 4)
+        f.write("</%s>\n" % self.name)
