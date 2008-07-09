@@ -381,7 +381,6 @@ class Project(object):
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
     then precompiled headers is set up.
-    self.doNotAddADependencyForTheseProjects - This ordered set is used to work around a problem with Visual Studio.
     The project does not add a Visual Studio dependency on any project in this list.      
     """
     
@@ -440,7 +439,6 @@ class Project(object):
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
-        self.doNotAddADependencyForTheseProjects = OrderedSet.OrderedSet()
 
     def AddProjects(self, _projects, _dependency = 1): 
         """ 
@@ -463,19 +461,6 @@ class Project(object):
                 if( not _dependency ):
                     self.projectsNonRequired.add( projectToAdd )
 
-    def DoNotAddADependencyForTheseProjects(self, _projects):
-        """
-        Adds _projects to self.doNotAddADependencyForTheseProjects. This ordered set is used to work 
-        around a problem with Visual Studio.
-        The project does not add a Visual Studio dependency on any project in this list.
-        If an item in _projects is a function, then it is called as a function 
-        (the result of the function should be a Project and is 
-        added to self.doNotAddADependencyForTheseProjects).
-        """
-        for project in _projects:
-            projectToAdd = ToProject(project)
-            self.doNotAddADependencyForTheseProjects.add(projectToAdd)
-                
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         """
         Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
