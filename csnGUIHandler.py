@@ -155,6 +155,7 @@ class Handler:
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         generator.Generate(instance, _settings.binFolder, _settings.installFolder, self.cmakeBuildType)
+        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.binFolder))
             
         if _alsoRunCMake:
             if not self.cmakeFound:

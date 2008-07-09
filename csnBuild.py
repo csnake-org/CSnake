@@ -203,7 +203,11 @@ class Generator:
         # add dependencies
         f.write( "\n" )
         for project in requiredProjects:
-            if( len(project.sources) and not project in _targetProject.doNotAddADependencyForTheseProjects ):
+            staticLibUsingAnotherLib = _targetProject.type == "library" and project.type != "executable" 
+            noSources = len(project.sources) == 0 
+            if staticLibUsingAnotherLib or noSources: 
+                continue
+            else:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
@@ -910,7 +914,6 @@ class Project(object):
 
         # add standard definition to allow multiply defined symbols in the linker
         f.write( "IF(WIN32)\n" )
-        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \"/FORCE:MULTIPLE\")\n" % self.name)
         f.write( "ELSE(WIN32)\n\n" )
         f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=report-all \")\n" % self.name)
         f.write( "ENDIF(WIN32)\n\n" )
