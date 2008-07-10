@@ -94,25 +94,33 @@ class CilabModuleProject(csnBuild.Project):
                 for extension in GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-    def AddDemos(self, _modules, _pch = ""):
+    def AddDemos(self, _modules, _pch = "", _applicationDependenciesList = None):
         """
         Creates extra CSnake projects, each project building one demo in the demos subfolder of the current project.
         _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
         _pch - If not "", this is the include file used to generate a precompiled header for each demo.
         """
+        dependencies = [self]
+        if not _applicationDependenciesList is None:
+            dependencies.extend(_applicationDependenciesList)
+            
         demosProject = csnBuild.Project(self.name + "Demos", "dll", _sourceRootFolder = self.sourceRootFolder)
         demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        AddApplications(demosProject, [self], _modules, "%s/demos" % self.sourceRootFolder, _pch)
+        AddApplications(demosProject, dependencies, _modules, "%s/demos" % self.sourceRootFolder, _pch)
         demosProject.AddProjects([self])
         self.AddProjects([demosProject], _dependency = 0)
 
-    def AddApplications(self, _modules, _pch = ""):
+    def AddApplications(self, _modules, _pch = "", _applicationDependenciesList = None):
         """
         Similar to AddDemos, but works on the Applications subfolder.
         """
+        dependencies = [self]
+        if not _applicationDependenciesList is None:
+            dependencies.extend(_applicationDependenciesList)
+            
         applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.sourceRootFolder)
         applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        AddApplications(applicationsProject, [self], _modules, "%s/Applications" % self.sourceRootFolder, _pch)
+        AddApplications(applicationsProject, dependencies, _modules, "%s/Applications" % self.sourceRootFolder, _pch)
         applicationsProject.AddProjects([self])
         self.AddProjects([applicationsProject], _dependency = 0)
 

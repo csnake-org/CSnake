@@ -9,7 +9,6 @@ import pickle
 import os.path
 import sys
 import subprocess
-import ConfigParser
 
 class RedirectText:
     """
@@ -20,58 +19,6 @@ class RedirectText:
 
     def write(self,string):
 		self.out.WriteText(string)
-
-class CSnakeGUISettings:
-    """
-    Contains configuration settings such as source folder/bin folder/etc.
-    """
-    def __init__(self):
-        self.binFolder = ""    
-        self.installFolder = ""    
-        self.thirdPartyBinFolder = ""
-        self.csnakeFile = ""
-        self.rootFolders = []
-        self.thirdPartyRootFolder = ""
-        self.instance = ""
-
-    def Load(self, filename):
-        parser = ConfigParser.ConfigParser()
-        parser.read([filename])
-        section = "CSnake"
-        rootFolderSection = "RootFolders"
-        self.binFolder = parser.get(section, "binFolder")
-        self.installFolder = parser.get(section, "installFolder")
-        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
-        self.csnakeFile = parser.get(section, "csnakeFile")
-        count = 0
-        self.rootFolders = []
-        while parser.has_option(rootFolderSection, "RootFolder%s" % count):
-            self.rootFolders.append( parser.get(rootFolderSection, "RootFolder%s" % count) )
-            count += 1
-        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
-        self.instance = parser.get(section, "instance")
-        return 1
-        
-    def Save(self, filename):
-        parser = ConfigParser.ConfigParser()
-        section = "CSnake"
-        rootFolderSection = "RootFolders"
-        parser.add_section(section)
-        parser.add_section(rootFolderSection)
-
-        parser.set(section, "binFolder", self.binFolder)
-        parser.set(section, "installFolder", self.installFolder)
-        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
-        parser.set(section, "csnakeFile", self.csnakeFile)
-        count = 0
-        while count < len(self.rootFolders):
-            parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
-            count += 1
-        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
-        parser.set(section, "instance", self.instance)
-        f = open(filename, 'w')
-        parser.write(f)
-        f.close()
 
 class CSnakeGUIFrame(wx.Frame):
     """
@@ -181,7 +128,7 @@ class CSnakeGUIFrame(wx.Frame):
         print "Checking if CMake is found...\n"
 
     def CreateMemberVariables(self):
-        self.settings = CSnakeGUISettings()
+        self.settings = csnGUIHandler.Settings()
         self.handler = csnGUIHandler.Handler()
         self.commandCounter = 0
         
@@ -222,7 +169,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Initializes the application.
         """
-        self.RedirectStdOut()
+        #self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
@@ -393,7 +340,7 @@ class CSnakeGUIFrame(wx.Frame):
             # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
             if copyDlls:
-                self.handler.InstallThirdPartyBinariesToBinFolder(self.settings)
+                self.handler.InstallBinariesToBinFolder(self.settings)
                     
             # if configuring the third party folder            
             if( configureThirdPartyFolder ):
@@ -490,6 +437,7 @@ class CSnakeGUIFrame(wx.Frame):
             try:
                 self.settings.Load(filename)
             except:
+                print "\n\n\nTrying to load %s\n\n\n" % filename    
                 f = open(filename, 'r')
                 self.settings = pickle.load(f)
                 f.close()

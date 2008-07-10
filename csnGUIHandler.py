@@ -9,6 +9,59 @@ import glob
 import RollbackImporter
 import inspect
 import string
+import ConfigParser
+
+class Settings:
+    """
+    Contains configuration settings such as source folder/bin folder/etc.
+    """
+    def __init__(self):
+        self.binFolder = ""    
+        self.installFolder = ""    
+        self.thirdPartyBinFolder = ""
+        self.csnakeFile = ""
+        self.rootFolders = []
+        self.thirdPartyRootFolder = ""
+        self.instance = ""
+
+    def Load(self, filename):
+        parser = ConfigParser.ConfigParser()
+        parser.read([filename])
+        section = "CSnake"
+        rootFolderSection = "RootFolders"
+        self.binFolder = parser.get(section, "binFolder")
+        self.installFolder = parser.get(section, "installFolder")
+        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
+        self.csnakeFile = parser.get(section, "csnakeFile")
+        count = 0
+        self.rootFolders = []
+        while parser.has_option(rootFolderSection, "RootFolder%s" % count):
+            self.rootFolders.append( parser.get(rootFolderSection, "RootFolder%s" % count) )
+            count += 1
+        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
+        self.instance = parser.get(section, "instance")
+        return 1
+        
+    def Save(self, filename):
+        parser = ConfigParser.ConfigParser()
+        section = "CSnake"
+        rootFolderSection = "RootFolders"
+        parser.add_section(section)
+        parser.add_section(rootFolderSection)
+
+        parser.set(section, "binFolder", self.binFolder)
+        parser.set(section, "installFolder", self.installFolder)
+        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
+        parser.set(section, "csnakeFile", self.csnakeFile)
+        count = 0
+        while count < len(self.rootFolders):
+            parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
+            count += 1
+        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
+        parser.set(section, "instance", self.instance)
+        f = open(filename, 'w')
+        parser.write(f)
+        f.close()
 
 class RootNotFound(IOError):
     pass
@@ -172,7 +225,7 @@ class Handler:
                 print "Configuration failed.\n"   
                 return False
             
-    def InstallThirdPartyBinariesToBinFolder(self, _settings):
+    def InstallBinariesToBinFolder(self, _settings):
         """ 
         This function copies all third party dlls to the binary folder, so that you can run the executables in the
         binary folder without having to build the INSTALL target.
@@ -190,7 +243,9 @@ class Handler:
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (folders[mode], location)
                         os.path.exists(absLocation) or os.makedirs(absLocation)
+                        #print "Copy %s to %s\n" % (file, absLocation) 
                         shutil.copy(file, absLocation)
+        return True
              
     def CMakeIsFound(self):
         found = os.path.exists(self.cmakePath) and os.path.isfile(self.cmakePath)
