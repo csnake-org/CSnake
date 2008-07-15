@@ -897,12 +897,6 @@ class Project(object):
         if( len(self.compileAndLinkConfigFor[configTypes.all].private.definitions) ):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compileAndLinkConfigFor[configTypes.all].private.definitions) )
 
-        # add standard definition to allow multiply defined symbols in the linker
-        f.write( "IF(WIN32)\n" )
-        f.write( "ELSE(WIN32)\n\n" )
-        f.write( "  SET_TARGET_PROPERTIES(%s PROPERTIES LINK_FLAGS \" -Wl,--unresolved-symbols=report-all \")\n" % self.name)
-        f.write( "ENDIF(WIN32)\n\n" )
-
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
         if(self.type == "executable" ):
             f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
