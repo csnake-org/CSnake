@@ -78,6 +78,11 @@ Phone +34 935 421323</address>
       and not to take credit for the good work done by the creators of
       CMake!</para>
     </note>
+
+    <warning>
+      <para>CSnake has been tested with CMake version 2.4-patch 6. Please use
+      this version.</para>
+    </warning>
   </chapter>
 
   <chapter>
@@ -271,6 +276,12 @@ myLibrary.AddProjects([myDll])</programlisting></para>
 
   <chapter>
     <title>Building the CISTIB third party libraries</title>
+
+    <warning>
+      <para>Building the toolkit with CSnake has been tested with CMake
+      version 2.4-patch 6. Please use this version. At the moment of writing,
+      using CMake 2.6 with CSnake fails to build the CISTIB Toolkit.</para>
+    </warning>
 
     <para>The CISTIB toolkit comes with many libraries that can be used as
     dependency projects. Many of these libraries are third party libraries, or
@@ -496,7 +507,7 @@ myLibrary.AddTests(["test/*.h"], cxxTest, _enableWxWidgets = 0)</programlisting>
     <para>Note that you have to supply the cxxTest project in the call to
     AddTests. The argument _enableWxWidgets is optional. If you set this
     argument to 1, then a test runner will be used that initializes wxWidgets,
-    so that you can create wxWidgets objects in your tests. </para>
+    so that you can create wxWidgets objects in your tests.</para>
 
     <para>The following lines come from test/MyLibraryTest.h, and illustrate
     how to create a test (in this case, we test that calling the MyLibrary

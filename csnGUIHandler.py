@@ -230,11 +230,12 @@ class Handler:
         This function copies all third party dlls to the binary folder, so that you can run the executables in the
         binary folder without having to build the INSTALL target.
         """
+        result = True
         instance = self.__GetProjectInstance(_settings)
         folders = dict()
         folders["debug"] = "%s/bin/Debug" % _settings.binFolder
         folders["release"] = "%s/bin/Release" % _settings.binFolder
-
+    
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         for mode in ("debug", "release"):
             os.path.exists(folders[mode]) or os.makedirs(folders[mode])
@@ -244,8 +245,9 @@ class Handler:
                         absLocation = "%s/%s" % (folders[mode], location)
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         #print "Copy %s to %s\n" % (file, absLocation) 
-                        shutil.copy(file, absLocation)
-        return True
+                        result = shutil.copy(file, absLocation) and result
+        
+        return result
              
     def CMakeIsFound(self):
         found = os.path.exists(self.cmakePath) and os.path.isfile(self.cmakePath)

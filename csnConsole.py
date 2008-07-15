@@ -4,13 +4,13 @@ handler = csnGUIHandler.Handler()
 handler.SetCMakePath("D:/Program Files (x86)/CMake 2.4/bin/cmake.exe")
 # the following is only needed if you want to build the tests on the target machine
 handler.SetPythonPath("D:/Python24/python.exe")
-handler.SetCompiler("Visual Studio 7 .NET 2003") # 
+handler.SetCompiler("Visual Studio 7 .NET 2003") # "Unix Makefiles"
 handler.SetCMakeBuildType("") # or "Release" or "Debug"
 
 settings = csnGUIHandler.Settings()
 settings.Load("settings.CSnakeGUI")
 
-if False:
+if True:
     taskMsg = "ConfigureThirdPartyFolder from %s to %s..." % (settings.thirdPartyRootFolder, settings.thirdPartyBinFolder) 
     print "Starting task: " + taskMsg  
     result = handler.ConfigureThirdPartyFolder(settings)

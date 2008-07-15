@@ -169,7 +169,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Initializes the application.
         """
-        #self.RedirectStdOut()
+        self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
@@ -340,7 +340,8 @@ class CSnakeGUIFrame(wx.Frame):
             # if installing dlls to the bin folder            
             copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
             if copyDlls:
-                self.handler.InstallBinariesToBinFolder(self.settings)
+                if not self.handler.InstallBinariesToBinFolder(self.settings):
+                    print "Error while installing files.\n"
                     
             # if configuring the third party folder            
             if( configureThirdPartyFolder ):
