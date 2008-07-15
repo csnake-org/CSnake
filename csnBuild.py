@@ -490,26 +490,32 @@ class Project(object):
                             self.sourceGroups[_sourceGroup] = []
                         self.sourceGroups[_sourceGroup].append(source)
                    
-    def AddFilesToInstall(self, _listOfFiles, _location = '.', _debugOnly = 0, _releaseOnly = 0):
+    def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.filesToInstall.
-        Entries of _listOfFiles may contain wildcards, such as lib/*/*.dll.
-        Relative paths in _listOfFiles are assumed to be relative to the root of the binary folder where the targets 
+        Entries of _list may contain wildcards, such as lib/*/*.dll.
+        You may also include a folder in _list. In that case, the whole folder is copied during
+        the install.
+        Relative paths in _list are assumed to be relative to the root of the binary folder where the targets 
         are created.
         _debugOnly - If true, then the dll is only installed to the debug install folder.
         _releaseOnly - If true, then the dll is only installed to the release install folder.
         """
-        for dll in _listOfFiles:
+        
+        if _location is None:
+            _location = '.'
+            
+        for file in _list:
             if not _debugOnly:
                 if not self.filesToInstall["release"].has_key(_location):
                     self.filesToInstall["release"][_location] = []
-                if not dll in self.filesToInstall["release"][_location]:
-                    self.filesToInstall["release"][_location].append( dll )
+                if not file in self.filesToInstall["release"][_location]:
+                    self.filesToInstall["release"][_location].append( file )
             if not _releaseOnly:
                 if not self.filesToInstall["debug"].has_key(_location):
                     self.filesToInstall["debug"][_location] = []
-                if not dll in self.filesToInstall["debug"][_location]:
-                    self.filesToInstall["debug"][_location].append( dll )
+                if not file in self.filesToInstall["debug"][_location]:
+                    self.filesToInstall["debug"][_location].append( file )
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """

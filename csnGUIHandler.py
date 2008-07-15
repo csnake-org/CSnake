@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import shutil
+import distutils.dir_util
 import csnUtility
 import csnBuild
 import csnCilab
@@ -243,9 +244,13 @@ class Handler:
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (folders[mode], location)
-                        os.path.exists(absLocation) or os.makedirs(absLocation)
-                        #print "Copy %s to %s\n" % (file, absLocation) 
-                        result = shutil.copy(file, absLocation) and result
+                        if os.path.isdir(file):
+                            #print "Copy folder %s to %s\n" % (file, absLocation)
+                            result = distutils.dir_util.copy_tree(file, absLocation) and result
+                        else:
+                            os.path.exists(absLocation) or os.makedirs(absLocation)
+                            #print "Copy %s to %s\n" % (file, absLocation)
+                            result = shutil.copy(file, absLocation) and result
         
         return result
              
