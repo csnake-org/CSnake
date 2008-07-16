@@ -211,7 +211,7 @@ class Generator:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
-        if isTopLevelProject:
+        if False and isTopLevelProject:
             for mode in ("debug", "release"):
                 for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
