@@ -545,7 +545,7 @@ public:
       <title>Use of wild cards</title>
 
       <programlisting>project = csnBuild.Project("Project", "library")
-project.AddSources("src/*.h", "src/*.cpp")</programlisting>
+project.AddSources(["src/*.h", "src/*.cpp"])</programlisting>
 
       <para>If you use a wild card in a call to AddSources, all source files
       matching that wild card are added. Each wild card must at least match
@@ -556,7 +556,7 @@ project.AddSources("src/*.h", "src/*.cpp")</programlisting>
       <title>Checking that sources exist</title>
 
       <programlisting>project = csnBuild.Project("Project", "library")
-project.AddSources("src/*.h", "src/*.cpp", _checkExists = 0)</programlisting>
+project.AddSources(["src/*.h", "src/*.cpp"], _checkExists = 0)</programlisting>
 
       <para>Using the option _checkExists = 0, CSnake will not raise an error
       if the specified sources cannot be found.</para>

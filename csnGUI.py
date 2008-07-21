@@ -5,6 +5,7 @@
 import wx
 import csnGUIOptions
 import csnGUIHandler
+import csnBuild
 import pickle
 import os.path
 import sys
@@ -152,7 +153,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.WriteOptions()
         self.PassOptionsToHandler()
 
-        iconFile = "Laticauda_colubrina.ico"
+        iconFile = csnBuild.rootOfCSnake + "/Laticauda_colubrina.ico"
         icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon1)
         
