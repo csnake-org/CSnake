@@ -40,6 +40,8 @@ class CSnakeGUIFrame(wx.Frame):
         wxglade_tmp_menu.AppendItem(self.mnuLoadSettings)
         self.mnuSaveSettingsAs = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Save Settings As...", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.AppendItem(self.mnuSaveSettingsAs)
+        self.mnuExit = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Exit", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuExit)
         self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "File")
         wxglade_tmp_menu = wx.Menu()
         self.mnuEditOptions = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Edit Options", "", wx.ITEM_NORMAL)
@@ -78,6 +80,7 @@ class CSnakeGUIFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.mnuLoadSettings)
         self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
+        self.Bind(wx.EVT_MENU, self.OnExit, self.mnuExit)
         self.Bind(wx.EVT_MENU, self.OnEditOptions, self.mnuEditOptions)
         self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
         self.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, self.btnUpdateListOfTargets)
@@ -487,6 +490,9 @@ class CSnakeGUIFrame(wx.Frame):
             argList = [self.options.visualStudioPath, pathToSolution]
             retcode = subprocess.Popen(argList)
                 
+    def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        self.Close()
+
 # end of class CSnakeGUIFrame
 
 
