@@ -564,21 +564,23 @@ class Project(object):
         for libraryFolder in _listOfLibraryFolders:
             defaultCompileAndLinkConfig.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
-    def AddLibraries(self, _type, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0):
+    def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.publicLibraries. 
-        _type - Should be \"debug\", \"optimized\" or \"all\".
         """
-        assert _type in ("debug", "optimized", "all"), "%s not any of (\"debug\", \"optimized\", \"all\"" % (_type)
-        if( _type == "all" ):
-            _type = ""
+        assert not( _debugOnly and _releaseOnly)
+        type = "" # empty string is the default, meaning both debug and release
+        if _debugOnly:
+            type = "debug"
+        if _releaseOnly:
+            type = "optimized"
 
         configTypes = ConfigTypes()
         opSysName = configTypes.GetOpSysName(_WIN32, _NOT_WIN32)
         compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]            
             
         for library in _listOfLibraries:
-            compileAndLinkConfig.public.libraries.append("%s %s" % (_type, library))
+            compileAndLinkConfig.public.libraries.append("%s %s" % (type, library))
         
     def __FindPath(self, _path):
         """ 
