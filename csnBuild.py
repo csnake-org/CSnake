@@ -205,7 +205,7 @@ class Generator:
         for project in requiredProjects:
             staticLibUsingAnotherLib = _targetProject.type == "library" and project.type != "executable" 
             noSources = len(project.sources) == 0 
-            if staticLibUsingAnotherLib or noSources: 
+            if (IsRunningOnWindows() and staticLibUsingAnotherLib) or noSources: 
                 continue
             else:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
