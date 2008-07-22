@@ -39,6 +39,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=wxID_btnSetCMakePath)
         self.Bind(wx.EVT_COMBOBOX, self.OnSelectBuildType, self.cmbBuildType)
         self.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, id=wxID_btnSetPythonPath)
+        self.Bind(wx.EVT_CHECKBOX, self.OnCheckAskToLaunchVisualStudio, self.chkAskToLaunchVisualStudio)
         self.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, id=wxID_btnSetPythonPath)
         self.Bind(wx.EVT_BUTTON, self.OnClose, self.btnClose)
         # end wxGlade
@@ -48,16 +49,14 @@ class CSnakeOptionsFrame(wx.Frame):
         If _options is not None, then sets _options as the options edited by this frame.
         Displays the current options.
         """
-        self.optionsFilename = _optionsFilename
+        if not _optionsFilename is None:
+            self.optionsFilename = _optionsFilename
         if not _options is None:
         	self.options = _options
         self.txtCMakePath.SetValue(self.options.cmakePath)
         self.txtPythonPath.SetValue(self.options.pythonPath)
         self.txtVisualStudioPath.SetValue(self.options.visualStudioPath)
-        if self.options.askToLaunchVisualStudio:
-            self.chkAskToLaunchVisualStudio.SetValue(True)
-        else:
-            self.chkAskToLaunchVisualStudio.SetValue(False)
+        self.chkAskToLaunchVisualStudio.SetValue(self.options.askToLaunchVisualStudio != 0)
         self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.options.compiler))
         
         buildTypes = dict()
@@ -102,6 +101,7 @@ class CSnakeOptionsFrame(wx.Frame):
         sizer_2.Add(self.btnClose, 0, wx.EXPAND, 0)
         self.SetSizer(sizer_2)
         self.Layout()
+        self.SetSize((600, -1))
         # end wxGlade
 
     def OnSetCMakePath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -110,37 +110,45 @@ class CSnakeOptionsFrame(wx.Frame):
         """
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
-            self.options.cmakePath = dlg.GetPath()
+            self.CopyFromGUIToOptions()
             self.ShowOptions()
 
     def OnSelectCompiler(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         """
         Let the user select the compiler.
         """
-        self.options.compiler = self.cmbCompiler.GetValue()
+        self.CopyFromGUIToOptions()
         self.ShowOptions()
 
-    def OnClose(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+    def CopyFromGUIToOptions(self):
+        """
+        Copies the values from the controls in the GUI to the options structure
+        """
         self.options.cmakePath = self.txtCMakePath.GetValue()
         self.options.pythonPath = self.txtPythonPath.GetValue()
         self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
         self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
+        self.options.compiler = self.cmbCompiler.GetValue()
+        if self.cmbBuildType.GetSelection() == 0:
+            self.options.cmakeBuildType = "None"
+        else:
+            self.options.cmakeBuildType = "%s" % self.cmbBuildType.GetValue()
+        
+    def OnClose(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        self.CopyFromGUIToOptions()
         self.MakeModal(0)
         if not self.optionsFilename is None:
             self.options.Save(self.optionsFilename)
         self.Destroy()
 
     def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
-        if self.cmbBuildType.GetSelection() == 0:
-            self.options.cmakeBuildType = "None"
-        else:
-            self.options.cmakeBuildType = "%s" % self.cmbBuildType.GetValue()
+        self.CopyFromGUIToOptions()
         self.ShowOptions()
 
     def OnSetPythonPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
-            self.options.pythonPath = dlg.GetPath()
+            self.CopyFromGUIToOptions()
             self.ShowOptions()
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -148,6 +156,10 @@ class CSnakeOptionsFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.options.visualStudioPath = dlg.GetPath()
             self.ShowOptions()
+
+    def OnCheckAskToLaunchVisualStudio(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        self.CopyFromGUIToOptions()
+        self.ShowOptions()
 
 # end of class CSnakeOptionsFrame
 
@@ -172,7 +184,7 @@ class Options:
             self.currentGUISettingsFilename = parser.get(section, "currentGUISettingsFilename")
             self.cmakeBuildType = parser.get(section, "cmakeBuildType")
             if parser.has_option(section, "askToLaunchVisualStudio"):
-                self.askToLaunchVisualStudio = parser.get(section, "askToLaunchVisualStudio")
+                self.askToLaunchVisualStudio = parser.get(section, "askToLaunchVisualStudio") == str(True)
             if parser.has_option(section, "visualStudioPath"):
                 self.visualStudioPath = parser.get(section, "visualStudioPath")
 
