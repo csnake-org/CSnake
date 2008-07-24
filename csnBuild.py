@@ -21,6 +21,11 @@ def IsRunningOnWindows():
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
+# - Fix module reloading
+# - Fix install rules when installing a folder
+# - Better GUI: recently used Source Root Folder and associated recently used csnake files.
+# - Better GUI: do more checks, give nice error messages
+# - If copy_tree copies nothing, check that the source folder is empty
 # End: ToDo.
 
 # create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
@@ -783,8 +788,7 @@ class Project(object):
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "INCLUDE_DIRECTORIES(${%s_INCLUDE_DIRS})\n" % (self.name) )
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.name) )
-        f.write( "LINK_LIBRARIES(${%s_LIBRARIES})\n" % (self.name) )
-
+        
         # write definitions     
         for opSysName in [configTypes.win32, configTypes.notWin32]:
             compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
@@ -853,7 +857,14 @@ class Project(object):
         return self.generateWin32Header
                    
     def CreateCMakeSection_IncludeConfigAndUseFiles(self, f, binaryFolder):
-        for project in self.ProjectsToUse():
+        """ Include the use file and config file for any dependency project, and finally also
+        add the use and config file for this project (do this last, so that all definitions from
+        the dependency projects are already included).
+        """
+        projectsToUse = [project for project in self.RequiredProjects(_recursive = 1)]
+        assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
+        projectsToUse.append(self)
+        for project in projectsToUse:
             f.write( "\n# use %s\n" % (project.name) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (self.name != project.name and not IsRunningOnWindows())) ))
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(binaryFolder)) )
@@ -929,6 +940,15 @@ class Project(object):
             f.write("\n#Adding rule %s\n" % description)
             f.write("ADD_CUSTOM_COMMAND( TARGET %s PRE_BUILD COMMAND %s WORKING_DIRECTORY \"%s\" COMMENT \"Running rule %s\" VERBATIM )\n" % (self.name, rule.command, rule.workingDirectory, description))
     
+    def CreateCMakeSection_Link(self, f):
+        if self.type in ("dll", "executable"):
+            targetLinkLibraries = ""
+            for project in self.RequiredProjects(_recursive = 1):
+                if project.type == "third party":
+                    continue
+                targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
+            f.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.name, targetLinkLibraries) )
+        
     def CreateCMakeSections(self, f, _binaryFolder, _installFolder):
         """ Writes different CMake sections for this project to the file f. """
     
@@ -941,6 +961,7 @@ class Project(object):
         if( len(self.sources) ):
             f.write( "\n# Add target\n" )
             self.CreateCMakeSection_Sources(f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
+            self.CreateCMakeSection_Link(f)
             self.CreateCMakeSection_Definitions(f)
             self.CreateCMakeSection_InstallRules(f, _installFolder)
             self.CreateCMakeSection_Rules(f)

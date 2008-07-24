@@ -24,25 +24,45 @@ class Settings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
+        self.recentlyUsedCSnakeFiles = list()
 
     def Load(self, filename):
         parser = ConfigParser.ConfigParser()
         parser.read([filename])
+        self.__LoadBasicFields(parser)
+        self.__LoadRootFolders(parser)
+        self.__LoadRecentlyUsedCSnakeFiles(parser)
+        return 1
+        
+    def __LoadBasicFields(self, parser):
         section = "CSnake"
-        rootFolderSection = "RootFolders"
         self.binFolder = parser.get(section, "binFolder")
         self.installFolder = parser.get(section, "installFolder")
         self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
         self.csnakeFile = parser.get(section, "csnakeFile")
-        count = 0
-        self.rootFolders = []
-        while parser.has_option(rootFolderSection, "RootFolder%s" % count):
-            self.rootFolders.append( parser.get(rootFolderSection, "RootFolder%s" % count) )
-            count += 1
         self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
         self.instance = parser.get(section, "instance")
-        return 1
+
+    def __LoadRootFolders(self, parser):
+        section = "RootFolders"
+        count = 0
+        self.rootFolders = []
+        while parser.has_option(section, "RootFolder%s" % count):
+            self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
+            count += 1
         
+    def __LoadRecentlyUsedCSnakeFiles(self, parser):
+        section = "RecentlyUsedCSnakeFiles"
+        if not parser.has_section(section):
+            return
+            
+        count = 0
+        while parser.has_option(section, "RecentlyUsedCSnakeFile%s" % count):
+            rawData = parser.get(section, "RecentlyUsedCSnakeFile%s" % count) 
+            (csnakeFile, instance) = re.split("\?", rawData)
+            self.recentlyUsedCSnakeFiles.append( (csnakeFile, instance) )
+            count += 1
+    
     def Save(self, filename):
         parser = ConfigParser.ConfigParser()
         section = "CSnake"
@@ -246,7 +266,7 @@ class Handler:
                         absLocation = "%s/%s" % (folders[mode], location)
                         if os.path.isdir(file):
                             #print "Copy folder %s to %s\n" % (file, absLocation)
-                            result = distutils.dir_util.copy_tree(file, absLocation) and result
+                            distutils.dir_util.copy_tree(file, absLocation)
                         else:
                             os.path.exists(absLocation) or os.makedirs(absLocation)
                             #print "Copy %s to %s\n" % (file, absLocation)

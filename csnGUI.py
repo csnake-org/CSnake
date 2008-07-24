@@ -6,7 +6,6 @@ import wx
 import csnGUIOptions
 import csnGUIHandler
 import csnBuild
-import pickle
 import os.path
 import sys
 import subprocess
@@ -173,7 +172,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Initializes the application.
         """
-        self.RedirectStdOut()
+        #self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
@@ -203,13 +202,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Load options from the application options file. 
         """
-        try:
-            return self.options.Load(self.optionsFilename)
-        except:
-            f = open(self.optionsFilename, 'r')
-            self.options = pickle.load(f)
-            f.close()
-            return 1
+        return self.options.Load(self.optionsFilename)
         
     def __do_layout(self):
         # begin wxGlade: CSnakeGUIFrame.__do_layout
@@ -439,13 +432,7 @@ class CSnakeGUIFrame(wx.Frame):
             filename = self.options.currentGUISettingsFilename
                 
         if os.path.exists( filename ):
-            try:
-                self.settings.Load(filename)
-            except:
-                print "\n\n\nTrying to load %s\n\n\n" % filename    
-                f = open(filename, 'r')
-                self.settings = pickle.load(f)
-                f.close()
+            self.settings.Load(filename)
             self.CopySettingsVariableToTextBoxContents()
             
         self.StoreSettingsFilename(filename)
@@ -493,6 +480,10 @@ class CSnakeGUIFrame(wx.Frame):
     def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.Close()
 
+    def Validate(self, action):
+        if self.cmbAction.GetValue() == "Only create CMake files":
+            pass
+        
 # end of class CSnakeGUIFrame
 
 
