@@ -90,7 +90,7 @@ class ConfigTypes:
     def GetOpSysName(self, _WIN32, _NOT_WIN32):
         """
         Returns a type from self.List()
-        """
+        """ 
         if( _WIN32 and _NOT_WIN32 ):
             _WIN32 = _NOT_WIN32 = 0
         compiler = self.all
@@ -157,7 +157,7 @@ class Generator:
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolderForCSnake) )
+        f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolderForTheCompiler) )
 
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
@@ -203,7 +203,8 @@ class Generator:
         for project in projectsToGenerate:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
-                f.write( "ADD_SUBDIRECTORY(\"${BINARY_DIR}/%s\" \"${BINARY_DIR}/%s\")\n" % (project.binarySubfolder, project.binarySubfolder) )
+                subDirectory = "%s/%s" % (_binaryFolderForCSnake, project.binarySubfolder)
+                f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (subDirectory, subDirectory) )
                 self.Generate(project, _binaryFolderForCSnake, _binaryFolderForTheCompiler, _installFolder, _cmakeBuildType, _generatedList, _knownProjectNames)
            
         # add dependencies

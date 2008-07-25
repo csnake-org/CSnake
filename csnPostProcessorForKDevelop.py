@@ -17,7 +17,6 @@ class PostProcessor:
         kdevProjectFileListFilename = "%s.filelist" % kdevProjectFilename
 
         if not os.path.exists(kdevProjectFilename):
-            print "Not found: %s\n" % kdevProjectFilename
             return
             
         f = open(kdevProjectFileListFilename, 'w')
