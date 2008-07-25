@@ -19,6 +19,7 @@ class Settings:
     def __init__(self):
         self.binFolder = ""    
         self.installFolder = ""    
+        self.kdevelopProjectFolder = ""    
         self.thirdPartyBinFolder = ""
         self.csnakeFile = ""
         self.rootFolders = []
@@ -38,6 +39,8 @@ class Settings:
         section = "CSnake"
         self.binFolder = parser.get(section, "binFolder")
         self.installFolder = parser.get(section, "installFolder")
+        if parser.has_option(section, "kdevelopProjectFolder"):
+            self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
         self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
         self.csnakeFile = parser.get(section, "csnakeFile")
         self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
@@ -72,6 +75,7 @@ class Settings:
 
         parser.set(section, "binFolder", self.binFolder)
         parser.set(section, "installFolder", self.installFolder)
+        parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
         parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
         parser.set(section, "csnakeFile", self.csnakeFile)
         count = 0
@@ -240,7 +244,7 @@ class Handler:
             argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
             retcode = subprocess.Popen(argList, cwd = _settings.binFolder).wait()
             if retcode == 0:
-                generator.PostProcess(instance, _settings.binFolder)
+                generator.PostProcess(instance, _settings.binFolder, _settings.kdevelopProjectFolder)
                 return True
             else:
                 print "Configuration failed.\n"   
@@ -270,7 +274,7 @@ class Handler:
                         else:
                             os.path.exists(absLocation) or os.makedirs(absLocation)
                             #print "Copy %s to %s\n" % (file, absLocation)
-                            result = shutil.copy(file, absLocation) and result
+                            result = (0 != shutil.copy(file, absLocation)) and result
         
         return result
              

@@ -1,4 +1,6 @@
 import csnUtility
+import csnPostProcessorForVisualStudio
+import csnPostProcessorForKDevelop
 import inspect
 import os.path
 import warnings
@@ -8,9 +10,6 @@ import glob
 import types
 import shutil
 import OrderedSet
-
-def ForwardSlashes(x):
-    return x.replace("\\", "/")
 
 def IsRunningOnWindows():
     """ Returns true if the python script is not running on Windows """
@@ -26,14 +25,15 @@ def IsRunningOnWindows():
 # - Better GUI: recently used Source Root Folder and associated recently used csnake files.
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
+# - On linux, prevent building with all, force use of either debug or release
+# - On linux, also create a Debug and Release folder (not happening now, because the cmake type is "")
+# - On linux, don't copy any windows dlls
 # End: ToDo.
 
 # create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
 # the root folder is set correctly both when running the python interpreter, or when using the binary
 # CSnakeGUI executable.
-rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
-rootOfCSnake = ForwardSlashes(rootOfCSnake)
-sys.path.append(rootOfCSnake)
+sys.path.append(csnUtility.GetRootOfCSnake())
 
 pythonPath = "D:/Python24/python.exe"
 
@@ -113,6 +113,11 @@ class Generator:
         _generatedList -- List of projects for which Generate was already called
         """
 
+        # On linux, we have to extend the bin folder with a subfolder: Release or Debug. This will ensure
+        # that the binary folder on linux has the same structure as the folder on windows.
+        if not _cmakeBuildType == "None":
+            _binaryFolder = _binaryFolder + "/" +  _cmakeBuildType
+            
         isTopLevelProject = _generatedList is None
         if( _generatedList is None ):
             _generatedList = []
@@ -156,8 +161,8 @@ class Generator:
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        
         f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolder) )
+
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
         
@@ -223,7 +228,7 @@ class Generator:
                     for location in project.filesToInstall[mode].keys():
                         files = ""
                         for file in project.filesToInstall[mode][location]:
-                            files += "%s " % ForwardSlashes(file)
+                            files += "%s " % csnUtility.ForwardSlashes(file)
                         if files != "":
                             destination = "%s/%s" % (_installFolder, location)
                             f.write( "\n# Rule for installing files in location %s\n" % destination)
@@ -231,112 +236,30 @@ class Generator:
                         
         f.close()
 
-    def PostProcess(self, _targetProject, _binaryFolder):
+    def PostProcess(self, _targetProject, _binaryFolder, _kdevelopProjectFolder = ""):
         """
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
         _binaryFolder - The binary folder that was passed to the Generate member function.
+        _kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
+        copied from the bin folder to this folder. This is work around for a problem in 
+        KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
         """
         projects = OrderedSet.OrderedSet()
         projects.add(_targetProject)
         projects.update( _targetProject.AllProjects(_recursive = 1) )
+        ppVisualStudio = csnPostProcessorForVisualStudio.PostProcessor()
+        ppKDevelop = csnPostProcessorForKDevelop.PostProcessor()
         for project in projects:
-            self.PostProcessOneProject(project, _binaryFolder)
-        
-    def PostProcessOneProject(self, _project, _binaryFolder):
-        """
-        Apply post-processing after the CMake generation only for _project (not its children).
-        """
-        binaryProjectFolder = _project.AbsoluteBinaryFolder(_binaryFolder)
-        
-        # vc proj to patch
-        vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
-
-        # if there is a vcproj, and we want a precompiled header
-        if _project.precompiledHeader != "" and os.path.exists(vcprojFilename):
-            # binary pch file to generate
-            debugPchFilename = "%s/%s.debug.pch" % (binaryProjectFolder, _project.name)
-            releasePchFilename = "%s/%s.release.pch" % (binaryProjectFolder, _project.name)
-            # this is the name of the cpp file that will build the precompiled headers
-            pchCppFilename = "%sPCH.cpp" % (_project.name)
-
-            # patch the vcproj            
-            f = open(vcprojFilename, 'r')
-            vcproj = f.read()
-            f.close()
-            vcprojOrg = vcproj 
-            
-            # add release project pch settings to all configurations
-            searchString = "RuntimeTypeInfo=\"TRUE\"\n"
-            replaceString = \
-"""RuntimeTypeInfo="TRUE"
-UsePrecompiledHeader="3"
-PrecompiledHeaderThrough="%s" 
-PrecompiledHeaderFile="%s"
-""" % (_project.precompiledHeader, releasePchFilename)
-            vcproj = vcproj.replace(searchString, replaceString)
-            
-            # in the first occurence of the release pch filename, correct it to the debug pch filename
-            vcproj = vcproj.replace(releasePchFilename, debugPchFilename, 1)
-            
-            # add pchCpp to the solution
-            searchString = "<Files>\n"
-            replaceString = \
-"""
-    <Files>
-		<Filter
-			Name="PCH Files"
-			Filter="">
-			<File
-				RelativePath="%s">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"/>
-				</FileConfiguration>
-			</File>
-		</Filter>
-""" % pchCppFilename             
-            vcproj = vcproj.replace(searchString, replaceString)
-            
-            # force include of the pch header file
-            searchString = "CompileAs=\"2\"\n"
-            replaceString = \
-"""CompileAs="2"
-ForcedIncludeFiles="%s"
-""" % _project.precompiledHeader
-            vcproj = vcproj.replace(searchString, replaceString)
-
-            # create file pchCppFilename
-            precompiledHeaderCppFilename = "%s/%s" % (binaryProjectFolder, pchCppFilename);
-            precompiledHeaderCppFilenameText = \
-"""// Automatically generated file for building the precompiled headers file. DO NOT EDIT
-#include "%s"
-""" % _project.precompiledHeader
-   
-            if( csnUtility.FileToString(precompiledHeaderCppFilename) != precompiledHeaderCppFilenameText ):
-                f = open(precompiledHeaderCppFilename, 'w')
-                f.write(precompiledHeaderCppFilenameText)
-                f.close()
-            
-            # write patched vcproj
-            f = open(vcprojFilename, 'w')
-            f.write(vcproj)
-            f.close()
+            ppVisualStudio.Do(project, _binaryFolder)
+        ppKDevelop.Do(_targetProject, _binaryFolder, _kdevelopProjectFolder)
     
     def __GenerateWin32Header(self, _targetProject, _binaryFolder):
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
-        templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.h"
+        templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.h"
         if( _targetProject.type == "library" ):
-            templateFilename = rootOfCSnake + "/TemplateSourceFiles/Win32Header.lib.h"
+            templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
         templateOutputFilename = "%s/%sWin32Header.h" % (_targetProject.AbsoluteBinaryFolder(_binaryFolder), _targetProject.name)
         
         assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
@@ -431,7 +354,7 @@ class Project(object):
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
             file = self.debug_call
-            self.sourceRootFolder = ForwardSlashes(os.path.normpath(os.path.dirname(file)))
+            self.sourceRootFolder = csnUtility.ForwardSlashes(os.path.normpath(os.path.dirname(file)))
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
@@ -599,24 +522,24 @@ class Project(object):
         if( not os.path.exists(path) ):
             raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
-        path = ForwardSlashes(path)
+        path = csnUtility.ForwardSlashes(path)
         return path
         
     def PrependSourceRootFolderToRelativePath(self, _path):
         """ 
         Returns _path prepended with self.sourceRootFolder, unless _path is already an absolute path (in that case, _path is returned).
         """
-        path = ForwardSlashes(_path)
+        path = csnUtility.ForwardSlashes(_path)
         if not os.path.isabs(path):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
-        return ForwardSlashes(path)
+        return csnUtility.ForwardSlashes(path)
     
     def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
         """
-        return [ForwardSlashes(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
+        return [csnUtility.ForwardSlashes(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
@@ -841,7 +764,7 @@ class Project(object):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
-                        path = ForwardSlashes(dllPattern)
+                        path = csnUtility.ForwardSlashes(dllPattern)
                         if not os.path.isabs(path):
                             path = "%s/%s" % (_thirdPartyBinFolder, path)
                         for dll in glob.glob(path):
@@ -1007,8 +930,8 @@ class Project(object):
         # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
-            wxRunnerArg = "--template \"%s\"" % (rootOfCSnake + "/TemplateSourceFiles/wxRunner.tpl")
-        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+            wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
+        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (csnUtility.ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         

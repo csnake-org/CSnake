@@ -1,10 +1,17 @@
 import os.path
 import re
 import imp
-import csnBuild
-import csnUtility
 import sys
 
+def ForwardSlashes(x):
+    return x.replace("\\", "/")
+
+rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
+rootOfCSnake = ForwardSlashes(rootOfCSnake)
+
+def GetRootOfCSnake():
+    return rootOfCSnake
+    
 def Log(logString):
         f = open("F:\\log.txt", 'a')
         f.write(logString)
@@ -54,4 +61,4 @@ def GetDummyCppFilename():
     Returns name of the file that can be used in any project to prevent the project from having zero source files. 
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
-    return csnBuild.rootOfCSnake + "/TemplateSourceFiles/csnake_dummy.cpp"
+    return GetRootOfCSnake() + "/TemplateSourceFiles/csnake_dummy.cpp"

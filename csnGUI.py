@@ -5,7 +5,7 @@
 import wx
 import csnGUIOptions
 import csnGUIHandler
-import csnBuild
+import csnUtility
 import os.path
 import sys
 import subprocess
@@ -70,6 +70,9 @@ class CSnakeGUIFrame(wx.Frame):
         self.label_1_copy_copy = wx.StaticText(self.panelThirdParty, -1, "ThirdParty Bin Folder\n")
         self.txtThirdPartyBinFolder = wx.TextCtrl(self.panelThirdParty, -1, "")
         self.btnSelectThirdPartyBinFolder = wx.Button(self.panelThirdParty, -1, "...")
+        self.label_2_copy = wx.StaticText(self.panelThirdParty, -1, "KDevelop Project Folder\n\n")
+        self.txtKDevelopProjectFolder = wx.TextCtrl(self.panelThirdParty, -1, "")
+        self.btnSelectKDevelopProjectFolder = wx.Button(self.panelThirdParty, -1, "...")
         self.textLog = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP)
         self.btnDoAction = wx.Button(self, -1, "Do -->")
         self.cmbAction = wx.ComboBox(self, -1, choices=["Create CMake files and run CMake", "Only create CMake files", "Install files to Bin Folder", "Configure ThirdParty Folder"], style=wx.CB_DROPDOWN)
@@ -89,6 +92,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnSelectInstallFolder, self.btnSelectInstallFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyRootFolder, self.btnSelectThirdPartyRootFolder)
         self.Bind(wx.EVT_BUTTON, self.OnSelectThirdPartyBinFolder, self.btnSelectThirdPartyBinFolder)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectKDevelopProjectFolder, self.btnSelectKDevelopProjectFolder)
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
         # end wxGlade
         
@@ -96,25 +100,38 @@ class CSnakeGUIFrame(wx.Frame):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
         self.SetTitle("CSnake GUI")
         self.SetSize((750, 400))
+        self.lbCSnakeFile.SetMinSize((100, -1))
         self.txtCSnakeFile.SetMinSize((-1, -1))
         self.txtCSnakeFile.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
         self.btnSelectCSnakeFile.SetMinSize((30, -1))
+        self.labelInstance.SetMinSize((100, -1))
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
+        self.label_1.SetMinSize((100,100))
         self.lbRootFolders.SetMinSize((4000, 26))
+        self.label_1_copy.SetMinSize((100, -1))
         self.txtBinFolder.SetMinSize((-1, -1))
         self.txtBinFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectBinFolder.SetMinSize((30, -1))
+        self.label_2.SetMinSize((100, -1))
         self.txtInstallFolder.SetMinSize((-1, -1))
         self.txtInstallFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectInstallFolder.SetMinSize((30, -1))
         self.panelSource.SetMinSize((-1,-1))
+        self.label_1_copy_1.SetMinSize((100, -1))
         self.txtThirdPartyRootFolder.SetMinSize((-1, -1))
         self.txtThirdPartyRootFolder.SetToolTipString("Optional field for the root of the source tree that contains the Project Folder. CSnake will search this source tree for other projects.")
         self.btnSelectThirdPartyRootFolder.SetMinSize((30, -1))
+        self.label_1_copy_copy.SetMinSize((100, -1))
         self.txtThirdPartyBinFolder.SetMinSize((-1, -1))
         self.txtThirdPartyBinFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
         self.btnSelectThirdPartyBinFolder.SetMinSize((30, -1))
-        self.panelThirdParty.SetBackgroundColour(wx.Colour(192, 191, 255))
+        self.label_2_copy.SetMinSize((100, -1))
+        self.label_2_copy.SetBackgroundColour(wx.Colour(236, 233, 216))
+        self.txtKDevelopProjectFolder.SetMinSize((-1, -1))
+        self.txtKDevelopProjectFolder.SetBackgroundColour(wx.Colour(255, 255, 255))
+        self.txtKDevelopProjectFolder.SetToolTipString("This is the location where CSnake will generate the \"make files\".")
+        self.btnSelectKDevelopProjectFolder.SetMinSize((30, -1))
+        self.panelThirdParty.SetBackgroundColour(wx.Colour(236, 233, 216))
         self.cmbAction.SetSelection(0)
         # end wxGlade
         
@@ -155,7 +172,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.WriteOptions()
         self.PassOptionsToHandler()
 
-        iconFile = csnBuild.rootOfCSnake + "/Laticauda_colubrina.ico"
+        iconFile = csnUtility.GetRootOfCSnake() + "/Laticauda_colubrina.ico"
         icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon1)
         
@@ -209,50 +226,55 @@ class CSnakeGUIFrame(wx.Frame):
         boxSettings = wx.BoxSizer(wx.VERTICAL)
         boxBuildProject = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        boxInstallFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxThirdPartyBinFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxThirdPartyRoot = wx.BoxSizer(wx.HORIZONTAL)
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        boxBinFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
+        boxInstallFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxBinFolder = wx.BoxSizer(wx.HORIZONTAL)
         boxRootFolder = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         boxRootFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxProjectPath = wx.BoxSizer(wx.HORIZONTAL)
-        boxProjectPath.Add(self.lbCSnakeFile, 0, wx.RIGHT, 5)
+        boxProjectPath.Add(self.lbCSnakeFile, 0, wx.RIGHT|wx.EXPAND, 5)
         boxProjectPath.Add(self.txtCSnakeFile, 2, wx.FIXED_MINSIZE, 0)
         boxProjectPath.Add(self.btnSelectCSnakeFile, 0, 0, 0)
         sizer_3.Add(boxProjectPath, 0, wx.EXPAND, 0)
-        boxRootFolder_copy.Add(self.labelInstance, 0, wx.RIGHT, 5)
+        boxRootFolder_copy.Add(self.labelInstance, 0, wx.RIGHT|wx.EXPAND, 5)
         boxRootFolder_copy.Add(self.cmbInstance, 1, wx.EXPAND, 0)
         boxRootFolder_copy.Add(self.btnUpdateListOfTargets, 0, 0, 0)
         sizer_3.Add(boxRootFolder_copy, 1, wx.EXPAND, 0)
         self.panelProjectAndInstance.SetSizer(sizer_3)
         boxSettings.Add(self.panelProjectAndInstance, 0, wx.EXPAND, 0)
-        boxRootFolder.Add(self.label_1, 0, wx.RIGHT, 5)
+        boxRootFolder.Add(self.label_1, 0, wx.RIGHT|wx.EXPAND, 5)
         boxRootFolder.Add(self.lbRootFolders, 1, wx.EXPAND|wx.FIXED_MINSIZE, 0)
         sizer_4.Add(self.btnAddRootFolder, 0, 0, 0)
         sizer_4.Add(self.btnRemoveRootFolder, 0, 0, 0)
         boxRootFolder.Add(sizer_4, 0, wx.EXPAND, 0)
         sizer_1.Add(boxRootFolder, 0, wx.EXPAND, 0)
-        boxBinFolder.Add(self.label_1_copy, 0, wx.RIGHT, 5)
+        boxBinFolder.Add(self.label_1_copy, 0, wx.RIGHT|wx.EXPAND, 5)
         boxBinFolder.Add(self.txtBinFolder, 2, wx.FIXED_MINSIZE, 0)
         boxBinFolder.Add(self.btnSelectBinFolder, 0, 0, 0)
         sizer_1.Add(boxBinFolder, 1, wx.EXPAND, 0)
-        boxBinFolder_copy.Add(self.label_2, 0, wx.RIGHT, 5)
-        boxBinFolder_copy.Add(self.txtInstallFolder, 2, wx.FIXED_MINSIZE, 0)
-        boxBinFolder_copy.Add(self.btnSelectInstallFolder, 0, 0, 0)
-        sizer_1.Add(boxBinFolder_copy, 1, wx.EXPAND, 0)
+        boxInstallFolder.Add(self.label_2, 0, wx.RIGHT|wx.EXPAND, 5)
+        boxInstallFolder.Add(self.txtInstallFolder, 2, wx.FIXED_MINSIZE, 0)
+        boxInstallFolder.Add(self.btnSelectInstallFolder, 0, 0, 0)
+        sizer_1.Add(boxInstallFolder, 1, wx.EXPAND, 0)
         self.panelSource.SetSizer(sizer_1)
         boxSettings.Add(self.panelSource, 0, wx.EXPAND, 0)
-        boxThirdPartyRoot.Add(self.label_1_copy_1, 0, wx.RIGHT, 5)
+        boxThirdPartyRoot.Add(self.label_1_copy_1, 0, wx.RIGHT|wx.EXPAND, 5)
         boxThirdPartyRoot.Add(self.txtThirdPartyRootFolder, 2, wx.FIXED_MINSIZE, 0)
         boxThirdPartyRoot.Add(self.btnSelectThirdPartyRootFolder, 0, 0, 0)
         sizer_2.Add(boxThirdPartyRoot, 1, wx.EXPAND, 0)
-        boxThirdPartyBinFolder.Add(self.label_1_copy_copy, 0, wx.RIGHT, 5)
+        boxThirdPartyBinFolder.Add(self.label_1_copy_copy, 0, wx.RIGHT|wx.EXPAND, 5)
         boxThirdPartyBinFolder.Add(self.txtThirdPartyBinFolder, 2, wx.FIXED_MINSIZE, 0)
         boxThirdPartyBinFolder.Add(self.btnSelectThirdPartyBinFolder, 0, 0, 0)
         sizer_2.Add(boxThirdPartyBinFolder, 1, wx.EXPAND, 0)
+        boxInstallFolder_copy.Add(self.label_2_copy, 0, wx.RIGHT|wx.EXPAND, 5)
+        boxInstallFolder_copy.Add(self.txtKDevelopProjectFolder, 2, wx.FIXED_MINSIZE, 0)
+        boxInstallFolder_copy.Add(self.btnSelectKDevelopProjectFolder, 0, 0, 0)
+        sizer_2.Add(boxInstallFolder_copy, 1, wx.EXPAND, 0)
         self.panelThirdParty.SetSizer(sizer_2)
         boxSettings.Add(self.panelThirdParty, 0, wx.EXPAND, 0)
         boxSettings.Add(self.textLog, 1, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
@@ -293,6 +315,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.settings.binFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
+        self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue().replace("\\", "/")
         self.settings.csnakeFile = self.txtCSnakeFile.GetValue().replace("\\", "/")
         self.settings.rootFolders = []
         for i in range( self.lbRootFolders.GetCount() ):
@@ -419,6 +442,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.txtBinFolder.SetValue( self.settings.binFolder )
         self.txtInstallFolder.SetValue( self.settings.installFolder )
         self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
+        self.txtKDevelopProjectFolder.SetValue( self.settings.kdevelopProjectFolder )
         self.cmbInstance.Clear()
         if self.settings.instance != "":
             self.cmbInstance.Append(self.settings.instance)
@@ -484,6 +508,11 @@ class CSnakeGUIFrame(wx.Frame):
         if self.cmbAction.GetValue() == "Only create CMake files":
             pass
         
+    def OnSelectKDevelopProjectFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select folder for saving the KDevelop project file")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtKDevelopProjectFolder.SetValue(dlg.GetPath())
+
 # end of class CSnakeGUIFrame
 
 
