@@ -22,18 +22,13 @@ class PostProcessor:
                 fileListItem = fileListItem[len(prefix):]
                 f.write(fileListItem + "\n")
         f.close()
+        result = (0 != shutil.copy(kdevProjectFileListFilename, _kdevelopProjectFolder))
+        assert result, "Could not copy from %s to %s\n" % (kdevProjectFileListFilename, _kdevelopProjectFolder)
         
         kdevelopFileInTargetFolder = "%s/%s.kdevelop" % (kdevelopProjectFolder, _targetProject.name) 
         f = open(kdevelopFileInTargetFolder)
         kdevelopProjectText = f.read()
         f.close()
-        print "Replacing %s with %s\n" % (binaryProjectFolder, kdevelopProjectFolder)
-        kdevelopProjectText = kdevelopProjectText.replace(binaryProjectFolder, kdevelopProjectFolder)
         f = open(kdevelopFileInTargetFolder, 'w')
-        f.write(kdevelopProjectText)
+        f.write(kdevelopProjectText.replace(binaryProjectFolder, kdevelopProjectFolder))
         f.close()
-        
-        result = (0 != shutil.copy(kdevProjectFilename, _kdevelopProjectFolder))
-        assert result, "Could not copy from %s to %s\n" % (kdevProjectFilename, _kdevelopProjectFolder)
-        result = (0 != shutil.copy(kdevProjectFileListFilename, _kdevelopProjectFolder))
-        assert result, "Could not copy from %s to %s\n" % (kdevProjectFileListFilename, _kdevelopProjectFolder)

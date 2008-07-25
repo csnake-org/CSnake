@@ -157,7 +157,7 @@ class Generator:
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolderForTheCompiler) )
+        f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolderForCSnake) )
 
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
