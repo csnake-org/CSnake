@@ -44,6 +44,12 @@ class Settings:
         """
         return self.__binFolder
             
+    def SetBinFolderForCSnake(self, x):
+        """
+        Returns the bin folder that is used by CSnake to store build-related files.
+        """
+        self.__binFolder = x
+            
     def GetDebugBinFolder(self):
         """
         Return the folder where the compiler will place the debug binaries (returns the "same" folder on
@@ -254,12 +260,21 @@ class Handler:
         return instance
     
     def ConfigureProjectToBinFolder(self, _settings, _alsoRunCMake):
+        """ 
+        Configures the project to the bin folder.
+        """
         logString = ""
         instance = self.__GetProjectInstance(_settings)
         
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
-        generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, _settings.cmakeBuildType)
+        
+        # on linux, cmake build type None means that two config steps are performed, for debug and for release
+        if self.compiler in ("KDevelop3", "Unix Makefiles") and _settings.cmakeBuildType == "None":
+            generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, "Debug")
+            generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, "Release")
+        else:
+            generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, _settings.cmakeBuildType)
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.GetBinFolderForCSnake()))
             
         if _alsoRunCMake:

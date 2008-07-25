@@ -71,7 +71,6 @@ class CSnakeOptionsFrame(wx.Frame):
         self.SetSize((600, -1))
         self.cmbCompiler.SetSelection(-1)
         self.txtCMakePath.SetMinSize((20,20))
-        self.cmbBuildType.SetSelection(-1)
         self.txtPythonPath.SetMinSize((20,20))
         self.txtVisualStudioPath.SetMinSize((20,20))
         # end wxGlade
@@ -117,6 +116,10 @@ class CSnakeOptionsFrame(wx.Frame):
         """
         Let the user select the compiler.
         """
+        # use the current selection as the build type to use for visual studio projects
+        if hasattr(self, "buildTypeForVisualStudio"):
+            self.cmbBuildType.SetSelection(self.buildTypeForVisualStudio)
+            
         self.CopyFromGUIToOptions()
         self.ShowOptions()
 
@@ -129,6 +132,12 @@ class CSnakeOptionsFrame(wx.Frame):
         self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
         self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
         self.options.compiler = self.cmbCompiler.GetValue()
+        
+        # correct setting None on Linux to Debug
+        if self.options.compiler in ("KDevelop3", "Unix Makefiles") and self.cmbBuildType.GetSelection() == 0:
+            self.buildTypeForVisualStudio = self.cmbBuildType.GetSelection() 
+            self.cmbBuildType.SetSelection(1)
+                     
         if self.cmbBuildType.GetSelection() == 0:
             self.options.cmakeBuildType = "None"
         else:
@@ -142,6 +151,8 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Destroy()
 
     def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        # set the current selection as the build type to use for visual studio projects
+        self.buildTypeForVisualStudio = self.cmbBuildType.GetSelection() 
         self.CopyFromGUIToOptions()
         self.ShowOptions()
 
