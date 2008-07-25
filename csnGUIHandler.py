@@ -28,21 +28,36 @@ class Settings:
         self.cmakeBuildType = "None"
         self.recentlyUsedCSnakeFiles = list()
 
-    def GetBinFolder(self):
+    def GetBinFolderForTheCompiler(self):
+        """
+        Returns the bin folder that must be passed to the compiler (either visual studio or kdevelop)
+        for storing binaries.
+        """
         if self.cmakeBuildType == "None":
             return self.__binFolder
         else:
             return "%s/bin/%s" % (self.__binFolder, self.cmakeBuildType)
             
-    def GetDebugBinFolder(self):
-        return "%s/bin/Debug" % self.__binFolder
-            
-    def GetReleaseBinFolder(self):
-        return "%s/bin/Release" % self.__binFolder
-            
-    def GetPrivateVariable_BinFolder(self):
+    def GetBinFolderForCSnake(self):
+        """
+        Returns the bin folder that is used by CSnake to store build-related files.
+        """
         return self.__binFolder
             
+    def GetDebugBinFolder(self):
+        """
+        Return the folder where the compiler will place the debug binaries (returns the "same" folder on
+        Linux and Windows).
+        """
+        return "%s/bin/Debug" % self.__binFolder
+    
+    def GetReleaseBinFolder(self):
+        """
+        Return the folder where the compiler will place the release binaries (returns the "same" folder on
+        Linux and Windows).
+        """
+        return "%s/bin/Release" % self.__binFolder
+    
     def Load(self, filename):
         parser = ConfigParser.ConfigParser()
         parser.read([filename])
@@ -244,19 +259,19 @@ class Handler:
         
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
-        generator.Generate(instance, _settings.GetBinFolder(), _settings.installFolder, _settings.cmakeBuildType)
-        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.GetBinFolder()))
+        generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, _settings.cmakeBuildType)
+        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.GetBinFolderForCSnake()))
             
         if _alsoRunCMake:
             if not self.cmakeFound:
                 print "Please specify correct path to CMake"
                 return False
                 
-            folderCMakeLists = "%s/%s/" % (_settings.GetBinFolder(), instance.cmakeListsSubpath)
+            folderCMakeLists = "%s/%s/" % (_settings.GetBinFolderForCSnake(), instance.cmakeListsSubpath)
             argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
-            retcode = subprocess.Popen(argList, cwd = _settings.GetBinFolder()).wait()
+            retcode = subprocess.Popen(argList, cwd = _settings.GetBinFolderForCSnake()).wait()
             if retcode == 0:
-                generator.PostProcess(instance, _settings.GetBinFolder(), _settings.kdevelopProjectFolder)
+                generator.PostProcess(instance, _settings.GetBinFolderForCSnake(), _settings.kdevelopProjectFolder)
                 return True
             else:
                 print "Configuration failed.\n"   
@@ -394,7 +409,7 @@ class Handler:
         
     def GetListOfSpuriousPluginDlls(self, _settings):
         """
-        Determines a list of GIMIAS plugin dlls that were found in _settings.GetBinFolder(), and returns a list of filenames containing those 
+        Determines a list of GIMIAS plugin dlls that were found in _settings.GetDebugBinFolder() and _settings.GetReleaseBinFolder(), and returns a list of filenames containing those 
         plugin dlls which are not built by the current configuration (in _settings).
         """
         result = []
@@ -404,7 +419,7 @@ class Handler:
     
         configuredPluginNames = [project.name for project in instance.AllProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBinFolder(), configuration)
+            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBinFolderForCSnake(), configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)
@@ -419,7 +434,7 @@ class Handler:
 
     def GetTargetSolutionPath(self, _settings):
         instance = self.__GetProjectInstance(_settings)
-        binaryProjectFolder = _settings.GetBinFolder() + "/" + instance.binarySubfolder
+        binaryProjectFolder = _settings.GetBinFolderForCSnake() + "/" + instance.binarySubfolder
         return "%s/%s.sln" % (binaryProjectFolder, instance.name)
 
     def GetThirdPartySolutionPath(self, _settings):

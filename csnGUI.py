@@ -439,7 +439,7 @@ class CSnakeGUIFrame(wx.Frame):
         for rootFolder in self.settings.rootFolders:
             self.lbRootFolders.Append(rootFolder)
         self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
-        self.txtBinFolder.SetValue( self.settings.GetPrivateVariable_BinFolder() )
+        self.txtBinFolder.SetValue( self.settings.GetBinFolderForCSnake() )
         self.txtInstallFolder.SetValue( self.settings.installFolder )
         self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
         self.txtKDevelopProjectFolder.SetValue( self.settings.kdevelopProjectFolder )
