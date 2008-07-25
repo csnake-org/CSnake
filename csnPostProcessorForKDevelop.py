@@ -26,7 +26,7 @@ class PostProcessor:
         assert result, "Could not copy from %s to %s\n" % (kdevProjectFileListFilename, _kdevelopProjectFolder)
         
         kdevelopFileInTargetFolder = "%s/%s.kdevelop" % (kdevelopProjectFolder, _targetProject.name) 
-        f = open(kdevelopFileInTargetFolder)
+        f = open(kdevProjectFilename, 'r')
         kdevelopProjectText = f.read()
         f.close()
         f = open(kdevelopFileInTargetFolder, 'w')
