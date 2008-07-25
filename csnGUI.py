@@ -211,7 +211,6 @@ class CSnakeGUIFrame(wx.Frame):
 
     def PassOptionsToHandler(self):
         self.handler.SetCompiler(self.options.compiler)
-        self.handler.SetCMakeBuildType(self.options.cmakeBuildType)
         self.handler.SetPythonPath(self.options.pythonPath)
         return self.handler.SetCMakePath(self.options.cmakePath)
         
@@ -322,6 +321,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
         self.settings.instance = self.cmbInstance.GetValue()
+        self.settings.cmakeBuildType = self.options.cmakeBuildType
     
     def SaveSettings(self, filename = ""):
         """
@@ -439,7 +439,7 @@ class CSnakeGUIFrame(wx.Frame):
         for rootFolder in self.settings.rootFolders:
             self.lbRootFolders.Append(rootFolder)
         self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
-        self.txtBinFolder.SetValue( self.settings.binFolder )
+        self.txtBinFolder.SetValue( self.settings.GetPrivateVariable_BinFolder() )
         self.txtInstallFolder.SetValue( self.settings.installFolder )
         self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
         self.txtKDevelopProjectFolder.SetValue( self.settings.kdevelopProjectFolder )

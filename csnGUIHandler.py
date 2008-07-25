@@ -17,7 +17,7 @@ class Settings:
     Contains configuration settings such as source folder/bin folder/etc.
     """
     def __init__(self):
-        self.binFolder = ""    
+        self.__binFolder = ""    
         self.installFolder = ""    
         self.kdevelopProjectFolder = ""    
         self.thirdPartyBinFolder = ""
@@ -25,8 +25,24 @@ class Settings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
+        self.cmakeBuildType = "None"
         self.recentlyUsedCSnakeFiles = list()
 
+    def GetBinFolder(self):
+        if self.cmakeBuildType == "None":
+            return self.__binFolder
+        else:
+            return "%s/bin/%s" % (self.__binFolder, self.cmakeBuildType)
+            
+    def GetDebugBinFolder(self):
+        return "%s/bin/Debug" % self.__binFolder
+            
+    def GetReleaseBinFolder(self):
+        return "%s/bin/Release" % self.__binFolder
+            
+    def GetPrivateVariable_BinFolder(self):
+        return self.__binFolder
+            
     def Load(self, filename):
         parser = ConfigParser.ConfigParser()
         parser.read([filename])
@@ -37,7 +53,7 @@ class Settings:
         
     def __LoadBasicFields(self, parser):
         section = "CSnake"
-        self.binFolder = parser.get(section, "binFolder")
+        self.__binFolder = parser.get(section, "binFolder")
         self.installFolder = parser.get(section, "installFolder")
         if parser.has_option(section, "kdevelopProjectFolder"):
             self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
@@ -73,7 +89,7 @@ class Settings:
         parser.add_section(section)
         parser.add_section(rootFolderSection)
 
-        parser.set(section, "binFolder", self.binFolder)
+        parser.set(section, "binFolder", self.__binFolder)
         parser.set(section, "installFolder", self.installFolder)
         parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
         parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
@@ -176,7 +192,6 @@ class Handler:
         self.cmakePath = ""
         self.pythonPath = ""
         self.cmakeFound = 0 
-        self.cmakeBuildType = "None"
         pass
     
     def SetCMakePath(self, _cmakePath):
@@ -198,9 +213,6 @@ class Handler:
         
     def SetCompiler(self, _compiler):
         self.compiler = _compiler
-        
-    def SetCMakeBuildType(self, _buildType):
-        self.cmakeBuildType = _buildType
         
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
@@ -232,19 +244,19 @@ class Handler:
         
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
-        generator.Generate(instance, _settings.binFolder, _settings.installFolder, self.cmakeBuildType)
-        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.binFolder))
+        generator.Generate(instance, _settings.GetBinFolder(), _settings.installFolder, _settings.cmakeBuildType)
+        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.GetBinFolder()))
             
         if _alsoRunCMake:
             if not self.cmakeFound:
                 print "Please specify correct path to CMake"
                 return False
                 
-            folderCMakeLists = "%s/%s/" % (_settings.binFolder, instance.cmakeListsSubpath)
+            folderCMakeLists = "%s/%s/" % (_settings.GetBinFolder(), instance.cmakeListsSubpath)
             argList = [self.cmakePath, "-G", self.compiler, folderCMakeLists]
-            retcode = subprocess.Popen(argList, cwd = _settings.binFolder).wait()
+            retcode = subprocess.Popen(argList, cwd = _settings.GetBinFolder()).wait()
             if retcode == 0:
-                generator.PostProcess(instance, _settings.binFolder, _settings.kdevelopProjectFolder)
+                generator.PostProcess(instance, _settings.GetBinFolder(), _settings.kdevelopProjectFolder)
                 return True
             else:
                 print "Configuration failed.\n"   
@@ -258,8 +270,8 @@ class Handler:
         result = True
         instance = self.__GetProjectInstance(_settings)
         folders = dict()
-        folders["debug"] = "%s/bin/Debug" % _settings.binFolder
-        folders["release"] = "%s/bin/Release" % _settings.binFolder
+        folders["debug"] = _settings.GetDebugBinFolder()
+        folders["release"] = _settings.GetReleaseBinFolder()
     
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         for mode in ("debug", "release"):
@@ -382,7 +394,7 @@ class Handler:
         
     def GetListOfSpuriousPluginDlls(self, _settings):
         """
-        Determines a list of GIMIAS plugin dlls that were found in _settings.binFolder, and returns a list of filenames containing those 
+        Determines a list of GIMIAS plugin dlls that were found in _settings.GetBinFolder(), and returns a list of filenames containing those 
         plugin dlls which are not built by the current configuration (in _settings).
         """
         result = []
@@ -392,7 +404,7 @@ class Handler:
     
         configuredPluginNames = [project.name for project in instance.AllProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.binFolder, configuration)
+            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBinFolder(), configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)
@@ -407,7 +419,7 @@ class Handler:
 
     def GetTargetSolutionPath(self, _settings):
         instance = self.__GetProjectInstance(_settings)
-        binaryProjectFolder = _settings.binFolder + "/" + instance.binarySubfolder
+        binaryProjectFolder = _settings.GetBinFolder() + "/" + instance.binarySubfolder
         return "%s/%s.sln" % (binaryProjectFolder, instance.name)
 
     def GetThirdPartySolutionPath(self, _settings):
