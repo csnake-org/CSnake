@@ -133,7 +133,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.btnSelectKDevelopProjectFolder.SetMinSize((30, -1))
         self.panelThirdParty.SetBackgroundColour(wx.Colour(236, 233, 216))
         self.textLog.SetMinSize((100, 50))
-        self.btnDoAction.SetMinSize((100, 15))
+        self.btnDoAction.SetMinSize((100, -1))
         self.cmbAction.SetSelection(0)
         # end wxGlade
         
