@@ -106,7 +106,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.btnSelectCSnakeFile.SetMinSize((30, -1))
         self.labelInstance.SetMinSize((100, -1))
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
-        self.label_1.SetMinSize((100,100))
+        self.label_1.SetMinSize((100,50))
         self.lbRootFolders.SetMinSize((4000, 26))
         self.label_1_copy.SetMinSize((100, -1))
         self.txtBinFolder.SetMinSize((-1, -1))

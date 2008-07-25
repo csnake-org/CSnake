@@ -5,6 +5,12 @@ import csnUtility
 class PostProcessor:
     def Do(self, _targetProject, _binaryFolder, _kdevelopProjectFolder):
 
+        if not os.path.exists(_kdevelopProjectFolder):
+            # if _kdevelopProjectFolder does not exist, then it MUST equal "".
+            # otherwise, the user specified an invalid path for _kdevelopProjectFolder.  
+            assert _kdevelopProjectFolder == "", "Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
+            return
+            
         kdevelopProjectFolder = csnUtility.ForwardSlashes(os.path.normpath(_kdevelopProjectFolder))
         binaryProjectFolder = _targetProject.AbsoluteBinaryFolder(_binaryFolder)
         kdevProjectFilename = "%s/%s.kdevelop" % (binaryProjectFolder, _targetProject.name)
