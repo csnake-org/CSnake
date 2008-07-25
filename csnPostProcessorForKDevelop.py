@@ -30,5 +30,11 @@ class PostProcessor:
         kdevelopProjectText = f.read()
         f.close()
         f = open(kdevelopFileInTargetFolder, 'w')
-        f.write(kdevelopProjectText.replace(binaryProjectFolder, kdevelopProjectFolder))
+        searchText = "<projectdirectory>%s" % binaryProjectFolder
+        replaceText = "<projectdirectory>%s" % kdevelopProjectFolder
+        kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
+        searchText = "<filelistdirectory>%s" % binaryProjectFolder
+        replaceText = "<filelistdirectory>%s" % kdevelopProjectFolder
+        kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
+        f.write(kdevelopProjectText)
         f.close()
