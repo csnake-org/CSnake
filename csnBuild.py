@@ -963,5 +963,5 @@ class Project(object):
     def GetInstallFolder(self, _binaryFolderForTheCompiler, _cmakeBuildType):
         targetProjectInstallSubfolder = "%s/%s" % (_binaryFolderForTheCompiler, self.installSubFolder)
         if not _cmakeBuildType == "None":
-            targetProjectInstallSubfolder = "%s/%s/%s" % (_binaryFolderForTheCompiler, _cmakeBuildType, _targetProject.installSubFolder)
+            targetProjectInstallSubfolder = "%s/%s/%s" % (_binaryFolderForTheCompiler, _cmakeBuildType, self.installSubFolder)
         return targetProjectInstallSubfolder
