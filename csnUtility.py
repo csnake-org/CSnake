@@ -3,6 +3,10 @@ import re
 import imp
 import sys
 
+def IsRunningOnWindows():
+    """ Returns true if the python script is not running on Windows """
+    return sys.platform == "win32"
+
 def ForwardSlashes(x):
     return x.replace("\\", "/")
 

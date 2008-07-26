@@ -11,10 +11,6 @@ import types
 import shutil
 import OrderedSet
 
-def IsRunningOnWindows():
-    """ Returns true if the python script is not running on Windows """
-    return sys.platform == "win32"
-
 # ToDo:
 # - check that of all root folders, only one contains csnCISTIBToolkit
 # - Have public and private related projects (hide the include paths from its clients)
@@ -162,16 +158,14 @@ class Generator:
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
         
-        targetProjectInstallSubfolder = "%s/%s" % (_binaryFolderForTheCompiler, _targetProject.installSubFolder)
-        
         f.write( "\n# All binary outputs are written to the same folder.\n" )
         f.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % (targetProjectInstallSubfolder) )
-        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % (targetProjectInstallSubfolder) )
+        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetInstallFolder(_binaryFolderForTheCompiler, _cmakeBuildType) )
+        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetInstallFolder(_binaryFolderForTheCompiler, _cmakeBuildType) )
     
         # create config and use files, and include them
-        _targetProject.GenerateConfigFile( _binaryFolderForCSnake, _public = 0)
-        _targetProject.GenerateConfigFile( _binaryFolderForCSnake, _public = 1)
+        _targetProject.GenerateConfigFile( _binaryFolderForCSnake, _cmakeBuildType, _public = 0)
+        _targetProject.GenerateConfigFile( _binaryFolderForCSnake, _cmakeBuildType, _public = 1)
         _targetProject.GenerateUseFile(_binaryFolderForCSnake)
         
         _targetProject.CreateCMakeSections(f, _binaryFolderForCSnake, _installFolder)
@@ -212,7 +206,7 @@ class Generator:
         for project in requiredProjects:
             staticLibUsingAnotherLib = _targetProject.type == "library" and project.type != "executable" 
             noSources = len(project.sources) == 0 
-            if (IsRunningOnWindows() and staticLibUsingAnotherLib) or noSources: 
+            if (csnUtility.IsRunningOnWindows() and staticLibUsingAnotherLib) or noSources: 
                 continue
             else:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
@@ -654,7 +648,7 @@ class Project(object):
           
         return result
         
-    def GenerateConfigFile(self, _binaryFolderForCSnake, _public):
+    def GenerateConfigFile(self, _binaryFolderForCSnake, _cmakeBuildType, _public):
         """
         Generates the XXXConfig.cmake file for this project.
         _public - If true, generates a config file that can be used in any cmake file. If false,
@@ -670,8 +664,7 @@ class Project(object):
         # targets are placed to this list. 
         publicLibraryFolders = defaultCompileAndLinkConfig.public.libraryFolders
         if _public:
-            targetProjectInstallSubfolder = "%s/%s" % (_binaryFolderForCSnake, self.installSubFolder)
-            publicLibraryFolders.append(targetProjectInstallSubfolder) 
+            publicLibraryFolders.append(self.GetInstallFolder(_binaryFolderForCSnake, _cmakeBuildType)) 
 
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
@@ -786,7 +779,7 @@ class Project(object):
         projectsToUse.append(self)
         for project in projectsToUse:
             f.write( "\n# use %s\n" % (project.name) )
-            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (self.name != project.name and not IsRunningOnWindows())) ))
+            f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(binaryFolder, _public = (self.name != project.name and not csnUtility.IsRunningOnWindows())) ))
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile(binaryFolder)) )
     
     def CreateCMakeSection_SourceGroups(self, f):
@@ -966,3 +959,9 @@ class Project(object):
         for project in self.RequiredProjects():
             project.WriteDependencyStructureToXMLImp(f, indent + 4)
         f.write("</%s>\n" % self.name)
+
+    def GetInstallFolder(self, _binaryFolderForTheCompiler, _cmakeBuildType):
+        targetProjectInstallSubfolder = "%s/%s" % (_binaryFolderForTheCompiler, self.installSubFolder)
+        if not _cmakeBuildType == "None":
+            targetProjectInstallSubfolder = "%s/%s/%s" % (_binaryFolderForTheCompiler, _cmakeBuildType, _targetProject.installSubFolder)
+        return targetProjectInstallSubfolder
