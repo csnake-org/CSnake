@@ -34,7 +34,7 @@ class Settings:
         for storing binaries.
         """
         if self.cmakeBuildType == "None":
-            return self.__binFolder
+            return "%s/bin" % self.__binFolder
         else:
             return "%s/bin/%s" % (self.__binFolder, self.cmakeBuildType)
             
@@ -367,13 +367,11 @@ class Handler:
         if result:
             os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
             argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
-            retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
             for i in range(0, _nrOfTimes):
-                if retcode:
-                    retcode = subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait()
-                if not retcode == 0:
-                    result = 0
-                    print "Configuration failed.\n"   
+                result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
+
+	if not result:
+            print "Configuration failed.\n"   
             
         print messageAboutPatches
         return result
