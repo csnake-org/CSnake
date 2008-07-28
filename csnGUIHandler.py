@@ -2,7 +2,6 @@ import os
 import subprocess
 import sys
 import shutil
-import distutils.dir_util
 import csnUtility
 import csnBuild
 import csnCilab
@@ -65,12 +64,15 @@ class Settings:
         return "%s/bin/Release" % self.__binFolder
     
     def Load(self, filename):
-        parser = ConfigParser.ConfigParser()
-        parser.read([filename])
-        self.__LoadBasicFields(parser)
-        self.__LoadRootFolders(parser)
-        self.__LoadRecentlyUsedCSnakeFiles(parser)
-        return 1
+        try:
+            parser = ConfigParser.ConfigParser()
+            parser.read([filename])
+            self.__LoadBasicFields(parser)
+            self.__LoadRootFolders(parser)
+            self.__LoadRecentlyUsedCSnakeFiles(parser)
+            return 1
+        except:
+            return 0
         
     def __LoadBasicFields(self, parser):
         section = "CSnake"
@@ -311,8 +313,7 @@ class Handler:
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (folders[mode], location)
                         if os.path.isdir(file):
-                            #print "Copy folder %s to %s\n" % (file, absLocation)
-                            distutils.dir_util.copy_tree(file, absLocation)
+							csnUtility.CopyFolder(file, absLocation, [".svn", "CVS"])
                         else:
                             os.path.exists(absLocation) or os.makedirs(absLocation)
                             #print "Copy %s to %s\n" % (file, absLocation)
