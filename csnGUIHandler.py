@@ -10,6 +10,8 @@ import RollbackImporter
 import inspect
 import string
 import ConfigParser
+import csnPostProcessorForVisualStudio
+import csnPostProcessorForKDevelop
 
 class Settings:
     """
@@ -253,6 +255,10 @@ class Handler:
         (name, ext) = os.path.splitext(name)
         
         try:
+            if self.compiler in ("KDevelop3", "Unix Makefiles"):
+                csnBuild.globalCurrentCompilerType = csnPostProcessorForKDevelop.Compiler
+            else:
+                csnBuild.globalCurrentCompilerType = csnPostProcessorForVisualStudio.Compiler
             project = csnUtility.LoadModule(projectFolder, name)
             exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
         finally:
@@ -267,7 +273,7 @@ class Handler:
         """
         logString = ""
         instance = self.__GetProjectInstance(_settings)
-        
+
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
@@ -312,12 +318,10 @@ class Handler:
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (folders[mode], location)
-                        if os.path.isdir(file):
-							csnUtility.CopyFolder(file, absLocation, [".svn", "CVS"])
-                        else:
-                            os.path.exists(absLocation) or os.makedirs(absLocation)
-                            #print "Copy %s to %s\n" % (file, absLocation)
-                            result = (0 != shutil.copy(file, absLocation)) and result
+                        assert not os.path.isdir(file), "InstallBinariesToBinFolder: Cannot install a folder (%s)" % file
+                        os.path.exists(absLocation) or os.makedirs(absLocation)
+                        #print "Copy %s to %s\n" % (file, absLocation)
+                        result = (0 != shutil.copy(file, absLocation)) and result
         
         return result
              

@@ -5,11 +5,8 @@ import sys
 import GlobDirectoryWalker
 import shutil
 
-def ForwardSlashes(x):
-    return x.replace("\\", "/")
-
 def NormalizePath(path):
-    return ForwardSlashes(os.path.normpath(path))
+    return os.path.normpath(path).replace("\\", "/")
 
 def RemovePrefixFromPath(path, prefix):
     prefix = os.path.commonprefix([NormalizePath(path), NormalizePath(prefix)] )
@@ -38,7 +35,7 @@ def IsRunningOnWindows():
     return sys.platform == "win32"
 
 rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
-rootOfCSnake = ForwardSlashes(rootOfCSnake)
+rootOfCSnake = NormalizePath(rootOfCSnake)
 
 def GetRootOfCSnake():
     return rootOfCSnake

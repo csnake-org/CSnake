@@ -8,7 +8,7 @@ import sys
 import re
 import glob
 import types
-import shutil
+import GlobDirectoryWalker
 import OrderedSet
 
 # ToDo:
@@ -17,7 +17,6 @@ import OrderedSet
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 # - Fix module reloading
-# - Fix install rules when installing a folder
 # - Better GUI: recently used Source Root Folder and associated recently used csnake files.
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
@@ -32,6 +31,7 @@ import OrderedSet
 sys.path.append(csnUtility.GetRootOfCSnake())
 
 pythonPath = "D:/Python24/python.exe"
+globalCurrentCompilerType = None
 
 class DependencyError(StandardError):
     pass
@@ -65,36 +65,6 @@ class CompileAndLinkSettings:
         self.libraries = list()
         self.includeFolders = list()
         self.libraryFolders = list()
-        
-class CompileAndLinkConfig:
-    """ 
-    Helper class that contains the settings on an operating system 
-    """
-    def __init__(self):
-        self.public = CompileAndLinkSettings()
-        self.private = CompileAndLinkSettings()
-
-class ConfigTypes:
-    def __init__(self):
-        self.all = "ALL"
-        self.win32 = "WIN32"
-        self.notWin32 = "NOT WIN32"
-
-    def List(self):
-        return [self.all, self.win32, self.notWin32]
-        
-    def GetOpSysName(self, _WIN32, _NOT_WIN32):
-        """
-        Returns a type from self.List()
-        """ 
-        if( _WIN32 and _NOT_WIN32 ):
-            _WIN32 = _NOT_WIN32 = 0
-        compiler = self.all
-        if( _WIN32 ):
-            compiler = self.win32
-        elif( _NOT_WIN32 ):
-            compiler = self.notWin32
-        return compiler
                     
 class Generator:
     """
@@ -136,14 +106,12 @@ class Generator:
         targetProjectBinFolderForCSnake = _targetProject.AbsoluteBinaryFolder(_binaryFolderForCSnake)
         os.path.exists(targetProjectBinFolderForCSnake) or os.makedirs(targetProjectBinFolderForCSnake)
     
-        configTypes = ConfigTypes()
-        
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
             self.__GenerateWin32Header(_targetProject, _binaryFolderForCSnake)
             # add search path to the generated win32 header
-            if not targetProjectBinFolderForCSnake in _targetProject.compileAndLinkConfigFor[configTypes.all].public.includeFolders:
-                _targetProject.compileAndLinkConfigFor[configTypes.all].public.includeFolders.append(targetProjectBinFolderForCSnake)
+            if not targetProjectBinFolderForCSnake in _targetProject.compiler.public.includeFolders:
+                _targetProject.compiler.public.includeFolders.append(targetProjectBinFolderForCSnake)
         
         # open cmakelists.txt
         fileCMakeLists = "%s/%s" % (_binaryFolderForCSnake, _targetProject.cmakeListsSubpath)
@@ -212,14 +180,14 @@ class Generator:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
-        if False and isTopLevelProject:
+        if isTopLevelProject:
             for mode in ("debug", "release"):
                 for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
                     for location in project.filesToInstall[mode].keys():
                         files = ""
                         for file in project.filesToInstall[mode][location]:
-                            files += "%s " % csnUtility.ForwardSlashes(file)
+                            files += "%s " % csnUtility.NormalizePath(file)
                         if files != "":
                             destination = "%s/%s" % (_installFolder, location)
                             f.write( "\n# Rule for installing files in location %s\n" % destination)
@@ -287,7 +255,7 @@ class Project(object):
     self.sources -- Sources to be compiled for this target.
     self.sourceGroups -- Dictionary (groupName -> sources) for sources that should be placed in a visual studio group.
     self.rules - CMake rules. See AddRule function.
-    self.compileAndLinkConfigFor -- Dictionary (WIN32/NOT WIN32/ALL -> CompileAndLinkConfig) with definitions to be used for different operating systems. 
+    self.config -- Definitions to be used for different operating systems. 
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
@@ -325,12 +293,6 @@ class Project(object):
         self.sources = []
         self.sourceGroups = dict()
 
-        configTypes = ConfigTypes()
-        self.compileAndLinkConfigFor = dict()
-        for opSysName in configTypes.List():
-            self.compileAndLinkConfigFor[opSysName] = CompileAndLinkConfig()
-        self.compileAndLinkConfigFor[configTypes.win32].private.definitions.append("/Zm200")
-
         self.precompiledHeader = ""
         self.sourcesToBeMoced = []
         self.sourcesToBeUIed = []
@@ -341,11 +303,12 @@ class Project(object):
         self.type = _type
         self.rules = dict()
         self.createIfNotExistent = dict()
+        self.compiler = globalCurrentCompilerType()
         
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
             file = self.debug_call
-            self.sourceRootFolder = csnUtility.ForwardSlashes(os.path.normpath(os.path.dirname(file)))
+            self.sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(file))
         self.useBefore = []
         if( self.type == "dll" ):
             self.binarySubfolder = "library/%s" % (_name)
@@ -440,13 +403,9 @@ class Project(object):
         """
         Adds definitions to self.compileAndLinkConfigFor. 
         """
-        configTypes = ConfigTypes()
-        opSystemName = configTypes.GetOpSysName(_WIN32, _NOT_WIN32)            
-        compileAndLinkConfig = self.compileAndLinkConfigFor[opSystemName]
-        if( _private ):
-            compileAndLinkConfig.private.definitions.extend(_listOfDefinitions)
-        else:
-            compileAndLinkConfig.public.definitions.extend(_listOfDefinitions)
+        if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
+            return
+        self.compiler.GetConfig(_private).definitions.extend(_listOfDefinitions)
         
     def AddIncludeFolders(self, _listOfIncludeFolders):
         """
@@ -455,12 +414,10 @@ class Project(object):
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
-        configTypes = ConfigTypes()
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         for includeFolder in _listOfIncludeFolders:
             for folder in self.Glob(includeFolder):
                 if (not os.path.exists(folder)) or os.path.isdir(folder):
-                    defaultCompileAndLinkConfig.public.includeFolders.append( folder )
+                    self.compiler.public.includeFolders.append( folder )
         
     def SetPrecompiledHeader(self, _precompiledHeader):
         """
@@ -478,15 +435,16 @@ class Project(object):
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
-        configTypes = ConfigTypes()
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
         for libraryFolder in _listOfLibraryFolders:
-            defaultCompileAndLinkConfig.public.libraryFolders.append( self.__FindPath(libraryFolder) )
+            self.compiler.public.libraryFolders.append( self.__FindPath(libraryFolder) )
         
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.publicLibraries. 
         """
+        if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
+            return
+            
         assert not( _debugOnly and _releaseOnly)
         type = "" # empty string is the default, meaning both debug and release
         if _debugOnly:
@@ -494,12 +452,8 @@ class Project(object):
         if _releaseOnly:
             type = "optimized"
 
-        configTypes = ConfigTypes()
-        opSysName = configTypes.GetOpSysName(_WIN32, _NOT_WIN32)
-        compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]            
-            
         for library in _listOfLibraries:
-            compileAndLinkConfig.public.libraries.append("%s %s" % (type, library))
+            self.compiler.public.libraries.append("%s %s" % (type, library))
         
     def __FindPath(self, _path):
         """ 
@@ -513,24 +467,24 @@ class Project(object):
         if( not os.path.exists(path) ):
             raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
-        path = csnUtility.ForwardSlashes(path)
+        path = csnUtility.NormalizePath(path)
         return path
         
     def PrependSourceRootFolderToRelativePath(self, _path):
         """ 
         Returns _path prepended with self.sourceRootFolder, unless _path is already an absolute path (in that case, _path is returned).
         """
-        path = csnUtility.ForwardSlashes(_path)
+        path = csnUtility.NormalizePath(_path)
         if not os.path.isabs(path):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
-        return csnUtility.ForwardSlashes(path)
+        return csnUtility.NormalizePath(path)
     
     def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
         The return paths are absolute, containing only forward slashes.
         """
-        return [csnUtility.ForwardSlashes(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
+        return [csnUtility.NormalizePath(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
@@ -657,12 +611,9 @@ class Project(object):
         fileConfig = self.GetPathToConfigFile(_binaryFolderForCSnake, _public)
         f = open(fileConfig, 'w')
         
-        configTypes = ConfigTypes()
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
-        
         # create list with folder where libraries should be found. Add the bin folder where all the
         # targets are placed to this list. 
-        publicLibraryFolders = defaultCompileAndLinkConfig.public.libraryFolders
+        publicLibraryFolders = self.compiler.public.libraryFolders
         if _public:
             publicLibraryFolders.append(self.GetInstallFolder(_binaryFolderForCSnake, _cmakeBuildType)) 
 
@@ -671,17 +622,10 @@ class Project(object):
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND \"TRUE\" )\n" % (self.name) )
         f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.name, self.GetPathToUseFile(_binaryFolderForCSnake) ) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.includeFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.compiler.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
-        for opSysName in [configTypes.win32, configTypes.notWin32]:
-            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
-            if( len(compileAndLinkConfig.public.libraries) ):
-                f.write( "IF(%s)\n" % (opSysName))
-                f.write( "SET( %s_LIBRARIES %s )\n" % (self.name, csnUtility.Join(compileAndLinkConfig.public.libraries, _addQuotes = 1)) )
-                f.write( "ENDIF(%s)\n" % (opSysName))
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
-        if( len(defaultCompileAndLinkConfig.public.libraries) ):
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(defaultCompileAndLinkConfig.public.libraries, _addQuotes = 1)) )
+        if( len(self.compiler.public.libraries) ):
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(self.compiler.public.libraries, _addQuotes = 1)) )
 
         # add the target of this project to the list of libraries that should be linked
         if _public and len(self.sources) > 0 and (self.type == "library" or self.type == "dll"):
@@ -694,7 +638,6 @@ class Project(object):
         """
         fileUse = "%s/%s" % (_binaryFolderForCSnake, self.useFilePath)
         f = open(fileUse, 'w')
-        configTypes = ConfigTypes()
         
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
@@ -703,15 +646,8 @@ class Project(object):
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.name) )
         
         # write definitions     
-        for opSysName in [configTypes.win32, configTypes.notWin32]:
-            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
-            if( len(compileAndLinkConfig.public.definitions) ):
-                f.write( "IF(%s)\n" % (opSysName))
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.public.definitions) )
-                f.write( "ENDIF(%s)\n" % (opSysName))
-        defaultCompileAndLinkConfig = self.compileAndLinkConfigFor[configTypes.all]
-        if( len(defaultCompileAndLinkConfig.public.definitions) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(defaultCompileAndLinkConfig.public.definitions) )
+        if( len(self.compiler.public.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compiler.public.definitions) )
    
         # write definitions that state whether this is a static library
         #if self.type == "library":
@@ -747,21 +683,33 @@ class Project(object):
     def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder, _skipCVS = 1):
         """ 
         This function replaces relative paths and wildcards in self.filesToInstall with absolute paths without wildcards.
+        Any folder is replaced by a complete list of the files in that folder.
         _skipCVS - If true, folders called CVS are automatically skipped. 
         """
+        excludedFolderList = ("CVS", ".svn")
         for mode in ("debug", "release"):
             for project in self.AllProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
-                        path = csnUtility.ForwardSlashes(dllPattern)
+                        path = csnUtility.NormalizePath(dllPattern)
                         if not os.path.isabs(path):
                             path = "%s/%s" % (_thirdPartyBinFolder, path)
                         for dll in glob.glob(path):
-                            skip = (os.path.basename(dll) == "CVS" and _skipCVS and os.path.isdir(dll))
+                            skip = (os.path.basename(dll) in excludedFolderList and _skipCVS and os.path.isdir(dll))
                             if not skip:
                                 newList.append(dll)
-                    project.filesToInstall[mode][location] = newList
+                    
+                    newListWithOnlyFiles = []
+                    for file in newList:
+                        if os.path.isdir(file):
+                            for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
+                                if not os.path.isdir(folderFile):
+                                    newListWithOnlyFiles.append(folderFile)
+                        else:
+							newListWithOnlyFiles.append(file)
+                        
+                    project.filesToInstall[mode][location] = newListWithOnlyFiles
     
     def SetGenerateWin32Header(self, _flag):
         self.generateWin32Header = _flag
@@ -819,15 +767,8 @@ class Project(object):
         return (cmakeUIHInputVar, cmakeUICppInputVar)
     
     def CreateCMakeSection_Definitions(self, f):
-        configTypes = ConfigTypes()
-        for opSysName in [configTypes.win32, configTypes.notWin32]:
-            compileAndLinkConfig = self.compileAndLinkConfigFor[opSysName]
-            if( len(compileAndLinkConfig.private.definitions) ):
-                f.write( "IF(%s)\n" % (opSysName))
-                f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(compileAndLinkConfig.private.definitions) )
-                f.write( "ENDIF(%s)\n" % (opSysName))
-        if( len(self.compileAndLinkConfigFor[configTypes.all].private.definitions) ):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compileAndLinkConfigFor[configTypes.all].private.definitions) )
+        if( len(self.compiler.private.definitions) ):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compiler.private.definitions) )
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
         if(self.type == "executable" ):
@@ -921,7 +862,7 @@ class Project(object):
         wxRunnerArg = ""
         if _enableWxWidgets:
             wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
-        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (csnUtility.ForwardSlashes(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (csnUtility.NormalizePath(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         

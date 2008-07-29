@@ -1,5 +1,21 @@
 import os
 import csnUtility
+import csnBuild
+
+class Compiler:
+    def __init__(self):
+        self.public = csnBuild.CompileAndLinkSettings()
+        self.private = csnBuild.CompileAndLinkSettings()
+        self.private.definitions.append("/Zm200")        
+
+    def IsForPlatform(self, _WIN32, _NOT_WIN32):
+        return _WIN32 or (not _WIN32 and not _NOT_WIN32)
+
+    def GetConfig(self, _isPrivate):
+        if _isPrivate:
+            return self.private
+        else:
+            return self.public
 
 class PostProcessor:
     def Do(self, _project, _binaryFolder):
