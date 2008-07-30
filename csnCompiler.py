@@ -1,9 +1,18 @@
-import csnBuild
+
+class CompileAndLinkSettings:
+    """ 
+    Helper class for CompileAndLinkConfig 
+    """
+    def __init__(self):
+        self.definitions = list()
+        self.libraries = list()
+        self.includeFolders = list()
+        self.libraryFolders = list()
 
 class Compiler:
     def __init__(self):
-        self.public = csnBuild.CompileAndLinkSettings()
-        self.private = csnBuild.CompileAndLinkSettings()
+        self.public = CompileAndLinkSettings()
+        self.private = CompileAndLinkSettings()
 
     def GetConfig(self, _isPrivate):
         if _isPrivate:
