@@ -1,21 +1,14 @@
 import os
 import shutil
 import csnUtility
-import csnBuild
+import csnCompiler
 
-class Compiler:
+class Compiler(csnCompiler.Compiler):
     def __init__(self):
-        self.public = csnBuild.CompileAndLinkSettings()
-        self.private = csnBuild.CompileAndLinkSettings()
+        csnCompiler.Compiler.__init__(self)
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
-
-    def GetConfig(self, _isPrivate):
-        if _isPrivate:
-            return self.private
-        else:
-            return self.public
 
 class PostProcessor:
     def Do(self, _targetProject, _binaryFolder, _kdevelopProjectFolder):
@@ -27,8 +20,7 @@ class PostProcessor:
             return
             
         kdevelopProjectFolder = csnUtility.NormalizePath(_kdevelopProjectFolder)
-        binaryProjectFolder = _targetProject.AbsoluteBinaryFolder(_binaryFolder)
-        kdevProjectFilename = "%s/%s.kdevelop" % (binaryProjectFolder, _targetProject.name)
+        kdevProjectFilename = "%s/%s.kdevelop" % (_project.GetBuildFolder(), _targetProject.name)
         kdevProjectFileListFilename = "%s.filelist" % kdevProjectFilename
 
         if not os.path.exists(kdevProjectFilename):
@@ -48,10 +40,10 @@ class PostProcessor:
         kdevelopProjectText = f.read()
         f.close()
         f = open(kdevelopFileInTargetFolder, 'w')
-        searchText = "<projectdirectory>%s" % binaryProjectFolder
+        searchText = "<projectdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<projectdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
-        searchText = "<filelistdirectory>%s" % binaryProjectFolder
+        searchText = "<filelistdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<filelistdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
         f.write(kdevelopProjectText)

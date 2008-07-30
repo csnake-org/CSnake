@@ -10,8 +10,8 @@ import RollbackImporter
 import inspect
 import string
 import ConfigParser
-import csnPostProcessorForVisualStudio
-import csnPostProcessorForKDevelop
+import csnVisualStudio2003
+import csnKDevelop
 
 class Settings:
     """
@@ -256,9 +256,9 @@ class Handler:
         
         try:
             if self.compiler in ("KDevelop3", "Unix Makefiles"):
-                csnBuild.globalCurrentCompilerType = csnPostProcessorForKDevelop.Compiler
+                csnBuild.globalCurrentCompilerType = csnKDevelop.Compiler
             else:
-                csnBuild.globalCurrentCompilerType = csnPostProcessorForVisualStudio.Compiler
+                csnBuild.globalCurrentCompilerType = csnVisualStudio2003.Compiler
             project = csnUtility.LoadModule(projectFolder, name)
             exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
         finally:
@@ -283,7 +283,7 @@ class Handler:
             generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, "Release")
         else:
             generator.Generate(instance, _settings.GetBinFolderForCSnake(), _settings.GetBinFolderForTheCompiler(), _settings.installFolder, _settings.cmakeBuildType)
-        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.AbsoluteBinaryFolder(_settings.GetBinFolderForCSnake()))
+        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
             if not self.cmakeFound:

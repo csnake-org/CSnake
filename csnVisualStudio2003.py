@@ -1,38 +1,29 @@
 import os
 import csnUtility
-import csnBuild
+import csnCompiler
 
-class Compiler:
+class Compiler(csnCompiler.Compiler):
     def __init__(self):
-        self.public = csnBuild.CompileAndLinkSettings()
-        self.private = csnBuild.CompileAndLinkSettings()
+        csnCompiler.Compiler.__init__(self)
         self.private.definitions.append("/Zm200")        
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
-
-    def GetConfig(self, _isPrivate):
-        if _isPrivate:
-            return self.private
-        else:
-            return self.public
-
+        
 class PostProcessor:
     def Do(self, _project, _binaryFolder):
         """
         Post processes the vcproj file generated for _project, where the vc proj file was written
         to _binaryFolder.         
         """
-        binaryProjectFolder = _project.AbsoluteBinaryFolder(_binaryFolder)
-        
         # vc proj to patch
-        vcprojFilename = "%s/%s.vcproj" % (binaryProjectFolder, _project.name)
+        vcprojFilename = "%s/%s.vcproj" % (_project.GetBuildFolder(), _project.name)
 
         # if there is a vcproj, and we want a precompiled header
         if _project.precompiledHeader != "" and os.path.exists(vcprojFilename):
             # binary pch file to generate
-            debugPchFilename = "%s/%s.debug.pch" % (binaryProjectFolder, _project.name)
-            releasePchFilename = "%s/%s.release.pch" % (binaryProjectFolder, _project.name)
+            debugPchFilename = "%s/%s.debug.pch" % (_project.GetBuildFolder(), _project.name)
+            releasePchFilename = "%s/%s.release.pch" % (_project.GetBuildFolder(), _project.name)
             # this is the name of the cpp file that will build the precompiled headers
             pchCppFilename = "%sPCH.cpp" % (_project.name)
 
@@ -91,7 +82,7 @@ ForcedIncludeFiles="%s"
             vcproj = vcproj.replace(searchString, replaceString)
 
             # create file pchCppFilename
-            precompiledHeaderCppFilename = "%s/%s" % (binaryProjectFolder, pchCppFilename);
+            precompiledHeaderCppFilename = "%s/%s" % (_project.GetBuildFolder(), pchCppFilename);
             precompiledHeaderCppFilenameText = \
 """// Automatically generated file for building the precompiled headers file. DO NOT EDIT
 #include "%s"
