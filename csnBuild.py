@@ -71,10 +71,9 @@ class Generator:
     Generates the CMakeLists.txt for a csnBuild.Project.
     """
 
-    def Generate(self, _targetProject, _binaryFolderForCSnake, _binaryFolderForTheCompiler, _installFolder = "", _cmakeBuildType = "None", _generatedList = None, _knownProjectNames = None):
+    def Generate(self, _targetProject, _buildFolder, _installFolder = "", _cmakeBuildType = "None", _generatedList = None, _knownProjectNames = None):
         """
-        Generates the CMakeLists.txt for a csnBuild.Project in _binaryFolderForCSnake.
-        When the project is built by the compiler, all binaries will be placed in _binaryFolderForTheCompiler.
+        Generates the CMakeLists.txt for a csnBuild.Project in _buildFolder.
         _generatedList -- List of projects for which Generate was already called
         """
 
@@ -82,9 +81,6 @@ class Generator:
         if( isTopLevelProject ):
             _generatedList = []
             _knownProjectNames = []
-            _targetProject.compiler.SetBinFolder(_binaryFolderForCSnake)
-            for project in _targetProject.AllProjects(_recursive = True):
-                project.compiler.SetBinFolder(_binaryFolderForCSnake)
 
         if( _targetProject.name in _knownProjectNames):
             raise NameError, "Each project must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
@@ -96,15 +92,20 @@ class Generator:
         _generatedList.append(_targetProject)
         
         # check for backward slashes
-        if csnUtility.HasBackSlash(_binaryFolderForCSnake):
-            raise SyntaxError, "Error, backslash found in binary folder %s" % _binaryFolderForCSnake
-        if csnUtility.HasBackSlash(_binaryFolderForTheCompiler):
-            raise SyntaxError, "Error, backslash found in binary folder %s" % _binaryFolderForTheCompiler
+        if csnUtility.HasBackSlash(_buildFolder):
+            raise SyntaxError, "Error, backslash found in binary folder %s" % _buildFolder
         
+        # check  trying to build a third party library
         if( _targetProject.type == "third party" ):
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
          
+        # set build folder in all compiler instances
+        if( isTopLevelProject ):
+            _targetProject.compiler.SetBuildFolder(_buildFolder)
+            for project in _targetProject.AllProjects(_recursive = True):
+                project.compiler.SetBuildFolder(_buildFolder)
+                
         # create binary project folder
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
     
@@ -116,26 +117,25 @@ class Generator:
                 _targetProject.compiler.public.includeFolders.append(_targetProject.GetBuildFolder())
         
         # open cmakelists.txt
-        fileCMakeLists = "%s/%s" % (_binaryFolderForCSnake, _targetProject.cmakeListsSubpath)
-        f = open(fileCMakeLists, 'w')
+        f = open(_targetProject.GetCMakeListsFilename(), 'w')
         
         # write header and some cmake fields
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        f.write( "SET( BINARY_DIR \"%s\")\n" % (_binaryFolderForTheCompiler) )
+        f.write( "SET( BINARY_DIR \"%s\")\n" % (_targetProject.compiler.GetOutputFolder(_cmakeBuildType)) )
 
         if not _cmakeBuildType == "None":
             f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
         
         f.write( "\n# All binary outputs are written to the same folder.\n" )
         f.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetInstallFolder(_cmakeBuildType) )
-        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetInstallFolder(_cmakeBuildType) )
+        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_cmakeBuildType) )
+        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_cmakeBuildType) )
     
         # create config and use files, and include them
-        _targetProject.GenerateConfigFile( _cmakeBuildType, _public = 0)
-        _targetProject.GenerateConfigFile( _cmakeBuildType, _public = 1)
+        _targetProject.GenerateConfigFile( _public = 0)
+        _targetProject.GenerateConfigFile( _public = 1)
         _targetProject.GenerateUseFile()
         
         _targetProject.CreateCMakeSections(f, _installFolder)
@@ -167,9 +167,8 @@ class Generator:
         for project in projectsToGenerate:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
-                subDirectory = "%s/%s" % (_binaryFolderForCSnake, project.binarySubfolder)
-                f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (subDirectory, subDirectory) )
-                self.Generate(project, _binaryFolderForCSnake, _binaryFolderForTheCompiler, _installFolder, _cmakeBuildType, _generatedList, _knownProjectNames)
+                f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (project.GetBuildFolder(), project.GetBuildFolder()) )
+                self.Generate(project, _buildFolder, _installFolder, _cmakeBuildType, _generatedList, _knownProjectNames)
            
         # add dependencies
         f.write( "\n" )
@@ -183,7 +182,7 @@ class Generator:
 
         # if top level project, add install rules for all the filesToInstall
         if isTopLevelProject:
-            for mode in ("debug", "release"):
+            for mode in ("Debug", "Release"):
                 for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
                     for location in project.filesToInstall[mode].keys():
@@ -197,10 +196,10 @@ class Generator:
                         
         f.close()
 
-    def PostProcess(self, _targetProject, _binaryFolderForCSnake, _kdevelopProjectFolder = ""):
+    def PostProcess(self, _targetProject, _buildFolder, _kdevelopProjectFolder = ""):
         """
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
-        _binaryFolderForCSnake - The binary folder that was passed to the Generate member function.
+        _buildFolder - The binary folder that was passed to the Generate member function.
         _kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
         copied from the bin folder to this folder. This is work around for a problem in 
         KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
@@ -211,8 +210,8 @@ class Generator:
         ppVisualStudio = csnVisualStudio2003.PostProcessor()
         ppKDevelop = csnKDevelop.PostProcessor()
         for project in projects:
-            ppVisualStudio.Do(project, _binaryFolderForCSnake)
-        ppKDevelop.Do(_targetProject, _binaryFolderForCSnake, _kdevelopProjectFolder)
+            ppVisualStudio.Do(project, _buildFolder)
+        ppKDevelop.Do(_targetProject, _buildFolder, _kdevelopProjectFolder)
     
     def __GenerateWin32Header(self, _targetProject):
         """
@@ -250,7 +249,7 @@ class Project(object):
     because we can directly include first the config file and then the use file.
     
     The constructors initialises these member variables:
-    self.binarySubfolder -- Direct subfolder - within the binary folder - for this project. Is either 'executable' or 'library'.
+    self.buildSubFolder -- Direct subfolder - within the build folder - for this project. Is either 'executable' or 'library'.
     self.installSubfolder -- Direct subfolder - within the install folder - for targets generated by this project.
     self.useBefore -- A list of projects. This project must be used before the projects in this list.
     self.configFilePath -- The config file for the project. See above.
@@ -261,7 +260,7 @@ class Project(object):
     self.sourcesToBeMoced -- Sources for which a moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
-    For example: if self.filesToInstall[\"debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
+    For example: if self.filesToInstall[\"Debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
     then c:/one.txt and c:/two.txt must be installed in the data subfolder of the binary folder when in debug mode.
     self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
     self.cmakeListsSubpath -- The cmake file that builds the project as a target
@@ -300,11 +299,10 @@ class Project(object):
         self.sourcesToBeUIed = []
         self.name = _name
         self.filesToInstall = dict()
-        self.filesToInstall["debug"] = dict()
-        self.filesToInstall["release"] = dict()
+        self.filesToInstall["Debug"] = dict()
+        self.filesToInstall["Release"] = dict()
         self.type = _type
         self.rules = dict()
-        self.createIfNotExistent = dict()
         self.compiler = globalCurrentCompilerType()
         
         self.sourceRootFolder = _sourceRootFolder
@@ -313,13 +311,13 @@ class Project(object):
             self.sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(file))
         self.useBefore = []
         if( self.type == "dll" ):
-            self.binarySubfolder = "library/%s" % (_name)
+            self.buildSubFolder = "library/%s" % (_name)
         else:
-            self.binarySubfolder = "%s/%s" % (self.type, _name)
+            self.buildSubFolder = "%s/%s" % (self.type, _name)
         self.installSubFolder = ""
-        self.configFilePath = "%s/%sConfig.cmake" % (self.binarySubfolder, _name)
-        self.useFilePath = "%s/Use%s.cmake" % (self.binarySubfolder, _name)
-        self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.binarySubfolder)
+        self.configFilePath = "%s/%sConfig.cmake" % (self.buildSubFolder, _name)
+        self.useFilePath = "%s/Use%s.cmake" % (self.buildSubFolder, _name)
+        self.cmakeListsSubpath = "%s/CMakeLists.txt" % (self.buildSubFolder)
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
@@ -391,15 +389,15 @@ class Project(object):
             
         for file in _list:
             if not _debugOnly:
-                if not self.filesToInstall["release"].has_key(_location):
-                    self.filesToInstall["release"][_location] = []
-                if not file in self.filesToInstall["release"][_location]:
-                    self.filesToInstall["release"][_location].append( file )
+                if not self.filesToInstall["Release"].has_key(_location):
+                    self.filesToInstall["Release"][_location] = []
+                if not file in self.filesToInstall["Release"][_location]:
+                    self.filesToInstall["Release"][_location].append( file )
             if not _releaseOnly:
-                if not self.filesToInstall["debug"].has_key(_location):
-                    self.filesToInstall["debug"][_location] = []
-                if not file in self.filesToInstall["debug"][_location]:
-                    self.filesToInstall["debug"][_location].append( file )
+                if not self.filesToInstall["Debug"].has_key(_location):
+                    self.filesToInstall["Debug"][_location] = []
+                if not file in self.filesToInstall["Debug"][_location]:
+                    self.filesToInstall["Debug"][_location].append( file )
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
@@ -604,7 +602,7 @@ class Project(object):
           
         return result
         
-    def GenerateConfigFile(self, _cmakeBuildType, _public):
+    def GenerateConfigFile(self, _public):
         """
         Generates the XXXConfig.cmake file for this project.
         _public - If true, generates a config file that can be used in any cmake file. If false,
@@ -617,7 +615,7 @@ class Project(object):
         # targets are placed to this list. 
         publicLibraryFolders = self.compiler.public.libraryFolders
         if _public:
-            publicLibraryFolders.append(self.GetInstallFolder(_cmakeBuildType)) 
+            publicLibraryFolders.append(self.GetBinaryInstallFolder()) 
 
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )
@@ -638,7 +636,7 @@ class Project(object):
         """
         Generates the UseXXX.cmake file for this project.
         """
-        fileUse = "%s/%s" % (self.compiler.GetBinFolder(), self.useFilePath)
+        fileUse = "%s/%s" % (self.compiler.GetBuildFolder(), self.useFilePath)
         f = open(fileUse, 'w')
         
         # write header and some cmake fields
@@ -657,14 +655,14 @@ class Project(object):
             
     def GetPathToConfigFile(self, _public):
         """ 
-        Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBinFolder() + self.useFilePath.
+        Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBuildFolder() + self.useFilePath.
         If _public is false, and the project is not of type 'third party', then the postfix ".private" 
         is added to the return value.
         """
         if( os.path.isabs(self.configFilePath) ):
             result = self.configFilePath
         else:
-            result = "%s/%s" % (self.compiler.GetBinFolder(), self.configFilePath)
+            result = "%s/%s" % (self.compiler.GetBuildFolder(), self.configFilePath)
 
         postfix = ""
         if (not self.type == "third party") and (not _public):
@@ -675,12 +673,12 @@ class Project(object):
 
     def GetPathToUseFile(self):
         """ 
-        Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBinFolder() + self.useFilePath.
+        Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBuildFolder() + self.useFilePath.
         """
         if( os.path.isabs(self.useFilePath) ):
             return self.useFilePath
         else:
-            return "%s/%s" % (self.compiler.GetBinFolder(), self.useFilePath)
+            return "%s/%s" % (self.compiler.GetBuildFolder(), self.useFilePath)
         
     def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder, _skipCVS = 1):
         """ 
@@ -689,7 +687,7 @@ class Project(object):
         _skipCVS - If true, folders called CVS are automatically skipped. 
         """
         excludedFolderList = ("CVS", ".svn")
-        for mode in ("debug", "release"):
+        for mode in ("Debug", "Release"):
             for project in self.AllProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
@@ -724,8 +722,8 @@ class Project(object):
         add the use and config file for this project (do this last, so that all definitions from
         the dependency projects are already included).
         """
-        if not hasattr(self.compiler, "binFolder"):
-            assert False, "Project %s has no compiler with binFolder\n" % self.name
+        if not hasattr(self.compiler, "buildFolder"):
+            assert False, "Project %s has no compiler with buildFolder\n" % self.name
             
         projectsToUse = [project for project in self.RequiredProjects(_recursive = 1)]
         assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
@@ -888,9 +886,8 @@ class Project(object):
     def GetBuildFolder(self):
         """
         Returns the bin folder for storing binary files for this project.
-        _rootBinFolder - The binary folder for building the entire solution.
         """
-        return self.compiler.GetBinFolder() + "/" + self.binarySubfolder
+        return self.compiler.GetBuildFolder() + "/" + self.buildSubFolder
 
     def WriteDependencyStructureToXML(self, filename):
         f = open(filename, 'w')
@@ -905,8 +902,19 @@ class Project(object):
             project.WriteDependencyStructureToXMLImp(f, indent + 4)
         f.write("</%s>\n" % self.name)
 
-    def GetInstallFolder(self, _cmakeBuildType):
-        targetProjectInstallSubfolder = "%s/%s" % (self.compiler.GetBinFolder(), self.installSubFolder)
-        if not _cmakeBuildType == "None":
-            targetProjectInstallSubfolder = "%s/%s" % (self.compiler.GetBinFolder(), self.installSubFolder)
-        return targetProjectInstallSubfolder
+    def GetBinaryInstallFolder(self, _cmakeBuildType = "${CMAKE_CFG_INTDIR}"):
+        """ 
+        Returns location in the binary folderwhere binaries for this project must be installed.
+        This functions is used for being able to "install" all files in the binary folder that are needed to run the application
+        from the binary folder without having to install to the Install Folder.
+        """
+        result = self.compiler.GetOutputFolder(_cmakeBuildType)
+        if self.installSubFolder != "":
+            if _cmakeBuildType == "None":
+                result += "/${CMAKE_CFG_INTDIR}"
+            result += "/%s" % self.installSubFolder
+        return result
+
+    def GetCMakeListsFilename(self):
+           return "%s/%s" % (self.compiler.GetBuildFolder(), self.cmakeListsSubpath)
+ 

@@ -191,7 +191,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Initializes the application.
         """
-        self.RedirectStdOut()
+        #self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
@@ -313,7 +313,7 @@ class CSnakeGUIFrame(wx.Frame):
     	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
 
     def CopyTextBoxContentsToSettingsVariable(self):
-        self.settings.SetBinFolderForCSnake( self.txtBinFolder.GetValue().replace("\\", "/") )
+        self.settings.SetBuildFolder( self.txtBinFolder.GetValue().replace("\\", "/") )
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
         self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue().replace("\\", "/")
@@ -441,7 +441,7 @@ class CSnakeGUIFrame(wx.Frame):
         for rootFolder in self.settings.rootFolders:
             self.lbRootFolders.Append(rootFolder)
         self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
-        self.txtBinFolder.SetValue( self.settings.GetBinFolderForCSnake() )
+        self.txtBinFolder.SetValue( self.settings.GetBuildFolder() )
         self.txtInstallFolder.SetValue( self.settings.installFolder )
         self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
         self.txtKDevelopProjectFolder.SetValue( self.settings.kdevelopProjectFolder )

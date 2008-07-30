@@ -10,6 +10,14 @@ class Compiler(csnCompiler.Compiler):
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
 
+    def GetOutputFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
+        """
+        Returns the folder where the compiler places binaries for _configuration.
+        The default value for _configuration returns the output folder for the current configuration.
+        for storing binaries.
+        """
+        return "%s/bin/%s" % (self.GetBuildFolder(), _configuration)
+        
 class PostProcessor:
     def Do(self, _targetProject, _binaryFolder, _kdevelopProjectFolder):
 

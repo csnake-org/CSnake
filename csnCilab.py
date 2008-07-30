@@ -131,10 +131,7 @@ class GimiasPluginProject(csnBuild.Project):
     """
     def __init__(self, _name):
         csnBuild.Project.__init__(self, _name, "dll")
-        if csnUtility.IsRunningOnWindows():
-            self.installSubFolder = "${CMAKE_CFG_INTDIR}/plugins/%s/lib" % _name
-        else:
-            self.installSubFolder = "plugins/%s/lib" % _name
+        self.installSubFolder = "plugins/%s/lib" % _name
         self.AddIncludeFolders(["."])
         
     def AddWidgetModules(self, _widgetModules, _holdingFolder = "widgets", _useQt = 1):

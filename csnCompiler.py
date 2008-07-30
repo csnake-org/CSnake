@@ -11,8 +11,9 @@ class Compiler:
         else:
             return self.public
 
-    def SetBinFolder(self, _binFolder):
-        self.binFolder = _binFolder
+    def SetBuildFolder(self, _buildFolder):
+        self.buildFolder = _buildFolder
 
-    def GetBinFolder(self):
-        return self.binFolder
+    def GetBuildFolder(self):
+        return self.buildFolder
+        

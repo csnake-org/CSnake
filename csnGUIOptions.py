@@ -18,17 +18,17 @@ class CSnakeOptionsFrame(wx.Frame):
     """
     def __init__(self, *args, **kwds):
         # begin wxGlade: CSnakeOptionsFrame.__init__
-        kwds["style"] = wx.DEFAULT_FRAME_STYLE
+        kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.STAY_ON_TOP|wx.SYSTEM_MENU|wx.RESIZE_BORDER|wx.CLIP_CHILDREN
         wx.Frame.__init__(self, *args, **kwds)
         self.sizer_4_staticbox = wx.StaticBox(self, -1, "Compiler")
         self.cmbCompiler = wx.ComboBox(self, -1, choices=["Visual Studio 7 .NET 2003", "Visual Studio 8 2005", "Visual Studio 8 2005 Win64", "KDevelop3", "Unix Makefiles"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.btnSetCMakePath = wx.Button(self, wxID_btnSetCMakePath, "Set path to CMake")
         self.txtCMakePath = wx.TextCtrl(self, -1, "")
         self.cmbBuildType = wx.ComboBox(self, -1, choices=["Default (Debug and Release)", "Release", "Debug"], style=wx.CB_DROPDOWN|wx.CB_READONLY)
-        self.btnSetPythonPath = wx.Button(self, wxID_btnSetPythonPath, "Set path to Python")
+        self.btnSetPythonPath = wx.Button(self, -1, "Set path to Python")
         self.txtPythonPath = wx.TextCtrl(self, -1, "")
         self.chkAskToLaunchVisualStudio = wx.CheckBox(self, -1, "Ask to launch VisualStudio")
-        self.btnSetVisualStudioPath = wx.Button(self, wxID_btnSetPythonPath, "Set path to Visual Studio")
+        self.btnSetVisualStudioPath = wx.Button(self, -1, "Set path to Visual Studio")
         self.txtVisualStudioPath = wx.TextCtrl(self, -1, "")
         self.btnClose = wx.Button(self, -1, "Close")
 
@@ -38,9 +38,9 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.OnSelectCompiler, self.cmbCompiler)
         self.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=wxID_btnSetCMakePath)
         self.Bind(wx.EVT_COMBOBOX, self.OnSelectBuildType, self.cmbBuildType)
-        self.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, id=wxID_btnSetPythonPath)
+        self.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, self.btnSetPythonPath)
         self.Bind(wx.EVT_CHECKBOX, self.OnCheckAskToLaunchVisualStudio, self.chkAskToLaunchVisualStudio)
-        self.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, id=wxID_btnSetPythonPath)
+        self.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, self.btnSetVisualStudioPath)
         self.Bind(wx.EVT_BUTTON, self.OnClose, self.btnClose)
         # end wxGlade
 
@@ -71,6 +71,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.SetSize((600, -1))
         self.cmbCompiler.SetSelection(-1)
         self.txtCMakePath.SetMinSize((20,20))
+        self.cmbBuildType.SetSelection(-1)
         self.txtPythonPath.SetMinSize((20,20))
         self.txtVisualStudioPath.SetMinSize((20,20))
         # end wxGlade
@@ -107,10 +108,12 @@ class CSnakeOptionsFrame(wx.Frame):
         """
         Let the user select where CSnake is located.
         """
+        self.Show(False)
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
-            self.CopyFromGUIToOptions()
+            self.options.cmakePath = dlg.GetPath()
             self.ShowOptions()
+        self.Show(True)
 
     def OnSelectCompiler(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         """
@@ -157,16 +160,20 @@ class CSnakeOptionsFrame(wx.Frame):
         self.ShowOptions()
 
     def OnSetPythonPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        self.Show(False)
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
-            self.CopyFromGUIToOptions()
+            self.options.pythonPath = dlg.GetPath()
             self.ShowOptions()
+        self.Show(True)
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        self.Show(False)
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
             self.options.visualStudioPath = dlg.GetPath()
             self.ShowOptions()
+        self.Show(True)
 
     def OnCheckAskToLaunchVisualStudio(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.CopyFromGUIToOptions()
