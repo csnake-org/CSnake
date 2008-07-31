@@ -129,7 +129,7 @@ class Generator:
         # set build folder in all compiler instances
         if( isTopLevelProject ):
             _targetProject.compiler.SetBuildFolder(_buildFolder)
-            for project in _targetProject.AllProjects(_recursive = True):
+            for project in _targetProject.GetProjects(_recursive = True):
                 project.compiler.SetBuildFolder(_buildFolder)
                 
         # create binary project folder
@@ -165,11 +165,11 @@ class Generator:
         _targetProject.GenerateUseFile()
         
         _targetProject.CreateCMakeSections(f, _installFolder)
-        _targetProject.CreateExtraSourceFilesForTesting()
+        _targetProject.RunCustomCommands()
 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
-        requiredProjects = _targetProject.RequiredProjects(_recursive = 1)        
+        requiredProjects = _targetProject.GetProjects(_recursive = 1, _onlyRequiredProjects = 1)        
         for projectToGenerate in requiredProjects:
             # determine if we must Generate the project. If a required project will generate it, 
             # then leave it to the required project. This will prevent multiple generation of the same project.
@@ -177,7 +177,7 @@ class Generator:
             # (the non-required project may depend on target project to generate project, creating a race condition).
             generateProject = not projectToGenerate in _generatedList and projectToGenerate.type != "third party"
             if( generateProject ):
-                for requiredProject in _targetProject.RequiredProjects(_recursive = 0):
+                for requiredProject in _targetProject.GetProjects(_recursive = 0, _onlyRequiredProjects = 1):
                     if( requiredProject.DependsOn(projectToGenerate) ):
                         generateProject = 0
             if( generateProject ):
@@ -231,7 +231,7 @@ class Generator:
         """
         projects = OrderedSet.OrderedSet()
         projects.add(_targetProject)
-        projects.update( _targetProject.AllProjects(_recursive = 1) )
+        projects.update( _targetProject.GetProjects(_recursive = 1) )
         ppVisualStudio = csnVisualStudio2003.PostProcessor()
         ppKDevelop = csnKDevelop.PostProcessor()
         for project in projects:
@@ -285,6 +285,7 @@ class Project(object):
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
     then precompiled headers are used for this project.
+    self.customCommands -- List of extra commands that must be run when configuring this project.
     """
     
     def __new__(cls, *a, **b):
@@ -318,6 +319,7 @@ class Project(object):
         self.filesToInstall["Release"] = dict()
         self.type = _type
         self.rules = dict()
+        self.customCommands = []
         
         if  _compiler is None:
             self.compiler = globalCurrentCompilerType()
@@ -523,33 +525,25 @@ class Project(object):
         otherProject = ToProject(_otherProject)
         assert not self in _skipList, "%s should not be in stoplist" % (self.name)
         _skipList.append(self)
-        for requiredProject in self.RequiredProjects():
+        for requiredProject in self.GetProjects(_onlyRequiredProjects = 1):
             if requiredProject in _skipList:
                 continue
             if requiredProject is otherProject or requiredProject.DependsOn(otherProject, _skipList ):
                 return 1
         return 0
         
-    def RequiredProjects(self, _recursive = 0):
-        """
-        Return a set of projects that self depends upon.
-        If recursive is true, then required projects of required projects are also retrieved.
-        """
-        result = self.projects - self.projectsNonRequired
-
-        if( _recursive ):
-            moreResults = OrderedSet.OrderedSet()
-            for project in result:
-                moreResults.update( project.RequiredProjects(_recursive) )
-            result.update(moreResults)
-        return result
-        
-    def AllProjects(self, _recursive = 0, _skipList = None):
+    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _skipList = None):
         """
         Returns list of all projects associated with this project.
+        _recursive -- If true, returns not only child projects but all projects in the tree below this project.
+        _onlyRequiredProjects -- If true, only projects that this project requires are returned.
         """
         result = OrderedSet.OrderedSet()
-        result.update(self.projects)
+        if _onlyRequiredProjects:
+            result.update(self.projects - self.projectsNonRequired)
+        else:
+            result.update(self.projects)
+            
         if( _recursive ):
             moreResults = OrderedSet.OrderedSet()
             for project in result:
@@ -560,7 +554,7 @@ class Project(object):
                     continue
                 # add project to the skip list, and recurse
                 _skipList.append(project)
-                moreResults.update( project.AllProjects(_recursive, _skipList) )
+                moreResults.update( project.GetProjects(_recursive, _onlyRequiredProjects, _skipList) )
             result.update(moreResults)
         return result
         
@@ -587,7 +581,7 @@ class Project(object):
         if( otherProject in self.useBefore ):
             return 1
             
-        for requiredProject in self.RequiredProjects(1):
+        for requiredProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
             if( otherProject in requiredProject.useBefore ):
                 return 1
                 
@@ -601,7 +595,7 @@ class Project(object):
         """
         result = []
         
-        projectsToUse = [project for project in self.RequiredProjects(_recursive = 1)]
+        projectsToUse = [project for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1)]
         assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
         projectsToUse.append(self)
         
@@ -713,7 +707,7 @@ class Project(object):
         """
         excludedFolderList = ("CVS", ".svn")
         for mode in ("Debug", "Release"):
-            for project in self.AllProjects(_recursive = 1):
+            for project in self.GetProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
@@ -752,7 +746,7 @@ class Project(object):
         if not hasattr(self.compiler, "buildFolder"):
             assert False, "Project %s has no compiler with buildFolder\n" % self.name
             
-        projectsToUse = [project for project in self.RequiredProjects(_recursive = 1)]
+        projectsToUse = [project for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1)]
         assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
         projectsToUse.append(self)
         for project in projectsToUse:
@@ -806,14 +800,17 @@ class Project(object):
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
         """ Add sources to the target in the CMakeLists.txt """
+        sources = self.sources
+        if len(sources) == 0:
+            sources.append( csnUtility.GetDummyCppFilename() )
         if(self.type == "executable" ):
-            f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+            f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
             
         elif(self.type == "library" ):
-            f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+            f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
         
         elif(self.type == "dll" ):
-            f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
+            f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
             
         else:
             raise NameError, "Unknown project type %s" % self.type
@@ -835,7 +832,7 @@ class Project(object):
         """ Create link commands in the CMakeLists.txt """
         if self.type in ("dll", "executable"):
             targetLinkLibraries = ""
-            for project in self.RequiredProjects(_recursive = 1):
+            for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
                 if project.type == "third party":
                     continue
                 targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
@@ -863,12 +860,12 @@ class Project(object):
         Tests if this project is a test project. If so, checks if the test runner output file exists. If not, creates a dummy file.
         This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
         """
-        if hasattr(self, "testRunnerSourceFile"):
-            testRunnerSourceFile = "%s/%s" % (self.GetBuildFolder(), self.testRunnerSourceFile)
-            if not os.path.exists(testRunnerSourceFile):
-                f = open(testRunnerSourceFile, 'w')
-                f.write("// Test runner source file. To be created by CxxTest.py.")
-                f.close()
+        assert hasattr(self, "testRunnerSourceFile")
+        testRunnerSourceFile = "%s/%s" % (self.GetBuildFolder(), self.testRunnerSourceFile)
+        if not os.path.exists(testRunnerSourceFile):
+            f = open(testRunnerSourceFile, 'w')
+            f.write("// Test runner source file. To be created by CxxTest.py.")
+            f.close()
         
     def AddRule(self, description, command, workingDirectory = "."):
         """
@@ -878,7 +875,16 @@ class Project(object):
         rule.command = command
         rule.workingDirectory = workingDirectory
         self.rules[description] = rule
-        
+
+    def AddCustomCommand(self, command):
+        """ Adds command to the list of custom commands. Each command must accept this instance (self) as the one and only argument. """
+        self.customCommands.append(command)
+
+    def RunCustomCommands(self):
+        """ Runs commands in self.customCommands, passing self as the one and only argument. """
+        for command in self.customCommands:
+            command(self)
+            
     def CreateTestProject(self, _cxxTestProject, _enableWxWidgets = 0):
         """
         Creates a test project in self.testProject. This testProject will be configured by CMake, and will run the tests for this
@@ -894,6 +900,8 @@ class Project(object):
         self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
+        # when the test project is generated, the CreateExtraSourceFilesForTesting method must be executed
+        self.testProject.AddCustomCommand(Project.CreateExtraSourceFilesForTesting)
         
         # todo: find out where python is located
         wxRunnerArg = ""
@@ -940,7 +948,7 @@ class Project(object):
         for i in range(indent):
             f.write(' ')
         f.write("<%s>" % self.name)
-        for project in self.RequiredProjects():
+        for project in self.GetProjects(_onlyRequiredProjects = 1):
             project.WriteDependencyStructureToXMLImp(f, indent + 4)
         f.write("</%s>\n" % self.name)
 

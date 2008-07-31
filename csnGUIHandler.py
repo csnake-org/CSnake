@@ -288,7 +288,7 @@ class Handler:
         for mode in ("Debug", "Release"):
             outputFolder = instance.compiler.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
-            for project in instance.AllProjects(_recursive = 1):
+            for project in instance.GetProjects(_recursive = 1):
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (outputFolder, location)
@@ -408,7 +408,7 @@ class Handler:
         if not instance.name.lower() == "gimias":
             return result
     
-        configuredPluginNames = [project.name for project in instance.AllProjects(_recursive = 1) ]
+        configuredPluginNames = [project.name for project in instance.GetProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
             pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBuildFolder(), configuration)
 

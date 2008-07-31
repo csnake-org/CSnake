@@ -342,7 +342,8 @@ class CSnakeGUIFrame(wx.Frame):
         Perform action specified in cmbAction.
         """
         print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
-        self.SaveSettings(self.options.currentGUISettingsFilename)
+        if os.path.exists(self.options.currentGUISettingsFilename):
+            self.SaveSettings(self.options.currentGUISettingsFilename)
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
         configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
