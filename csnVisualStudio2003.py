@@ -16,7 +16,7 @@ class Compiler(csnCompiler.Compiler):
         The default value for _configuration returns the output folder for the current configuration.
         for storing binaries.
         """
-        if _configuration == "None":
+        if _configuration == "DebugAndRelease":
             return "%s/bin" % self.GetBuildFolder()
         else:
             return "%s/bin/%s" % (self.GetBuildFolder(), _configuration)

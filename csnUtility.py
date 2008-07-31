@@ -34,6 +34,9 @@ def IsRunningOnWindows():
     """ Returns true if the python script is not running on Windows """
     return sys.platform == "win32"
 
+# create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
+# the root folder is set correctly both when running the python interpreter, or when using the binary
+# CSnakeGUI executable.
 rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
 rootOfCSnake = NormalizePath(rootOfCSnake)
 

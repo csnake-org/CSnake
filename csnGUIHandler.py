@@ -26,7 +26,7 @@ class Settings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
-        self.cmakeBuildType = "None"
+        self.cmakeBuildType = "DebugAndRelease"
         self.recentlyUsedCSnakeFiles = list()
 
     def GetBuildFolder(self):
@@ -254,8 +254,8 @@ class Handler:
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
-        # on linux, cmake build type None means that two config steps are performed, for debug and for release
-        if self.compiler in ("KDevelop3", "Unix Makefiles") and _settings.cmakeBuildType == "None":
+        # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
+        if self.compiler in ("KDevelop3", "Unix Makefiles") and _settings.cmakeBuildType == "DebugAndRelease":
             generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Debug")
             generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Release")
         else:

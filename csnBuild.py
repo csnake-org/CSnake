@@ -11,6 +11,38 @@ import types
 import GlobDirectoryWalker
 import OrderedSet
 
+# General documentation
+#
+# This block contains an introduction to the CSnake code. It's main purpose is to introduce some common terminology and concepts.
+#  It is assumed that the reader has already read the CSnake user manual.
+#
+# Terminology:
+# target project - Project that you want to build with CSnake. Modelled by class csnBuild.Project.
+# dependency project - Project that must also be built in order to built the target project. Modelled by class csnBuild.Project.
+# build folder - Folder where all intermediate build results (CMakeCache.txt, .obj files, etc) are stored for the target project and all dependency projects.
+# binary folder - Folder where all final build results (executables, dlls etc) are stored.
+# install folder - Folder to which the build results are copied, and from which you can run the application. Note that CSnake allows you to use the build folder as the install folder as well.
+# configuration name - Identifies a build configuration, such as "Debug" or "Release". The name "DebugAndRelease" means that both Debug and Release must be generated.
+# source root folder - Folder used for locating the source files for a project. When adding sources to a project, names relative to the source root folder may be used.
+#
+# Config and use file:
+# CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
+# such as SAMPLE_APP_INCLUDE_DIRECTORIES and SAMPLE_APP_LIBRARY_DIRECTORIES. The use file uses these values to add
+# include directories and library directories to the current CMake target. The standard way to use these files is to a)
+# make sure that SAMPLE_APP_DIR points to the location of SAMPLE_APPConfig.cmake and UseSAMPLE_APP.cmake, b) 
+# call FIND_PACKAGE(SAMPLE_APP) and c) call INCLUDE(${SAMPLE_APP_USE_FILE}. In step b) the config file of SAMPLE_APP is included and
+# in step c) the necessary include directories, library directories etc are added to the current target.
+# To adhere to normal CMake procedures, csnBuild also uses the use file and config file. However, FIND_PACKAGE is not needed,
+# because the Generator class will directly include the config and use file for any dependency project.
+#
+# Compilers
+#
+# In this version of CSnake, you are required to specify the compiler that you will use to build your project. Examples of compiler instances are csnKDevelop.Compiler and csnVisualStudio2003.Compiler.
+# I choose this design because it allowed me to simplify the code a lot. For example, when adding a compiler definition for linux, a check is performed to see if the project uses a linux compiler; it not,
+# the definition is simply ignored.
+# The default compiler is stored in csnBuild.globalCurrentCompilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
+#
+
 # ToDo:
 # - check that of all root folders, only one contains csnCISTIBToolkit
 # - Have public and private related projects (hide the include paths from its clients)
@@ -21,74 +53,68 @@ import OrderedSet
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
 # - On linux, prevent building with all, force use of either debug or release
-# - On linux, also create a Debug and Release folder (not happening now, because the cmake type is "")
 # - On linux, don't copy any windows dlls
 # End: ToDo.
 
-# create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
-# the root folder is set correctly both when running the python interpreter, or when using the binary
-# CSnakeGUI executable.
+# add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
 
+# set default location of python. Note that this path may be overwritten in csnGUIHandler
+# \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
+
+# Set default method for creating a csnCompiler.Compiler instance.
 globalCurrentCompilerType = csnVisualStudio2003.Compiler
 
 class DependencyError(StandardError):
+    """ Used when there is a cyclic dependency between CSnake projects. """
     pass
     
 class SyntaxError(StandardError):
-    pass
-
-class ProjectClosedError(StandardError):
+    """ Used when there is a syntax error, for example in a folder name. """
     pass
 
 class Rule:
+    """ This class contains a build rule for e.g. Visual Studio, Make, etc """
     def __init__(self):
         self.workingDirectory = ""
         self.command = ""
 
 def ToProject(project):
     """
-    Helper function that tests if project is a function. If so, it returns the result of the function. If not, it returns project.
+    Helper function that tests if its argument (project) is a function. If so, it returns the result of the function. 
+    If not, it returns its argument (project). It is used to treat Project instances and functions returning a Project instance
+    in the same way.
     """
     result = project
     if type(project) == types.FunctionType:
         result = project()
     return result
 
-class CompileAndLinkSettings:
-    """ 
-    Helper class for CompileAndLinkConfig 
-    """
-    def __init__(self):
-        self.definitions = list()
-        self.libraries = list()
-        self.includeFolders = list()
-        self.libraryFolders = list()
-                    
 class Generator:
     """
-    Generates the CMakeLists.txt for a csnBuild.Project.
+    Generates the CMakeLists.txt for a csnBuild.Project and all its dependency projects.
     """
 
-    def Generate(self, _targetProject, _buildFolder, _installFolder = "", _cmakeBuildType = "None", _generatedList = None, _knownProjectNames = None):
+    def Generate(self, _targetProject, _buildFolder, _installFolder = "", _configurationName = "DebugAndRelease", _generatedList = None):
         """
-        Generates the CMakeLists.txt for a csnBuild.Project in _buildFolder.
-        _generatedList -- List of projects for which Generate was already called
+        Generates the CMakeLists.txt for _targetProject (a csnBuild.Project) in _buildFolder.
+        _installFolder -- Install rules are added to the CMakeLists to install files in this folder.
+        _configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
+        if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
+        _generatedList -- List of projects for which Generate was already called (internal to the function).
         """
 
         isTopLevelProject = _generatedList is None
         if( isTopLevelProject ):
             _generatedList = []
-            _knownProjectNames = []
 
-        if( _targetProject.name in _knownProjectNames):
-            raise NameError, "Each project must have a unique name. Violating project is %s in folder %s\n" % (_targetProject.name, _targetProject.sourceRootFolder)
-        else:
-            _knownProjectNames.append(_targetProject.name)
-            
         # trying to Generate a project twice indicates a logical error in the code        
         assert not _targetProject in _generatedList, "Target project name = %s" % (_targetProject.name)
+
+        for generatedProject in _generatedList:
+            if generatedProject.name == _targetProject.name:
+                raise NameError, "Each project must have a unique name. Conflicting projects are %s (in folder %s) and %s (in folder %s)\n" % (_targetProject.name, _targetProject.sourceRootFolder, generatedProject.name, generatedProject.sourceRootFolder)
         _generatedList.append(_targetProject)
         
         # check for backward slashes
@@ -123,15 +149,15 @@ class Generator:
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        f.write( "SET( BINARY_DIR \"%s\")\n" % (_targetProject.compiler.GetOutputFolder(_cmakeBuildType)) )
+        f.write( "SET( BINARY_DIR \"%s\")\n" % (_targetProject.compiler.GetOutputFolder(_configurationName)) )
 
-        if not _cmakeBuildType == "None":
-            f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_cmakeBuildType) )
+        if not _configurationName == "DebugAndRelease":
+            f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_configurationName) )
         
         f.write( "\n# All binary outputs are written to the same folder.\n" )
         f.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_cmakeBuildType) )
-        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_cmakeBuildType) )
+        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_configurationName) )
+        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_configurationName) )
     
         # create config and use files, and include them
         _targetProject.GenerateConfigFile( _public = 0)
@@ -168,7 +194,7 @@ class Generator:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
                 f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (project.GetBuildFolder(), project.GetBuildFolder()) )
-                self.Generate(project, _buildFolder, _installFolder, _cmakeBuildType, _generatedList, _knownProjectNames)
+                self.Generate(project, _buildFolder, _installFolder, _configurationName, _generatedList)
            
         # add dependencies
         f.write( "\n" )
@@ -199,7 +225,6 @@ class Generator:
     def PostProcess(self, _targetProject, _buildFolder, _kdevelopProjectFolder = ""):
         """
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
-        _buildFolder - The binary folder that was passed to the Generate member function.
         _kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
         copied from the bin folder to this folder. This is work around for a problem in 
         KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
@@ -238,38 +263,28 @@ class Generator:
 class Project(object):
     """
     Contains the data for the makefile (or vcproj) for a project.
-    Config and use file:
-    CMake uses config and use files to let packages use other packages. The config file assigns a number of variables
-    such as SAMPLE_APP_INCLUDE_DIRECTORIES and SAMPLE_APP_LIBRARY_DIRECTORIES. The use file uses these values to add
-    include directories and library directories to the current CMake target. The standard way to use these files is to a)
-    make sure that SAMPLE_APP_DIR points to the location of SAMPLE_APPConfig.cmake and UseSAMPLE_APP.cmake, b) 
-    call FIND_PACKAGE(SAMPLE_APP) and c) call INCLUDE(${SAMPLE_APP_USE_FILE}. In step b) the config file of SAMPLE_APP is included and
-    in step c) the necessary include directories, library directories etc are added to the current target.
-    To adhere to normal CMake procedures, csnBuild also uses the use file and config file. However, FIND_PACKAGE is not needed,
-    because we can directly include first the config file and then the use file.
     
     The constructors initialises these member variables:
     self.buildSubFolder -- Direct subfolder - within the build folder - for this project. Is either 'executable' or 'library'.
     self.installSubfolder -- Direct subfolder - within the install folder - for targets generated by this project.
-    self.useBefore -- A list of projects. This project must be used before the projects in this list.
-    self.configFilePath -- The config file for the project. See above.
+    self.useBefore -- A list of projects. The use-file of this project must be included before the use-file of the projects in this list.
+    self.configFilePath -- Path to the config file for the project.
     self.sources -- Sources to be compiled for this target.
     self.sourceGroups -- Dictionary (groupName -> sources) for sources that should be placed in a visual studio group.
     self.rules - CMake rules. See AddRule function.
-    self.config -- Definitions to be used for different operating systems. 
-    self.sourcesToBeMoced -- Sources for which a moc file must be generated.
+    self.sourcesToBeMoced -- Sources for which a qt moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
     self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
     For example: if self.filesToInstall[\"Debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
-    then c:/one.txt and c:/two.txt must be installed in the data subfolder of the binary folder when in debug mode.
-    self.useFilePath -- Path to the use file of the project. If it is relative, then the binary folder will be prepended.
-    self.cmakeListsSubpath -- The cmake file that builds the project as a target
+    then c:/one.txt and c:/two.txt must be installed in the data subfolder of the install folder when in debug mode.
+    self.useFilePath -- Path to the use file of the project. If it is relative, then the build folder will be prepended.
+    self.cmakeListsSubpath -- Path to the cmake file (relative to the build folder) that builds this project.
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
     self.projectsNonRequired -- Subset of self.projects. Contains projects that self doesn't depend on.
+    The project does not add a dependency on any project in this list.      
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
-    then precompiled headers is set up.
-    The project does not add a Visual Studio dependency on any project in this list.      
+    then precompiled headers are used for this project.
     """
     
     def __new__(cls, *a, **b):
@@ -284,13 +299,13 @@ class Project(object):
     """
     _type -- Type of the project, should be \"executable\", \"library\", \"dll\" or \"third party\".
     _name -- Name of the project, e.g. \"SampleApp\".
-    _sourceRootFolder -- If None, then the root folder where source files are located is derived from 
-    the call stack. For example, if this class' constructor is called in a file 
-    d:/users/me/csnMyProject.py, and you want to configure the files d:/users/me/src/hello.h and 
-    d:/users/me/src/hello.cpp with Cmake, then you do not need to pass a value for _sourceRootFolder, 
-    because it is inferred from the call stack. 
+    _sourceRootFolder -- Folder used for locating source files for this project. If None, then the folder name is derived from 
+    the call stack. For example, if this class' constructor is called in a file d:/users/me/csnMyProject.py, then d:/users/me 
+    will be set as the source root folder.
+    _compiler - The compiler (instance of csnCompiler.Compiler) that will be used for compiling this project. If set to None,
+    then a new compiler instance will be created using csnBuild.globalCurrentCompilerType.
     """    
-    def __init__(self, _name, _type, _sourceRootFolder = None ):
+    def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None ):
         self.sources = []
         self.sourceGroups = dict()
 
@@ -303,7 +318,11 @@ class Project(object):
         self.filesToInstall["Release"] = dict()
         self.type = _type
         self.rules = dict()
-        self.compiler = globalCurrentCompilerType()
+        
+        if  _compiler is None:
+            self.compiler = globalCurrentCompilerType()
+        else:
+            self.compiler = _compiler
         
         self.sourceRootFolder = _sourceRootFolder
         if self.sourceRootFolder is None:
@@ -325,10 +344,9 @@ class Project(object):
     def AddProjects(self, _projects, _dependency = 1): 
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
-        it is called as a function (the result of the function should be a Project).
+        this function is called to retrieve the Project instance.
         _dependency - Flag that states that self target requires (is dependent on) _projects.
-        _private - If true, then the dependency on this project is not propagated to other projects.
-        Raises StandardError in case of a cyclic dependency.
+        Raises DependencyError in case of a cyclic dependency.
         """
         for project in _projects:
             projectToAdd = ToProject(project)
@@ -349,6 +367,7 @@ class Project(object):
         Entries of _listOfSourceFiles may contain wildcards, such as src/*/*.h.
         If _moc, then a moc file is generated for each header file in _listOfSourceFiles.
         If _ui, then qt's ui.exe is run for the file.
+        _sourceGroup -- Place sources in this group (optional).
         If _checkExists, then added sources (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
         _forceAdd - If true, then each item in _listOfSourceFiles is added as a source, even if the item does not exist on the disk.
         """
@@ -378,8 +397,7 @@ class Project(object):
         Entries of _list may contain wildcards, such as lib/*/*.dll.
         You may also include a folder in _list. In that case, the whole folder is copied during
         the install.
-        Relative paths in _list are assumed to be relative to the root of the binary folder where the targets 
-        are created.
+        Relative paths in _list are assumed to be relative to the third party binary folder.
         _debugOnly - If true, then the dll is only installed to the debug install folder.
         _releaseOnly - If true, then the dll is only installed to the release install folder.
         """
@@ -401,7 +419,10 @@ class Project(object):
                 
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
         """
-        Adds definitions to self.compileAndLinkConfigFor. 
+        Adds definitions to self.compiler.
+        _private -- Don't propagate these definitions to dependency projects.
+        _WIN32 -- Only for Windows platforms.
+        _NOT_WIN32 -- Only for non-Windows platforms.
         """
         if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
@@ -441,6 +462,10 @@ class Project(object):
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         """
         Adds items to self.publicLibraries. 
+        _WIN32 -- Only for Windows platforms.
+        _NOT_WIN32 -- Only for non-Windows platforms.
+        _debug -- Only for the Debug configuration.
+        _release  -- Only for the Release configuration.
         """
         if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
@@ -541,7 +566,7 @@ class Project(object):
         
     def UseBefore(self, _otherProject):
         """ 
-        Indicate that self must be used before _otherProjects in a cmake file. 
+        Sets a flag that says that self must be used before _otherProjects in a cmake file. 
         Throws DependencyError if _otherProject wants to be used before self.
         _otherProject - May be a project, or a function returning a project.
         """
@@ -684,7 +709,7 @@ class Project(object):
         """ 
         This function replaces relative paths and wildcards in self.filesToInstall with absolute paths without wildcards.
         Any folder is replaced by a complete list of the files in that folder.
-        _skipCVS - If true, folders called CVS are automatically skipped. 
+        _skipCVS - If true, folders called CVS and .svn are automatically skipped. 
         """
         excludedFolderList = ("CVS", ".svn")
         for mode in ("Debug", "Release"):
@@ -712,9 +737,11 @@ class Project(object):
                     project.filesToInstall[mode][location] = newListWithOnlyFiles
     
     def SetGenerateWin32Header(self, _flag):
+        """ If _flag, then the Win32Header is generated for this project. """
         self.generateWin32Header = _flag
 
     def GetGenerateWin32Header(self):
+        """ See SetGenerateWin32Header """
         return self.generateWin32Header
                    
     def CreateCMakeSection_IncludeConfigAndUseFiles(self, f):
@@ -734,6 +761,7 @@ class Project(object):
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile()) )
     
     def CreateCMakeSection_SourceGroups(self, f):
+        """ Create source groups in the CMakeLists.txt """
         for groupName in self.sourceGroups:
             f.write( "\n # Create %s group \n" % groupName )
             f.write( "IF (WIN32)\n" )
@@ -741,6 +769,7 @@ class Project(object):
             f.write( "ENDIF(WIN32)\n\n" )
     
     def CreateCMakeSection_MocRules(self, f):
+        """ Create moc rules in the CMakeLists.txt """
         cmakeMocInputVar = ""
         if( len(self.sourcesToBeMoced) ):
             cmakeMocInputVarName = "MOC_%s" % (self.name)
@@ -754,6 +783,7 @@ class Project(object):
         return cmakeMocInputVar
     
     def CreateCMakeSection_UicRules(self, f):
+        """ Create uic rules in the CMakeLists.txt """
         cmakeUIHInputVar = ""
         cmakeUICppInputVar = ""
         if( len(self.sourcesToBeUIed) ):
@@ -770,10 +800,12 @@ class Project(object):
         return (cmakeUIHInputVar, cmakeUICppInputVar)
     
     def CreateCMakeSection_Definitions(self, f):
+        """ Create definitions in the CMakeLists.txt """
         if( len(self.compiler.private.definitions) ):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compiler.private.definitions) )
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
+        """ Add sources to the target in the CMakeLists.txt """
         if(self.type == "executable" ):
             f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(self.sources, _addQuotes = 1)) )
             
@@ -787,17 +819,20 @@ class Project(object):
             raise NameError, "Unknown project type %s" % self.type
         
     def CreateCMakeSection_InstallRules(self, f, _installFolder):
+        """ Create install rules in the CMakeLists.txt """
         if( _installFolder != "" and self.type != "library"):
             destination = "%s/%s" % (_installFolder, self.installSubFolder)
             f.write( "\n# Rule for installing files in location %s\n" % destination)
             f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (self.name, destination) )
     
     def CreateCMakeSection_Rules(self, f):
+        """ Create other rules in the CMakeLists.txt """
         for description, rule in self.rules.iteritems():
             f.write("\n#Adding rule %s\n" % description)
             f.write("ADD_CUSTOM_COMMAND( TARGET %s PRE_BUILD COMMAND %s WORKING_DIRECTORY \"%s\" COMMENT \"Running rule %s\" VERBATIM )\n" % (self.name, rule.command, rule.workingDirectory, description))
     
     def CreateCMakeSection_Link(self, f):
+        """ Create link commands in the CMakeLists.txt """
         if self.type in ("dll", "executable"):
             targetLinkLibraries = ""
             for project in self.RequiredProjects(_recursive = 1):
@@ -870,7 +905,8 @@ class Project(object):
         
     def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0):
         """
-        _cxxTestProject - May be the cxxTest project instance, or a function returning a cxxTest project instance.
+        _cxxTestProject -- May be the cxxTest project instance, or a function returning a cxxTest project instance.
+        listOfTests -- List of source files containing cxx test classes.
         """
         cxxTestProject = ToProject(_cxxTestProject)
         
@@ -885,16 +921,22 @@ class Project(object):
 
     def GetBuildFolder(self):
         """
-        Returns the bin folder for storing binary files for this project.
+        Returns the bin folder for storing intermediate build files for this project.
         """
         return self.compiler.GetBuildFolder() + "/" + self.buildSubFolder
 
     def WriteDependencyStructureToXML(self, filename):
+        """
+        Writes an xml file containing the dependency structure for this project and its dependency projects.
+        """
         f = open(filename, 'w')
         self.WriteDependencyStructureToXMLImp(f)
         f.close()
 
     def WriteDependencyStructureToXMLImp(self, f, indent = 0):
+        """
+        Helper function.
+        """
         for i in range(indent):
             f.write(' ')
         f.write("<%s>" % self.name)
@@ -902,19 +944,19 @@ class Project(object):
             project.WriteDependencyStructureToXMLImp(f, indent + 4)
         f.write("</%s>\n" % self.name)
 
-    def GetBinaryInstallFolder(self, _cmakeBuildType = "${CMAKE_CFG_INTDIR}"):
+    def GetBinaryInstallFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         """ 
-        Returns location in the binary folderwhere binaries for this project must be installed.
+        Returns location in the binary folder where binaries for this project must be installed.
         This functions is used for being able to "install" all files in the binary folder that are needed to run the application
         from the binary folder without having to install to the Install Folder.
         """
-        result = self.compiler.GetOutputFolder(_cmakeBuildType)
+        result = self.compiler.GetOutputFolder(_configurationName)
         if self.installSubFolder != "":
-            if _cmakeBuildType == "None":
+            if _configurationName == "DebugAndRelease":
                 result += "/${CMAKE_CFG_INTDIR}"
             result += "/%s" % self.installSubFolder
         return result
 
     def GetCMakeListsFilename(self):
-           return "%s/%s" % (self.compiler.GetBuildFolder(), self.cmakeListsSubpath)
- 
+        """ Return the filename for the CMakeLists.txt file for this project. """
+        return "%s/%s" % (self.compiler.GetBuildFolder(), self.cmakeListsSubpath)

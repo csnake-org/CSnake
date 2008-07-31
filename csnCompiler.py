@@ -1,7 +1,7 @@
 
 class CompileAndLinkSettings:
     """ 
-    Helper class for CompileAndLinkConfig 
+    Helper class containing the settings that must be passed to the compiler and linker to build a target.
     """
     def __init__(self):
         self.definitions = list()

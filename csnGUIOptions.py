@@ -60,7 +60,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.options.compiler))
         
         buildTypes = dict()
-        buildTypes["None"] = 0
+        buildTypes["DebugAndRelease"] = 0
         buildTypes["Release"] = 1
         buildTypes["Debug"] = 2
         self.cmbBuildType.SetSelection(buildTypes[self.options.cmakeBuildType])
@@ -142,7 +142,7 @@ class CSnakeOptionsFrame(wx.Frame):
             self.cmbBuildType.SetSelection(1)
                      
         if self.cmbBuildType.GetSelection() == 0:
-            self.options.cmakeBuildType = "None"
+            self.options.cmakeBuildType = "DebugAndRelease"
         else:
             self.options.cmakeBuildType = "%s" % self.cmbBuildType.GetValue()
         
@@ -187,7 +187,7 @@ class Options:
         self.pythonPath = "D:/Python24/python.exe"
         self.compiler = "Visual Studio 7 .NET 2003"
         self.currentGUISettingsFilename = ""
-        self.cmakeBuildType = "None"    
+        self.cmakeBuildType = "DebugAndRelease"    
         self.askToLaunchVisualStudio = False
         self.visualStudioPath = ""
 
@@ -201,6 +201,9 @@ class Options:
             self.compiler = parser.get(section, "compiler")
             self.currentGUISettingsFilename = parser.get(section, "currentGUISettingsFilename")
             self.cmakeBuildType = parser.get(section, "cmakeBuildType")
+            # fix legacy value
+            if self.cmakeBuildType == "None":
+                self.cmakeBuildType = "DebugAndRelease"
             if parser.has_option(section, "askToLaunchVisualStudio"):
                 self.askToLaunchVisualStudio = parser.get(section, "askToLaunchVisualStudio") == str(True)
             if parser.has_option(section, "visualStudioPath"):

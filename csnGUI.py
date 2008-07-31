@@ -191,7 +191,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Initializes the application.
         """
-        #self.RedirectStdOut()
+        self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
