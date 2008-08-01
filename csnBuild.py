@@ -175,7 +175,7 @@ class Generator:
             # then leave it to the required project. This will prevent multiple generation of the same project.
             # If a non-required project will generate it, then still generate the project 
             # (the non-required project may depend on target project to generate project, creating a race condition).
-            generateProject = not projectToGenerate in _generatedList and projectToGenerate.type != "third party"
+            generateProject = not projectToGenerate in _generatedList and projectToGenerate.type in ("dll", "executable", "library")
             if( generateProject ):
                 for requiredProject in _targetProject.GetProjects(_recursive = 0, _onlyRequiredProjects = 1):
                     if( requiredProject.DependsOn(projectToGenerate) ):
@@ -539,6 +539,7 @@ class Project(object):
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
         """
         result = OrderedSet.OrderedSet()
+            
         if _onlyRequiredProjects:
             result.update(self.projects - self.projectsNonRequired)
         else:
@@ -684,7 +685,7 @@ class Project(object):
             result = "%s/%s" % (self.compiler.GetBuildFolder(), self.configFilePath)
 
         postfix = ""
-        if (not self.type == "third party") and (not _public):
+        if self.type in ("dll", "library", "executable") and (not _public):
             postfix = ".private"
              
         return result + postfix
@@ -707,7 +708,9 @@ class Project(object):
         """
         excludedFolderList = ("CVS", ".svn")
         for mode in ("Debug", "Release"):
-            for project in self.GetProjects(_recursive = 1):
+            projects = self.GetProjects(_recursive = 1)
+            projects.add(self)
+            for project in projects:
                 for location in project.filesToInstall[mode].keys():
                     newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
@@ -833,7 +836,7 @@ class Project(object):
         if self.type in ("dll", "executable"):
             targetLinkLibraries = ""
             for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
-                if project.type == "third party":
+                if not project.type in ("dll", "library", "executable", "prebuilt"):
                     continue
                 targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
             f.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.name, targetLinkLibraries) )
