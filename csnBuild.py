@@ -49,11 +49,12 @@ import OrderedSet
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 # - Fix module reloading
-# - Better GUI: recently used Source Root Folder and associated recently used csnake files.
+# - GUI: recently used csnakesettings files.
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
 # - On linux, prevent building with all, force use of either debug or release
 # - On linux, don't copy any windows dlls
+# = GUI: when changing a csnake setting, change the domain data and then update the view (always in that direction)
 # End: ToDo.
 
 # add root of csnake to the system path

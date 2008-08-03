@@ -49,7 +49,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.SetMenuBar(self.frmCSnakeGUI_menubar)
         # Menu Bar end
         self.lbCSnakeFile = wx.StaticText(self.panelProjectAndInstance, -1, "CSnake File\n")
-        self.txtCSnakeFile = wx.TextCtrl(self.panelProjectAndInstance, -1, "")
+        self.cmbCSnakeFile = wx.ComboBox(self.panelProjectAndInstance, -1, choices=[], style=wx.CB_DROPDOWN)
         self.btnSelectCSnakeFile = wx.Button(self.panelProjectAndInstance, -1, "...")
         self.labelInstance = wx.StaticText(self.panelProjectAndInstance, -1, "Instance")
         self.cmbInstance = wx.ComboBox(self.panelProjectAndInstance, -1, choices=[], style=wx.CB_DROPDOWN)
@@ -84,6 +84,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
         self.Bind(wx.EVT_MENU, self.OnExit, self.mnuExit)
         self.Bind(wx.EVT_MENU, self.OnEditOptions, self.mnuEditOptions)
+        self.Bind(wx.EVT_COMBOBOX, self.OnSelectRecentlyUsed, self.cmbCSnakeFile)
         self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
         self.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, self.btnUpdateListOfTargets)
         self.Bind(wx.EVT_BUTTON, self.OnAddRootFolder, self.btnAddRootFolder)
@@ -101,8 +102,6 @@ class CSnakeGUIFrame(wx.Frame):
         self.SetTitle("CSnake GUI")
         self.SetSize((750, 400))
         self.lbCSnakeFile.SetMinSize((100, 15))
-        self.txtCSnakeFile.SetMinSize((-1, -1))
-        self.txtCSnakeFile.SetToolTipString("The folder containing the target (dll, lib or exe) you wish to build.")
         self.btnSelectCSnakeFile.SetMinSize((30, -1))
         self.labelInstance.SetMinSize((100, 15))
         self.panelProjectAndInstance.SetBackgroundColour(wx.Colour(192, 191, 255))
@@ -239,7 +238,7 @@ class CSnakeGUIFrame(wx.Frame):
         boxRootFolder_copy = wx.BoxSizer(wx.HORIZONTAL)
         boxProjectPath = wx.BoxSizer(wx.HORIZONTAL)
         boxProjectPath.Add(self.lbCSnakeFile, 0, wx.RIGHT|wx.EXPAND, 5)
-        boxProjectPath.Add(self.txtCSnakeFile, 2, wx.FIXED_MINSIZE, 0)
+        boxProjectPath.Add(self.cmbCSnakeFile, 1, 0, 0)
         boxProjectPath.Add(self.btnSelectCSnakeFile, 0, 0, 0)
         sizer_3.Add(boxProjectPath, 0, wx.EXPAND, 0)
         boxRootFolder_copy.Add(self.labelInstance, 0, wx.RIGHT|wx.EXPAND, 5)
@@ -317,7 +316,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
         self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
         self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue().replace("\\", "/")
-        self.settings.csnakeFile = self.txtCSnakeFile.GetValue().replace("\\", "/")
+        self.settings.csnakeFile = self.cmbCSnakeFile.GetValue().replace("\\", "/")
         self.settings.rootFolders = []
         for i in range( self.lbRootFolders.GetCount() ):
             self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
@@ -342,8 +341,7 @@ class CSnakeGUIFrame(wx.Frame):
         Perform action specified in cmbAction.
         """
         print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
-        if os.path.exists(self.options.currentGUISettingsFilename):
-            self.SaveSettings(self.options.currentGUISettingsFilename)
+        self.CopyTextBoxContentsToSettingsVariable()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
         configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
@@ -374,6 +372,9 @@ class CSnakeGUIFrame(wx.Frame):
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
+        if os.path.exists(self.options.currentGUISettingsFilename):
+            self.SaveSettings(self.options.currentGUISettingsFilename)
+            self.CopySettingsVariableToTextBoxContents()
                 
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -397,7 +398,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.FileDialog(None, "Select CSnake file")
         if dlg.ShowModal() == wx.ID_OK:
-            self.txtCSnakeFile.SetValue(dlg.GetPath())
+            self.settings.csnakeFile = dlg.GetPath()
+            self.CopySettingsVariableToTextBoxContents()
 
     def OnAddRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -437,7 +439,12 @@ class CSnakeGUIFrame(wx.Frame):
             self.SaveSettings(settingsFilename)
 
     def CopySettingsVariableToTextBoxContents(self):
-        self.txtCSnakeFile.SetValue(self.settings.csnakeFile)
+        self.cmbCSnakeFile.Clear()
+        self.cmbCSnakeFile.Append(self.settings.csnakeFile)
+        for x in self.settings.recentlyUsed:
+            self.cmbCSnakeFile.Append("%s - In %s" % (x.instance, x.csnakeFile))
+        self.cmbCSnakeFile.SetSelection(0)
+        
         self.lbRootFolders.Clear()
         for rootFolder in self.settings.rootFolders:
             self.lbRootFolders.Append(rootFolder)
@@ -450,6 +457,7 @@ class CSnakeGUIFrame(wx.Frame):
         if self.settings.instance != "":
             self.cmbInstance.Append(self.settings.instance)
             self.cmbInstance.SetSelection(0)
+            
     
     def LoadSettings(self, filename = ""):
         """
@@ -515,6 +523,13 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.DirDialog(None, "Select folder for saving the KDevelop project file")
         if dlg.ShowModal() == wx.ID_OK:
             self.txtKDevelopProjectFolder.SetValue(dlg.GetPath())
+
+    def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        item = self.cmbCSnakeFile.GetSelection() - 1
+        settings = self.settings.recentlyUsed[item]
+        self.settings.csnakeFile = settings.csnakeFile
+        self.settings.instance = settings.instance
+        self.CopySettingsVariableToTextBoxContents()
 
 # end of class CSnakeGUIFrame
 

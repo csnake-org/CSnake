@@ -28,7 +28,7 @@ class Settings:
         self.thirdPartyRootFolder = ""
         self.instance = ""
         self.cmakeBuildType = "DebugAndRelease"
-        self.recentlyUsedCSnakeFiles = list()
+        self.recentlyUsed = list()
 
     def GetBuildFolder(self):
         """
@@ -73,16 +73,35 @@ class Settings:
             count += 1
         
     def __LoadRecentlyUsedCSnakeFiles(self, parser):
-        section = "RecentlyUsedCSnakeFiles"
-        if not parser.has_section(section):
-            return
-            
+        self.recentlyUsed = []
         count = 0
-        while parser.has_option(section, "RecentlyUsedCSnakeFile%s" % count):
-            rawData = parser.get(section, "RecentlyUsedCSnakeFile%s" % count) 
-            (csnakeFile, instance) = re.split("\?", rawData)
-            self.recentlyUsedCSnakeFiles.append( (csnakeFile, instance) )
+        section = "RecentlyUsedCSnakeFile%s" % count
+        while parser.has_section(section):
+            self.AddRecentlyUsed(parser.get(section, "instance"), parser.get(section, "csnakeFile"))
             count += 1
+            section = "RecentlyUsedCSnakeFile%s" % count
+    
+    def __SaveRecentlyUsedCSnakeFiles(self, parser):
+        for index in range(len(self.recentlyUsed)):
+            section = "RecentlyUsedCSnakeFile%s" % index
+            if not parser.has_section(section):
+                parser.add_section(section)
+            parser.set(section, "csnakeFile", self.recentlyUsed[index].csnakeFile) 
+            parser.set(section, "instance", self.recentlyUsed[index].instance) 
+
+    def AddRecentlyUsed(self, _instance, _csnakeFile):
+        for item in range( len(self.recentlyUsed) ):
+            x = self.recentlyUsed[item]
+            if (x.instance == _instance and x.csnakeFile == _csnakeFile):
+                self.recentlyUsed.remove(x)
+                self.recentlyUsed.insert(0, x)
+                return
+        
+        x = Settings()
+        (x.instance, x.csnakeFile) = (_instance, _csnakeFile)
+        self.recentlyUsed.insert(0, x)
+        if len(self.recentlyUsed) > 10:
+            self.recentlyUsed.pop() 
     
     def Save(self, filename):
         parser = ConfigParser.ConfigParser()
@@ -102,6 +121,9 @@ class Settings:
             count += 1
         parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
         parser.set(section, "instance", self.instance)
+        
+        self.__SaveRecentlyUsedCSnakeFiles(parser)
+        
         f = open(filename, 'w')
         parser.write(f)
         f.close()
@@ -245,6 +267,9 @@ class Handler:
         instance.compiler.SetBuildFolder(_settings.GetBuildFolder())
         #relocator = csnPrebuilt.ProjectRelocator()
         #relocator.Do(instance, "E:/Code/CISTIBToolkitPrebuilt")
+        
+        self.UpdateRecentlyUsedCSnakeFiles(_settings)
+        
         return instance
     
     def ConfigureProjectToBinFolder(self, _settings, _alsoRunCMake):
@@ -433,3 +458,6 @@ class Handler:
 
     def GetThirdPartySolutionPath(self, _settings):
         return "%s/CILAB_TOOLKIT.sln" % (_settings.thirdPartyBinFolder)
+    
+    def UpdateRecentlyUsedCSnakeFiles(self, _settings):
+        _settings.AddRecentlyUsed(_settings.instance, _settings.csnakeFile)
