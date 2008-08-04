@@ -8,6 +8,11 @@ class ProjectRelocator:
     It scans a target project for all child projects. For each child project, it checks if the project is available in the
     prebuilt projects folder. If so, it labels the project as "prebuilt", and sets the use file and config file to the ones
     from the prebuilt project.
+    
+    If you want to relocate a project p, add a subfolder (with name p.name) in the relocated projects folder.
+    This subfolder should have a csnake file called csnRelocate + p.name + .py. 
+    The filename may have only one period (for the extension); replace any other period with underscore. E.g. for vtk, 
+    you would have PrebuiltProjectFolder/VTK-5.1/csnRelocateVTK-5_1.py .
     """
     
     def Do(self, _targetProject, _prebuiltProjectsFolder):
@@ -18,7 +23,7 @@ class ProjectRelocator:
                 
     def __Relocate(self, _project, _prebuiltProjectFolder):
         print "Relocating project %s\n" % _project.name
-        name = _project.name.replace(".", "")
+        name = _project.name.replace(".", "_")
         module = csnUtility.LoadModule(_prebuiltProjectFolder, "csnRelocate" + name)
         self.prebuiltProjectFolder = _prebuiltProjectFolder
         self.project = _project
