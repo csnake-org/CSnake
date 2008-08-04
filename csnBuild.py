@@ -54,7 +54,6 @@ import OrderedSet
 # - If copy_tree copies nothing, check that the source folder is empty
 # - On linux, prevent building with all, force use of either debug or release
 # - On linux, don't copy any windows dlls
-# = GUI: when changing a csnake setting, change the domain data and then update the view (always in that direction)
 # End: ToDo.
 
 # add root of csnake to the system path

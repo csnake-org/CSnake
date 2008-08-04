@@ -22,6 +22,7 @@ class Settings:
         self.__binFolder = ""    
         self.installFolder = ""    
         self.kdevelopProjectFolder = ""    
+        self.prebuiltBinariesFolder = ""    
         self.thirdPartyBinFolder = ""
         self.csnakeFile = ""
         self.rootFolders = []
@@ -59,6 +60,8 @@ class Settings:
         self.installFolder = parser.get(section, "installFolder")
         if parser.has_option(section, "kdevelopProjectFolder"):
             self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
+        if parser.has_option(section, "prebuiltBinariesFolder"):
+            self.prebuiltBinariesFolder = parser.get(section, "prebuiltBinariesFolder")
         self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
         self.csnakeFile = parser.get(section, "csnakeFile")
         self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
@@ -113,6 +116,7 @@ class Settings:
         parser.set(section, "binFolder", self.__binFolder)
         parser.set(section, "installFolder", self.installFolder)
         parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
+        parser.set(section, "prebuiltBinariesFolder", self.prebuiltBinariesFolder)
         parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
         parser.set(section, "csnakeFile", self.csnakeFile)
         count = 0
@@ -265,8 +269,8 @@ class Handler:
             rollbackHandler.TearDown()
 
         instance.compiler.SetBuildFolder(_settings.GetBuildFolder())
-        #relocator = csnPrebuilt.ProjectRelocator()
-        #relocator.Do(instance, "E:/Code/CISTIBToolkitPrebuilt")
+        relocator = csnPrebuilt.ProjectRelocator()
+        relocator.Do(instance, _settings.prebuiltBinariesFolder)
         
         self.UpdateRecentlyUsedCSnakeFiles(_settings)
         

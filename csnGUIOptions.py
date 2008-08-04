@@ -152,6 +152,10 @@ class CSnakeOptionsFrame(wx.Frame):
         if not self.optionsFilename is None:
             self.options.Save(self.optionsFilename)
         self.Destroy()
+        if not self.callBack is None:
+            self.callBack()
+            self.callBack = None
+
 
     def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         # set the current selection as the build type to use for visual studio projects
@@ -178,6 +182,10 @@ class CSnakeOptionsFrame(wx.Frame):
     def OnCheckAskToLaunchVisualStudio(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.CopyFromGUIToOptions()
         self.ShowOptions()
+        
+    def Show(self, show, callBack = None):
+        wx.Frame.Show(self, show)
+        self.callBack = callBack
 
 # end of class CSnakeOptionsFrame
 
