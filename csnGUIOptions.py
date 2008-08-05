@@ -44,6 +44,8 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnClose, self.btnClose)
         # end wxGlade
 
+        self.Bind(wx.EVT_CLOSE, self.OnClose, self)
+        
     def ShowOptions(self, _options = None, _optionsFilename = None):
         """
         If _options is not None, then sets _options as the options edited by this frame.
