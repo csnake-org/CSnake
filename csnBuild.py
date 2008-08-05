@@ -591,7 +591,7 @@ class Project(object):
     def ProjectsToUse(self):
         """
         Determine a list of projects that must be used (meaning: include the config and use file) to generate this project.
-        Note that self is also included in this list.
+        Note that self is always the last project in this list.
         The list is sorted in the correct order, using Project.WantsToBeUsedBefore.
         """
         result = []
@@ -613,6 +613,7 @@ class Project(object):
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
                 if( otherProject.WantsToBeUsedBefore(project) ):
+                    assert not otherProject is self, "Logical error. %s cannot be used before %s" % (self.name, project.name)
                     skipThisProjectForNow = 1
             if( skipThisProjectForNow ):
                 projectsToUse.insert(0, project)
@@ -620,6 +621,8 @@ class Project(object):
             else:
                 result.append(project)
           
+        result.remove(self)
+        result.append(self)
         return result
         
     def GenerateConfigFile(self, _public):
@@ -746,13 +749,8 @@ class Project(object):
         add the use and config file for this project (do this last, so that all definitions from
         the dependency projects are already included).
         """
-        if not hasattr(self.compiler, "buildFolder"):
-            assert False, "Project %s has no compiler with buildFolder\n" % self.name
-            
-        projectsToUse = [project for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1)]
-        assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
-        projectsToUse.append(self)
-        for project in projectsToUse:
+        assert hasattr(self.compiler, "buildFolder"), "Project %s has no compiler with buildFolder\n" % self.name
+        for project in self.ProjectsToUse():
             f.write( "\n# use %s\n" % (project.name) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_public = (self.name != project.name and not csnUtility.IsRunningOnWindows())) ))
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile()) )

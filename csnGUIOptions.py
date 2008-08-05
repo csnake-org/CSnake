@@ -156,7 +156,6 @@ class CSnakeOptionsFrame(wx.Frame):
             self.callBack()
             self.callBack = None
 
-
     def OnSelectBuildType(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         # set the current selection as the build type to use for visual studio projects
         self.buildTypeForVisualStudio = self.cmbBuildType.GetSelection() 
