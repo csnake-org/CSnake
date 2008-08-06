@@ -19,6 +19,15 @@ class Compiler(csnCompiler.Compiler):
         return "%s/bin/%s" % (self.GetBuildFolder(), _configuration)
         
 class PostProcessor:
+    def __GetKDevelopProjectFilename(self, _project, _folder = None):
+        if _folder is None:
+            return "%s/%s.kdevelop" % (_project.GetBuildFolder(), _project.name)
+        else:
+            return "%s/%s.kdevelop" % (_folder, _project.name)
+        
+    def __GetFilelistFilename(self, _project, _folder = None):
+        return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
+        
     def Do(self, _project, _binaryFolder, _kdevelopProjectFolder):
 
         if not os.path.exists(_kdevelopProjectFolder):
@@ -28,32 +37,32 @@ class PostProcessor:
             return
             
         kdevelopProjectFolder = csnUtility.NormalizePath(_kdevelopProjectFolder)
-        kdevProjectFilename = "%s/%s.kdevelop" % (_project.GetBuildFolder(), _project.name)
-        kdevProjectFileListFilename = "%s.filelist" % kdevProjectFilename
 
-        if not os.path.exists(kdevProjectFilename):
+        if not os.path.exists(self.__GetKDevelopProjectFilename(_project)):
             return
             
-        f = open(kdevProjectFileListFilename, 'w')
+        f = open(self.__GetFilelistFilename(_project), 'w')
         for project in _project.ProjectsToUse():
             for source in project.sources:
                 fileListItem = csnUtility.RemovePrefixFromPath(source, kdevelopProjectFolder)
                 fileListItem = csnUtility.NormalizePath(fileListItem)
-                f.write(fileListItem + "\n")
+                f.write(fileListItem + "/n")
         f.close()
-        result = (0 != shutil.copy(kdevProjectFileListFilename, _kdevelopProjectFolder))
-        assert result, "Could not copy from %s to %s\n" % (kdevProjectFileListFilename, _kdevelopProjectFolder)
         
-        kdevelopFileInTargetFolder = "%s/%s.kdevelop" % (kdevelopProjectFolder, _project.name) 
-        f = open(kdevProjectFilename, 'r')
+        if csnUtility.FileToString(self.__GetFilelistFilename(_project, kdevelopProjectFolder)) != csnUtility.FileToString(self.__GetFilelistFilename(_project)):
+            result = (0 != shutil.copy(self.__GetFilelistFilename(_project), kdevelopProjectFolder))
+            assert result, "Could not copy from %s to %s/n" % (self.__GetFilelistFilename(_project), kdevelopProjectFolder)
+        
+        f = open(self.__GetKDevelopProjectFilename(_project), 'r')
         kdevelopProjectText = f.read()
         f.close()
-        f = open(kdevelopFileInTargetFolder, 'w')
         searchText = "<projectdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<projectdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
         searchText = "<filelistdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<filelistdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
-        f.write(kdevelopProjectText)
-        f.close()
+        if csnUtility.FileToString(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder)) != kdevelopProjectText:
+            f = open(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder), 'w')
+            f.write(kdevelopProjectText)
+            f.close()
