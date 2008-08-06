@@ -393,7 +393,7 @@ class Project(object):
                             self.sourceGroups[_sourceGroup] = []
                         self.sourceGroups[_sourceGroup].append(source)
                    
-    def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0):
+    def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.filesToInstall.
         Entries of _list may contain wildcards, such as lib/*/*.dll.
@@ -404,6 +404,9 @@ class Project(object):
         _releaseOnly - If true, then the dll is only installed to the release install folder.
         """
         
+        if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
+            return
+            
         if _location is None:
             _location = '.'
             
