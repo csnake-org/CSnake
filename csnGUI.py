@@ -102,6 +102,8 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
         # end wxGlade
         
+        self.Bind(wx.EVT_CLOSE, self.OnExit, self)        
+        
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
         self.SetTitle("CSnake GUI")
@@ -318,7 +320,7 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.DirDialog(None, "Select Third Party Binary Folder")
         if dlg.ShowModal() == wx.ID_OK:
             self.settings.thirdPartyBinFolder = dlg.GetPath()
-            self.txtThirdPartyBinFolder.SetValue(dlg.GetPath())
+            self.RefreshGUI()
 
     def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -360,6 +362,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Perform action specified in cmbAction.
         """
+        
+        self.textLog.Clear()
         print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
         self.CopyGUIToSettings()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
@@ -372,7 +376,7 @@ class CSnakeGUIFrame(wx.Frame):
         
             # if configuring the target project...            
             if configureProject:
-                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
+                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake, _out = sys.stdout):
                     if self.settings.instance.lower() == "gimias":
                         self.ProposeToDeletePluginDlls()
                     if self.options.askToLaunchVisualStudio:
@@ -392,9 +396,7 @@ class CSnakeGUIFrame(wx.Frame):
 
         print "--- Done (command counter: %s) ---\n" % self.commandCounter
         self.commandCounter += 1
-        if os.path.exists(self.options.currentGUISettingsFilename):
-            self.SaveSettings(self.options.currentGUISettingsFilename)
-            self.RefreshGUI()
+        self.RefreshGUI()
                 
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -462,6 +464,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.SaveSettings(settingsFilename)
 
     def RefreshGUI(self):
+        """ Also saves the current settings to the currentGUISettingsFilename """
         self.cmbCSnakeFile.Clear()
         self.cmbCSnakeFile.Append(self.settings.csnakeFile)
         for x in self.settings.recentlyUsed:
@@ -484,6 +487,9 @@ class CSnakeGUIFrame(wx.Frame):
             
         self.panelKDevelop.Show( self.options.compiler in ("KDevelop3", "Unix Makefiles") )
         self.Layout()
+        
+        if os.path.exists(self.options.currentGUISettingsFilename):
+            self.SaveSettings(self.options.currentGUISettingsFilename)
     
     def LoadSettings(self, filename = ""):
         """
@@ -539,7 +545,10 @@ class CSnakeGUIFrame(wx.Frame):
             retcode = subprocess.Popen(argList)
                 
     def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        self.Close()
+        self.CopyGUIToSettings()
+        if os.path.exists(self.options.currentGUISettingsFilename):
+            self.SaveSettings(self.options.currentGUISettingsFilename)
+        self.Destroy()
 
     def Validate(self, action):
         if self.cmbAction.GetValue() == "Only create CMake files":
