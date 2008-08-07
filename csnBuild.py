@@ -207,7 +207,7 @@ class Generator:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
-        if False and isTopLevelProject:
+        if isTopLevelProject:
             for mode in ("Debug", "Release"):
                 for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
@@ -729,14 +729,16 @@ class Project(object):
                             if os.path.isdir(file):
                                 for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
                                     if not os.path.isdir(folderFile):
-                                        actualLocation = location + "/" + csnUtility.RemovePrefixFromPath(os.path.dirname(folderFile), file)
-                                        if not filesToInstall.has_key(actualLocation):
-                                            filesToInstall[actualLocation] = []
-                                        filesToInstall[actualLocation].append(folderFile)
+                                        normalizedLocation = location + "/" + csnUtility.RemovePrefixFromPath(os.path.dirname(folderFile), file)
+                                        normalizedLocation = csnUtility.NormalizePath(normalizedLocation)
+                                        if not filesToInstall.has_key(normalizedLocation):
+                                            filesToInstall[normalizedLocation] = []
+                                        filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(folderFile))
                             else:
-                                if not filesToInstall.has_key(location):
-                                    filesToInstall[location] = []
-                                filesToInstall[location].append(file)
+                                normalizedLocation = csnUtility.NormalizePath(location)
+                                if not filesToInstall.has_key(normalizedLocation):
+                                    filesToInstall[normalizedLocation] = []
+                                filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(file))
                     
                 project.filesToInstall[mode] = filesToInstall
     
