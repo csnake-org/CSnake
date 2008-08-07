@@ -285,7 +285,6 @@ class Handler:
 
         generator = csnBuild.Generator()
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
-
         
         # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
         if self.compiler in ("KDevelop3", "Unix Makefiles") and _settings.cmakeBuildType == "DebugAndRelease":

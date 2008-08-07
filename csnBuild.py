@@ -207,7 +207,7 @@ class Generator:
                 f.write( "ADD_DEPENDENCIES(%s %s)\n" % (_targetProject.name, project.name) )
 
         # if top level project, add install rules for all the filesToInstall
-        if isTopLevelProject:
+        if False and isTopLevelProject:
             for mode in ("Debug", "Release"):
                 for project in _targetProject.ProjectsToUse():
                     # iterate over filesToInstall to be copied in this mode
@@ -717,27 +717,28 @@ class Project(object):
             projects = self.GetProjects(_recursive = 1)
             projects.add(self)
             for project in projects:
+                filesToInstall = dict()
                 for location in project.filesToInstall[mode].keys():
-                    newList = []
                     for dllPattern in project.filesToInstall[mode][location]:
                         path = csnUtility.NormalizePath(dllPattern)
                         if not os.path.isabs(path):
                             path = "%s/%s" % (_thirdPartyBinFolder, path)
-                        for dll in glob.glob(path):
-                            skip = (os.path.basename(dll) in excludedFolderList and _skipCVS and os.path.isdir(dll))
-                            if not skip:
-                                newList.append(dll)
+                        for file in glob.glob(path):
+                            if (os.path.basename(file) in excludedFolderList) and _skipCVS and os.path.isdir(file):
+                                continue
+                            if os.path.isdir(file):
+                                for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
+                                    if not os.path.isdir(folderFile):
+                                        actualLocation = location + "/" + csnUtility.RemovePrefixFromPath(os.path.dirname(folderFile), file)
+                                        if not filesToInstall.has_key(actualLocation):
+                                            filesToInstall[actualLocation] = []
+                                        filesToInstall[actualLocation].append(folderFile)
+                            else:
+                                if not filesToInstall.has_key(location):
+                                    filesToInstall[location] = []
+                                filesToInstall[location].append(file)
                     
-                    newListWithOnlyFiles = []
-                    for file in newList:
-                        if os.path.isdir(file):
-                            for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
-                                if not os.path.isdir(folderFile):
-                                    newListWithOnlyFiles.append(folderFile)
-                        else:
-							newListWithOnlyFiles.append(file)
-                        
-                    project.filesToInstall[mode][location] = newListWithOnlyFiles
+                project.filesToInstall[mode] = filesToInstall
     
     def SetGenerateWin32Header(self, _flag):
         """ If _flag, then the Win32Header is generated for this project. """
