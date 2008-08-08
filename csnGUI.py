@@ -376,7 +376,7 @@ class CSnakeGUIFrame(wx.Frame):
         
             # if configuring the target project...            
             if configureProject:
-                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake, _out = sys.stdout):
+                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
                     if self.settings.instance.lower() == "gimias":
                         self.ProposeToDeletePluginDlls()
                     if self.options.askToLaunchVisualStudio:

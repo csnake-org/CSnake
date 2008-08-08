@@ -452,6 +452,9 @@ class Handler:
                 searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
                 if os.path.exists( searchPath ):
                     result.append( searchPath )
+                searchPath = string.Template("$folder/lib/$config/lib$name.so").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+                if os.path.exists( searchPath ):
+                    result.append( searchPath )
                     
         return result
 

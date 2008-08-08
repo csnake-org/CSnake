@@ -137,7 +137,7 @@ class Generator:
     
         # create Win32Header
         if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
-            self.__GenerateWin32Header(_targetProject)
+            _targetProject.GenerateWin32Header()
             # add search path to the generated win32 header
             if not _targetProject.GetBuildFolder() in _targetProject.compiler.public.includeFolders:
                 _targetProject.compiler.public.includeFolders.append(_targetProject.GetBuildFolder())
@@ -237,28 +237,6 @@ class Generator:
         for project in projects:
             ppVisualStudio.Do(project, _buildFolder)
         ppKDevelop.Do(_targetProject, _buildFolder, _kdevelopProjectFolder)
-    
-    def __GenerateWin32Header(self, _targetProject):
-        """
-        Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
-        """
-        templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.h"
-        if( _targetProject.type == "library" ):
-            templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
-        templateOutputFilename = "%s/%sWin32Header.h" % (_targetProject.GetBuildFolder(), _targetProject.name)
-        
-        assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
-        f = open(templateFilename, 'r')
-        template = f.read()
-        template = template.replace('${PROJECTNAME_UPPERCASE}', _targetProject.name.upper())
-        template = template.replace('${PROJECTNAME}', _targetProject.name)
-        f.close()
-        
-        # don't overwrite the existing file if it contains the same text, because this will trigger a source recompile later!
-        if( csnUtility.FileToString(templateOutputFilename) != template ):
-            f = open(templateOutputFilename, 'w')
-            f.write(template)
-            f.close()
         
 class Project(object):
     """
@@ -975,3 +953,26 @@ class Project(object):
     def GetCMakeListsFilename(self):
         """ Return the filename for the CMakeLists.txt file for this project. """
         return "%s/%s" % (self.compiler.GetBuildFolder(), self.cmakeListsSubpath)
+
+    def GenerateWin32Header(self):
+        """
+        Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
+        """
+        templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.h"
+        if( self.type == "library" ):
+            templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
+        templateOutputFilename = "%s/%sWin32Header.h" % (self.GetBuildFolder(), self.name)
+        
+        assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
+        f = open(templateFilename, 'r')
+        template = f.read()
+        template = template.replace('${PROJECTNAME_UPPERCASE}', self.name.upper())
+        template = template.replace('${PROJECTNAME}', self.name)
+        f.close()
+        
+        # don't overwrite the existing file if it contains the same text, because this will trigger a source recompile later!
+        if( csnUtility.FileToString(templateOutputFilename) != template ):
+            f = open(templateOutputFilename, 'w')
+            f.write(template)
+            f.close()
+        
