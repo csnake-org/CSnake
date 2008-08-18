@@ -27,7 +27,7 @@ class GlobalTestSetup:
 			self.devenvPath = "devenv"
 			warnings.warn( "$(CSNAKE_TEST_DEVENV_COM) com file not defined, devenv.com needs to be in the search path.\n" )
 		
-	def stearDown(self):
+	def tearDown(self):
 		pass
 
 class ProjectTest(unittest.TestCase):
@@ -57,7 +57,7 @@ class ProjectTest(unittest.TestCase):
 		self.dummyExe.AddProjects([self.dummyLib])
 		self.dummyExe.AddDefinitions(["DummyExeDefPrivate"], _private = 1)
 		
-	def stearDown(self):
+	def tearDown(self):
 		self.globalTestSetup.tearDown()
 		
 	def testHasBackSlash(self):

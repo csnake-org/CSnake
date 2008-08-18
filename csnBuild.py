@@ -10,6 +10,7 @@ import glob
 import types
 import GlobDirectoryWalker
 import OrderedSet
+import unittest
 
 # General documentation
 #
@@ -229,12 +230,9 @@ class Generator:
         copied from the bin folder to this folder. This is work around for a problem in 
         KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
         """
-        projects = OrderedSet.OrderedSet()
-        projects.add(_targetProject)
-        projects.update( _targetProject.GetProjects(_recursive = 1) )
         ppVisualStudio = csnVisualStudio2003.PostProcessor()
         ppKDevelop = csnKDevelop.PostProcessor()
-        for project in projects:
+        for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
             ppVisualStudio.Do(project, _buildFolder)
         ppKDevelop.Do(_targetProject, _buildFolder, _kdevelopProjectFolder)
         
@@ -381,7 +379,7 @@ class Project(object):
         _debugOnly - If true, then the dll is only installed to the debug install folder.
         _releaseOnly - If true, then the dll is only installed to the release install folder.
         """
-        
+
         if not self.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
             
@@ -513,7 +511,7 @@ class Project(object):
                 return 1
         return 0
         
-    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _skipList = None):
+    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _skipList = None):
         """
         Returns list of all projects associated with this project.
         _recursive -- If true, returns not only child projects but all projects in the tree below this project.
@@ -536,8 +534,11 @@ class Project(object):
                     continue
                 # add project to the skip list, and recurse
                 _skipList.append(project)
-                moreResults.update( project.GetProjects(_recursive, _onlyRequiredProjects, _skipList) )
+                moreResults.update( project.GetProjects(_recursive, _onlyRequiredProjects, False, _skipList) )
             result.update(moreResults)
+            
+        if _includeSelf:
+            result.add(self)
         return result
         
     def UseBefore(self, _otherProject):
@@ -692,9 +693,7 @@ class Project(object):
         """
         excludedFolderList = ("CVS", ".svn")
         for mode in ("Debug", "Release"):
-            projects = self.GetProjects(_recursive = 1)
-            projects.add(self)
-            for project in projects:
+            for project in self.GetProjects(_recursive = 1, _includeSelf = True):
                 filesToInstall = dict()
                 for location in project.filesToInstall[mode].keys():
                     for dllPattern in project.filesToInstall[mode][location]:
@@ -976,3 +975,22 @@ class Project(object):
             f.write(template)
             f.close()
         
+class ProjectTest(unittest.TestCase):
+    def testAddFilesToInstallWindows(self):
+        location = "./Install"
+        project = Project("TestProject", "dll", _compiler = csnVisualStudio2003.Compiler())
+        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
+        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
+        assert project.filesToInstall["Release"][location] == ["Hello.cpp"]
+        assert project.filesToInstall["Debug"][location] == ["Hello.cpp"]
+        
+    def testAddFilesToInstallLinux(self):
+        location = "./Install"
+        project = Project("TestProject", "dll", _compiler = csnKDevelop.Compiler())
+        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
+        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
+        assert project.filesToInstall["Release"][location] == ["Bye.h"]
+        assert project.filesToInstall["Debug"][location] == ["Bye.h"]
+    
+if __name__ == "__main__":
+	unittest.main() 

@@ -320,7 +320,7 @@ class Handler:
         for mode in ("Debug", "Release"):
             outputFolder = instance.compiler.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
-            for project in instance.GetProjects(_recursive = 1):
+            for project in instance.GetProjects(_recursive = 1, _includeSelf = True):
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (outputFolder, location)
