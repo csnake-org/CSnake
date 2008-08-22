@@ -16,6 +16,8 @@ class ProjectRelocator:
     """
     
     def Do(self, _targetProject, _prebuiltProjectsFolder):
+        if _prebuiltProjectsFolder == "":
+            return
         for project in _targetProject.GetProjects(_recursive = 1):
             prebuiltProjectFolder = "%s/%s" % (_prebuiltProjectsFolder, project.name)
             if os.path.exists(prebuiltProjectFolder):
