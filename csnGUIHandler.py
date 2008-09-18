@@ -6,6 +6,7 @@ import csnUtility
 import csnBuild
 import csnCilab
 import csnVisualStudio2003
+import csnVisualStudio2005
 import csnKDevelop
 import csnPrebuilt
 import glob
@@ -260,8 +261,13 @@ class Handler:
         try:
             if self.compiler in ("KDevelop3", "Unix Makefiles"):
                 csnBuild.globalCurrentCompilerType = csnKDevelop.Compiler
-            else:
+            elif self.compiler == "Visual Studio 7 .NET 2003":
                 csnBuild.globalCurrentCompilerType = csnVisualStudio2003.Compiler
+            elif self.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
+                csnBuild.globalCurrentCompilerType = csnVisualStudio2005.Compiler
+            else:
+                assert false, "Unknown compiler %s\n" % self.compiler
+                
             project = csnUtility.LoadModule(projectFolder, name)
             exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
         finally:

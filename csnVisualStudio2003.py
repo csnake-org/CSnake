@@ -6,6 +6,7 @@ class Compiler(csnCompiler.Compiler):
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
         self.private.definitions.append("/Zm200")        
+        self.postProcessor = PostProcessor()
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
@@ -22,7 +23,7 @@ class Compiler(csnCompiler.Compiler):
             return "%s/bin/%s" % (self.GetBuildFolder(), _configuration)
         
 class PostProcessor:
-    def Do(self, _project, _binaryFolder):
+    def Do(self, _project, _binaryFolder, _kdevelopProjectFolder = "ignored"):
         """
         Post processes the vcproj file generated for _project, where the vc proj file was written
         to _binaryFolder.         

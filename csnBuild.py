@@ -50,11 +50,8 @@ import unittest
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
 # - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 # - Fix module reloading
-# - GUI: recently used csnakesettings files.
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
-# - On linux, prevent building with all, force use of either debug or release
-# - On linux, don't copy any windows dlls
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -219,7 +216,7 @@ class Generator:
                         if files != "":
                             destination = "%s/%s" % (_installFolder, location)
                             f.write( "\n# Rule for installing files in location %s\n" % destination)
-                            f.write("INSTALL(FILES %s DESTINATION %s CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
+                            f.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
                         
         f.close()
 
@@ -230,11 +227,8 @@ class Generator:
         copied from the bin folder to this folder. This is work around for a problem in 
         KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
         """
-        ppVisualStudio = csnVisualStudio2003.PostProcessor()
-        ppKDevelop = csnKDevelop.PostProcessor()
         for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
-            ppVisualStudio.Do(project, _buildFolder)
-        ppKDevelop.Do(_targetProject, _buildFolder, _kdevelopProjectFolder)
+            _targetProject.compiler.GetPostProcessor().Do(project, _buildFolder, _kdevelopProjectFolder)
         
 class Project(object):
     """
@@ -804,7 +798,7 @@ class Project(object):
         if( _installFolder != "" and self.type != "library"):
             destination = "%s/%s" % (_installFolder, self.installSubFolder)
             f.write( "\n# Rule for installing files in location %s\n" % destination)
-            f.write( "INSTALL(TARGETS %s DESTINATION %s)\n" % (self.name, destination) )
+            f.write( "INSTALL(TARGETS %s DESTINATION \"%s\")\n" % (self.name, destination) )
     
     def CreateCMakeSection_Rules(self, f):
         """ Create other rules in the CMakeLists.txt """
@@ -887,7 +881,6 @@ class Project(object):
         # when the test project is generated, the CreateExtraSourceFilesForTesting method must be executed
         self.testProject.AddCustomCommand(Project.CreateExtraSourceFilesForTesting)
         
-        # todo: find out where python is located
         wxRunnerArg = ""
         if _enableWxWidgets:
             wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")

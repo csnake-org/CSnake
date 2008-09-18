@@ -6,6 +6,7 @@ import csnCompiler
 class Compiler(csnCompiler.Compiler):
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
+        self.postProcessor = PostProcessor()
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)

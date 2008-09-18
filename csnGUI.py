@@ -102,7 +102,14 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
         # end wxGlade
         
-        self.Bind(wx.EVT_CLOSE, self.OnExit, self)        
+        self.Bind(wx.EVT_CLOSE, self.OnExit, self)
+        
+        self.txtBinFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtBinFolder)        
+        self.txtInstallFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtInstallFolder)        
+        self.txtThirdPartyRootFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtThirdPartyRootFolder)        
+        self.txtThirdPartyBinFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtThirdPartyBinFolder)        
+        self.txtKDevelopProjectFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtKDevelopProjectFolder)        
+        self.txtPrebuiltBinariesFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtPrebuiltBinariesFolder)        
         
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
@@ -217,7 +224,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.options.currentGUISettingsFilename = lastUsedSettingsFile
         self.WriteOptions()
         
-    def WriteOptions(self):
+    def WriteOptions(self, event = None):
         """
         Write options to the application options file, and passes them to the handler. 
         """

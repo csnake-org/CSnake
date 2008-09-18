@@ -26,3 +26,5 @@ class Compiler:
     def GetBuildFolder(self):
         return self.buildFolder
         
+    def GetPostProcessor(self):
+        return self.postProcessor
