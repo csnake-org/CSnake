@@ -141,7 +141,8 @@ class Generator:
                 _targetProject.compiler.public.includeFolders.append(_targetProject.GetBuildFolder())
         
         # open cmakelists.txt
-        f = open(_targetProject.GetCMakeListsFilename(), 'w')
+        tmpCMakeListsFile = _targetProject.GetCMakeListsFilename() + ".tmp"
+        f = open(tmpCMakeListsFile, 'w')
         
         # write header and some cmake fields
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
@@ -219,6 +220,7 @@ class Generator:
                             f.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
                         
         f.close()
+        csnUtility.ReplaceDestinationFileIfDifferent(tmpCMakeListsFile, _targetProject.GetCMakeListsFilename())
 
     def PostProcess(self, _targetProject, _buildFolder, _kdevelopProjectFolder = ""):
         """
@@ -884,7 +886,7 @@ class Project(object):
         wxRunnerArg = ""
         if _enableWxWidgets:
             wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
-        self.testProject.AddRule("Create test runner", "\"%s\" %s %s --have-eh --error-printer -o %s " % (csnUtility.NormalizePath(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
+        self.testProject.AddRule("Create test runner", "\"%s\" \"%s\" %s --have-eh --error-printer -o %s " % (csnUtility.NormalizePath(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
         self.testProject.AddProjects([cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         

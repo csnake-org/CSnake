@@ -30,7 +30,6 @@ class PostProcessor:
         return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
         
     def Do(self, _project, _binaryFolder, _kdevelopProjectFolder):
-
         if not os.path.exists(_kdevelopProjectFolder):
             # if _kdevelopProjectFolder does not exist, then it MUST equal "".
             # otherwise, the user specified an invalid path for _kdevelopProjectFolder.  
@@ -50,9 +49,7 @@ class PostProcessor:
                 f.write(fileListItem + "/n")
         f.close()
         
-        if csnUtility.FileToString(self.__GetFilelistFilename(_project, kdevelopProjectFolder)) != csnUtility.FileToString(self.__GetFilelistFilename(_project)):
-            result = (0 != shutil.copy(self.__GetFilelistFilename(_project), kdevelopProjectFolder))
-            assert result, "Could not copy from %s to %s/n" % (self.__GetFilelistFilename(_project), kdevelopProjectFolder)
+        ReplaceDestinationFileIfDifferent(self.__GetFilelistFilename(_project, kdevelopProjectFolder), self.__GetFilelistFilename(_project))
         
         f = open(self.__GetKDevelopProjectFilename(_project), 'r')
         kdevelopProjectText = f.read()

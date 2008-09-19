@@ -93,3 +93,8 @@ def GetDummyCppFilename():
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
     return GetRootOfCSnake() + "/TemplateSourceFiles/csnake_dummy.cpp"
+
+def ReplaceDestinationFileIfDifferent(sourceFile, destinationFile):
+    if FileToString(sourceFile) != FileToString(destinationFile):
+        result = (0 != shutil.copy(sourceFile, destinationFile))
+        assert result, "Could not copy from %s to %s/n" % (sourceFile, destinationFile)
