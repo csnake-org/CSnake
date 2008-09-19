@@ -104,12 +104,12 @@ class CSnakeGUIFrame(wx.Frame):
         
         self.Bind(wx.EVT_CLOSE, self.OnExit, self)
         
-        self.txtBinFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtBinFolder)        
-        self.txtInstallFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtInstallFolder)        
-        self.txtThirdPartyRootFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtThirdPartyRootFolder)        
-        self.txtThirdPartyBinFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtThirdPartyBinFolder)        
-        self.txtKDevelopProjectFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtKDevelopProjectFolder)        
-        self.txtPrebuiltBinariesFolder.Bind(wx.EVT_KILL_FOCUS, self.WriteOptions, self.txtPrebuiltBinariesFolder)        
+        self.txtBinFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtBinFolder)        
+        self.txtInstallFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtInstallFolder)        
+        self.txtThirdPartyRootFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtThirdPartyRootFolder)        
+        self.txtThirdPartyBinFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtThirdPartyBinFolder)        
+        self.txtKDevelopProjectFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtKDevelopProjectFolder)        
+        self.txtPrebuiltBinariesFolder.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, self.txtPrebuiltBinariesFolder)        
         
     def __set_properties(self):
         # begin wxGlade: CSnakeGUIFrame.__set_properties
@@ -224,7 +224,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.options.currentGUISettingsFilename = lastUsedSettingsFile
         self.WriteOptions()
         
-    def WriteOptions(self, event = None):
+    def WriteOptions(self):
         """
         Write options to the application options file, and passes them to the handler. 
         """
@@ -311,24 +311,6 @@ class CSnakeGUIFrame(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def OnSelectBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Select folder where project binaries must be placed.
-        """
-        dlg = wx.DirDialog(None, "Select Binary Folder")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.settings.SetBuildFolder(dlg.GetPath())
-            self.RefreshGUI()
-
-    def OnSelectThirdPartyBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Select folder where third party binaries must be placed.
-        """
-        dlg = wx.DirDialog(None, "Select Third Party Binary Folder")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.settings.thirdPartyBinFolder = dlg.GetPath()
-            self.RefreshGUI()
-
     def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Create 'empty' CSnake file for configuring a library or executable (depending on cmbNewProjectType).
@@ -405,6 +387,33 @@ class CSnakeGUIFrame(wx.Frame):
         self.commandCounter += 1
         self.RefreshGUI()
                 
+    def OnKillFocus(self, event):
+        self.settings.SetBuildFolder(self.txtBinFolder.GetValue())
+        self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue()
+        self.settings.installFolder = self.txtInstallFolder.GetValue()
+        self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue()
+        self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue()
+        if os.path.exists(self.options.currentGUISettingsFilename):
+            self.SaveSettings(self.options.currentGUISettingsFilename)
+    
+    def OnSelectBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Select folder where project binaries must be placed.
+        """
+        dlg = wx.DirDialog(None, "Select Binary Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.settings.SetBuildFolder(dlg.GetPath())
+            self.RefreshGUI()
+
+    def OnSelectThirdPartyBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Select folder where third party binaries must be placed.
+        """
+        dlg = wx.DirDialog(None, "Select Third Party Binary Folder")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.settings.thirdPartyBinFolder = dlg.GetPath()
+            self.RefreshGUI()
+            
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Select folder where application binaries are installed when building the INSTALL target.
@@ -430,6 +439,12 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.FileDialog(None, "Select CSnake file")
         if dlg.ShowModal() == wx.ID_OK:
             self.settings.csnakeFile = dlg.GetPath()
+            self.RefreshGUI()
+
+    def OnSelectKDevelopProjectFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        dlg = wx.DirDialog(None, "Select folder for saving the KDevelop project file")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.settings.kdevelopProjectFolder = dlg.GetPath()
             self.RefreshGUI()
 
     def OnAddRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
@@ -561,12 +576,6 @@ class CSnakeGUIFrame(wx.Frame):
         if self.cmbAction.GetValue() == "Only create CMake files":
             pass
         
-    def OnSelectKDevelopProjectFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        dlg = wx.DirDialog(None, "Select folder for saving the KDevelop project file")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.settings.kdevelopProjectFolder = dlg.GetPath()
-            self.RefreshGUI()
-
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         item = self.cmbCSnakeFile.GetSelection() - 1
         settings = self.settings.recentlyUsed[item]
