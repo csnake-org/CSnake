@@ -171,7 +171,6 @@ class CSnakeGUIFrame(wx.Frame):
     def CreateMemberVariables(self):
         self.settings = csnGUIHandler.Settings()
         self.handler = csnGUIHandler.Handler()
-        self.commandCounter = 0
         
     def CreateOptionsFilenameAndOptionsMemberVariable(self):
         # find out location of application options file
@@ -353,7 +352,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         
         self.textLog.Clear()
-        print "\n--- Working, patience please... (command counter: %s) ---" % self.commandCounter
+        self.textLog.Update()
+        print "\n--- Working, patience please... ---"
         self.CopyGUIToSettings()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
@@ -383,8 +383,7 @@ class CSnakeGUIFrame(wx.Frame):
                 if self.options.askToLaunchVisualStudio:
                     self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
 
-        print "--- Done (command counter: %s) ---\n" % self.commandCounter
-        self.commandCounter += 1
+        print "--- Done ---\n"
         self.RefreshGUI()
                 
     def OnKillFocus(self, event):

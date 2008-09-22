@@ -245,7 +245,6 @@ class Handler:
         
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
-
         self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules
@@ -279,7 +278,6 @@ class Handler:
         relocator.Do(instance, _settings.prebuiltBinariesFolder)
         
         self.UpdateRecentlyUsedCSnakeFiles(_settings)
-        
         return instance
     
     def ConfigureProjectToBinFolder(self, _settings, _alsoRunCMake):
