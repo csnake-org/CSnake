@@ -49,7 +49,7 @@ class PostProcessor:
                 f.write(fileListItem + "/n")
         f.close()
         
-        ReplaceDestinationFileIfDifferent(self.__GetFilelistFilename(_project, kdevelopProjectFolder), self.__GetFilelistFilename(_project))
+        csnUtility.ReplaceDestinationFileIfDifferent(self.__GetFilelistFilename(_project, kdevelopProjectFolder), self.__GetFilelistFilename(_project))
         
         f = open(self.__GetKDevelopProjectFilename(_project), 'r')
         kdevelopProjectText = f.read()
