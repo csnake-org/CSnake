@@ -22,6 +22,8 @@ class ProjectRelocator:
             prebuiltProjectFolder = "%s/%s" % (_prebuiltProjectsFolder, project.name)
             if os.path.exists(prebuiltProjectFolder):
                 self.__Relocate(project, prebuiltProjectFolder)
+            elif False:
+                print "Not relocating project %s (no folder %s)\n" % (project.name, prebuiltProjectFolder)
                 
     def __Relocate(self, _project, _prebuiltProjectFolder):
         print "Relocating project %s\n" % _project.name

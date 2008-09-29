@@ -163,8 +163,8 @@ class Generator:
         _targetProject.GenerateConfigFile( _public = 1)
         _targetProject.GenerateUseFile()
         
-        _targetProject.CreateCMakeSections(f, _installFolder)
         _targetProject.RunCustomCommands()
+        _targetProject.CreateCMakeSections(f, _installFolder)
 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
@@ -365,6 +365,33 @@ class Project(object):
                             self.sourceGroups[_sourceGroup] = []
                         self.sourceGroups[_sourceGroup].append(source)
                    
+    def RemoveSources(self, _listOfSourceFiles):
+        """
+        Adds items to self.sources. For each source file that is not an absolute path, self.sourceRootFolder is prefixed.
+        Entries of _listOfSourceFiles may contain wildcards, such as src/*/*.h.
+        If _moc, then a moc file is generated for each header file in _listOfSourceFiles.
+        If _ui, then qt's ui.exe is run for the file.
+        _sourceGroup -- Place sources in this group (optional).
+        If _checkExists, then added sources (possibly after wildcard expansion) must exist on the filesystem, or an exception is thrown.
+        _forceAdd - If true, then each item in _listOfSourceFiles is added as a source, even if the item does not exist on the disk.
+        """
+        for sourceFile in _listOfSourceFiles:
+            sources = self.Glob(sourceFile)
+            if( not len(sources) ):
+                sources = [sourceFile]
+            
+            for source in sources:
+                if source in self.sourcesToBeMoced:
+                    self.sourcesToBeMoced.remove(source)
+                
+                if( source in self.sources ):
+                    if( source in self.sourcesToBeUIed ):
+                        self.sourcesToBeUIed.remove(source)
+                    self.sources.remove(source)
+                    for sourceGroupKey in self.sourceGroups.keys():
+                        if source in self.sourceGroups[sourceGroupKey]:
+                            self.sourceGroups[sourceGroupKey].remove(source)
+                            
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.filesToInstall.
@@ -484,9 +511,17 @@ class Project(object):
     def Glob(self, _path):
         """ 
         Returns a list of files that match _path (which can be absolute, or relative to self.sourceRootFolder). 
+        If _path is a list, then every element of _path will be Globbed.
         The return paths are absolute, containing only forward slashes.
         """
-        return [csnUtility.NormalizePath(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
+        if type(_path) == type(list()):
+            result = []
+            for x in _path:
+                moreResults = self.Glob(x)
+                result.extend(moreResults)
+            return result
+        else:
+            return [csnUtility.NormalizePath(x) for x in glob.glob(self.PrependSourceRootFolderToRelativePath(_path))]
     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 
@@ -834,18 +869,6 @@ class Project(object):
             self.CreateCMakeSection_Definitions(f)
             self.CreateCMakeSection_InstallRules(f, _installFolder)
             self.CreateCMakeSection_Rules(f)
-
-    def CreateExtraSourceFilesForTesting(self):
-        """ 
-        Tests if this project is a test project. If so, checks if the test runner output file exists. If not, creates a dummy file.
-        This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
-        """
-        assert hasattr(self, "testRunnerSourceFile")
-        testRunnerSourceFile = "%s/%s" % (self.GetBuildFolder(), self.testRunnerSourceFile)
-        if not os.path.exists(testRunnerSourceFile):
-            f = open(testRunnerSourceFile, 'w')
-            f.write("// Test runner source file. To be created by CxxTest.py.")
-            f.close()
         
     def AddRule(self, description, command, workingDirectory = "."):
         """
@@ -857,7 +880,18 @@ class Project(object):
         self.rules[description] = rule
 
     def AddCustomCommand(self, command):
-        """ Adds command to the list of custom commands. Each command must accept this instance (self) as the one and only argument. """
+        """ 
+        Adds command to the list of custom commands. Each command must accept this instance (self) as the one and only argument. 
+        For example:
+        
+        project.AddCustomCommand(project.DoSomethingSpecial)
+        
+        (... in class of project)
+        def DoSomethingSpecial(self):
+            # do special stuff
+            pass
+            
+        """
         self.customCommands.append(command)
 
     def RunCustomCommands(self):
@@ -873,22 +907,44 @@ class Project(object):
         _enableWxWidgets - If true, the CMake rule that creates the testrunner will create a test runner that initializes wxWidgets, so that
         your tests can create wxWidgets objects.
         """
-        cxxTestProject = ToProject(_cxxTestProject)
         self.testProject = Project("%sTest" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder)
-        self.testProject.testRunnerSourceFile = "%s.cpp" % self.testProject.name
-        pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.sourceRootFolder
-        self.testProject.AddSources([self.testProject.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
+        self.testProject.cxxTestProject = ToProject(_cxxTestProject)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
-        # when the test project is generated, the CreateExtraSourceFilesForTesting method must be executed
-        self.testProject.AddCustomCommand(Project.CreateExtraSourceFilesForTesting)
         
-        wxRunnerArg = ""
         if _enableWxWidgets:
-            wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
-        self.testProject.AddRule("Create test runner", "\"%s\" \"%s\" %s --have-eh --error-printer -o %s " % (csnUtility.NormalizePath(pythonPath), pythonScript, wxRunnerArg, self.testProject.testRunnerSourceFile))
-        self.testProject.AddProjects([cxxTestProject, self])
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
+        else:
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/normalRunner.tpl")
+        self.testProject.AddProjects([self.testProject.cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
+        self.testProject.AddCustomCommand(Project.__CreateRuleForGeneratingTestRunner)
+
+    def __CreateRuleForGeneratingTestRunner(self):
+        """ 
+        This function adds (to self) the rule for building a test runner.
+        It is installed (using AddCustomCommand) by CreateTestProject, and ran when the project is generated.
+        """
+        # Check if the test runner output file exists. If not, create a dummy file.
+        # This dummy file is needed, for otherwise CMake will not include the test runner source file in the test project.
+        self.testRunnerSourceFile = "%s/%s.cpp" % (self.GetBuildFolder(), self.name)
+        if not os.path.exists(self.testRunnerSourceFile):
+            f = open(self.testRunnerSourceFile, 'w')
+            f.write("// Test runner source file. To be created by CxxTest.py.")
+            f.close()
+            
+        self.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
+        pythonScript = "%s/CxxTest/cxxtestgen.py" % self.cxxTestProject.sourceRootFolder
+        command = "\"%s\" \"%s\" %s --have-eh --error-printer -o %s " % (
+            csnUtility.NormalizePath(pythonPath), 
+            pythonScript, 
+            self.wxRunnerArg, 
+            self.testRunnerSourceFile
+        )
+        for source in self.sources:
+            if os.path.splitext(source)[1] in (".h", ".hpp"):
+                command += "\"%s\"" % source
+        self.AddRule("Create test runner", command)
         
     def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0):
         """
@@ -900,10 +956,8 @@ class Project(object):
         if not hasattr(self, "testProject"):
             self.CreateTestProject(cxxTestProject, _enableWxWidgets)
             
-        rule = self.testProject.rules["Create test runner"]
         for test in listOfTests:
             absPathToTest = self.PrependSourceRootFolderToRelativePath(test)
-            rule.command += "\"%s\"" % absPathToTest
             self.testProject.AddSources([absPathToTest], _checkExists = 0)
 
     def GetBuildFolder(self):
