@@ -5,6 +5,7 @@
 import wx
 import csnGUIOptions
 import csnGUIHandler
+import csnBuild
 import csnUtility
 import os.path
 import sys
@@ -166,6 +167,7 @@ class CSnakeGUIFrame(wx.Frame):
 
     def PrintWelcomeMessages(self):
         print "CSnakeGUI loaded.\n"
+        print "CSnake version = %s\n" % csnBuild.version
         print "Checking if CMake is found...\n"
 
     def CreateMemberVariables(self):
