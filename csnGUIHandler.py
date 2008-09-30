@@ -265,7 +265,7 @@ class Handler:
             elif self.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
                 csnBuild.globalCurrentCompilerType = csnVisualStudio2005.Compiler
             else:
-                assert false, "Unknown compiler %s\n" % self.compiler
+                assert false, "\n\nError: Unknown compiler %s\n" % self.compiler
                 
             project = csnUtility.LoadModule(projectFolder, name)
             exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
@@ -328,7 +328,7 @@ class Handler:
                 for location in project.filesToInstall[mode].keys():
                     for file in project.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (outputFolder, location)
-                        assert not os.path.isdir(file), "InstallBinariesToBinFolder: Cannot install a folder (%s)" % file
+                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBinFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         #print "Copy %s to %s\n" % (file, absLocation)
                         result = (0 != shutil.copy(file, absLocation)) and result

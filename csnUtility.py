@@ -75,7 +75,7 @@ def LoadModule(_folder, _name):
     sys.path.append(_folder)
     location = len(sys.path) - 1
     result = __import__(_name)
-    assert sys.path[location] == _folder, "Expected that importing %s would not remove stuff from sys.path." % _name 
+    assert sys.path[location] == _folder, "\n\nError: expected that importing %s would not remove stuff from sys.path." % _name 
     sys.path.pop(location)
     return result 
 
@@ -97,4 +97,4 @@ def GetDummyCppFilename():
 def ReplaceDestinationFileIfDifferent(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):
         result = (0 != shutil.copy(sourceFile, destinationFile))
-        assert result, "Could not copy from %s to %s/n" % (sourceFile, destinationFile)
+        assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)

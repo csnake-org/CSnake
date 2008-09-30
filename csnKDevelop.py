@@ -33,7 +33,7 @@ class PostProcessor:
         if not os.path.exists(_kdevelopProjectFolder):
             # if _kdevelopProjectFolder does not exist, then it MUST equal "".
             # otherwise, the user specified an invalid path for _kdevelopProjectFolder.  
-            assert _kdevelopProjectFolder == "", "Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
+            assert _kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
             return
             
         kdevelopProjectFolder = csnUtility.NormalizePath(_kdevelopProjectFolder)

@@ -14,18 +14,18 @@ if True:
     taskMsg = "ConfigureThirdPartyFolder from %s to %s..." % (settings.thirdPartyRootFolder, settings.thirdPartyBinFolder) 
     print "Starting task: " + taskMsg  
     result = handler.ConfigureThirdPartyFolder(settings)
-    assert result, "Task failed: ConfigureThirdPartyFolder" 
+    assert result, "\n\nTask failed: ConfigureThirdPartyFolder" 
     print "Finished " + taskMsg + "\nPlease build the 3rd party sources then press enter...\n"
     raw_input()
 
 taskMsg = "InstallBinariesToBinFolder to %s..." % (settings.binFolder)
 print "Starting task: " + taskMsg 
 result = handler.InstallBinariesToBinFolder(settings)
-assert result, "Task failed: InstallBinariesToBinFolder" 
+assert result, "\n\nTask failed: InstallBinariesToBinFolder" 
 print "Finished task: " + taskMsg
 
 taskMsg = "ConfigureProjectToBinFolder to %s..." % (settings.binFolder)
 print "Starting task: " + taskMsg 
 result = handler.ConfigureProjectToBinFolder(settings, _alsoRunCMake = True)
-assert result, "Task failed: ConfigureProjectToBinFolder" 
+assert result, "\n\nTask failed: ConfigureProjectToBinFolder" 
 print "Finished task: " + taskMsg + "\nPlease build the sources in %s.\n" % handler.GetTargetSolutionPath(settings)

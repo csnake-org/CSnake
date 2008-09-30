@@ -60,6 +60,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
+version = 1.1
 
 # Set default method for creating a csnCompiler.Compiler instance.
 globalCurrentCompilerType = csnVisualStudio2003.Compiler
@@ -107,8 +108,8 @@ class Generator:
         if( isTopLevelProject ):
             _generatedList = []
 
-        # trying to Generate a project twice indicates a logical error in the code        
-        assert not _targetProject in _generatedList, "Target project name = %s" % (_targetProject.name)
+        # Trying to Generate a project twice indicates a logical error in the code        
+        assert not _targetProject in _generatedList, "\n\nError: Trying to Generate a project twice. Target project name = %s" % (_targetProject.name)
 
         for generatedProject in _generatedList:
             if generatedProject.name == _targetProject.name:
@@ -450,7 +451,7 @@ class Project(object):
         this filename. 
         """
         globResult = self.Glob(_precompiledHeader)
-        assert len(globResult) == 1, "Error locating precompiled header file %s (source root folder = %s)" % (_precompiledHeader, self.sourceRootFolder)
+        assert len(globResult) == 1, "\n\nError locating precompiled header file %s (source root folder = %s)" % (_precompiledHeader, self.sourceRootFolder)
         self.precompiledHeader = globResult[0]
         self.AddSources([_precompiledHeader], _sourceGroup = "PCH Files (header)")
         
@@ -533,7 +534,7 @@ class Project(object):
             _skipList = []
         
         otherProject = ToProject(_otherProject)
-        assert not self in _skipList, "%s should not be in stoplist" % (self.name)
+        assert not self in _skipList, "\n\nError: %s should not be in stoplist" % (self.name)
         _skipList.append(self)
         for requiredProject in self.GetProjects(_onlyRequiredProjects = 1):
             if requiredProject in _skipList:
@@ -610,7 +611,7 @@ class Project(object):
         result = []
         
         projectsToUse = [project for project in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1)]
-        assert not self in projectsToUse, "%s should not be in projectsToUse" % (self.name)
+        assert not self in projectsToUse, "\n\nError: %s should not be in projectsToUse" % (self.name)
         projectsToUse.append(self)
         
         (count, maxCount) = (0, 1)
@@ -626,7 +627,7 @@ class Project(object):
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
                 if( otherProject.WantsToBeUsedBefore(project) ):
-                    assert not otherProject is self, "Logical error. %s cannot be used before %s" % (self.name, project.name)
+                    assert not otherProject is self, "\n\nLogical error: %s cannot be used before %s" % (self.name, project.name)
                     skipThisProjectForNow = 1
             if( skipThisProjectForNow ):
                 projectsToUse.insert(0, project)
@@ -763,7 +764,7 @@ class Project(object):
         add the use and config file for this project (do this last, so that all definitions from
         the dependency projects are already included).
         """
-        assert hasattr(self.compiler, "buildFolder"), "Project %s has no compiler with buildFolder\n" % self.name
+        assert hasattr(self.compiler, "buildFolder"), "\n\nError: Project %s has no compiler with buildFolder\n" % self.name
         for project in self.ProjectsToUse():
             f.write( "\n# use %s\n" % (project.name) )
             f.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_public = (self.name != project.name and not csnUtility.IsRunningOnWindows())) ))
@@ -1011,7 +1012,7 @@ class Project(object):
             templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
         templateOutputFilename = "%s/%sWin32Header.h" % (self.GetBuildFolder(), self.name)
         
-        assert os.path.exists(templateFilename), "File not found %s\n" % (templateFilename)
+        assert os.path.exists(templateFilename), "\n\nError: File not found %s\n" % (templateFilename)
         f = open(templateFilename, 'r')
         template = f.read()
         template = template.replace('${PROJECTNAME_UPPERCASE}', self.name.upper())
