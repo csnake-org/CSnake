@@ -61,6 +61,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
 version = 1.1
+testRunnerTemplate = "normalRunner.tpl"
 
 # Set default method for creating a csnCompiler.Compiler instance.
 globalCurrentCompilerType = csnVisualStudio2003.Compiler
@@ -916,7 +917,7 @@ class Project(object):
         if _enableWxWidgets:
             self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
         else:
-            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/normalRunner.tpl")
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/%s" % testRunnerTemplate)
         self.testProject.AddProjects([self.testProject.cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         self.testProject.AddCustomCommand(Project.__CreateRuleForGeneratingTestRunner)

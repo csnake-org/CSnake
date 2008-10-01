@@ -71,28 +71,32 @@ class CilabModuleProject(csnBuild.Project):
         Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
         It is assumed that the root folder of self has a subfolder called libmodules. The subfolders of libmodules should
         contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
+        If the src folder has a subfolder called 'stub', it is also added to the source tree.
         _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
         """
         # add sources    
         for libModule in _libModules:
-            srcFolder = "libmodules/%s/src" % (libModule)
-            srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
-            if( os.path.exists(srcFolderAbs) ):
-                self.AddIncludeFolders([srcFolder])
-                for extension in GetSourceFileExtensions():
-                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-                for extension in GetIncludeFileExtensions():
-                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+            for stub in ("/stub", ""):
+                srcFolder = "libmodules/%s/src%s" % (libModule, stub)
+                srcFolderAbs = "%s/%s" % (self.sourceRootFolder, srcFolder)
+                if( os.path.exists(srcFolderAbs) ):
+                    self.AddIncludeFolders([srcFolder])
+                    for extension in GetSourceFileExtensions():
+                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+                    for extension in GetIncludeFileExtensions():
+                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
 
-            if( len(self.sources) == 0 ):
-                self.AddSources([csnUtility.GetDummyCppFilename()])
-                
-            includeFolder = "libmodules/%s/include" % libModule
-            includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
-            if( os.path.exists(includeFolderAbs) ):
-                self.AddIncludeFolders([includeFolder])
-                for extension in GetIncludeFileExtensions():
-                    self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
+        if( len(self.sources) == 0 ):
+            self.AddSources([csnUtility.GetDummyCppFilename()])
+ 
+        for libModule in _libModules:
+            for stub in ("/stub", ""):
+                includeFolder = "libmodules/%s/include%s" % (libModule, stub)
+                includeFolderAbs = "%s/%s" % (self.sourceRootFolder, includeFolder)
+                if( os.path.exists(includeFolderAbs) ):
+                    self.AddIncludeFolders([includeFolder])
+                    for extension in GetIncludeFileExtensions():
+                        self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
     def AddDemos(self, _modules, _pch = "", _applicationDependenciesList = None):
         """
