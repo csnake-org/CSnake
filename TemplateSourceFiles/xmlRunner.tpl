@@ -2,13 +2,14 @@
 // This is the default test runner.
 //
 
-//#include <cxxtest/XmlPrinter.h>
-//#include <stdio.h>
+#include <cxxtest/XmlPrinter.h>
 
 // The CxxTest "world"
 <CxxTest world>
 
 int main( int argc, char** argv )
 {
-	return CxxTest::XmlPrinter( std::ofstream( "testLog.xml" ) ).run();
+    std::ofstream ofs( "test_log.xml" );
+    return CxxTest::XmlPrinter( ofs ).run();
+    ofs.close();
 }
