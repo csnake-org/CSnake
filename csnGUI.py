@@ -387,6 +387,14 @@ class CSnakeGUIFrame(wx.Frame):
 
         print "--- Done ---\n"
         self.RefreshGUI()
+        #self.Restart()
+        
+    def Restart(self):
+        arglist = []
+        if( os.path.splitext(os.path.basename(sys.executable))[0].lower() == "python" ):
+            arglist = [sys.executable]
+            arglist.extend(sys.argv)
+        os.execv(sys.executable, arglist)
                 
     def OnKillFocus(self, event):
         self.settings.SetBuildFolder(self.txtBinFolder.GetValue())

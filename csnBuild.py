@@ -60,7 +60,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
-version = 1.1
+version = 1.11
 testRunnerTemplate = "normalRunner.tpl"
 
 # Set default method for creating a csnCompiler.Compiler instance.
