@@ -357,44 +357,19 @@ class Handler:
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
-        result = 1
-        messageAboutPatches = ""
-        
         if not self.cmakeFound:
             print "Please specify correct path to CMake"
-            return 0
+            return False
         
-        # apply MITK patch
-        originalMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in" % _settings.thirdPartyRootFolder
-        patchedMITK = "%s/MITK-0.7/MITK-0.7Config.cmake.in.patchedForCSnake" % _settings.thirdPartyRootFolder
-        if not os.path.exists(patchedMITK):
-            print "Warning: patch failed. File not found: %s\n" % patchedMITK
-            result = 1
-        else:
-            shutil.copy(patchedMITK, originalMITK)
-            messageAboutPatches = "Note: Applied patch to file %s\n" % originalMITK
-        
-        # apply ITK patch
-        if result:
-            originalITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in" % _settings.thirdPartyRootFolder
-            patchedITK = "%s/ITK-3.2/InsightToolkit-3.2.0/UseITK.cmake.in.patchedForCSnake" % _settings.thirdPartyRootFolder
-            if not os.path.exists(patchedITK):
-                print "Warning: patch failed. File not found: %s\n" % patchedITK
-                result = 1
-            else:
-                shutil.copy(patchedITK, originalITK)
-                messageAboutPatches = messageAboutPatches + "Note: Applied patch to file %s\n" % originalITK
-        
-        if result:
-            os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
-            argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
-            for i in range(0, _nrOfTimes):
-                result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
+        result = True
+        os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
+        argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
+        for i in range(0, _nrOfTimes):
+            result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
 
-	if not result:
-            print "Configuration failed.\n"   
+    	if not result:
+                print "Configuration failed.\n"   
             
-        print messageAboutPatches
         return result
 
     def DeletePycFiles(self, _settings):
