@@ -14,6 +14,7 @@ import RollbackImporter
 import inspect
 import string
 import ConfigParser
+import re
 
 class Settings:
     """
@@ -31,6 +32,7 @@ class Settings:
         self.instance = ""
         self.cmakeBuildType = "DebugAndRelease"
         self.recentlyUsed = list()
+        self.filter = list()
 
     def GetBuildFolder(self):
         """
@@ -67,6 +69,8 @@ class Settings:
         self.csnakeFile = parser.get(section, "csnakeFile")
         self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
         self.instance = parser.get(section, "instance")
+        if parser.has_option(section, "filter"):
+            self.filter = re.split(";", parser.get(section, "filter"))
 
     def __LoadRootFolders(self, parser):
         section = "RootFolders"
@@ -120,6 +124,7 @@ class Settings:
         parser.set(section, "prebuiltBinariesFolder", self.prebuiltBinariesFolder)
         parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
         parser.set(section, "csnakeFile", self.csnakeFile)
+        parser.set(section, "filter", ";".join(self.filter))
         count = 0
         while count < len(self.rootFolders):
             parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
@@ -245,6 +250,7 @@ class Handler:
         
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
+        csnBuild.filter = _settings.filter
         self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules

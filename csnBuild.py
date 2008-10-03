@@ -60,8 +60,9 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
-version = 1.11
+version = 1.12
 testRunnerTemplate = "normalRunner.tpl"
+filter = []
 
 # Set default method for creating a csnCompiler.Compiler instance.
 globalCurrentCompilerType = csnVisualStudio2003.Compiler
@@ -109,6 +110,9 @@ class Generator:
         if( isTopLevelProject ):
             _generatedList = []
 
+        # assert that this project is not filtered
+        assert not _targetProject.MatchesFilter(), "\n\nLogical error: the project %s should have been filtered instead of generated." % _targetProject.name
+        
         # Trying to Generate a project twice indicates a logical error in the code        
         assert not _targetProject in _generatedList, "\n\nError: Trying to Generate a project twice. Target project name = %s" % (_targetProject.name)
 
@@ -280,7 +284,7 @@ class Project(object):
     _compiler - The compiler (instance of csnCompiler.Compiler) that will be used for compiling this project. If set to None,
     then a new compiler instance will be created using csnBuild.globalCurrentCompilerType.
     """    
-    def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None ):
+    def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None, _categories = None ):
         self.sources = []
         self.sourceGroups = dict()
 
@@ -316,17 +320,29 @@ class Project(object):
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.generateWin32Header = 1
+        self.categories = _categories
+        if self.categories is None:
+            self.categories = []
 
+    def MatchesFilter(self):
+        for category in filter:
+            if category in self.categories:
+                return True
+        return False
+    
     def AddProjects(self, _projects, _dependency = 1): 
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
         this function is called to retrieve the Project instance.
+        Projects that have a category that matches the global variable csnBuild.filter are not added.
         _dependency - Flag that states that self target requires (is dependent on) _projects.
         Raises DependencyError in case of a cyclic dependency.
         """
         for project in _projects:
             projectToAdd = ToProject(project)
-                
+            if projectToAdd.MatchesFilter():
+                continue
+                    
             if( self is projectToAdd ):
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
@@ -909,7 +925,7 @@ class Project(object):
         _enableWxWidgets - If true, the CMake rule that creates the testrunner will create a test runner that initializes wxWidgets, so that
         your tests can create wxWidgets objects.
         """
-        self.testProject = Project("%sTest" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder)
+        self.testProject = Project("%sTest" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", "%sTests" % self.name])
         self.testProject.cxxTestProject = ToProject(_cxxTestProject)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
