@@ -48,9 +48,8 @@ Phone +34 935 421323</address>
       </listitem>
 
       <listitem>
-        <para>define dependencies between different libraries and executables
-        (automatically handling the paths where include files from the
-        dependent projects should be searched).</para>
+        <para>define dependencies between different libraries and
+        executables</para>
       </listitem>
 
       <listitem>
@@ -88,18 +87,15 @@ Phone +34 935 421323</address>
   <chapter>
     <title>Installing CSnake</title>
 
-    <para>Copy the contents of
-    \\193.145.44.5\standard_software_installers\WindowsXP\GIMIAS\Other\CSnake
-    to your Program Files folder. You can start CSnakeGUI by double clicking
-    on CSnakeGUI.bat. Before experimenting with CSnakeGUI, we advise you to
-    read the next chapter on creating a CSnake project.</para>
+    <para></para>
 
-    <important>
-      <para>In this user guide, we will assume that CSnake is installed in
-      C:\Program Files\CSnake. If you install CSnake to a different folder
-      (for example on Linux), use this folder in the examples to
-      follow.</para>
-    </important>
+    <section>
+      <title>Installing the source version</title>
+
+      <para>The source code can be obtained from the SVN repository at
+      https://svncistib.upf.edu/repos/csnake. For the source version, you need
+      to have wxPython installed.</para>
+    </section>
   </chapter>
 
   <chapter>
@@ -164,7 +160,7 @@ myLibrary.AddIncludeFolders(["src"])</programlisting><note>
     csnBuild can be found by the interpreter (adjust the path below as
     necessary), and then run CSnake</para>
 
-    <programlisting>&gt;set PYTHONPATH="C:\Program Files\CSnake\src"
+    <programlisting>&gt;set PYTHONPATH="C:\csnake\CSnake"
 &gt;python csnMyLibrary.py</programlisting>
 
     <para>After running this, CMake files have been placed in the folder
@@ -612,7 +608,8 @@ project.AddSources(["src/*.h", "src/*.cpp"], _checkExists = 0)</programlisting>
         <glossterm>CMake</glossterm>
 
         <glossdef>
-          <para>This is the tool that CSnake is</para>
+          <para>This is the tool that CSnake uses to create the
+          <emphasis>compiler project files</emphasis>.</para>
         </glossdef>
       </glossentry>
     </glossdiv>

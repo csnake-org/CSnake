@@ -4,6 +4,7 @@
 
 import wx
 import csnGUIOptions
+import csnGUISelectProjects
 import csnGUIHandler
 import csnBuild
 import csnUtility
@@ -81,6 +82,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.textLog = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_WORDWRAP)
         self.btnDoAction = wx.Button(self, -1, "Do -->")
         self.cmbAction = wx.ComboBox(self, -1, choices=["Create CMake files and run CMake", "Only create CMake files", "Install files to Bin Folder", "Configure ThirdParty Folder"], style=wx.CB_DROPDOWN)
+        self.btnSelectProjects = wx.Button(self, -1, "Select projects")
 
         self.__set_properties()
         self.__do_layout()
@@ -101,6 +103,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, self.btnSelectCSnakeFile)
         self.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, self.btnUpdateListOfTargets)
         self.Bind(wx.EVT_BUTTON, self.OnButtonDo, self.btnDoAction)
+        self.Bind(wx.EVT_BUTTON, self.OnButtonSelectProjects, self.btnSelectProjects)
         # end wxGlade
         
         self.Bind(wx.EVT_CLOSE, self.OnExit, self)
@@ -307,6 +310,7 @@ class CSnakeGUIFrame(wx.Frame):
         boxSettings.Add(self.textLog, 1, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
         boxBuildProject.Add(self.btnDoAction, 0, 0, 0)
         boxBuildProject.Add(self.cmbAction, 2, 0, 0)
+        boxBuildProject.Add(self.btnSelectProjects, 0, 0, 0)
         boxSettings.Add(boxBuildProject, 0, wx.EXPAND, 0)
         self.SetSizer(boxSettings)
         self.Layout()
@@ -597,6 +601,15 @@ class CSnakeGUIFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.settings.prebuiltBinariesFolder = dlg.GetPath()
             self.RefreshGUI()
+
+    def OnButtonSelectProjects(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        previousFilter = self.settings.filter 
+        self.settings.filter = ""
+        categories = self.handler.GetCategories(self.settings)
+        self.settings.filter = previousFilter
+        dlg = csnGUISelectProjects.Dialog(None, -1, "")
+        if dlg.ShowItems(categories, self.settings.filter) == wx.ID_OK:
+            pass
 
 # end of class CSnakeGUIFrame
 

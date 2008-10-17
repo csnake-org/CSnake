@@ -925,7 +925,7 @@ class Project(object):
         _enableWxWidgets - If true, the CMake rule that creates the testrunner will create a test runner that initializes wxWidgets, so that
         your tests can create wxWidgets objects.
         """
-        self.testProject = Project("%sTest" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", "%sTests" % self.name])
+        self.testProject = Project("%sTests" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", "%sTests" % self.name])
         self.testProject.cxxTestProject = ToProject(_cxxTestProject)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)

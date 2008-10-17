@@ -452,3 +452,13 @@ class Handler:
     
     def UpdateRecentlyUsedCSnakeFiles(self, _settings):
         _settings.AddRecentlyUsed(_settings.instance, _settings.csnakeFile)
+
+    def GetCategories(self, _settings):
+        instance = self.__GetProjectInstance(_settings)
+        categories = list()
+        for project in instance.GetProjects(_recursive = True):
+            for cat in project.categories:
+                if not cat in categories:
+                    categories.append(cat)
+        return categories
+                    
