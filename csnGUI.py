@@ -554,6 +554,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)
+            self.SaveSettings()
 
     def ProposeToDeletePluginDlls(self):
         spuriousDlls = self.handler.GetListOfSpuriousPluginDlls(self.settings)
@@ -604,7 +605,7 @@ class CSnakeGUIFrame(wx.Frame):
 
     def OnButtonSelectProjects(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         previousFilter = self.settings.filter 
-        self.settings.filter = ""
+        self.settings.filter = list()
         categories = self.handler.GetCategories(self.settings)
         self.settings.filter = previousFilter
         dlg = csnGUISelectProjects.Dialog(None, -1, "")
