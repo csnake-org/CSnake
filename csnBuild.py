@@ -60,7 +60,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
-version = 1.16
+version = 1.17
 testRunnerTemplate = "normalRunner.tpl"
 filter = []
 
@@ -567,7 +567,7 @@ class Project(object):
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
         """
         result = OrderedSet.OrderedSet()
-            
+        
         if _onlyRequiredProjects:
             result.update(self.projects - self.projectsNonRequired)
         else:

@@ -134,7 +134,7 @@ class GimiasPluginProject(csnBuild.Project):
     modules to the plugin.
     """
     def __init__(self, _name):
-        csnBuild.Project.__init__(self, _name, "dll")
+        csnBuild.Project.__init__(self, _name, "dll", _categories = ["GIMIAS%s" % _name])
         self.installSubFolder = "plugins/%s/lib" % _name
         self.AddIncludeFolders(["."])
         
