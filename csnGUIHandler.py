@@ -230,11 +230,11 @@ class Handler:
     
     def SetOptions(self, options):
         # Set options described by csnGUIOptions.Options
-        self.__SetCompiler(options.compiler)
-        self.__SetPythonPath(options.pythonPath)
-        return self.__SetCMakePath(options.cmakePath)
+        self.SetCompiler(options.compiler)
+        self.SetPythonPath(options.pythonPath)
+        return self.SetCMakePath(options.cmakePath)
     
-    def __SetCMakePath(self, _cmakePath):
+    def SetCMakePath(self, _cmakePath):
         if not self.cmakePath == _cmakePath:
             self.cmakePath = _cmakePath
             self.cmakeFound = self.CMakeIsFound() 
@@ -244,14 +244,14 @@ class Handler:
             print "Warning: %s is is not a valid path to cmake. Select path to CMake using menu Settings->Edit Settings." % self.cmakePath
         return self.cmakeFound
         
-    def __SetPythonPath(self, path):
+    def SetPythonPath(self, path):
         csnBuild.pythonPath = path
         if not (os.path.exists(csnBuild.pythonPath) and os.path.isfile(csnBuild.pythonPath)):
             print "Warning: python not found at: %s. Check the path in the Options menu.\n" % csnBuild.pythonPath
         
         return 1
         
-    def __SetCompiler(self, _compiler):
+    def SetCompiler(self, _compiler):
         self.compiler = _compiler
         
     def __GetProjectInstance(self, _settings):
