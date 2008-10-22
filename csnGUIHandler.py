@@ -229,6 +229,7 @@ class Handler:
         pass
     
     def SetOptions(self, options):
+        # Set options described by csnGUIOptions.Options
         self.__SetCompiler(options.compiler)
         self.__SetPythonPath(options.pythonPath)
         return self.__SetCMakePath(options.cmakePath)
