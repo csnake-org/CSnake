@@ -233,9 +233,7 @@ class CSnakeGUIFrame(wx.Frame):
         self.options.Save(self.optionsFilename)
 
     def PassOptionsToHandler(self):
-        self.handler.SetCompiler(self.options.compiler)
-        self.handler.SetPythonPath(self.options.pythonPath)
-        return self.handler.SetCMakePath(self.options.cmakePath)
+        return self.handler.SetOptions(self.options)
         
     def LoadOptions(self):
         """
@@ -369,26 +367,30 @@ class CSnakeGUIFrame(wx.Frame):
         self.WriteOptions()
         if self.PassOptionsToHandler():
         
-            # if configuring the target project...            
-            if configureProject:
-                if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
-                    if self.settings.instance.lower() == "gimias":
-                        self.ProposeToDeletePluginDlls()
+            try:
+                # if configuring the target project...            
+                if configureProject:
+                    if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
+                        if self.settings.instance.lower() == "gimias":
+                            self.ProposeToDeletePluginDlls()
+                        if self.options.askToLaunchVisualStudio:
+                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
+        
+                # if installing dlls to the bin folder            
+                copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
+                if copyDlls:
+                    if not self.handler.InstallBinariesToBinFolder(self.settings):
+                        print "Error while installing files.\n"
+                        
+                # if configuring the third party folder            
+                if( configureThirdPartyFolder ):
+                    self.handler.ConfigureThirdPartyFolder(self.settings)
                     if self.options.askToLaunchVisualStudio:
-                        self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
-    
-            # if installing dlls to the bin folder            
-            copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
-            if copyDlls:
-                if not self.handler.InstallBinariesToBinFolder(self.settings):
-                    print "Error while installing files.\n"
-                    
-            # if configuring the third party folder            
-            if( configureThirdPartyFolder ):
-                self.handler.ConfigureThirdPartyFolder(self.settings)
-                if self.options.askToLaunchVisualStudio:
-                    self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
+                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
 
+            except AssertionError, e:
+                print str(e) + '\n'
+                
         print "--- Done ---\n"
         self.RefreshGUI()
         #self.Restart()
