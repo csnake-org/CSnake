@@ -52,6 +52,7 @@ import unittest
 # - Fix module reloading
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
+# - Run CMake in parallel on independent configuration steps
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -60,7 +61,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
-version = 1.18
+version = 1.19
 testRunnerTemplate = "normalRunner.tpl"
 filter = []
 
@@ -107,7 +108,7 @@ class Generator:
         """
 
         isTopLevelProject = _generatedList is None
-        if( isTopLevelProject ):
+        if isTopLevelProject:
             _generatedList = []
 
         # assert that this project is not filtered
@@ -126,12 +127,12 @@ class Generator:
             raise SyntaxError, "Error, backslash found in binary folder %s" % _buildFolder
         
         # check  trying to build a third party library
-        if( _targetProject.type == "third party" ):
+        if _targetProject.type == "third party":
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
          
         # set build folder in all compiler instances
-        if( isTopLevelProject ):
+        if isTopLevelProject:
             _targetProject.compiler.SetBuildFolder(_buildFolder)
             for project in _targetProject.GetProjects(_recursive = True):
                 project.compiler.SetBuildFolder(_buildFolder)
@@ -140,7 +141,7 @@ class Generator:
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
     
         # create Win32Header
-        if( _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header() ):
+        if _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header():
             _targetProject.GenerateWin32Header()
             # add search path to the generated win32 header
             if not _targetProject.GetBuildFolder() in _targetProject.compiler.public.includeFolders:
@@ -181,17 +182,17 @@ class Generator:
             # If a non-required project will generate it, then still generate the project 
             # (the non-required project may depend on target project to generate project, creating a race condition).
             generateProject = not projectToGenerate in _generatedList and projectToGenerate.type in ("dll", "executable", "library")
-            if( generateProject ):
+            if generateProject:
                 for requiredProject in _targetProject.GetProjects(_recursive = 0, _onlyRequiredProjects = 1):
-                    if( requiredProject.DependsOn(projectToGenerate) ):
+                    if requiredProject.DependsOn(projectToGenerate):
                         generateProject = 0
-            if( generateProject ):
+            if generateProject:
                 projectsToGenerate.add(projectToGenerate)
         f.write( "\n" )
         
         # add non-required projects that have not yet been generated to projectsToGenerate
         for project in _targetProject.projectsNonRequired:
-            if( not project in _generatedList ):
+            if not project in _generatedList:
                 projectsToGenerate.add(project)
 
         # generate projects, and add a line with ADD_SUBDIRECTORY
@@ -309,7 +310,7 @@ class Project(object):
             file = self.debug_call
             self.sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(file))
         self.useBefore = []
-        if( self.type == "dll" ):
+        if self.type == "dll":
             self.buildSubFolder = "library/%s" % (_name)
         else:
             self.buildSubFolder = "%s/%s" % (self.type, _name)
@@ -343,14 +344,14 @@ class Project(object):
             if projectToAdd.MatchesFilter():
                 continue
                     
-            if( self is projectToAdd ):
+            if self is projectToAdd:
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
-            if( not projectToAdd in self.projects ):
-                if( _dependency and projectToAdd.DependsOn(self) ):
+            if not projectToAdd in self.projects:
+                if _dependency and projectToAdd.DependsOn(self):
                     raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.name, projectToAdd.name)
                 self.projects.add( projectToAdd )
-                if( not _dependency ):
+                if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
@@ -365,17 +366,17 @@ class Project(object):
         """
         for sourceFile in _listOfSourceFiles:
             sources = self.Glob(sourceFile)
-            if( _checkExists and not len(sources) ):
+            if _checkExists and not len(sources):
                     raise IOError, "Path file not found %s" % (sourceFile)
-            if( not len(sources) and _forceAdd ):
+            if not len(sources) and _forceAdd:
                 sources = [sourceFile]
             
             for source in sources:
                 if _moc and not source in self.sourcesToBeMoced:
                     self.sourcesToBeMoced.append(source)
                 
-                if( not source in self.sources ):
-                    if( _ui ):
+                if not source in self.sources:
+                    if _ui:
                         self.sourcesToBeUIed.append(source)
                     self.sources.append(source)
                     if _sourceGroup != "":
@@ -395,15 +396,15 @@ class Project(object):
         """
         for sourceFile in _listOfSourceFiles:
             sources = self.Glob(sourceFile)
-            if( not len(sources) ):
+            if not len(sources):
                 sources = [sourceFile]
             
             for source in sources:
                 if source in self.sourcesToBeMoced:
                     self.sourcesToBeMoced.remove(source)
                 
-                if( source in self.sources ):
-                    if( source in self.sourcesToBeUIed ):
+                if source in self.sources:
+                    if source in self.sourcesToBeUIed:
                         self.sourcesToBeUIed.remove(source)
                     self.sources.remove(source)
                     for sourceGroupKey in self.sourceGroups.keys():
@@ -509,9 +510,9 @@ class Project(object):
         Throws IOError if path was not found.
         """
         path = os.path.normpath(_path)
-        if( not os.path.isabs(path) ):
+        if not os.path.isabs(path):
             path = os.path.abspath("%s/%s" % (self.sourceRootFolder, path))
-        if( not os.path.exists(path) ):
+        if not os.path.exists(path):
             raise IOError, "Path file not found %s (tried %s)" % (_path, path)
             
         path = csnUtility.NormalizePath(path)
@@ -573,7 +574,7 @@ class Project(object):
         else:
             result.update(self.projects)
             
-        if( _recursive ):
+        if _recursive:
             moreResults = OrderedSet.OrderedSet()
             for project in result:
                 # see if project is in the skip list
@@ -597,7 +598,7 @@ class Project(object):
         _otherProject - May be a project, or a function returning a project.
         """
         otherProject = ToProject(_otherProject)
-        if( otherProject.WantsToBeUsedBefore(self) ):
+        if otherProject.WantsToBeUsedBefore(self):
             raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, otherProject.name)
         self.useBefore.append(otherProject)
         
@@ -607,14 +608,14 @@ class Project(object):
         _otherProject - May be a project, or a function returning a project.
         """
         otherProject = ToProject(_otherProject)
-        if( self is otherProject ):
+        if self is otherProject:
             return 0
             
-        if( otherProject in self.useBefore ):
+        if otherProject in self.useBefore:
             return 1
             
         for requiredProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
-            if( otherProject in requiredProject.useBefore ):
+            if otherProject in requiredProject.useBefore:
                 return 1
                 
         return 0
@@ -643,10 +644,10 @@ class Project(object):
             # check if we must skip this project for now, because another project must be used before this one
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
-                if( otherProject.WantsToBeUsedBefore(project) ):
+                if otherProject.WantsToBeUsedBefore(project):
                     assert not otherProject is self, "\n\nLogical error: %s cannot be used before %s" % (self.name, project.name)
                     skipThisProjectForNow = 1
-            if( skipThisProjectForNow ):
+            if skipThisProjectForNow:
                 projectsToUse.insert(0, project)
                 continue
             else:
@@ -678,7 +679,7 @@ class Project(object):
         f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.name, self.GetPathToUseFile() ) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.name, csnUtility.Join(self.compiler.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
-        if( len(self.compiler.public.libraries) ):
+        if len(self.compiler.public.libraries):
             f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.name, self.name, csnUtility.Join(self.compiler.public.libraries, _addQuotes = 1)) )
 
         # add the target of this project to the list of libraries that should be linked
@@ -690,7 +691,7 @@ class Project(object):
         """
         Generates the UseXXX.cmake file for this project.
         """
-        fileUse = "%s/%s" % (self.compiler.GetBuildFolder(), self.useFilePath)
+        fileUse = self.GetPathToUseFile()
         f = open(fileUse, 'w')
         
         # write header and some cmake fields
@@ -700,23 +701,19 @@ class Project(object):
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.name) )
         
         # write definitions     
-        if( len(self.compiler.public.definitions) ):
+        if len(self.compiler.public.definitions):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compiler.public.definitions) )
    
-        # write definitions that state whether this is a static library
-        #if self.type == "library":
-        #    f.write( "ADD_DEFINITIONS(%sSTATIC)\n" % self.name )
-            
     def GetPathToConfigFile(self, _public):
         """ 
         Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBuildFolder() + self.useFilePath.
         If _public is false, and the project is not of type 'third party', then the postfix ".private" 
         is added to the return value.
         """
-        if( os.path.isabs(self.configFilePath) ):
+        if os.path.isabs(self.configFilePath):
             result = self.configFilePath
         else:
-            result = "%s/%s" % (self.compiler.GetBuildFolder(), self.configFilePath)
+                result = "%s/%s" % (self.compiler.GetBuildFolder(), self.configFilePath)
 
         postfix = ""
         if self.type in ("dll", "library", "executable") and (not _public):
@@ -729,10 +726,10 @@ class Project(object):
         """ 
         Returns self.useFilePath if it is absolute. Otherwise, returns self.compiler.GetBuildFolder() + self.useFilePath.
         """
-        if( os.path.isabs(self.useFilePath) ):
+        if os.path.isabs(self.useFilePath):
             return self.useFilePath
         else:
-            return "%s/%s" % (self.compiler.GetBuildFolder(), self.useFilePath)
+                return "%s/%s" % (self.compiler.GetBuildFolder(), self.useFilePath)
         
     def ResolvePathsOfFilesToInstall(self, _thirdPartyBinFolder, _skipCVS = 1):
         """ 
@@ -798,7 +795,7 @@ class Project(object):
     def CreateCMakeSection_MocRules(self, f):
         """ Create moc rules in the CMakeLists.txt """
         cmakeMocInputVar = ""
-        if( len(self.sourcesToBeMoced) ):
+        if len(self.sourcesToBeMoced):
             cmakeMocInputVarName = "MOC_%s" % (self.name)
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
             f.write("\nQT_WRAP_CPP( %s %s %s )\n" % (self.name, cmakeMocInputVarName, csnUtility.Join(self.sourcesToBeMoced, _addQuotes = 1)) )
@@ -813,7 +810,7 @@ class Project(object):
         """ Create uic rules in the CMakeLists.txt """
         cmakeUIHInputVar = ""
         cmakeUICppInputVar = ""
-        if( len(self.sourcesToBeUIed) ):
+        if len(self.sourcesToBeUIed):
             cmakeUIHInputVarName = "UI_H_%s" % (self.name)
             cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
             cmakeUICppInputVarName = "UI_CPP_%s" % (self.name)
@@ -828,7 +825,7 @@ class Project(object):
     
     def CreateCMakeSection_Definitions(self, f):
         """ Create definitions in the CMakeLists.txt """
-        if( len(self.compiler.private.definitions) ):
+        if len(self.compiler.private.definitions):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.compiler.private.definitions) )
 
     def CreateCMakeSection_Sources(self, f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
@@ -836,13 +833,13 @@ class Project(object):
         sources = self.sources
         if len(sources) == 0:
             sources.append( csnUtility.GetDummyCppFilename() )
-        if(self.type == "executable" ):
+        if self.type == "executable":
             f.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
             
-        elif(self.type == "library" ):
+        elif self.type == "library":
             f.write( "ADD_LIBRARY(%s STATIC %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
         
-        elif(self.type == "dll" ):
+        elif self.type == "dll":
             f.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (self.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
             
         else:
@@ -850,7 +847,7 @@ class Project(object):
         
     def CreateCMakeSection_InstallRules(self, f, _installFolder):
         """ Create install rules in the CMakeLists.txt """
-        if( _installFolder != "" and self.type != "library"):
+        if _installFolder != "" and self.type != "library":
             destination = "%s/%s" % (_installFolder, self.installSubFolder)
             f.write( "\n# Rule for installing files in location %s\n" % destination)
             f.write( "INSTALL(TARGETS %s DESTINATION \"%s\")\n" % (self.name, destination) )
@@ -880,7 +877,7 @@ class Project(object):
         (cmakeUIHInputVar, cmakeUICppInputVar) = self.CreateCMakeSection_UicRules(f)
             
         # write section that is specific for the project type   
-        if( len(self.sources) ):
+        if len(self.sources):
             f.write( "\n# Add target\n" )
             self.CreateCMakeSection_Sources(f, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
             self.CreateCMakeSection_Link(f)
@@ -1025,7 +1022,7 @@ class Project(object):
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
         templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.h"
-        if( self.type == "library" ):
+        if self.type == "library":
             templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
         templateOutputFilename = "%s/%sWin32Header.h" % (self.GetBuildFolder(), self.name)
         
@@ -1037,7 +1034,7 @@ class Project(object):
         f.close()
         
         # don't overwrite the existing file if it contains the same text, because this will trigger a source recompile later!
-        if( csnUtility.FileToString(templateOutputFilename) != template ):
+        if csnUtility.FileToString(templateOutputFilename) != template:
             f = open(templateOutputFilename, 'w')
             f.write(template)
             f.close()

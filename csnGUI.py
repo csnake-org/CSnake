@@ -451,7 +451,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         Select file containing the project that should be configured.
         """
-        dlg = wx.FileDialog(None, "Select CSnake file")
+        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.py")
         if dlg.ShowModal() == wx.ID_OK:
             self.settings.csnakeFile = dlg.GetPath()
             self.RefreshGUI()
