@@ -110,7 +110,7 @@ class CilabModuleProject(csnBuild.Project):
 
         demosName = "%sDemos" % self.name
         csnBuild.globalSettings.SetSuperSubCategory("Demos", demosName)
-        demosProject = csnBuild.Project(demosName, "dll", _sourceRootFolder = self.sourceRootFolder, _categories = ["Demos", demosName])
+        demosProject = csnBuild.Project(demosName, "dll", _sourceRootFolder = self.sourceRootFolder, _categories = [demosName])
         demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(demosProject, dependencies, _modules, "%s/demos" % self.sourceRootFolder, _pch)
         demosProject.AddProjects([self])
@@ -126,7 +126,7 @@ class CilabModuleProject(csnBuild.Project):
             
         applicationsName = "%sApplications" % self.name
         csnBuild.globalSettings.SetSuperSubCategory("Applications", applicationsName)
-        applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.sourceRootFolder, _categories = ["Applications", applicationsName])
+        applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.sourceRootFolder, _categories = [applicationsName])
         applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         AddApplications(applicationsProject, dependencies, _modules, "%s/Applications" % self.sourceRootFolder, _pch)
         applicationsProject.AddProjects([self])

@@ -50,12 +50,18 @@ class Dialog(wx.Dialog):
         for item in sorted(items):
             self.checkBoxes[item] = wx.CheckBox(self, -1, item)
             self.checkBoxes[item].SetValue( not item in filter )
-            if item in csnBuild.globalSettings.subCategoriesOf.keys():
-                self.sizerItems.Insert(0, self.checkBoxes[item], 0, 0, 0)
-                self.Bind(wx.EVT_CHECKBOX, self.OnSuperCategoryCheckBoxChanged, self.checkBoxes[item])
-            else:
-                self.sizerItems.Add(self.checkBoxes[item], 0, 0, 0)
-             
+            self.sizerItems.Add(self.checkBoxes[item], 0, 0, 0)
+
+        for super in csnBuild.globalSettings.subCategoriesOf.keys():
+            value = True
+            for sub in csnBuild.globalSettings.subCategoriesOf[super]:
+                    value = value and (not sub in filter)
+                    
+            self.checkBoxes[super] = wx.CheckBox(self, -1, super)
+            self.checkBoxes[super].SetValue( value )
+            self.sizerItems.Insert(0, self.checkBoxes[super], 0, 0, 0)
+            self.Bind(wx.EVT_CHECKBOX, self.OnSuperCategoryCheckBoxChanged, self.checkBoxes[super])
+            
         self.sizerItems.Add(self.btnClose, 1, wx.ALL|wx.EXPAND, 5)
         self.sizerItems.Fit(self)
         self.Layout()

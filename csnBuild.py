@@ -70,6 +70,10 @@ class GlobalSettings:
         self.subCategoriesOf = dict()
         
     def SetSuperSubCategory(self, super, sub):
+        """ 
+        Makes super a supercategory of sub. This information is used to be able to disable all Tests with a single
+        click (since Tests will be a supercategory of each Test project).
+        """
         if not self.subCategoriesOf.has_key(super):
             self.subCategoriesOf[super] = OrderedSet.OrderedSet()
         self.subCategoriesOf[super].add(sub)
@@ -946,7 +950,7 @@ class Project(object):
         your tests can create wxWidgets objects.
         """
         testsName = "%sTests" % self.name
-        self.testProject = Project("%sTests" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", testsName])
+        self.testProject = Project("%sTests" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = [testsName])
         globalSettings.SetSuperSubCategory("Tests", testsName)
         self.testProject.cxxTestProject = ToProject(_cxxTestProject)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
