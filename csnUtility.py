@@ -96,6 +96,5 @@ def GetDummyCppFilename():
 
 def ReplaceDestinationFileIfDifferent(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):
-		    shutil.copy(destinationFile, (destinationFile + ".old"))
 		    result = (0 != shutil.copy(sourceFile, destinationFile))
 		    assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
