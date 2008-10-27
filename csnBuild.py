@@ -5,7 +5,6 @@ import inspect
 import os.path
 import warnings
 import sys
-import re
 import glob
 import types
 import GlobDirectoryWalker
@@ -20,6 +19,7 @@ import unittest
 # Terminology:
 # target project - Project that you want to build with CSnake. Modelled by class csnBuild.Project.
 # dependency project - Project that must also be built in order to built the target project. Modelled by class csnBuild.Project.
+# public dependency - If a project A is publicly dependent on B, then projects that are dependent on A will have to include from (and link to)  B.
 # build folder - Folder where all intermediate build results (CMakeCache.txt, .obj files, etc) are stored for the target project and all dependency projects.
 # binary folder - Folder where all final build results (executables, dlls etc) are stored.
 # install folder - Folder to which the build results are copied, and from which you can run the application. Note that CSnake allows you to use the build folder as the install folder as well.
@@ -61,7 +61,7 @@ sys.path.append(csnUtility.GetRootOfCSnake())
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 # \todo: Put this global variable in a helper struct, to make it more visible.
 pythonPath = "D:/Python24/python.exe"
-version = 1.20
+version = 1.21
 testRunnerTemplate = "normalRunner.tpl"
 filter = []
 
@@ -260,6 +260,7 @@ class Project(object):
     self.cmakeListsSubpath -- Path to the cmake file (relative to the build folder) that builds this project.
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
     self.projectsNonRequired -- Subset of self.projects. Contains projects that self doesn't depend on.
+    self.projectsPublic -- Subset of self.projects. Contains projects that are public dependencies.
     The project does not add a dependency on any project in this list.      
     self.generateWin32Header -- Flag that says if a standard Win32Header.h must be generated
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
@@ -331,7 +332,7 @@ class Project(object):
                 return True
         return False
     
-    def AddProjects(self, _projects, _dependency = 1): 
+    def AddProjects(self, _projects, _dependency = True, _public = False): 
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
         this function is called to retrieve the Project instance.
@@ -353,6 +354,8 @@ class Project(object):
                 self.projects.add( projectToAdd )
                 if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
+                if _public:
+                    self.publicProjects.add( projectToAdd )
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         """
@@ -561,18 +564,19 @@ class Project(object):
                 return 1
         return 0
         
-    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _skipList = None):
+    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _onlyPublicDependencies = False, _skipList = None):
         """
         Returns list of all projects associated with this project.
         _recursive -- If true, returns not only child projects but all projects in the tree below this project.
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
         """
         result = OrderedSet.OrderedSet()
-        
+        toSubtract = OrderedSet.OrderedSet()
         if _onlyRequiredProjects:
-            result.update(self.projects - self.projectsNonRequired)
-        else:
-            result.update(self.projects)
+            toSubtract.update(self.projectsNonRequired)
+        if _onlyPublicDependencies:
+            toSubtract.update(self.projectsPublic)
+        result.update(self.projects - toSubtract)
             
         if _recursive:
             moreResults = OrderedSet.OrderedSet()
@@ -584,7 +588,15 @@ class Project(object):
                     continue
                 # add project to the skip list, and recurse
                 _skipList.append(project)
-                moreResults.update( project.GetProjects(_recursive, _onlyRequiredProjects, False, _skipList) )
+                moreResults.update( 
+                    project.GetProjects(
+                        _recursive, 
+                        _onlyRequiredProjects, 
+                        _includeSelf, 
+                        _onlyPublicDependencies,
+                        _skipList
+                    ) 
+                )
             result.update(moreResults)
             
         if _includeSelf:

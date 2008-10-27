@@ -32,7 +32,7 @@ class Settings:
         self.instance = ""
         self.cmakeBuildType = "DebugAndRelease"
         self.recentlyUsed = list()
-        self.filter = list()
+        self.filter = ["Demos", "Applications", "Tests"]
 
     def GetBuildFolder(self):
         """
