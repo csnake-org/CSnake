@@ -227,7 +227,7 @@ class Generator:
                             f.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
                         
         f.close()
-        csnUtility.ReplaceDestinationFileIfDifferent(tmpCMakeListsFile, _targetProject.GetCMakeListsFilename())
+        csnUtility.ReplaceDestinationFileIfDifferentAndSaveBackup(tmpCMakeListsFile, _targetProject.GetCMakeListsFilename())
 
     def PostProcess(self, _targetProject, _buildFolder, _kdevelopProjectFolder = ""):
         """
