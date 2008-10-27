@@ -65,6 +65,17 @@ version = 1.21
 testRunnerTemplate = "normalRunner.tpl"
 filter = []
 
+class GlobalSettings:
+    def __init__(self):
+        self.subCategoriesOf = dict()
+        
+    def SetSuperSubCategory(self, super, sub):
+        if not self.subCategoriesOf.has_key(super):
+            self.subCategoriesOf[super] = OrderedSet.OrderedSet()
+        self.subCategoriesOf[super].add(sub)
+
+globalSettings = GlobalSettings()
+        
 # Set default method for creating a csnCompiler.Compiler instance.
 globalCurrentCompilerType = csnVisualStudio2003.Compiler
 
@@ -934,7 +945,9 @@ class Project(object):
         _enableWxWidgets - If true, the CMake rule that creates the testrunner will create a test runner that initializes wxWidgets, so that
         your tests can create wxWidgets objects.
         """
-        self.testProject = Project("%sTests" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", "%sTests" % self.name])
+        testsName = "%sTests" % self.name
+        self.testProject = Project("%sTests" % self.name, "executable", _sourceRootFolder = self.sourceRootFolder, _categories = ["Tests", testsName])
+        globalSettings.SetSuperSubCategory("Tests", testsName)
         self.testProject.cxxTestProject = ToProject(_cxxTestProject)
         self.testProject.AddDefinitions(["/DCXXTEST_HAVE_EH"], _private = 1, _WIN32 = 1)
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
