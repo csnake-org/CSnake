@@ -43,6 +43,10 @@ class Dialog(wx.Dialog):
         self.sizerItems = sizerItems
         
     def ShowItems(self, categories, filter):
+        """ 
+        Shows all items in categories in a vertical layout as checkboxes.
+        Categories that are in filter are unchecked.
+        """
         self.sizerItems.Clear()
         self.checkbox_1.Hide()
         self.checkBoxes = dict()
@@ -68,6 +72,10 @@ class Dialog(wx.Dialog):
         return self.ShowModal()
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
+        """ 
+        Respond to checking a supercategory (such as Tests or Demos). Results in (un)checking all subcategories in that
+        supercategory.
+        """
         for super in csnBuild.globalSettings.subCategoriesOf.keys():
             value = self.checkBoxes[super].GetValue()
                     
@@ -76,6 +84,9 @@ class Dialog(wx.Dialog):
                     self.checkBoxes[cbName].SetValue(value)
         
     def OnClose(self, event): # wxGlade: Dialog.<event_handler>
+        """ 
+        Updates the category filter, based on the current status of the checkbox for each category.
+        """
         for category in self.checkBoxes.keys():
             if category in self.filter:
                 self.filter.remove(category)
