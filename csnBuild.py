@@ -41,7 +41,7 @@ import unittest
 # In this version of CSnake, you are required to specify the compiler that you will use to build your project. Examples of compiler instances are csnKDevelop.Compiler and csnVisualStudio2003.Compiler.
 # I choose this design because it allowed me to simplify the code a lot. For example, when adding a compiler definition for linux, a check is performed to see if the project uses a linux compiler; it not,
 # the definition is simply ignored.
-# The default compiler is stored in csnBuild.globalCurrentCompilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
+# The default compiler is stored in csnBuild.globalSettings.compilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
 #
 
 # ToDo:
@@ -57,17 +57,18 @@ import unittest
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
+version = 1.23
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
-# \todo: Put this global variable in a helper struct, to make it more visible.
-pythonPath = "D:/Python24/python.exe"
-version = 1.22
-testRunnerTemplate = "normalRunner.tpl"
-filter = []
 
 class GlobalSettings:
     def __init__(self):
         self.subCategoriesOf = dict()
+        self.pythonPath = "D:/Python24/python.exe"
+        self.testRunnerTemplate = "normalRunner.tpl"
+        self.filter = []
+        # Set default method for creating a csnCompiler.Compiler instance.
+        self.globalCurrentCompilerType = csnVisualStudio2003.Compiler
         
     def SetSuperSubCategory(self, super, sub):
         """ 
@@ -79,9 +80,6 @@ class GlobalSettings:
         self.subCategoriesOf[super].add(sub)
 
 globalSettings = GlobalSettings()
-        
-# Set default method for creating a csnCompiler.Compiler instance.
-globalCurrentCompilerType = csnVisualStudio2003.Compiler
 
 class DependencyError(StandardError):
     """ Used when there is a cyclic dependency between CSnake projects. """
@@ -299,7 +297,7 @@ class Project(object):
     the call stack. For example, if this class' constructor is called in a file d:/users/me/csnMyProject.py, then d:/users/me 
     will be set as the source root folder.
     _compiler - The compiler (instance of csnCompiler.Compiler) that will be used for compiling this project. If set to None,
-    then a new compiler instance will be created using csnBuild.globalCurrentCompilerType.
+    then a new compiler instance will be created using csnBuild.globalSettings.compilerType.
     """    
     def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None, _categories = None ):
         self.sources = []
@@ -317,7 +315,7 @@ class Project(object):
         self.customCommands = []
         
         if  _compiler is None:
-            self.compiler = globalCurrentCompilerType()
+            self.compiler = globalSettings.compilerType()
         else:
             self.compiler = _compiler
         
@@ -342,7 +340,7 @@ class Project(object):
             self.categories = []
 
     def MatchesFilter(self):
-        for category in filter:
+        for category in globalSettings.filter:
             if category in self.categories:
                 return True
         return False
@@ -351,7 +349,7 @@ class Project(object):
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
         this function is called to retrieve the Project instance.
-        Projects that have a category that matches the global variable csnBuild.filter are not added.
+        Projects that have a category that matches the global variable csnBuild.globalSettings.filter are not added.
         _dependency - Flag that states that self target requires (is dependent on) _projects.
         Raises DependencyError in case of a cyclic dependency.
         """
@@ -959,7 +957,7 @@ class Project(object):
         if _enableWxWidgets:
             self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
         else:
-            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/%s" % testRunnerTemplate)
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/%s" % globalSettings.testRunnerTemplate)
         self.testProject.AddProjects([self.testProject.cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         self.testProject.AddCustomCommand(Project.__CreateRuleForGeneratingTestRunner)
@@ -980,7 +978,7 @@ class Project(object):
         self.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         pythonScript = "%s/CxxTest/cxxtestgen.py" % self.cxxTestProject.sourceRootFolder
         command = "\"%s\" \"%s\" %s --have-eh --error-printer -o %s " % (
-            csnUtility.NormalizePath(pythonPath), 
+            csnUtility.NormalizePath(globalSettings.pythonPath), 
             pythonScript, 
             self.wxRunnerArg, 
             self.testRunnerSourceFile

@@ -245,9 +245,9 @@ class Handler:
         return self.cmakeFound
         
     def SetPythonPath(self, path):
-        csnBuild.pythonPath = path
-        if not (os.path.exists(csnBuild.pythonPath) and os.path.isfile(csnBuild.pythonPath)):
-            print "Warning: python not found at: %s. Check the path in the Options menu.\n" % csnBuild.pythonPath
+        csnBuild.globalSettings.pythonPath = path
+        if not (os.path.exists(csnBuild.globalSettings.pythonPath) and os.path.isfile(csnBuild.globalSettings.pythonPath)):
+            print "Warning: python not found at: %s. Check the path in the Options menu.\n" % csnBuild.globalSettings.pythonPath
         
         return 1
         
@@ -256,7 +256,7 @@ class Handler:
         
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
-        csnBuild.filter = _settings.filter
+        csnBuild.globalSettings.filter = _settings.filter
         self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules
@@ -271,11 +271,11 @@ class Handler:
         
         try:
             if self.compiler in ("KDevelop3", "Unix Makefiles"):
-                csnBuild.globalCurrentCompilerType = csnKDevelop.Compiler
+                csnBuild.globalSettings.compilerType = csnKDevelop.Compiler
             elif self.compiler == "Visual Studio 7 .NET 2003":
-                csnBuild.globalCurrentCompilerType = csnVisualStudio2003.Compiler
+                csnBuild.globalSettings.compilerType = csnVisualStudio2003.Compiler
             elif self.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
-                csnBuild.globalCurrentCompilerType = csnVisualStudio2005.Compiler
+                csnBuild.globalSettings.compilerType = csnVisualStudio2005.Compiler
             else:
                 assert false, "\n\nError: Unknown compiler %s\n" % self.compiler
                 
