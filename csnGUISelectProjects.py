@@ -42,15 +42,15 @@ class Dialog(wx.Dialog):
         # end wxGlade
         self.sizerItems = sizerItems
         
-    def ShowItems(self, items, filter):
+    def ShowItems(self, categories, filter):
         self.sizerItems.Clear()
         self.checkbox_1.Hide()
         self.checkBoxes = dict()
         self.filter = filter
-        for item in sorted(items):
-            self.checkBoxes[item] = wx.CheckBox(self, -1, item)
-            self.checkBoxes[item].SetValue( not item in filter )
-            self.sizerItems.Add(self.checkBoxes[item], 0, 0, 0)
+        for category in sorted(categories):
+            self.checkBoxes[category] = wx.CheckBox(self, -1, category)
+            self.checkBoxes[category].SetValue( not category in filter )
+            self.sizerItems.Add(self.checkBoxes[category], 0, 0, 0)
 
         for super in csnBuild.globalSettings.subCategoriesOf.keys():
             value = True
@@ -76,11 +76,11 @@ class Dialog(wx.Dialog):
                     self.checkBoxes[cbName].SetValue(value)
         
     def OnClose(self, event): # wxGlade: Dialog.<event_handler>
-        while len(self.filter):
-            self.filter.pop()
-        for item in self.checkBoxes.keys():
-            if not self.checkBoxes[item].GetValue():
-                self.filter.append(item)
+        for category in self.checkBoxes.keys():
+            if category in self.filter:
+                self.filter.remove(category)
+            if not self.checkBoxes[category].GetValue():
+                self.filter.append(category)
         self.MakeModal(0)
         self.Destroy()
 
