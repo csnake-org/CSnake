@@ -68,7 +68,7 @@ class GlobalSettings:
         self.testRunnerTemplate = "normalRunner.tpl"
         self.filter = []
         # Set default method for creating a csnCompiler.Compiler instance.
-        self.globalCurrentCompilerType = csnVisualStudio2003.Compiler
+        self.compilerType = csnVisualStudio2003.Compiler
         
     def SetSuperSubCategory(self, super, sub):
         """ 
