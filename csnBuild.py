@@ -57,7 +57,7 @@ import unittest
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 1.23
+version = 1.24
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
