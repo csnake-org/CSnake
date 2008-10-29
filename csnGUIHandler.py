@@ -30,7 +30,6 @@ class Settings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
-        self.cmakeBuildType = "DebugAndRelease"
         self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
 
@@ -226,13 +225,15 @@ class Handler:
         self.cmakePath = ""
         self.pythonPath = ""
         self.cmakeFound = 0 
+        self.options = 0
         pass
     
-    def SetOptions(self, options):
+    def SetOptions(self, _options):
         # Set options described by csnGUIOptions.Options
-        self.SetCompiler(options.compiler)
-        self.SetPythonPath(options.pythonPath)
-        return self.SetCMakePath(options.cmakePath)
+        self.options = _options
+        self.SetCompiler(_options.compiler)
+        self.SetPythonPath(_options.pythonPath)
+        return self.SetCMakePath(_options.cmakePath)
     
     def SetCMakePath(self, _cmakePath):
         if not self.cmakePath == _cmakePath:
@@ -303,11 +304,11 @@ class Handler:
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
         # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
-        if self.compiler in ("KDevelop3", "Unix Makefiles") and _settings.cmakeBuildType == "DebugAndRelease":
+        if self.compiler in ("KDevelop3", "Unix Makefiles") and self.options.cmakeBuildType == "DebugAndRelease":
             generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Debug")
             generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Release")
         else:
-            generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, _settings.cmakeBuildType)
+            generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, self.options.cmakeBuildType)
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
