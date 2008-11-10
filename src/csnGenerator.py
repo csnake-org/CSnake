@@ -29,6 +29,10 @@ import OrderedSet
 # in step c) the necessary include directories, library directories etc are added to the current target.
 # To adhere to normal CMake procedures, csnBuild also uses the use file and config file. However, FIND_PACKAGE is not needed,
 # because the Generator class will directly include the config and use file for any dependency project.
+# IMPORTANT: CSnake contains a workaround for a problem in Visual Studio: when you create a dependency, making a project A depend on a B, then Visual Studio will automatically
+# link A with the binaries of B. This is a problem, because config file (BConfig.cmake) already tells A to link with the binaries of B, and linking twice with the same binaries may give linker errors.
+# To work around this problem, CSnake generates two config files for B: BConfig.cmake and BConfig.cmake.private. The second one does not contain the CMake commands to link with the binaries
+# of B, and this config file is included in the CMakeLists.txt of A.
 #
 # Compilers
 #
