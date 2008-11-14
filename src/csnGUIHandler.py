@@ -30,6 +30,7 @@ class Settings:
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
         self.instance = ""
+        self.testRunnerTemplate = ""
         self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
 
@@ -70,6 +71,8 @@ class Settings:
         self.instance = parser.get(section, "instance")
         if parser.has_option(section, "filter"):
             self.filter = re.split(";", parser.get(section, "filter"))
+        if parser.has_option(section, "testRunnerTemplate"):
+            self.testRunnerTemplate = parser.get(section, "testRunnerTemplate")
 
     def __LoadRootFolders(self, parser):
         section = "RootFolders"
@@ -130,6 +133,7 @@ class Settings:
             count += 1
         parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
         parser.set(section, "instance", self.instance)
+        parser.set(section, "testRunnerTemplate", self.instance)
         
         self.__SaveRecentlyUsedCSnakeFiles(parser)
         
@@ -258,6 +262,7 @@ class Handler:
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
         csnBuild.globalSettings.filter = _settings.filter
+        csnBuild.globalSettings.testRunnerTemplate = _settings.testRunnerTemplate
         self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules
@@ -343,8 +348,9 @@ class Handler:
                         absLocation = "%s/%s" % (outputFolder, location)
                         assert not os.path.isdir(file), "\n\nError: InstallBinariesToBinFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
-                        #print "Copy %s to %s\n" % (file, absLocation)
+                        assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
                         result = (0 != shutil.copy(file, absLocation)) and result
+                        #print "Copied %s to %s\n" % (file, absLocation)
         
         return result
              
@@ -432,13 +438,13 @@ class Handler:
         if not instance.name.lower() == "gimias":
             return result
     
-        configuredPluginNames = [project.name for project in instance.GetProjects(_recursive = 1) ]
+        configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
             pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBuildFolder(), configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)
-                if not os.path.isdir(pluginFolder) or pluginName in configuredPluginNames:
+                if not os.path.isdir(pluginFolder) or pluginName.lower() in configuredPluginNames:
                     continue
                     
                 searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
