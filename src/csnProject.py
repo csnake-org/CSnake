@@ -17,7 +17,7 @@ class GlobalSettings:
     def __init__(self):
         self.subCategoriesOf = dict()
         self.pythonPath = "D:/Python24/python.exe"
-        self.testRunnerTemplate = "normalRunner.tpl"
+        self.testRunnerTemplate = ""
         self.filter = []
         # Set default method for creating a csnCompiler.Compiler instance.
         self.compilerType = csnVisualStudio2003.Compiler
@@ -142,8 +142,21 @@ class Project(object):
             self.categories = []
 
     def MatchesFilter(self):
-        for category in globalSettings.filter:
-            if category in self.categories:
+        for pattern in globalSettings.filter:
+           for string in self.categories:
+              wildCharPosition = pattern.find( '*' )
+              if wildCharPosition != -1:
+                 patternLength = len(pattern);
+                 if wildCharPosition == 0:
+                    pattern = pattern[1:] + '$'
+                 elif wildCharPosition == patternLength:
+                    pattern = '^' + pattern[:patternLength-1]
+                 else:
+                    pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
+                 if re.search( pattern, string ):
+                    return True
+              else:
+                 if pattern == string:
                 return True
         return False
     
@@ -779,7 +792,7 @@ class Project(object):
             
         self.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         pythonScript = "%s/CxxTest/cxxtestgen.py" % self.cxxTestProject.sourceRootFolder
-        command = "\"%s\" \"%s\" %s --have-eh --error-printer -o %s " % (
+        command = "\"%s\" \"%s\" %s --have-eh --error-printer -o \"%s\" " % (
             csnUtility.NormalizePath(globalSettings.pythonPath), 
             pythonScript, 
             self.wxRunnerArg, 
