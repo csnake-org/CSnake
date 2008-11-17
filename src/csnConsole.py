@@ -1,4 +1,5 @@
 import csnGUIHandler
+import csnGenerator
 
 handler = csnGUIHandler.Handler()
 handler.SetCMakePath("D:/Program Files (x86)/CMake 2.4/bin/cmake.exe")
@@ -7,7 +8,7 @@ handler.SetPythonPath("D:/Python24/python.exe")
 handler.SetCompiler("Visual Studio 7 .NET 2003") # "Unix Makefiles"
 handler.SetCMakeBuildType("") # or "Release" or "Debug"
 
-settings = csnGUIHandler.Settings()
+settings = csnGenerator.Settings()
 settings.Load("settings.CSnakeGUI")
 
 if True:

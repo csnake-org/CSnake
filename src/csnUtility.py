@@ -37,7 +37,7 @@ def IsRunningOnWindows():
 # create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
 # the root folder is set correctly both when running the python interpreter, or when using the binary
 # CSnakeGUI executable.
-rootOfCSnake = os.path.dirname(__file__) + "/../CSnake"
+rootOfCSnake = os.path.dirname(__file__) + "/../"
 rootOfCSnake = NormalizePath(rootOfCSnake)
 
 def GetRootOfCSnake():
@@ -92,7 +92,7 @@ def GetDummyCppFilename():
     Returns name of the file that can be used in any project to prevent the project from having zero source files. 
     This is needed when you call ADD_DEPENDENCY (CMake complains if you use a project there that does not have sources).
     """
-    return GetRootOfCSnake() + "/TemplateSourceFiles/csnake_dummy.cpp"
+    return GetRootOfCSnake() + "/resources/csnake_dummy.cpp"
 
 def ReplaceDestinationFileIfDifferent(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):

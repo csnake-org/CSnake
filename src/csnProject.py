@@ -143,23 +143,23 @@ class Project(object):
 
     def MatchesFilter(self):
         for pattern in globalSettings.filter:
-           for string in self.categories:
-              wildCharPosition = pattern.find( '*' )
-              if wildCharPosition != -1:
-                 patternLength = len(pattern);
-                 if wildCharPosition == 0:
-                    pattern = pattern[1:] + '$'
-                 elif wildCharPosition == patternLength:
-                    pattern = '^' + pattern[:patternLength-1]
-                 else:
-                    pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
-                 if re.search( pattern, string ):
-                    return True
-              else:
-                 if pattern == string:
-                return True
+            for string in self.categories:
+                wildCharPosition = pattern.find( '*' )
+                if wildCharPosition != -1:
+                    patternLength = len(pattern);
+                    if wildCharPosition == 0:
+                        pattern = pattern[1:] + '$'
+                    elif wildCharPosition == patternLength:
+                        pattern = '^' + pattern[:patternLength-1]
+                    else:
+                        pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
+                    if re.search( pattern, string ):
+                        return True
+                else:
+                    if pattern == string:
+                        return True
         return False
-    
+
     def AddProjects(self, _projects, _dependency = True, _public = False): 
         """ 
         Adds projects in _projects as required projects. If an item in _projects is a function, then
@@ -770,9 +770,9 @@ class Project(object):
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
         
         if _enableWxWidgets:
-            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/wxRunner.tpl")
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/resources/wxRunner.tpl")
         else:
-            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/%s" % globalSettings.testRunnerTemplate)
+            self.testProject.wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/resources/%s" % globalSettings.testRunnerTemplate)
         self.testProject.AddProjects([self.testProject.cxxTestProject, self])
         self.AddProjects([self.testProject], _dependency = 0)
         self.testProject.AddCustomCommand(Project.__CreateRuleForGeneratingTestRunner)
@@ -863,9 +863,9 @@ class Project(object):
         """
         Generates the ProjectNameWin32.h header file for exporting/importing dll functions.
         """
-        templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.h"
+        templateFilename = csnUtility.GetRootOfCSnake() + "/resources/Win32Header.h"
         if self.type == "library":
-            templateFilename = csnUtility.GetRootOfCSnake() + "/TemplateSourceFiles/Win32Header.lib.h"
+            templateFilename = csnUtility.GetRootOfCSnake() + "/resources/Win32Header.lib.h"
         templateOutputFilename = "%s/%sWin32Header.h" % (self.GetBuildFolder(), self.name)
         
         assert os.path.exists(templateFilename), "\n\nError: File not found %s\n" % (templateFilename)

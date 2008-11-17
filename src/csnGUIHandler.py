@@ -13,133 +13,6 @@ import glob
 import RollbackImporter
 import inspect
 import string
-import ConfigParser
-import re
-
-class Settings:
-    """
-    Contains configuration settings such as source folder/bin folder/etc.
-    """
-    def __init__(self):
-        self.__binFolder = ""    
-        self.installFolder = ""    
-        self.kdevelopProjectFolder = ""    
-        self.prebuiltBinariesFolder = ""    
-        self.thirdPartyBinFolder = ""
-        self.csnakeFile = ""
-        self.rootFolders = []
-        self.thirdPartyRootFolder = ""
-        self.instance = ""
-        self.testRunnerTemplate = ""
-        self.recentlyUsed = list()
-        self.filter = ["Demos", "Applications", "Tests"]
-
-    def GetBuildFolder(self):
-        """
-        Returns the bin folder that is used by CSnake to store build-related files.
-        """
-        return self.__binFolder
-            
-    def SetBuildFolder(self, x):
-        """
-        Returns the bin folder that is used by CSnake to store build-related files.
-        """
-        self.__binFolder = x
-            
-    def Load(self, filename):
-        try:
-            parser = ConfigParser.ConfigParser()
-            parser.read([filename])
-            self.__LoadBasicFields(parser)
-            self.__LoadRootFolders(parser)
-            self.__LoadRecentlyUsedCSnakeFiles(parser)
-            return 1
-        except:
-            return 0
-        
-    def __LoadBasicFields(self, parser):
-        section = "CSnake"
-        self.__binFolder = parser.get(section, "binFolder")
-        self.installFolder = parser.get(section, "installFolder")
-        if parser.has_option(section, "kdevelopProjectFolder"):
-            self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
-        if parser.has_option(section, "prebuiltBinariesFolder"):
-            self.prebuiltBinariesFolder = parser.get(section, "prebuiltBinariesFolder")
-        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
-        self.csnakeFile = parser.get(section, "csnakeFile")
-        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
-        self.instance = parser.get(section, "instance")
-        if parser.has_option(section, "filter"):
-            self.filter = re.split(";", parser.get(section, "filter"))
-        if parser.has_option(section, "testRunnerTemplate"):
-            self.testRunnerTemplate = parser.get(section, "testRunnerTemplate")
-
-    def __LoadRootFolders(self, parser):
-        section = "RootFolders"
-        count = 0
-        self.rootFolders = []
-        while parser.has_option(section, "RootFolder%s" % count):
-            self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
-            count += 1
-        
-    def __LoadRecentlyUsedCSnakeFiles(self, parser):
-        self.recentlyUsed = []
-        count = 0
-        section = "RecentlyUsedCSnakeFile%s" % count
-        while parser.has_section(section):
-            self.AddRecentlyUsed(parser.get(section, "instance"), parser.get(section, "csnakeFile"))
-            count += 1
-            section = "RecentlyUsedCSnakeFile%s" % count
-    
-    def __SaveRecentlyUsedCSnakeFiles(self, parser):
-        for index in range(len(self.recentlyUsed)):
-            section = "RecentlyUsedCSnakeFile%s" % index
-            if not parser.has_section(section):
-                parser.add_section(section)
-            parser.set(section, "csnakeFile", self.recentlyUsed[index].csnakeFile) 
-            parser.set(section, "instance", self.recentlyUsed[index].instance) 
-
-    def AddRecentlyUsed(self, _instance, _csnakeFile):
-        for item in range( len(self.recentlyUsed) ):
-            x = self.recentlyUsed[item]
-            if (x.instance == _instance and x.csnakeFile == _csnakeFile):
-                self.recentlyUsed.remove(x)
-                self.recentlyUsed.insert(0, x)
-                return
-        
-        x = Settings()
-        (x.instance, x.csnakeFile) = (_instance, _csnakeFile)
-        self.recentlyUsed.insert(0, x)
-        if len(self.recentlyUsed) > 10:
-            self.recentlyUsed.pop() 
-    
-    def Save(self, filename):
-        parser = ConfigParser.ConfigParser()
-        section = "CSnake"
-        rootFolderSection = "RootFolders"
-        parser.add_section(section)
-        parser.add_section(rootFolderSection)
-
-        parser.set(section, "binFolder", self.__binFolder)
-        parser.set(section, "installFolder", self.installFolder)
-        parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
-        parser.set(section, "prebuiltBinariesFolder", self.prebuiltBinariesFolder)
-        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
-        parser.set(section, "csnakeFile", self.csnakeFile)
-        parser.set(section, "filter", ";".join(self.filter))
-        count = 0
-        while count < len(self.rootFolders):
-            parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
-            count += 1
-        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
-        parser.set(section, "instance", self.instance)
-        parser.set(section, "testRunnerTemplate", self.instance)
-        
-        self.__SaveRecentlyUsedCSnakeFiles(parser)
-        
-        f = open(filename, 'w')
-        parser.write(f)
-        f.close()
 
 class RootNotFound(IOError):
     pass
@@ -291,7 +164,7 @@ class Handler:
             # undo additions to the python path
             rollbackHandler.TearDown()
 
-        instance.compiler.SetBuildFolder(_settings.GetBuildFolder())
+        instance.compiler.SetBuildFolder(_settings.buildFolder)
         relocator = csnPrebuilt.ProjectRelocator()
         relocator.Do(instance, _settings.prebuiltBinariesFolder)
         
@@ -305,15 +178,15 @@ class Handler:
         logString = ""
         instance = self.__GetProjectInstance(_settings)
 
-        generator = csnBuild.Generator()
+        generator = csnBuild.Generator(_settings)
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
         # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
         if self.compiler in ("KDevelop3", "Unix Makefiles") and self.options.cmakeBuildType == "DebugAndRelease":
-            generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Debug")
-            generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, "Release")
+            generator.Generate(instance, "Debug")
+            generator.Generate(instance, "Release")
         else:
-            generator.Generate(instance, _settings.GetBuildFolder(), _settings.installFolder, self.options.cmakeBuildType)
+            generator.Generate(instance, self.options.cmakeBuildType)
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
@@ -322,9 +195,9 @@ class Handler:
                 return False
                 
             argList = [self.cmakePath, "-G", self.compiler, instance.GetCMakeListsFilename()]
-            retcode = subprocess.Popen(argList, cwd = _settings.GetBuildFolder()).wait()
+            retcode = subprocess.Popen(argList, cwd = _settings.buildFolder).wait()
             if retcode == 0:
-                generator.PostProcess(instance, _settings.GetBuildFolder(), _settings.kdevelopProjectFolder)
+                generator.PostProcess(instance)
                 return True
             else:
                 print "Configuration failed.\n"   
@@ -440,7 +313,7 @@ class Handler:
     
         configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.GetBuildFolder(), configuration)
+            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.buildFolder, configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)

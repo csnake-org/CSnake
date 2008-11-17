@@ -4,6 +4,8 @@ import warnings
 import sys
 import types
 import OrderedSet
+import ConfigParser
+import re
 
 # General documentation
 #
@@ -51,6 +53,13 @@ import OrderedSet
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
 # - Run CMake in parallel on independent configuration steps
+# - Try to detect compiler location (in a few standard locations) and python location
+# - E&xit
+# - Set settings only once in csnGuiHandler
+# - Command line option for redirect stdout
+# - Simplify Settings.Load and Save by iterating over the member variables and doing a standard load/save
+# - Move _configurationName to Settings
+# - Apply ExtractMethod on Generate
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -74,15 +83,135 @@ def ToProject(project):
         result = project()
     return result
 
+class Settings:
+    """
+    Contains configuration settings such as source folder/bin folder/etc.
+    kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
+    copied from the bin folder to this folder. This is work around for a problem in 
+    KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
+    """
+    def __init__(self):
+        self.buildFolder = ""    
+        self.installFolder = ""    
+        self.kdevelopProjectFolder = ""    
+        self.prebuiltBinariesFolder = ""    
+        self.thirdPartyBinFolder = ""
+        self.csnakeFile = ""
+        self.rootFolders = []
+        self.thirdPartyRootFolder = ""
+        self.instance = ""
+        self.testRunnerTemplate = "normalRunner.tpl"
+        self.recentlyUsed = list()
+        self.filter = ["Demos", "Applications", "Tests"]
+            
+    def Load(self, filename):
+        try:
+            parser = ConfigParser.ConfigParser()
+            parser.read([filename])
+            self.__LoadBasicFields(parser)
+            self.__LoadRootFolders(parser)
+            self.__LoadRecentlyUsedCSnakeFiles(parser)
+            return 1
+        except:
+            return 0
+        
+    def __LoadBasicFields(self, parser):
+        section = "CSnake"
+        self.buildFolder = parser.get(section, "binFolder")
+        self.installFolder = parser.get(section, "installFolder")
+        if parser.has_option(section, "kdevelopProjectFolder"):
+            self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
+        if parser.has_option(section, "prebuiltBinariesFolder"):
+            self.prebuiltBinariesFolder = parser.get(section, "prebuiltBinariesFolder")
+        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
+        self.csnakeFile = parser.get(section, "csnakeFile")
+        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
+        self.instance = parser.get(section, "instance")
+        if parser.has_option(section, "filter"):
+            self.filter = re.split(";", parser.get(section, "filter"))
+        if parser.has_option(section, "testRunnerTemplate"):
+            self.testRunnerTemplate = parser.get(section, "testRunnerTemplate")
+
+    def __LoadRootFolders(self, parser):
+        section = "RootFolders"
+        count = 0
+        self.rootFolders = []
+        print "Searching for %s\n" % section
+        while parser.has_option(section, "RootFolder%s" % count):
+            print "Found %s\n" % section
+            self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
+            count += 1
+        
+    def __LoadRecentlyUsedCSnakeFiles(self, parser):
+        self.recentlyUsed = []
+        count = 0
+        section = "RecentlyUsedCSnakeFile%s" % count
+        while parser.has_section(section):
+            self.AddRecentlyUsed(parser.get(section, "instance"), parser.get(section, "csnakeFile"))
+            count += 1
+            section = "RecentlyUsedCSnakeFile%s" % count
+    
+    def __SaveRecentlyUsedCSnakeFiles(self, parser):
+        for index in range(len(self.recentlyUsed)):
+            section = "RecentlyUsedCSnakeFile%s" % index
+            if not parser.has_section(section):
+                parser.add_section(section)
+            parser.set(section, "csnakeFile", self.recentlyUsed[index].csnakeFile) 
+            parser.set(section, "instance", self.recentlyUsed[index].instance) 
+
+    def AddRecentlyUsed(self, _instance, _csnakeFile):
+        for item in range( len(self.recentlyUsed) ):
+            x = self.recentlyUsed[item]
+            if (x.instance == _instance and x.csnakeFile == _csnakeFile):
+                self.recentlyUsed.remove(x)
+                self.recentlyUsed.insert(0, x)
+                return
+        
+        x = Settings()
+        (x.instance, x.csnakeFile) = (_instance, _csnakeFile)
+        self.recentlyUsed.insert(0, x)
+        if len(self.recentlyUsed) > 10:
+            self.recentlyUsed.pop() 
+    
+    def Save(self, filename):
+        parser = ConfigParser.ConfigParser()
+        section = "CSnake"
+        rootFolderSection = "RootFolders"
+        parser.add_section(section)
+        parser.add_section(rootFolderSection)
+
+        parser.set(section, "binFolder", self.buildFolder)
+        parser.set(section, "installFolder", self.installFolder)
+        parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
+        parser.set(section, "prebuiltBinariesFolder", self.prebuiltBinariesFolder)
+        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
+        parser.set(section, "csnakeFile", self.csnakeFile)
+        parser.set(section, "filter", ";".join(self.filter))
+        count = 0
+        while count < len(self.rootFolders):
+            parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
+            count += 1
+        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
+        parser.set(section, "instance", self.instance)
+        parser.set(section, "testRunnerTemplate", self.testRunnerTemplate)
+        
+        self.__SaveRecentlyUsedCSnakeFiles(parser)
+        
+        f = open(filename, 'w')
+        parser.write(f)
+        f.close()
+    
 class Generator:
     """
     Generates the CMakeLists.txt for a csnBuild.Project and all its dependency projects.
     """
 
-    def Generate(self, _targetProject, _buildFolder, _installFolder = "", _configurationName = "DebugAndRelease", _generatedList = None):
+    def __init__(self, settings):
+        self.settings = settings
+        
+    def Generate(self, _targetProject, _configurationName = "DebugAndRelease", _generatedList = None):
         """
-        Generates the CMakeLists.txt for _targetProject (a csnBuild.Project) in _buildFolder.
-        _installFolder -- Install rules are added to the CMakeLists to install files in this folder.
+        Generates the CMakeLists.txt for _targetProject (a csnBuild.Project) in the build folder.
         _configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
         if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
         _generatedList -- List of projects for which Generate was already called (internal to the function).
@@ -104,8 +233,8 @@ class Generator:
         _generatedList.append(_targetProject)
         
         # check for backward slashes
-        if csnUtility.HasBackSlash(_buildFolder):
-            raise SyntaxError, "Error, backslash found in binary folder %s" % _buildFolder
+        if csnUtility.HasBackSlash(self.settings.buildFolder):
+            raise SyntaxError, "Error, backslash found in binary folder %s" % self.settings.buildFolder
         
         # check  trying to build a third party library
         if _targetProject.type == "third party":
@@ -114,9 +243,9 @@ class Generator:
          
         # set build folder in all compiler instances
         if isTopLevelProject:
-            _targetProject.compiler.SetBuildFolder(_buildFolder)
+            _targetProject.compiler.SetBuildFolder(self.settings.buildFolder)
             for project in _targetProject.GetProjects(_recursive = True):
-                project.compiler.SetBuildFolder(_buildFolder)
+                project.compiler.SetBuildFolder(self.settings.buildFolder)
                 
         # create binary project folder
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
@@ -152,7 +281,7 @@ class Generator:
         _targetProject.GenerateUseFile()
         
         _targetProject.RunCustomCommands()
-        _targetProject.CreateCMakeSections(f, _installFolder)
+        _targetProject.CreateCMakeSections(f, self.settings.installFolder)
 
         # Find projects that must be generated. A separate list is used to ease debugging.
         projectsToGenerate = OrderedSet.OrderedSet()
@@ -181,7 +310,7 @@ class Generator:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
                 f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (project.GetBuildFolder(), project.GetBuildFolder()) )
-                self.Generate(project, _buildFolder, _installFolder, _configurationName, _generatedList)
+                self.Generate(project, _configurationName, _generatedList)
            
         # add dependencies
         f.write( "\n" )
@@ -203,20 +332,16 @@ class Generator:
                         for file in project.filesToInstall[mode][location]:
                             files += "%s " % csnUtility.NormalizePath(file)
                         if files != "":
-                            destination = "%s/%s" % (_installFolder, location)
+                            destination = "%s/%s" % (self.settings.installFolder, location)
                             f.write( "\n# Rule for installing files in location %s\n" % destination)
                             f.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
                         
         f.close()
         csnUtility.ReplaceDestinationFileIfDifferentAndSaveBackup(tmpCMakeListsFile, _targetProject.GetCMakeListsFilename())
 
-    def PostProcess(self, _targetProject, _buildFolder, _kdevelopProjectFolder = ""):
+    def PostProcess(self, _targetProject):
         """
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
-        _kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
-        copied from the bin folder to this folder. This is work around for a problem in 
-        KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
         """
         for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
-            _targetProject.compiler.GetPostProcessor().Do(project, _buildFolder, _kdevelopProjectFolder)
-     
+            _targetProject.compiler.GetPostProcessor().Do(project, self.settings.buildFolder, self.settings.kdevelopProjectFolder)
