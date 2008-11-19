@@ -10,6 +10,7 @@ import types
 import GlobDirectoryWalker
 import OrderedSet
 import unittest
+import re
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
