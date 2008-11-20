@@ -3,6 +3,7 @@
 //
 
 #include <cxxtest/XmlPrinter.h>
+#include <fstream>
 
 // The CxxTest "world"
 <CxxTest world>
