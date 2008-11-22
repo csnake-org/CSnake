@@ -41,7 +41,7 @@ import re
 # In this version of CSnake, you are required to specify the compiler that you will use to build your project. Examples of compiler instances are csnKDevelop.Compiler and csnVisualStudio2003.Compiler.
 # I choose this design because it allowed me to simplify the code a lot. For example, when adding a compiler definition for linux, a check is performed to see if the project uses a linux compiler; it not,
 # the definition is simply ignored.
-# The default compiler is stored in csnBuild.globalSettings.compilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
+# The default compiler is stored in csnProject.globalSettings.compilerType. If you create a Project without specifying a compiler, then this compiler will be assigned to the project instance.
 #
 
 # ToDo:
@@ -55,18 +55,16 @@ import re
 # - Set settings only once in csnGuiHandler
 # - Apply ExtractMethod on Generate
 # - Move visualStudioPath to Settings
+# - Move visualStudioPath to csnCompiler?
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
 # - Support loading old settings using a converter
 # - Improve namespaces, e.g. csnake.Generator
 # - Get rid of prebuiltBinariesFolder
 # - In CSnakeGUI, have separate "tab" for third party and for options. Third party tab works similar to Generate tab. The option tabs remembers where the compiler is stored.
-# = Use compiler as singleton instead of instance.compiler?
-# - Move visualStudioPath to csnCompiler?
 # - Replace GetCMakeListsFilename with a property
 # - Third party stuff should have its own settings section inside the ini file
 # - Move reusable functionality away from csnGUIHandler
 # - Eliminate options class. Put all settings in Settings. Have a "fixedSettings" instance in csnGUI
-# - Move testRunnerTemplate to the configurationContext
 # End: ToDo.
 
 # add root of csnake to the system path

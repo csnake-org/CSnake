@@ -97,7 +97,7 @@ class Project(object):
     the call stack. For example, if this class' constructor is called in a file d:/users/me/csnMyProject.py, then d:/users/me 
     will be set as the source root folder.
     _compiler - The compiler (instance of csnCompiler.Compiler) that will be used for compiling this project. If set to None,
-    then a new compiler instance will be created using csnBuild.globalSettings.compilerType.
+    then a new compiler instance will be created using csnProject.globalSettings.compilerType.
     """    
     def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None, _categories = None ):
         self.sources = []
