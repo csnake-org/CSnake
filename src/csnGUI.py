@@ -163,7 +163,7 @@ class CSnakeGUIFrame(wx.Frame):
 
     def CreateMemberVariables(self):
         self.settings = csnGenerator.Settings()
-        self.handler = csnGUIHandler.Handler()
+        self.handler = csnGUIHandler.Handler(self.settings)
         
     def CreateOptionsFilenameAndOptionsMemberVariable(self):
         # find out location of application options file
@@ -308,16 +308,6 @@ class CSnakeGUIFrame(wx.Frame):
 
         sizer_1.Remove(boxInstallFolder)
         
-    def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Create 'empty' CSnake file for configuring a library or executable (depending on cmbNewProjectType).
-        """
-        mapping = dict()
-        mapping["Dll"] = "dll"
-        mapping["Static library"] = "library"
-        mapping["Executable"] = "executable"
-    	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
-
     def CopyGUIToSettings(self):
         self.settings.buildFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
@@ -363,23 +353,23 @@ class CSnakeGUIFrame(wx.Frame):
             try:
                 # if configuring the target project...            
                 if configureProject:
-                    if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
+                    if self.handler.ConfigureProjectToBinFolder(alsoRunCMake):
                         if self.settings.instance.lower() == "gimias":
                             self.ProposeToDeletePluginDlls()
                         if self.options.askToLaunchVisualStudio:
-                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
+                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath() )
         
                 # if installing dlls to the bin folder            
                 copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
                 if copyDlls:
-                    if not self.handler.InstallBinariesToBinFolder(self.settings):
+                    if not self.handler.InstallBinariesToBinFolder():
                         print "Error while installing files.\n"
                         
                 # if configuring the third party folder            
                 if( configureThirdPartyFolder ):
-                    self.handler.ConfigureThirdPartyFolder(self.settings)
+                    self.handler.ConfigureThirdPartyFolder()
                     if self.options.askToLaunchVisualStudio:
-                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
+                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath() )
 
             except AssertionError, e:
                 print str(e) + '\n'
@@ -544,14 +534,14 @@ class CSnakeGUIFrame(wx.Frame):
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.SaveSettings()
-        targets = self.handler.GetListOfPossibleTargets(self.settings)
+        targets = self.handler.GetListOfPossibleTargets()
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)
             self.SaveSettings()
 
     def ProposeToDeletePluginDlls(self):
-        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls(self.settings)
+        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls()
         if len(spuriousDlls) == 0:
             return
             
@@ -594,7 +584,7 @@ class CSnakeGUIFrame(wx.Frame):
     def OnButtonSelectProjects(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         previousFilter = self.settings.filter 
         self.settings.filter = list()
-        categories = self.handler.GetCategories(self.settings)
+        categories = self.handler.GetCategories()
         self.settings.filter = previousFilter
         dlg = csnGUISelectProjects.Dialog(None, -1, "")
         if dlg.ShowItems(categories, self.settings.filter) == wx.ID_OK:

@@ -45,7 +45,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
         for sourceFile in sourceFiles:
             if os.path.isdir(sourceFile):
                 continue
-            (name, ext) = os.path.splitext( os.path.basename(sourceFile) )
+            name = os.path.splitext( os.path.basename(sourceFile) )[0]
             app = csnBuild.Project("%s_%s" % (_holderProject.name, name), "executable", _sourceRootFolder = _holderProject.sourceRootFolder)
             app.AddIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
@@ -87,7 +87,8 @@ class CilabModuleProject(csnBuild.Project):
                         self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
 
         if( len(self.sources) == 0 ):
-            self.AddSources([csnUtility.GetDummyCppFilename()])
+            dummySource = csnUtility.GetDummyCppFilename()
+            self.AddSources([dummySource])
  
         for libModule in _libModules:
             for stub in ("/stub", ""):

@@ -53,7 +53,6 @@ import re
 # - Try to detect compiler location (in a few standard locations) and python location
 # - E&xit
 # - Set settings only once in csnGuiHandler
-# - Command line option for redirect stdout
 # - Apply ExtractMethod on Generate
 # - Move visualStudioPath to Settings
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
@@ -66,6 +65,8 @@ import re
 # - Replace GetCMakeListsFilename with a property
 # - Third party stuff should have its own settings section inside the ini file
 # - Fix problem in linux with clearing the screen BEFORE processing
+# - Move reusable functionality away from csnGUIHandler
+# - Eliminate options class. Put all settings in Settings. Have a "fixedSettings" instance in csnGUI
 # End: ToDo.
 
 # add root of csnake to the system path
