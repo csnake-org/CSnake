@@ -99,9 +99,7 @@ class RollbackHandler:
                     
 class Handler:
     def __init__(self):
-        self.cmakePath = ""
         self.pythonPath = ""
-        self.cmakeFound = 0 
         self.options = 0
         pass
     
@@ -109,17 +107,6 @@ class Handler:
         # Set options described by csnGUIOptions.Options
         self.options = _options
         self.SetPythonPath(_options.pythonPath)
-        return self.SetCMakePath(_options.cmakePath)
-    
-    def SetCMakePath(self, _cmakePath):
-        if not self.cmakePath == _cmakePath:
-            self.cmakePath = _cmakePath
-            self.cmakeFound = self.CMakeIsFound() 
-            if self.cmakeFound:
-                print "CMake was found.\n"
-        if not self.cmakeFound:
-            print "Warning: %s is is not a valid path to cmake. Select path to CMake using menu Settings->Edit Settings." % self.cmakePath
-        return self.cmakeFound
         
     def SetPythonPath(self, path):
         csnBuild.globalSettings.pythonPath = path
@@ -181,11 +168,11 @@ class Handler:
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
-            if not self.cmakeFound:
+            if not self.CheckCMakeIsFound(_settings.cmakePath):
                 print "Please specify correct path to CMake"
                 return False
                 
-            argList = [self.cmakePath, "-G", _settings.compiler, instance.GetCMakeListsFilename()]
+            argList = [_settings.cmakePath, "-G", _settings.compiler, instance.GetCMakeListsFilename()]
             retcode = subprocess.Popen(argList, cwd = _settings.buildFolder).wait()
             if retcode == 0:
                 generator.PostProcess(instance)
@@ -218,15 +205,8 @@ class Handler:
         
         return result
              
-    def CMakeIsFound(self):
-        found = os.path.exists(self.cmakePath) and os.path.isfile(self.cmakePath)
-        if not found:
-            try:
-                retcode = subprocess.Popen(self.cmakePath).wait()
-            except:
-                retcode = 1
-            found = retcode == 0
-        return found
+    def CMakeIsFound(self, cmakePath):
+        return os.path.exists(cmakePath) and os.path.isfile(cmakePath)
     
     def ConfigureThirdPartyFolder(self, _settings, _nrOfTimes = 2):
         """ 
@@ -234,13 +214,13 @@ class Handler:
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
-        if not self.cmakeFound:
+        if not self.CheckCMakeIsFound(_settings.cmakePath):
             print "Please specify correct path to CMake"
             return False
         
         result = True
         os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
-        argList = [self.cmakePath, "-G", _settings.compiler, _settings.thirdPartyRootFolder]
+        argList = [_settings.cmakePath, "-G", _settings.compiler, _settings.thirdPartyRootFolder]
         for i in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
 

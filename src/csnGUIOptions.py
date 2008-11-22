@@ -54,7 +54,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.optionsFilename = _optionsFilename
         self.options = _options
         self.settings = _settings
-        self.txtCMakePath.SetValue(self.options.cmakePath)
+        self.txtCMakePath.SetValue(self.settings.cmakePath)
         self.txtPythonPath.SetValue(self.options.pythonPath)
         self.txtVisualStudioPath.SetValue(self.options.visualStudioPath)
         self.chkAskToLaunchVisualStudio.SetValue(self.options.askToLaunchVisualStudio != 0)
@@ -115,7 +115,7 @@ class CSnakeOptionsFrame(wx.Frame):
         self.Show(False)
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
-            self.options.cmakePath = dlg.GetPath()
+            self.settings.cmakePath = dlg.GetPath()
             self.__ShowOptions()
         self.Show(True)
 
@@ -134,7 +134,7 @@ class CSnakeOptionsFrame(wx.Frame):
         """
         Copies the values from the controls in the GUI to the options structure
         """
-        self.options.cmakePath = self.txtCMakePath.GetValue()
+        self.settings.cmakePath = self.txtCMakePath.GetValue()
         self.options.pythonPath = self.txtPythonPath.GetValue()
         self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
         self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
@@ -194,7 +194,6 @@ class CSnakeOptionsFrame(wx.Frame):
 
 class Options:
     def __init__(self):
-        self.cmakePath = "CMake"    
         self.pythonPath = "D:/Python24/python.exe"
         self.currentGUISettingsFilename = ""
         self.askToLaunchVisualStudio = False
@@ -205,7 +204,6 @@ class Options:
             parser = ConfigParser.ConfigParser()
             parser.read([filename])
             section = "CSnake"
-            self.cmakePath = parser.get(section, "cmakePath")
             self.pythonPath = parser.get(section, "pythonPath")
             self.currentGUISettingsFilename = parser.get(section, "currentGUISettingsFilename")
             if parser.has_option(section, "askToLaunchVisualStudio"):
@@ -227,7 +225,6 @@ class Options:
         parser = ConfigParser.ConfigParser()
         section = "CSnake"
         parser.add_section(section)
-        parser.set(section, "cmakePath", self.cmakePath)
         parser.set(section, "pythonPath", self.pythonPath)
         parser.set(section, "currentGUISettingsFilename", self.currentGUISettingsFilename)
         parser.set(section, "askToLaunchVisualStudio", self.askToLaunchVisualStudio)

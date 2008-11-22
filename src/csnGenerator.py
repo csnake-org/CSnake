@@ -45,14 +45,11 @@ import re
 #
 
 # ToDo:
-# - check that of all root folders, only one contains csnCISTIBToolkit
 # - Have public and private related projects (hide the include paths from its clients)
 # - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
-# - csn python modules can contain option widgets that are loaded into CSnakeGUI! Use this to add selection of desired toolkit modules in csnGIMIAS
 # - Fix module reloading
 # - Better GUI: do more checks, give nice error messages
 # - If copy_tree copies nothing, check that the source folder is empty
-# - Run CMake in parallel on independent configuration steps
 # - Try to detect compiler location (in a few standard locations) and python location
 # - E&xit
 # - Set settings only once in csnGuiHandler
@@ -61,7 +58,14 @@ import re
 # - Move visualStudioPath to Settings
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
 # - Support loading old settings using a converter
-# - Import all classes in a namespace csnake, e.g. csnake.Generator
+# - Improve namespaces, e.g. csnake.Generator
+# - Get rid of prebuiltBinariesFolder
+# - In CSnakeGUI, have separate "tab" for third party and for options. Third party tab works similar to Generate tab. The option tabs remembers where the compiler is stored.
+# = Use compiler as singleton instead of instance.compiler?
+# - Move visualStudioPath to csnCompiler?
+# - Replace GetCMakeListsFilename with a property
+# - Third party stuff should have its own settings section inside the ini file
+# - Fix problem in linux with clearing the screen BEFORE processing
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -109,10 +113,11 @@ class Settings:
         self.filter = ["Demos", "Applications", "Tests"]
         self.configurationName = "DebugAndRelease"
         self.compiler = "Visual Studio 7 .NET 2003"
+        self.cmakePath = "CMake"    
             
         self.basicFields = [
             "buildFolder", "installFolder", "kdevelopProjectFolder", "prebuiltBinariesFolder", "thirdPartyBinFolder", "csnakeFile",
-            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler"
+            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler", "cmakePath"
         ]
             
     def Load(self, filename):
@@ -140,9 +145,7 @@ class Settings:
         section = "RootFolders"
         count = 0
         self.rootFolders = []
-        print "Searching for %s\n" % section
         while parser.has_option(section, "RootFolder%s" % count):
-            print "Found %s\n" % section
             self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
             count += 1
         

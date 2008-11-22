@@ -12,6 +12,7 @@ import csnUtility
 import os.path
 import sys
 import subprocess
+from optparse import OptionParser
 
 class RedirectText:
     """
@@ -159,7 +160,6 @@ class CSnakeGUIFrame(wx.Frame):
     def PrintWelcomeMessages(self):
         print "CSnakeGUI loaded.\n"
         print "CSnake version = %s\n" % csnBuild.version
-        print "Checking if CMake is found...\n"
 
     def CreateMemberVariables(self):
         self.settings = csnGenerator.Settings()
@@ -191,18 +191,25 @@ class CSnakeGUIFrame(wx.Frame):
         
     def InitializeSettings(self):        
         # load previously saved settings
-        if len(sys.argv) >= 2:
-            self.LoadSettings(sys.argv[1])
+        if len(self.commandLineArgs) >= 1:
+            self.LoadSettings(self.commandLineArgs[0])
         else:
             self.LoadSettings()
-        # init lbRootFolders
         self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
-        
+
+    def ParseCommandLine(self):
+        parser = OptionParser()
+        parser.add_option("-c", "--console", dest="console", default=False,
+                          help="print all messages to the console window")
+        (self.commandLineOptions, self.commandLineArgs) = parser.parse_args()
+    
     def Initialize(self):
         """
         Initializes the application.
         """
-        self.RedirectStdOut()
+        self.ParseCommandLine()
+        if not self.commandLineOptions.console:
+            self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
