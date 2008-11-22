@@ -1,6 +1,5 @@
 import os
 import re
-import imp
 import sys
 import GlobDirectoryWalker
 import shutil
@@ -96,15 +95,16 @@ def GetDummyCppFilename():
 
 def ReplaceDestinationFileIfDifferent(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):
-		    result = (0 != shutil.copy(sourceFile, destinationFile))
-		    assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
+        result = (0 != shutil.copy(sourceFile, destinationFile))
+        assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
+        
 # (YM) debug output of the overwritten file to check differences
 def ReplaceDestinationFileIfDifferentAndSaveBackup(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):
-		    if os.path.exists(destinationFile):
-				    result = (0 != shutil.copy(destinationFile, (destinationFile + ".old")))
-				    assert result, "\n\nError: Could not copy from %s to %s/n" % (destinationFile, (destinationFile + ".old"))		    result = (0 != shutil.copy(sourceFile, destinationFile))
-		    assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
+        if os.path.exists(destinationFile):
+            result = (0 != shutil.copy(destinationFile, (destinationFile + ".old")))
+            assert result, "\n\nError: Could not copy from %s to %s/n" % (destinationFile, (destinationFile + ".old"))        result = (0 != shutil.copy(sourceFile, destinationFile))
+        assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
 
 def Matches(string, pattern):
     result = False
@@ -122,3 +122,8 @@ def Matches(string, pattern):
         if re.search( pattern, string ):
             result = True
     return result
+
+def LoadFields(parser, section, basicFields, self):
+    for basicField in self.basicFields:
+        if parser.has_option(section, basicField):
+            setattr(self, basicField, parser.get(section, basicField))

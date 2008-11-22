@@ -19,10 +19,10 @@ class RedirectText:
     Used to redirect messages to stdout to the text control in CSnakeGUIFrame.
     """
     def __init__(self,aWxTextCtrl):
-		self.out=aWxTextCtrl
+        self.out=aWxTextCtrl
 
     def write(self,string):
-		self.out.WriteText(string)
+        self.out.WriteText(string)
 
 class CSnakeGUIFrame(wx.Frame):
     """
@@ -339,7 +339,9 @@ class CSnakeGUIFrame(wx.Frame):
         """
         
         self.textLog.Clear()
+        self.textLog.Refresh()
         self.textLog.Update()
+        
         print "\n--- Working, patience please... ---"
         self.CopyGUIToSettings()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
@@ -562,7 +564,7 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.MessageDialog(self, message, style = wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             argList = [self.options.visualStudioPath, pathToSolution]
-            retcode = subprocess.Popen(argList)
+            subprocess.Popen(argList)
                 
     def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.CopyGUIToSettings()

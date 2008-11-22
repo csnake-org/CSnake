@@ -133,7 +133,8 @@ class Handler:
         csnCilab.thirdPartyBinFolder = self.settings.thirdPartyBinFolder
         
         (projectFolder, name) = os.path.split(self.settings.csnakeFile)
-        (name, ext) = os.path.splitext(name)
+        (name, _) = os.path.splitext(name)
+        instance = None # prevent warning
         
         try:
             if self.settings.compiler in ("KDevelop3", "Unix Makefiles"):
@@ -143,9 +144,10 @@ class Handler:
             elif self.settings.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
                 csnBuild.globalSettings.compilerType = csnVisualStudio2005.Compiler
             else:
-                assert false, "\n\nError: Unknown compiler %s\n" % self.settings.compiler
+                assert False, "\n\nError: Unknown compiler %s\n" % self.settings.compiler
                 
             project = csnUtility.LoadModule(projectFolder, name)
+            project # prevent warning
             exec "instance = csnBuild.ToProject(project.%s)" % self.settings.instance
         finally:
             # undo additions to the python path
@@ -162,7 +164,6 @@ class Handler:
         """ 
         Configures the project to the bin folder.
         """
-        logString = ""
         instance = self.__GetProjectInstance()
 
         generator = csnBuild.Generator(self.settings)
@@ -226,8 +227,7 @@ class Handler:
         result = True
         os.path.exists(self.settings.thirdPartyBinFolder) or os.makedirs(self.settings.thirdPartyBinFolder)
         argList = [self.settings.cmakePath, "-G", self.settings.compiler, self.settings.thirdPartyRootFolder]
-        for i in range(0, _nrOfTimes):
-            i # prevent warning
+        for _ in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = self.settings.thirdPartyBinFolder).wait() 
 
         if not result:
@@ -272,7 +272,7 @@ class Handler:
 
         # find csnake targets in the loaded module
         (projectFolder, name) = os.path.split(self.settings.csnakeFile)
-        (name, ext) = os.path.splitext(name)
+        (name, _) = os.path.splitext(name)
         csnCilab.thirdPartyModuleFolder = self.settings.thirdPartyRootFolder
         project = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(project):

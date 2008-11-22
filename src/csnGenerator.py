@@ -64,14 +64,14 @@ import re
 # - Move visualStudioPath to csnCompiler?
 # - Replace GetCMakeListsFilename with a property
 # - Third party stuff should have its own settings section inside the ini file
-# - Fix problem in linux with clearing the screen BEFORE processing
 # - Move reusable functionality away from csnGUIHandler
 # - Eliminate options class. Put all settings in Settings. Have a "fixedSettings" instance in csnGUI
+# - Move testRunnerTemplate to the configurationContext
 # End: ToDo.
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 1.27
+version = 1.28
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 

@@ -43,7 +43,6 @@ class PostProcessor:
             f = open(vcprojFilename, 'r')
             vcproj = f.read()
             f.close()
-            vcprojOrg = vcproj 
             
             # add release project pch settings to all configurations
             searchString = "RuntimeTypeInfo=\"TRUE\"\n"

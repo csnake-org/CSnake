@@ -3,14 +3,11 @@ import csnVisualStudio2003
 import csnKDevelop
 import inspect
 import os.path
-import warnings
-import sys
 import glob
 import types
 import GlobDirectoryWalker
 import OrderedSet
 import unittest
-import re
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -824,7 +821,7 @@ class Project(object):
         """
         Helper function.
         """
-        for i in range(indent):
+        for _ in range(indent):
             f.write(' ')
         f.write("<%s>" % self.name)
         for project in self.GetProjects(_onlyRequiredProjects = 1):
@@ -888,4 +885,4 @@ class ProjectTest(unittest.TestCase):
         assert project.filesToInstall["Debug"][location] == ["Bye.h"]
     
 if __name__ == "__main__":
-	unittest.main() 
+    unittest.main() 
