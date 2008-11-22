@@ -323,7 +323,6 @@ class CSnakeGUIFrame(wx.Frame):
             self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
         self.settings.instance = self.cmbInstance.GetValue()
-        self.settings.cmakeBuildType = self.options.cmakeBuildType
     
     def SaveSettings(self, filename = ""):
         """
@@ -508,7 +507,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.cmbInstance.Append(self.settings.instance)
             self.cmbInstance.SetSelection(0)
             
-        self.panelKDevelop.Show( self.options.compiler in ("KDevelop3", "Unix Makefiles") )
+        self.panelKDevelop.Show( self.settings.compiler in ("KDevelop3", "Unix Makefiles") )
         self.Layout()
         
         if os.path.exists(self.options.currentGUISettingsFilename):
@@ -532,7 +531,7 @@ class CSnakeGUIFrame(wx.Frame):
         Let user edit the application options.
         """
         frmEditOptions = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
-        frmEditOptions.ShowOptions(self.options, self.optionsFilename)
+        frmEditOptions.ShowOptions(self.settings, self.options, self.optionsFilename)
         frmEditOptions.MakeModal()
         frmEditOptions.Show(True, self.RefreshGUI)
         

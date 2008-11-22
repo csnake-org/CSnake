@@ -46,27 +46,29 @@ class CSnakeOptionsFrame(wx.Frame):
 
         self.Bind(wx.EVT_CLOSE, self.OnClose, self)
         
-    def ShowOptions(self, _options = None, _optionsFilename = None):
+    def ShowOptions(self, _settings, _options, _optionsFilename):
         """
         If _options is not None, then sets _options as the options edited by this frame.
         Displays the current options.
         """
-        if not _optionsFilename is None:
-            self.optionsFilename = _optionsFilename
-        if not _options is None:
-        	self.options = _options
+        self.optionsFilename = _optionsFilename
+        self.options = _options
+        self.settings = _settings
         self.txtCMakePath.SetValue(self.options.cmakePath)
         self.txtPythonPath.SetValue(self.options.pythonPath)
         self.txtVisualStudioPath.SetValue(self.options.visualStudioPath)
         self.chkAskToLaunchVisualStudio.SetValue(self.options.askToLaunchVisualStudio != 0)
-        self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.options.compiler))
+        self.cmbCompiler.SetSelection(self.cmbCompiler.FindString(self.settings.compiler))
         
         buildTypes = dict()
         buildTypes["DebugAndRelease"] = 0
         buildTypes["Release"] = 1
         buildTypes["Debug"] = 2
-        self.cmbBuildType.SetSelection(buildTypes[self.options.cmakeBuildType])
-        
+        self.cmbBuildType.SetSelection(buildTypes[self.settings.configurationName])
+       
+    def __ShowOptions(self):
+        self.ShowOptions(self.settings, self.options, self.optionsFilename)
+       
     def __set_properties(self):
         # begin wxGlade: CSnakeOptionsFrame.__set_properties
         self.SetTitle("CSnakeGUI Options")
@@ -114,7 +116,7 @@ class CSnakeOptionsFrame(wx.Frame):
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
             self.options.cmakePath = dlg.GetPath()
-            self.ShowOptions()
+            self.__ShowOptions()
         self.Show(True)
 
     def OnSelectCompiler(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -126,7 +128,7 @@ class CSnakeOptionsFrame(wx.Frame):
             self.cmbBuildType.SetSelection(self.buildTypeForVisualStudio)
             
         self.CopyFromGUIToOptions()
-        self.ShowOptions()
+        self.__ShowOptions()
 
     def CopyFromGUIToOptions(self):
         """
@@ -136,17 +138,17 @@ class CSnakeOptionsFrame(wx.Frame):
         self.options.pythonPath = self.txtPythonPath.GetValue()
         self.options.visualStudioPath = self.txtVisualStudioPath.GetValue()
         self.options.askToLaunchVisualStudio = self.chkAskToLaunchVisualStudio.GetValue()
-        self.options.compiler = self.cmbCompiler.GetValue()
+        self.settings.compiler = self.cmbCompiler.GetValue()
         
         # correct setting None on Linux to Debug
-        if self.options.compiler in ("KDevelop3", "Unix Makefiles") and self.cmbBuildType.GetSelection() == 0:
+        if self.settings.compiler in ("KDevelop3", "Unix Makefiles") and self.cmbBuildType.GetSelection() == 0:
             self.buildTypeForVisualStudio = self.cmbBuildType.GetSelection() 
             self.cmbBuildType.SetSelection(1)
                      
         if self.cmbBuildType.GetSelection() == 0:
-            self.options.cmakeBuildType = "DebugAndRelease"
+            self.settings.configurationName = "DebugAndRelease"
         else:
-            self.options.cmakeBuildType = "%s" % self.cmbBuildType.GetValue()
+            self.settings.configurationName = "%s" % self.cmbBuildType.GetValue()
         
     def OnClose(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.CopyFromGUIToOptions()
@@ -162,14 +164,14 @@ class CSnakeOptionsFrame(wx.Frame):
         # set the current selection as the build type to use for visual studio projects
         self.buildTypeForVisualStudio = self.cmbBuildType.GetSelection() 
         self.CopyFromGUIToOptions()
-        self.ShowOptions()
+        self.__ShowOptions()
 
     def OnSetPythonPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.Show(False)
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
             self.options.pythonPath = dlg.GetPath()
-            self.ShowOptions()
+            self.__ShowOptions()
         self.Show(True)
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -177,12 +179,12 @@ class CSnakeOptionsFrame(wx.Frame):
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
             self.options.visualStudioPath = dlg.GetPath()
-            self.ShowOptions()
+            self.__ShowOptions()
         self.Show(True)
 
     def OnCheckAskToLaunchVisualStudio(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         self.CopyFromGUIToOptions()
-        self.ShowOptions()
+        self.__ShowOptions()
         
     def Show(self, show, callBack = None):
         wx.Frame.Show(self, show)
@@ -194,9 +196,7 @@ class Options:
     def __init__(self):
         self.cmakePath = "CMake"    
         self.pythonPath = "D:/Python24/python.exe"
-        self.compiler = "Visual Studio 7 .NET 2003"
         self.currentGUISettingsFilename = ""
-        self.cmakeBuildType = "DebugAndRelease"    
         self.askToLaunchVisualStudio = False
         self.visualStudioPath = ""
 
@@ -207,12 +207,7 @@ class Options:
             section = "CSnake"
             self.cmakePath = parser.get(section, "cmakePath")
             self.pythonPath = parser.get(section, "pythonPath")
-            self.compiler = parser.get(section, "compiler")
             self.currentGUISettingsFilename = parser.get(section, "currentGUISettingsFilename")
-            self.cmakeBuildType = parser.get(section, "cmakeBuildType")
-            # fix legacy value
-            if self.cmakeBuildType == "None":
-                self.cmakeBuildType = "DebugAndRelease"
             if parser.has_option(section, "askToLaunchVisualStudio"):
                 self.askToLaunchVisualStudio = parser.get(section, "askToLaunchVisualStudio") == str(True)
             if parser.has_option(section, "visualStudioPath"):
@@ -234,9 +229,7 @@ class Options:
         parser.add_section(section)
         parser.set(section, "cmakePath", self.cmakePath)
         parser.set(section, "pythonPath", self.pythonPath)
-        parser.set(section, "compiler", self.compiler)
         parser.set(section, "currentGUISettingsFilename", self.currentGUISettingsFilename)
-        parser.set(section, "cmakeBuildType", self.cmakeBuildType)
         parser.set(section, "askToLaunchVisualStudio", self.askToLaunchVisualStudio)
         parser.set(section, "visualStudioPath", self.visualStudioPath)
         f = open(filename, 'w')

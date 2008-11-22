@@ -57,9 +57,11 @@ import re
 # - E&xit
 # - Set settings only once in csnGuiHandler
 # - Command line option for redirect stdout
-# - Simplify Settings.Load and Save by iterating over the member variables and doing a standard load/save
-# - Move _configurationName to Settings
 # - Apply ExtractMethod on Generate
+# - Move visualStudioPath to Settings
+# - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
+# - Support loading old settings using a converter
+# - Import all classes in a namespace csnake, e.g. csnake.Generator
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -89,6 +91,8 @@ class Settings:
     kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
     copied from the bin folder to this folder. This is work around for a problem in 
     KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
+    configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
+    if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
     """
     def __init__(self):
         self.buildFolder = ""    
@@ -103,6 +107,13 @@ class Settings:
         self.testRunnerTemplate = "normalRunner.tpl"
         self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
+        self.configurationName = "DebugAndRelease"
+        self.compiler = "Visual Studio 7 .NET 2003"
+            
+        self.basicFields = [
+            "buildFolder", "installFolder", "kdevelopProjectFolder", "prebuiltBinariesFolder", "thirdPartyBinFolder", "csnakeFile",
+            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler"
+        ]
             
     def Load(self, filename):
         try:
@@ -117,20 +128,13 @@ class Settings:
         
     def __LoadBasicFields(self, parser):
         section = "CSnake"
-        self.buildFolder = parser.get(section, "binFolder")
-        self.installFolder = parser.get(section, "installFolder")
-        if parser.has_option(section, "kdevelopProjectFolder"):
-            self.kdevelopProjectFolder = parser.get(section, "kdevelopProjectFolder")
-        if parser.has_option(section, "prebuiltBinariesFolder"):
-            self.prebuiltBinariesFolder = parser.get(section, "prebuiltBinariesFolder")
-        self.thirdPartyBinFolder = parser.get(section, "thirdPartyBinFolder")
-        self.csnakeFile = parser.get(section, "csnakeFile")
-        self.thirdPartyRootFolder = parser.get(section, "thirdPartyRootFolder")
-        self.instance = parser.get(section, "instance")
-        if parser.has_option(section, "filter"):
-            self.filter = re.split(";", parser.get(section, "filter"))
-        if parser.has_option(section, "testRunnerTemplate"):
-            self.testRunnerTemplate = parser.get(section, "testRunnerTemplate")
+        self.filter = re.split(";", parser.get(section, "filter"))
+        # for backward compatibility, try to load binFolder field
+        if parser.has_option(section, "binFolder"): 
+            self.buildFolder = parser.get(section, "binFolder")
+        for basicField in self.basicFields:
+            if parser.has_option(section, basicField):
+                setattr(self, basicField, parser.get(section, basicField))
 
     def __LoadRootFolders(self, parser):
         section = "RootFolders"
@@ -180,21 +184,13 @@ class Settings:
         parser.add_section(section)
         parser.add_section(rootFolderSection)
 
-        parser.set(section, "binFolder", self.buildFolder)
-        parser.set(section, "installFolder", self.installFolder)
-        parser.set(section, "kdevelopProjectFolder", self.kdevelopProjectFolder)
-        parser.set(section, "prebuiltBinariesFolder", self.prebuiltBinariesFolder)
-        parser.set(section, "thirdPartyBinFolder", self.thirdPartyBinFolder)
-        parser.set(section, "csnakeFile", self.csnakeFile)
+        for basicField in self.basicFields:
+            parser.set(section, basicField, getattr(self, basicField))
         parser.set(section, "filter", ";".join(self.filter))
         count = 0
         while count < len(self.rootFolders):
             parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
             count += 1
-        parser.set(section, "thirdPartyRootFolder", self.thirdPartyRootFolder)
-        parser.set(section, "instance", self.instance)
-        parser.set(section, "testRunnerTemplate", self.testRunnerTemplate)
-        
         self.__SaveRecentlyUsedCSnakeFiles(parser)
         
         f = open(filename, 'w')
@@ -209,11 +205,9 @@ class Generator:
     def __init__(self, settings):
         self.settings = settings
         
-    def Generate(self, _targetProject, _configurationName = "DebugAndRelease", _generatedList = None):
+    def Generate(self, _targetProject, _generatedList = None):
         """
         Generates the CMakeLists.txt for _targetProject (a csnBuild.Project) in the build folder.
-        _configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
-        if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
         _generatedList -- List of projects for which Generate was already called (internal to the function).
         """
 
@@ -265,15 +259,15 @@ class Generator:
         f.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "PROJECT(%s)\n" % (_targetProject.name) )
-        f.write( "SET( BINARY_DIR \"%s\")\n" % (_targetProject.compiler.GetOutputFolder(_configurationName)) )
+        f.write( "SET( BINARY_DIR \"%s\")\n" % (_targetProject.compiler.GetOutputFolder(self.settings.configurationName)) )
 
-        if not _configurationName == "DebugAndRelease":
-            f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (_configurationName) )
+        if not self.settings.configurationName == "DebugAndRelease":
+            f.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (self.settings.configurationName) )
         
         f.write( "\n# All binary outputs are written to the same folder.\n" )
         f.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_configurationName) )
-        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(_configurationName) )
+        f.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(self.settings.configurationName) )
+        f.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % _targetProject.GetBinaryInstallFolder(self.settings.configurationName) )
     
         # create config and use files, and include them
         _targetProject.GenerateConfigFile( _public = 0)
@@ -310,7 +304,7 @@ class Generator:
             # check again if a previous iteration of this loop didn't add project to the generated list
             if not project in _generatedList:
                 f.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (project.GetBuildFolder(), project.GetBuildFolder()) )
-                self.Generate(project, _configurationName, _generatedList)
+                self.Generate(project, _generatedList)
            
         # add dependencies
         f.write( "\n" )

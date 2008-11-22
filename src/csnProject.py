@@ -145,20 +145,8 @@ class Project(object):
     def MatchesFilter(self):
         for pattern in globalSettings.filter:
             for string in self.categories:
-                wildCharPosition = pattern.find( '*' )
-                if wildCharPosition != -1:
-                    patternLength = len(pattern);
-                    if wildCharPosition == 0:
-                        pattern = pattern[1:] + '$'
-                    elif wildCharPosition == patternLength:
-                        pattern = '^' + pattern[:patternLength-1]
-                    else:
-                        pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
-                    if re.search( pattern, string ):
-                        return True
-                else:
-                    if pattern == string:
-                        return True
+                if csnUtility.Matches(string, pattern):
+                    return True
         return False
 
     def AddProjects(self, _projects, _dependency = True, _public = False): 

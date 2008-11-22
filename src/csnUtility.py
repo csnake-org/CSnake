@@ -105,3 +105,20 @@ def ReplaceDestinationFileIfDifferentAndSaveBackup(sourceFile, destinationFile):
 				    result = (0 != shutil.copy(destinationFile, (destinationFile + ".old")))
 				    assert result, "\n\nError: Could not copy from %s to %s/n" % (destinationFile, (destinationFile + ".old"))		    result = (0 != shutil.copy(sourceFile, destinationFile))
 		    assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
+
+def Matches(string, pattern):
+    result = False
+    wildCharPosition = pattern.find( '*' )
+    if wildCharPosition == -1:
+        result = pattern == string
+    else:
+        patternLength = len(pattern);
+        if wildCharPosition == 0:
+            pattern = pattern[1:] + '$'
+        elif wildCharPosition == patternLength:
+            pattern = '^' + pattern[:patternLength-1]
+        else:
+            pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
+        if re.search( pattern, string ):
+            result = True
+    return result

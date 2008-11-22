@@ -108,7 +108,6 @@ class Handler:
     def SetOptions(self, _options):
         # Set options described by csnGUIOptions.Options
         self.options = _options
-        self.SetCompiler(_options.compiler)
         self.SetPythonPath(_options.pythonPath)
         return self.SetCMakePath(_options.cmakePath)
     
@@ -129,9 +128,6 @@ class Handler:
         
         return 1
         
-    def SetCompiler(self, _compiler):
-        self.compiler = _compiler
-        
     def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
         csnBuild.globalSettings.filter = _settings.filter
@@ -149,14 +145,14 @@ class Handler:
         (name, ext) = os.path.splitext(name)
         
         try:
-            if self.compiler in ("KDevelop3", "Unix Makefiles"):
+            if _settings.compiler in ("KDevelop3", "Unix Makefiles"):
                 csnBuild.globalSettings.compilerType = csnKDevelop.Compiler
-            elif self.compiler == "Visual Studio 7 .NET 2003":
+            elif _settings.compiler == "Visual Studio 7 .NET 2003":
                 csnBuild.globalSettings.compilerType = csnVisualStudio2003.Compiler
-            elif self.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
+            elif _settings.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
                 csnBuild.globalSettings.compilerType = csnVisualStudio2005.Compiler
             else:
-                assert false, "\n\nError: Unknown compiler %s\n" % self.compiler
+                assert false, "\n\nError: Unknown compiler %s\n" % _settings.compiler
                 
             project = csnUtility.LoadModule(projectFolder, name)
             exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
@@ -181,12 +177,7 @@ class Handler:
         generator = csnBuild.Generator(_settings)
         instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
-        # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
-        if self.compiler in ("KDevelop3", "Unix Makefiles") and self.options.cmakeBuildType == "DebugAndRelease":
-            generator.Generate(instance, "Debug")
-            generator.Generate(instance, "Release")
-        else:
-            generator.Generate(instance, self.options.cmakeBuildType)
+        generator.Generate(instance)
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
@@ -194,7 +185,7 @@ class Handler:
                 print "Please specify correct path to CMake"
                 return False
                 
-            argList = [self.cmakePath, "-G", self.compiler, instance.GetCMakeListsFilename()]
+            argList = [self.cmakePath, "-G", _settings.compiler, instance.GetCMakeListsFilename()]
             retcode = subprocess.Popen(argList, cwd = _settings.buildFolder).wait()
             if retcode == 0:
                 generator.PostProcess(instance)
@@ -249,7 +240,7 @@ class Handler:
         
         result = True
         os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
-        argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
+        argList = [self.cmakePath, "-G", _settings.compiler, _settings.thirdPartyRootFolder]
         for i in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
 
