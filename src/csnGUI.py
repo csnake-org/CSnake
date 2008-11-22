@@ -12,17 +12,16 @@ import csnUtility
 import os.path
 import sys
 import subprocess
-from optparse import OptionParser
 
 class RedirectText:
     """
     Used to redirect messages to stdout to the text control in CSnakeGUIFrame.
     """
     def __init__(self,aWxTextCtrl):
-        self.out=aWxTextCtrl
+		self.out=aWxTextCtrl
 
     def write(self,string):
-        self.out.WriteText(string)
+		self.out.WriteText(string)
 
 class CSnakeGUIFrame(wx.Frame):
     """
@@ -160,10 +159,11 @@ class CSnakeGUIFrame(wx.Frame):
     def PrintWelcomeMessages(self):
         print "CSnakeGUI loaded.\n"
         print "CSnake version = %s\n" % csnBuild.version
+        print "Checking if CMake is found...\n"
 
     def CreateMemberVariables(self):
         self.settings = csnGenerator.Settings()
-        self.handler = csnGUIHandler.Handler(self.settings)
+        self.handler = csnGUIHandler.Handler()
         
     def CreateOptionsFilenameAndOptionsMemberVariable(self):
         # find out location of application options file
@@ -191,25 +191,18 @@ class CSnakeGUIFrame(wx.Frame):
         
     def InitializeSettings(self):        
         # load previously saved settings
-        if len(self.commandLineArgs) >= 1:
-            self.LoadSettings(self.commandLineArgs[0])
+        if len(sys.argv) >= 2:
+            self.LoadSettings(sys.argv[1])
         else:
             self.LoadSettings()
+        # init lbRootFolders
         self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
-
-    def ParseCommandLine(self):
-        parser = OptionParser()
-        parser.add_option("-c", "--console", dest="console", default=False,
-                          help="print all messages to the console window")
-        (self.commandLineOptions, self.commandLineArgs) = parser.parse_args()
-    
+        
     def Initialize(self):
         """
         Initializes the application.
         """
-        self.ParseCommandLine()
-        if not self.commandLineOptions.console:
-            self.RedirectStdOut()
+        self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateMemberVariables()  
         self.CreateOptionsFilenameAndOptionsMemberVariable()
@@ -308,6 +301,16 @@ class CSnakeGUIFrame(wx.Frame):
 
         sizer_1.Remove(boxInstallFolder)
         
+    def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Create 'empty' CSnake file for configuring a library or executable (depending on cmbNewProjectType).
+        """
+        mapping = dict()
+        mapping["Dll"] = "dll"
+        mapping["Static library"] = "library"
+        mapping["Executable"] = "executable"
+    	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
+
     def CopyGUIToSettings(self):
         self.settings.buildFolder = self.txtBinFolder.GetValue().replace("\\", "/")
         self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
@@ -320,6 +323,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
         self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
         self.settings.instance = self.cmbInstance.GetValue()
+        self.settings.cmakeBuildType = self.options.cmakeBuildType
     
     def SaveSettings(self, filename = ""):
         """
@@ -339,9 +343,7 @@ class CSnakeGUIFrame(wx.Frame):
         """
         
         self.textLog.Clear()
-        self.textLog.Refresh()
         self.textLog.Update()
-        
         print "\n--- Working, patience please... ---"
         self.CopyGUIToSettings()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
@@ -355,23 +357,23 @@ class CSnakeGUIFrame(wx.Frame):
             try:
                 # if configuring the target project...            
                 if configureProject:
-                    if self.handler.ConfigureProjectToBinFolder(alsoRunCMake):
+                    if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
                         if self.settings.instance.lower() == "gimias":
                             self.ProposeToDeletePluginDlls()
                         if self.options.askToLaunchVisualStudio:
-                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath() )
+                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
         
                 # if installing dlls to the bin folder            
                 copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
                 if copyDlls:
-                    if not self.handler.InstallBinariesToBinFolder():
+                    if not self.handler.InstallBinariesToBinFolder(self.settings):
                         print "Error while installing files.\n"
                         
                 # if configuring the third party folder            
                 if( configureThirdPartyFolder ):
-                    self.handler.ConfigureThirdPartyFolder()
+                    self.handler.ConfigureThirdPartyFolder(self.settings)
                     if self.options.askToLaunchVisualStudio:
-                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath() )
+                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
 
             except AssertionError, e:
                 print str(e) + '\n'
@@ -506,7 +508,7 @@ class CSnakeGUIFrame(wx.Frame):
             self.cmbInstance.Append(self.settings.instance)
             self.cmbInstance.SetSelection(0)
             
-        self.panelKDevelop.Show( self.settings.compiler in ("KDevelop3", "Unix Makefiles") )
+        self.panelKDevelop.Show( self.options.compiler in ("KDevelop3", "Unix Makefiles") )
         self.Layout()
         
         if os.path.exists(self.options.currentGUISettingsFilename):
@@ -530,20 +532,20 @@ class CSnakeGUIFrame(wx.Frame):
         Let user edit the application options.
         """
         frmEditOptions = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
-        frmEditOptions.ShowOptions(self.settings, self.options, self.optionsFilename)
+        frmEditOptions.ShowOptions(self.options, self.optionsFilename)
         frmEditOptions.MakeModal()
         frmEditOptions.Show(True, self.RefreshGUI)
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.SaveSettings()
-        targets = self.handler.GetListOfPossibleTargets()
+        targets = self.handler.GetListOfPossibleTargets(self.settings)
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)
             self.SaveSettings()
 
     def ProposeToDeletePluginDlls(self):
-        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls()
+        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls(self.settings)
         if len(spuriousDlls) == 0:
             return
             
@@ -564,7 +566,7 @@ class CSnakeGUIFrame(wx.Frame):
         dlg = wx.MessageDialog(self, message, style = wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             argList = [self.options.visualStudioPath, pathToSolution]
-            subprocess.Popen(argList)
+            retcode = subprocess.Popen(argList)
                 
     def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         self.CopyGUIToSettings()
@@ -586,7 +588,7 @@ class CSnakeGUIFrame(wx.Frame):
     def OnButtonSelectProjects(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         previousFilter = self.settings.filter 
         self.settings.filter = list()
-        categories = self.handler.GetCategories()
+        categories = self.handler.GetCategories(self.settings)
         self.settings.filter = previousFilter
         dlg = csnGUISelectProjects.Dialog(None, -1, "")
         if dlg.ShowItems(categories, self.settings.filter) == wx.ID_OK:

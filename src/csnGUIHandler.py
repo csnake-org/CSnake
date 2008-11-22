@@ -98,19 +98,29 @@ class RollbackHandler:
         sys.path = list(self.previousPaths)
                     
 class Handler:
-    def __init__(self, _settings):
-        """ 
-        _settings - Instance of csnGenerator.Settings
-        """
+    def __init__(self):
+        self.cmakePath = ""
+        self.pythonPath = ""
+        self.cmakeFound = 0 
         self.options = 0
-        self.settings = _settings
         pass
     
     def SetOptions(self, _options):
         # Set options described by csnGUIOptions.Options
         self.options = _options
+        self.SetCompiler(_options.compiler)
         self.SetPythonPath(_options.pythonPath)
-        return True
+        return self.SetCMakePath(_options.cmakePath)
+    
+    def SetCMakePath(self, _cmakePath):
+        if not self.cmakePath == _cmakePath:
+            self.cmakePath = _cmakePath
+            self.cmakeFound = self.CMakeIsFound() 
+            if self.cmakeFound:
+                print "CMake was found.\n"
+        if not self.cmakeFound:
+            print "Warning: %s is is not a valid path to cmake. Select path to CMake using menu Settings->Edit Settings." % self.cmakePath
+        return self.cmakeFound
         
     def SetPythonPath(self, path):
         csnBuild.globalSettings.pythonPath = path
@@ -119,79 +129,88 @@ class Handler:
         
         return 1
         
-    def __GetProjectInstance(self):
+    def SetCompiler(self, _compiler):
+        self.compiler = _compiler
+        
+    def __GetProjectInstance(self, _settings):
         """ Instantiates and returns the _instance in _projectPath. """
-        csnBuild.globalSettings.filter = self.settings.filter
-        csnBuild.globalSettings.testRunnerTemplate = self.settings.testRunnerTemplate
-        self.DeletePycFiles()
+        csnBuild.globalSettings.filter = _settings.filter
+        csnBuild.globalSettings.testRunnerTemplate = _settings.testRunnerTemplate
+        self.DeletePycFiles(_settings)
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.settings.csnakeFile, self.settings.rootFolders, self.settings.thirdPartyRootFolder)
+        rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
         
-        csnCilab.thirdPartyModuleFolder = self.settings.thirdPartyRootFolder
-        csnCilab.thirdPartyBinFolder = self.settings.thirdPartyBinFolder
+        csnCilab.thirdPartyModuleFolder = _settings.thirdPartyRootFolder
+        csnCilab.thirdPartyBinFolder = _settings.thirdPartyBinFolder
         
-        (projectFolder, name) = os.path.split(self.settings.csnakeFile)
-        (name, _) = os.path.splitext(name)
-        instance = None # prevent warning
+        (projectFolder, name) = os.path.split(_settings.csnakeFile)
+        (name, ext) = os.path.splitext(name)
         
         try:
-            if self.settings.compiler in ("KDevelop3", "Unix Makefiles"):
+            if self.compiler in ("KDevelop3", "Unix Makefiles"):
                 csnBuild.globalSettings.compilerType = csnKDevelop.Compiler
-            elif self.settings.compiler == "Visual Studio 7 .NET 2003":
+            elif self.compiler == "Visual Studio 7 .NET 2003":
                 csnBuild.globalSettings.compilerType = csnVisualStudio2003.Compiler
-            elif self.settings.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
+            elif self.compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
                 csnBuild.globalSettings.compilerType = csnVisualStudio2005.Compiler
             else:
-                assert False, "\n\nError: Unknown compiler %s\n" % self.settings.compiler
+                assert false, "\n\nError: Unknown compiler %s\n" % self.compiler
                 
             project = csnUtility.LoadModule(projectFolder, name)
-            project # prevent warning
-            exec "instance = csnBuild.ToProject(project.%s)" % self.settings.instance
+            exec "instance = csnBuild.ToProject(project.%s)" % _settings.instance
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
 
-        instance.compiler.SetBuildFolder(self.settings.buildFolder)
+        instance.compiler.SetBuildFolder(_settings.buildFolder)
         relocator = csnPrebuilt.ProjectRelocator()
-        relocator.Do(instance, self.settings.prebuiltBinariesFolder)
+        relocator.Do(instance, _settings.prebuiltBinariesFolder)
         
-        self.UpdateRecentlyUsedCSnakeFiles()
+        self.UpdateRecentlyUsedCSnakeFiles(_settings)
         return instance
     
-    def ConfigureProjectToBinFolder(self, _alsoRunCMake):
+    def ConfigureProjectToBinFolder(self, _settings, _alsoRunCMake):
         """ 
         Configures the project to the bin folder.
         """
-        instance = self.__GetProjectInstance()
+        logString = ""
+        instance = self.__GetProjectInstance(_settings)
 
-        generator = csnBuild.Generator(self.settings)
-        instance.ResolvePathsOfFilesToInstall(self.settings.thirdPartyBinFolder)
+        generator = csnBuild.Generator(_settings)
+        instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
-        generator.Generate(instance)
+        # on linux, cmake build type DebugAndRelease means that two config steps are performed, for debug and for release
+        if self.compiler in ("KDevelop3", "Unix Makefiles") and self.options.cmakeBuildType == "DebugAndRelease":
+            generator.Generate(instance, "Debug")
+            generator.Generate(instance, "Release")
+        else:
+            generator.Generate(instance, self.options.cmakeBuildType)
         instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
-            argList = [self.settings.cmakePath, "-G", self.settings.compiler, instance.GetCMakeListsFilename()]
-            retcode = subprocess.Popen(argList, cwd = self.settings.buildFolder).wait()
+            if not self.cmakeFound:
+                print "Please specify correct path to CMake"
+                return False
+                
+            argList = [self.cmakePath, "-G", self.compiler, instance.GetCMakeListsFilename()]
+            retcode = subprocess.Popen(argList, cwd = _settings.buildFolder).wait()
             if retcode == 0:
                 generator.PostProcess(instance)
                 return True
             else:
                 print "Configuration failed.\n"   
-                if not self.CMakeIsFound():
-                    print "CMake not found at %s" % self.settings.cmakePath 
                 return False
             
-    def InstallBinariesToBinFolder(self):
+    def InstallBinariesToBinFolder(self, _settings):
         """ 
         This function copies all third party dlls to the binary folder, so that you can run the executables in the
         binary folder without having to build the INSTALL target.
         """
         result = True
-        instance = self.__GetProjectInstance()
-        instance.ResolvePathsOfFilesToInstall(self.settings.thirdPartyBinFolder)
+        instance = self.__GetProjectInstance(_settings)
+        instance.ResolvePathsOfFilesToInstall(_settings.thirdPartyBinFolder)
         
         for mode in ("Debug", "Release"):
             outputFolder = instance.compiler.GetOutputFolder(mode)
@@ -209,43 +228,44 @@ class Handler:
         return result
              
     def CMakeIsFound(self):
-        found = os.path.exists(self.settings.cmakePath) and os.path.isfile(self.settings.cmakePath)
+        found = os.path.exists(self.cmakePath) and os.path.isfile(self.cmakePath)
         if not found:
             try:
                 retcode = subprocess.Popen(self.cmakePath).wait()
             except:
                 retcode = 1
             found = retcode == 0
-        return found        
+        return found
     
-    def ConfigureThirdPartyFolder(self, _nrOfTimes = 2):
+    def ConfigureThirdPartyFolder(self, _settings, _nrOfTimes = 2):
         """ 
         Runs cmake to install the libraries in the third party folder.
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
+        if not self.cmakeFound:
+            print "Please specify correct path to CMake"
+            return False
+        
         result = True
-        os.path.exists(self.settings.thirdPartyBinFolder) or os.makedirs(self.settings.thirdPartyBinFolder)
-        argList = [self.settings.cmakePath, "-G", self.settings.compiler, self.settings.thirdPartyRootFolder]
-        for _ in range(0, _nrOfTimes):
-            result = result and 0 == subprocess.Popen(argList, cwd = self.settings.thirdPartyBinFolder).wait() 
+        os.path.exists(_settings.thirdPartyBinFolder) or os.makedirs(_settings.thirdPartyBinFolder)
+        argList = [self.cmakePath, "-G", self.compiler, _settings.thirdPartyRootFolder]
+        for i in range(0, _nrOfTimes):
+            result = result and 0 == subprocess.Popen(argList, cwd = _settings.thirdPartyBinFolder).wait() 
 
-        if not result:
-            print "Configuration failed.\n"   
-            if not self.CMakeIsFound():
-                print "Please specify correct path to CMake (current is %s)" % self.settings.cmakePath 
-                return False
+    	if not result:
+                print "Configuration failed.\n"   
             
         return result
 
-    def DeletePycFiles(self):
+    def DeletePycFiles(self, _settings):
         """
         Tries to delete all pyc files from _projectPath, _sourceRootFolders and thirdPartyRootFolder.
         However, __init__.pyc files are not removed.
         """
         # determine list of folders to search for pyc files
-        folderList = [self.settings.thirdPartyRootFolder]
-        folderList.extend(self.settings.rootFolders)
+        folderList = [_settings.thirdPartyRootFolder]
+        folderList.extend(_settings.rootFolders)
                     
         # remove pyc files
         while len(folderList) > 0:
@@ -259,21 +279,21 @@ class Handler:
                 newFolders.extend( [os.path.dirname(x).replace("\\", "/") for x in glob.glob("%s/*/__init__.py" % folder)] )
             folderList = list(newFolders)
         
-    def GetListOfPossibleTargets(self):
+    def GetListOfPossibleTargets(self, _settings):
         """
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
 
-        self.DeletePycFiles()
+        self.DeletePycFiles(_settings)
                 
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.settings.csnakeFile, self.settings.rootFolders, self.settings.thirdPartyRootFolder)
+        rollbackHandler.SetUp(_settings.csnakeFile, _settings.rootFolders, _settings.thirdPartyRootFolder)
         result = []
 
         # find csnake targets in the loaded module
-        (projectFolder, name) = os.path.split(self.settings.csnakeFile)
-        (name, _) = os.path.splitext(name)
-        csnCilab.thirdPartyModuleFolder = self.settings.thirdPartyRootFolder
+        (projectFolder, name) = os.path.split(_settings.csnakeFile)
+        (name, ext) = os.path.splitext(name)
+        csnCilab.thirdPartyModuleFolder = _settings.thirdPartyRootFolder
         project = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(project):
             if isinstance(member[1], csnBuild.Project):
@@ -282,18 +302,18 @@ class Handler:
         rollbackHandler.TearDown()
         return result
         
-    def GetListOfSpuriousPluginDlls(self):
+    def GetListOfSpuriousPluginDlls(self, _settings):
         """
-        Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration.
+        Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration (in _settings).
         """
         result = []
-        instance = self.__GetProjectInstance()
+        instance = self.__GetProjectInstance(_settings)
         if not instance.name.lower() == "gimias":
             return result
     
         configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (self.settings.buildFolder, configuration)
+            pluginsFolder = "%s/bin/%s/plugins/*" % (_settings.buildFolder, configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)
@@ -309,18 +329,18 @@ class Handler:
                     
         return result
 
-    def GetTargetSolutionPath(self):
-        instance = self.__GetProjectInstance()
+    def GetTargetSolutionPath(self, _settings):
+        instance = self.__GetProjectInstance(_settings)
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
-    def GetThirdPartySolutionPath(self):
-        return "%s/CILAB_TOOLKIT.sln" % (self.settings.thirdPartyBinFolder)
+    def GetThirdPartySolutionPath(self, _settings):
+        return "%s/CILAB_TOOLKIT.sln" % (_settings.thirdPartyBinFolder)
     
-    def UpdateRecentlyUsedCSnakeFiles(self):
-        self.settings.AddRecentlyUsed(self.settings.instance, self.settings.csnakeFile)
+    def UpdateRecentlyUsedCSnakeFiles(self, _settings):
+        _settings.AddRecentlyUsed(_settings.instance, _settings.csnakeFile)
 
-    def GetCategories(self):
-        instance = self.__GetProjectInstance()
+    def GetCategories(self, _settings):
+        instance = self.__GetProjectInstance(_settings)
         categories = list()
         for project in instance.GetProjects(_recursive = True):
             for cat in project.categories:

@@ -1,4 +1,5 @@
 import os
+import copy
 import csnUtility
 
 class ProjectRelocator:

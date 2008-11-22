@@ -1,3 +1,5 @@
+import os
+import csnUtility
 import csnCompiler
 
 class Compiler(csnCompiler.Compiler):

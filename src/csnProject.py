@@ -3,11 +3,14 @@ import csnVisualStudio2003
 import csnKDevelop
 import inspect
 import os.path
+import warnings
+import sys
 import glob
 import types
 import GlobDirectoryWalker
 import OrderedSet
 import unittest
+import re
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -97,7 +100,7 @@ class Project(object):
     the call stack. For example, if this class' constructor is called in a file d:/users/me/csnMyProject.py, then d:/users/me 
     will be set as the source root folder.
     _compiler - The compiler (instance of csnCompiler.Compiler) that will be used for compiling this project. If set to None,
-    then a new compiler instance will be created using csnProject.globalSettings.compilerType.
+    then a new compiler instance will be created using csnBuild.globalSettings.compilerType.
     """    
     def __init__(self, _name, _type, _sourceRootFolder = None, _compiler = None, _categories = None ):
         self.sources = []
@@ -142,8 +145,20 @@ class Project(object):
     def MatchesFilter(self):
         for pattern in globalSettings.filter:
             for string in self.categories:
-                if csnUtility.Matches(string, pattern):
-                    return True
+                wildCharPosition = pattern.find( '*' )
+                if wildCharPosition != -1:
+                    patternLength = len(pattern);
+                    if wildCharPosition == 0:
+                        pattern = pattern[1:] + '$'
+                    elif wildCharPosition == patternLength:
+                        pattern = '^' + pattern[:patternLength-1]
+                    else:
+                        pattern = '^' + pattern.replace( '*', "[\w]*" ) + '$'
+                    if re.search( pattern, string ):
+                        return True
+                else:
+                    if pattern == string:
+                        return True
         return False
 
     def AddProjects(self, _projects, _dependency = True, _public = False): 
@@ -821,7 +836,7 @@ class Project(object):
         """
         Helper function.
         """
-        for _ in range(indent):
+        for i in range(indent):
             f.write(' ')
         f.write("<%s>" % self.name)
         for project in self.GetProjects(_onlyRequiredProjects = 1):
@@ -885,4 +900,4 @@ class ProjectTest(unittest.TestCase):
         assert project.filesToInstall["Debug"][location] == ["Bye.h"]
     
 if __name__ == "__main__":
-    unittest.main() 
+	unittest.main() 
