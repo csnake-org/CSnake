@@ -328,12 +328,12 @@ class Project(object):
         assert not( _debugOnly and _releaseOnly)
         type = "" # empty string is the default, meaning both debug and release
         if _debugOnly:
-            type = "debug"
+            type = "debug "
         if _releaseOnly:
-            type = "optimized"
+            type = "optimized "
 
         for library in _listOfLibraries:
-            self.compiler.public.libraries.append("%s %s" % (type, library))
+            self.compiler.public.libraries.append("%s%s" % (type, library))
         
     def __FindPath(self, _path):
         """ 
