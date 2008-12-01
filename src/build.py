@@ -32,4 +32,5 @@ if settings.instance == "thirdParty":
     res = handler.ConfigureThirdPartyFolder(settings)
 else:
     res = handler.ConfigureProjectToBinFolder( settings, 1 )
-return res
+sys.exit(res)
+
