@@ -32,5 +32,7 @@ if settings.instance == "thirdParty":
     res = handler.ConfigureThirdPartyFolder(settings)
 else:
     res = handler.ConfigureProjectToBinFolder( settings, 1 )
-sys.exit(res)
+# exit with error if there was a problem
+if res == false:
+  sys.exit(1)
 
