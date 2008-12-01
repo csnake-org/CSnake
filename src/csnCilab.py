@@ -142,7 +142,7 @@ class GimiasPluginProject(csnBuild.Project):
         self.installSubFolder = "plugins/%s/lib" % _name
         self.AddIncludeFolders(["."])
         
-    def AddWidgetModules(self, _widgetModules, _holdingFolder = "widgets", _useQt = 1):
+    def AddWidgetModules(self, _widgetModules, _holdingFolder = "widgets", _useQt = 0):
         """ 
         Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
         _useQt - If true, adds build rules for the ui and moc files .
