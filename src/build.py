@@ -29,7 +29,7 @@ settings.Load( config_file )
 handler.SetOptions( options )
 # Configure the project with the settings
 if settings.instance == "thirdParty":
-    handler.ConfigureThirdPartyFolder(settings)
+    res = handler.ConfigureThirdPartyFolder(settings)
 else:
-    handler.ConfigureProjectToBinFolder( settings, 1 )
-
+    res = handler.ConfigureProjectToBinFolder( settings, 1 )
+return res
