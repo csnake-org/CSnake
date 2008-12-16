@@ -1,4 +1,5 @@
 import csnContext
+import csnProject
 import os
 import shutil
 import csnUtility
@@ -36,13 +37,13 @@ class PostProcessor:
         return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
         
     def Do(self, _project):
-        if not os.path.exists(self.kdevelopProjectFolder):
+        if not os.path.exists(_project.context.kdevelopProjectFolder):
             # if _kdevelopProjectFolder does not exist, then it MUST equal "".
             # otherwise, the user specified an invalid path for kdevelopProjectFolder.  
-            assert self.kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
+            assert _project.context.kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _project.context.kdevelopProjectFolder
             return
             
-        kdevelopProjectFolder = csnUtility.NormalizePath(self.kdevelopProjectFolder)
+        kdevelopProjectFolder = csnUtility.NormalizePath(_project.context.kdevelopProjectFolder)
 
         if not os.path.exists(self.__GetKDevelopProjectFilename(_project)):
             return
