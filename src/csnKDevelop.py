@@ -1,13 +1,19 @@
+import csnContext
 import os
 import shutil
 import csnUtility
-import csnCompiler
 
-class Compiler(csnCompiler.Compiler):
+class Context(csnContext.Context):
     def __init__(self):
-        csnCompiler.Compiler.__init__(self)
+        csnContext.Context.__init__(self)
+        self.kdevelopProjectFolder = ""    
+        self.basicFields.append("kdevelopProjectFolder")
         self.postProcessor = PostProcessor()
-
+        
+    def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
+        project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
+        return project
+        
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
 
@@ -17,7 +23,7 @@ class Compiler(csnCompiler.Compiler):
         The default value for _configuration returns the output folder for the current configuration.
         for storing binaries.
         """
-        return "%s/bin/%s" % (self.GetBuildFolder(), _configuration)
+        return "%s/bin/%s" % (self.buildFolder, _configuration)
         
 class PostProcessor:
     def __GetKDevelopProjectFilename(self, _project, _folder = None):
@@ -29,21 +35,21 @@ class PostProcessor:
     def __GetFilelistFilename(self, _project, _folder = None):
         return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
         
-    def Do(self, _project, _binaryFolder, _kdevelopProjectFolder):
-        if not os.path.exists(_kdevelopProjectFolder):
+    def Do(self, _project):
+        if not os.path.exists(self.kdevelopProjectFolder):
             # if _kdevelopProjectFolder does not exist, then it MUST equal "".
-            # otherwise, the user specified an invalid path for _kdevelopProjectFolder.  
-            assert _kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
+            # otherwise, the user specified an invalid path for kdevelopProjectFolder.  
+            assert self.kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _kdevelopProjectFolder 
             return
             
-        kdevelopProjectFolder = csnUtility.NormalizePath(_kdevelopProjectFolder)
+        kdevelopProjectFolder = csnUtility.NormalizePath(self.kdevelopProjectFolder)
 
         if not os.path.exists(self.__GetKDevelopProjectFilename(_project)):
             return
             
         f = open(self.__GetFilelistFilename(_project), 'w')
         for project in _project.ProjectsToUse():
-            for source in project.sources:
+            for source in project.GetSources():
                 fileListItem = csnUtility.RemovePrefixFromPath(source, kdevelopProjectFolder)
                 fileListItem = csnUtility.NormalizePath(fileListItem)
                 f.write(fileListItem + "/n")

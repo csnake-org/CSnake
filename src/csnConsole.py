@@ -1,32 +1,26 @@
 import csnGUIHandler
 import csnGenerator
+import csnContext
 
 handler = csnGUIHandler.Handler()
-handler.SetCMakePath("D:/Program Files (x86)/CMake 2.4/bin/cmake.exe")
-# the following is only needed if you want to build the tests on the target machine
-handler.SetPythonPath("D:/Python24/python.exe")
-handler.SetCompiler("Visual Studio 7 .NET 2003") # "Unix Makefiles"
-handler.SetCMakeBuildType("") # or "Release" or "Debug"
-
-settings = csnGenerator.Settings()
-settings.Load("settings.CSnakeGUI")
+context = handler.LoadContext("./settings.CSnake")
 
 if True:
-    taskMsg = "ConfigureThirdPartyFolder from %s to %s..." % (settings.thirdPartyRootFolder, settings.thirdPartyBinFolder) 
+    taskMsg = "ConfigureThirdPartyFolder from %s to %s..." % (context.thirdPartyRootFolder, context.thirdPartyBinFolder) 
     print "Starting task: " + taskMsg  
-    result = handler.ConfigureThirdPartyFolder(settings)
+    result = handler.ConfigureThirdPartyFolder()
     assert result, "\n\nTask failed: ConfigureThirdPartyFolder" 
     print "Finished " + taskMsg + "\nPlease build the 3rd party sources then press enter...\n"
     raw_input()
 
-taskMsg = "InstallBinariesToBinFolder to %s..." % (settings.binFolder)
+taskMsg = "InstallBinariesToBinFolder to %s..." % (context.buildFolder)
 print "Starting task: " + taskMsg 
-result = handler.InstallBinariesToBinFolder(settings)
+result = handler.InstallBinariesToBinFolder()
 assert result, "\n\nTask failed: InstallBinariesToBinFolder" 
 print "Finished task: " + taskMsg
 
-taskMsg = "ConfigureProjectToBinFolder to %s..." % (settings.binFolder)
+taskMsg = "ConfigureProjectToBinFolder to %s..." % (context.buildFolder)
 print "Starting task: " + taskMsg 
-result = handler.ConfigureProjectToBinFolder(settings, _alsoRunCMake = True)
+result = handler.ConfigureProjectToBinFolder(_alsoRunCMake = True)
 assert result, "\n\nTask failed: ConfigureProjectToBinFolder" 
-print "Finished task: " + taskMsg + "\nPlease build the sources in %s.\n" % handler.GetTargetSolutionPath(settings)
+print "Finished task: " + taskMsg + "\nPlease build the sources in %s.\n" % handler.GetTargetSolutionPath()

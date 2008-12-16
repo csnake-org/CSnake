@@ -7,21 +7,26 @@ import wx
 import csnGUIOptions
 import csnGUISelectProjects
 import csnGUIHandler
+import csnContext
+import csnContextConverter
 import csnBuild
 import csnUtility
 import os.path
 import sys
+import shutil
+import time
 import subprocess
+from optparse import OptionParser
 
 class RedirectText:
     """
     Used to redirect messages to stdout to the text control in CSnakeGUIFrame.
     """
     def __init__(self,aWxTextCtrl):
-		self.out=aWxTextCtrl
+        self.out=aWxTextCtrl
 
     def write(self,string):
-		self.out.WriteText(string)
+        self.out.WriteText(string)
 
 class CSnakeGUIFrame(wx.Frame):
     """
@@ -39,13 +44,15 @@ class CSnakeGUIFrame(wx.Frame):
         # Menu Bar
         self.frmCSnakeGUI_menubar = wx.MenuBar()
         wxglade_tmp_menu = wx.Menu()
-        self.mnuLoadSettings = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Load Settings", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.AppendItem(self.mnuLoadSettings)
-        self.mnuSaveSettingsAs = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Save Settings As...", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.AppendItem(self.mnuSaveSettingsAs)
-        self.mnuExit = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Exit", "", wx.ITEM_NORMAL)
+        self.mnuContextOpen = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Open...", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuContextOpen)
+        self.mnuContextCreateACopy = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Create a Copy...", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuContextCreateACopy)
+        self.mnuContextAbandonChanges = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Abandon Changes", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.mnuContextAbandonChanges)
+        self.mnuExit = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "E&xit", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.AppendItem(self.mnuExit)
-        self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "File")
+        self.frmCSnakeGUI_menubar.Append(wxglade_tmp_menu, "Context")
         wxglade_tmp_menu = wx.Menu()
         self.mnuEditOptions = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), "Edit Options", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.AppendItem(self.mnuEditOptions)
@@ -85,8 +92,9 @@ class CSnakeGUIFrame(wx.Frame):
         self.__set_properties()
         self.__do_layout()
 
-        self.Bind(wx.EVT_MENU, self.OnLoadSettings, self.mnuLoadSettings)
-        self.Bind(wx.EVT_MENU, self.OnSaveSettingsAs, self.mnuSaveSettingsAs)
+        self.Bind(wx.EVT_MENU, self.OnContextOpen, self.mnuContextOpen)
+        self.Bind(wx.EVT_MENU, self.OnContextCreateACopy, self.mnuContextCreateACopy)
+        self.Bind(wx.EVT_MENU, self.OnContextAbandonChanges, self.mnuContextAbandonChanges)
         self.Bind(wx.EVT_MENU, self.OnExit, self.mnuExit)
         self.Bind(wx.EVT_MENU, self.OnEditOptions, self.mnuEditOptions)
         self.Bind(wx.EVT_BUTTON, self.OnAddRootFolder, self.btnAddRootFolder)
@@ -149,87 +157,6 @@ class CSnakeGUIFrame(wx.Frame):
         # end wxGlade
         
         self.Initialize()
-        
-    def RedirectStdOut(self):
-        # redirect std out
-        redir=RedirectText(self.textLog)
-        sys.stdout=redir
-        sys.stderr=redir
-
-    def PrintWelcomeMessages(self):
-        print "CSnakeGUI loaded.\n"
-        print "CSnake version = %s\n" % csnBuild.version
-        print "Checking if CMake is found...\n"
-
-    def CreateMemberVariables(self):
-        self.settings = csnGenerator.Settings()
-        self.handler = csnGUIHandler.Handler()
-        
-    def CreateOptionsFilenameAndOptionsMemberVariable(self):
-        # find out location of application options file
-        thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
-        thisFolder = thisFolder.replace("\\", "/")
-        if thisFolder == "":
-            thisFolder = "."
-        self.optionsFilename = "%s/options" % thisFolder
-        
-        # create options
-        self.options = csnGUIOptions.Options()
-        self.options.currentGUISettingsFilename = "%s/settings" % thisFolder
-
-    def InitializeOptions(self):
-        # load options from options file
-        self.LoadOptions()
-        
-        # Write the default options to the options file, and pass them to the handler
-        self.WriteOptions()
-        self.PassOptionsToHandler()
-
-        iconFile = csnUtility.GetRootOfCSnake() + "/resources/Laticauda_colubrina.ico"
-        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
-        self.SetIcon(icon1)
-        
-    def InitializeSettings(self):        
-        # load previously saved settings
-        if len(sys.argv) >= 2:
-            self.LoadSettings(sys.argv[1])
-        else:
-            self.LoadSettings()
-        # init lbRootFolders
-        self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
-        
-    def Initialize(self):
-        """
-        Initializes the application.
-        """
-        self.RedirectStdOut()
-        self.PrintWelcomeMessages()
-        self.CreateMemberVariables()  
-        self.CreateOptionsFilenameAndOptionsMemberVariable()
-        self.InitializeOptions()    
-        self.InitializeSettings()            
-
-    def StoreSettingsFilename(self, lastUsedSettingsFile):
-        """
-        Write location of last used config settings to the application options file. 
-        """
-        self.options.currentGUISettingsFilename = lastUsedSettingsFile
-        self.WriteOptions()
-        
-    def WriteOptions(self):
-        """
-        Write options to the application options file, and passes them to the handler. 
-        """
-        self.options.Save(self.optionsFilename)
-
-    def PassOptionsToHandler(self):
-        return self.handler.SetOptions(self.options)
-        
-    def LoadOptions(self):
-        """
-        Load options from the application options file. 
-        """
-        return self.options.Load(self.optionsFilename)
         
     def __do_layout(self):
         # begin wxGlade: CSnakeGUIFrame.__do_layout
@@ -301,85 +228,155 @@ class CSnakeGUIFrame(wx.Frame):
 
         sizer_1.Remove(boxInstallFolder)
         
-    def OnStartNewProject(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def Initialize(self):
         """
-        Create 'empty' CSnake file for configuring a library or executable (depending on cmbNewProjectType).
+        Initializes the application.
         """
-        mapping = dict()
-        mapping["Dll"] = "dll"
-        mapping["Static library"] = "library"
-        mapping["Executable"] = "executable"
-    	csnGUIHandler.CreateCSnakeProject(self.settings.csnakeFile, self.settings.rootFolders, self.txtNewProjectName.GetValue(), mapping[self.cmbNewProjectType.GetValue()])
+        self.LoadIcon()
+        self.ParseCommandLine()
+        if not self.commandLineOptions.console:
+            self.RedirectStdOut()
+        self.PrintWelcomeMessages()
+        self.CreateHandler()
+        self.InitializeOptions()    
+        
+        # load previously saved context
+        contextToLoad = self.options.contextFilename
+        if len(self.commandLineArgs) >= 1:
+            contextToLoad = self.commandLineArgs[0]
+            
+        okay = self.LoadContext(contextToLoad)
+        if not okay:
+            raise "Could not open %s\n" % contextToLoad
 
-    def CopyGUIToSettings(self):
-        self.settings.buildFolder = self.txtBinFolder.GetValue().replace("\\", "/")
-        self.settings.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
-        self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
-        self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue().replace("\\", "/")
-        self.settings.prebuiltBinariesFolder = ""
-        self.settings.csnakeFile = self.cmbCSnakeFile.GetValue().replace("\\", "/")
-        self.settings.rootFolders = []
-        for i in range( self.lbRootFolders.GetCount() ):
-            self.settings.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
-        self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
-        self.settings.instance = self.cmbInstance.GetValue()
-        self.settings.cmakeBuildType = self.options.cmakeBuildType
+        self.BackupContextFile()
+        self.lbRootFolders.SetSelection(self.lbRootFolders.GetCount()-1)
+
+    def BackupContextFile(self):
+        self.contextBeforeEditingFilename = "%s/contextBeforeEditing" % self.thisFolder
+        try:
+            shutil.copy(self.options.contextFilename, self.contextBeforeEditingFilename)
+        except:
+            print "Warning: could not copy %s to backup location %s" % (self.options.contextFilename, self.contextBeforeEditingFilename)
     
-    def SaveSettings(self, filename = ""):
+    def LoadIcon(self):
+        iconFile = csnUtility.GetRootOfCSnake() + "/resources/Laticauda_colubrina.ico"
+        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
+        self.SetIcon(icon1)
+    
+    def ParseCommandLine(self):
+        parser = OptionParser()
+        parser.add_option("-c", "--console", dest="console", default=False,
+                          help="print all messages to the console window")
+        (self.commandLineOptions, self.commandLineArgs) = parser.parse_args()
+        self.thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
+        self.thisFolder = self.thisFolder.replace("\\", "/")
+        if self.thisFolder == "":
+            self.thisFolder = "."
+    
+    def RedirectStdOut(self):
+        # redirect std out
+        redir=RedirectText(self.textLog)
+        sys.stdout=redir
+        sys.stderr=redir
+
+    def PrintWelcomeMessages(self):
+        print "CSnakeGUI loaded.\n"
+        print "CSnake version = %s\n" % csnBuild.version
+
+    def CreateHandler(self):
+        self.handler = csnGUIHandler.Handler()
+        self.context = None
+    
+    def InitializeOptions(self):
+        self.options = csnGUIOptions.Options()
+        self.optionsFilename = "%s/options" % self.thisFolder
+        if os.path.exists(self.optionsFilename):
+            self.converter = csnContextConverter.Converter(self.optionsFilename)
+            self.options.Load(self.optionsFilename)
+        else:
+            self.options.contextFilename = "%s/context" % self.thisFolder
+            self.options.Save(self.optionsFilename)
+            
+        if not os.path.exists(self.options.contextFilename):
+            self.options.contextFilename = "%s/context" % self.thisFolder
+            csnContext.Context().Save(self.options.contextFilename)
+        
+    def CopyGUIToContextAndOptions(self):
+        self.context.buildFolder = self.txtBinFolder.GetValue().replace("\\", "/")
+        self.context.installFolder = self.txtInstallFolder.GetValue().replace("\\", "/")
+        self.context.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue().replace("\\", "/")
+        if hasattr(self.context, "kdevelopProjectFolder"):
+            self.context.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue().replace("\\", "/")
+        self.context.prebuiltBinariesFolder = ""
+        self.context.csnakeFile = self.cmbCSnakeFile.GetValue().replace("\\", "/")
+        self.context.rootFolders = []
+        for i in range( self.lbRootFolders.GetCount() ):
+            self.context.rootFolders.append( self.lbRootFolders.GetString(i).replace("\\", "/") )
+        self.context.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue().replace("\\", "/")
+        self.context.instance = self.cmbInstance.GetValue()
+    
+    def SaveContextAndOptions(self, contextFilename = ""):
         """
-        Copy settings from the widget controls to self.settings.
-        If filename is not "", save current configuration settings (source folder/bin folder/etc) 
+        Copy context from the widget controls to self.context.
+        If filename is not "", save current configuration context (source folder/bin folder/etc) 
         to filename.
         """
-        self.CopyGUIToSettings()
-        if not filename == "":
-            self.settings.Save(filename)
-            # record the settings filename in self.optionsFilename
-            self.StoreSettingsFilename(filename)
+        self.CopyGUIToContextAndOptions()
+        if not contextFilename == "":
+            self.options.contextFilename = contextFilename
+        self.context.Save(self.options.contextFilename)
+        self.options.Save(self.optionsFilename)
+        self.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
     
     def OnButtonDo(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Perform action specified in cmbAction.
         """
-        
         self.textLog.Clear()
+        self.textLog.Refresh()
         self.textLog.Update()
+        
         print "\n--- Working, patience please... ---"
-        self.CopyGUIToSettings()
+        self.SaveContextAndOptions()
         configureProject = self.cmbAction.GetValue() in ("Only create CMake files", "Create CMake files and run CMake")
         alsoRunCMake = self.cmbAction.GetValue() in ("Create CMake files and run CMake")
         configureThirdPartyFolder = self.cmbAction.GetValue() in ("Configure ThirdParty Folder")
 
+        startTime = time.time()
+        
         # write application options, and pass them to the handler
-        self.WriteOptions()
-        if self.PassOptionsToHandler():
-        
-            try:
-                # if configuring the target project...            
-                if configureProject:
-                    if self.handler.ConfigureProjectToBinFolder(self.settings, alsoRunCMake):
-                        if self.settings.instance.lower() == "gimias":
-                            self.ProposeToDeletePluginDlls()
-                        if self.options.askToLaunchVisualStudio:
-                            self.AskToLaunchVisualStudio( self.handler.GetTargetSolutionPath(self.settings) )
-        
-                # if installing dlls to the bin folder            
-                copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
-                if copyDlls:
-                    if not self.handler.InstallBinariesToBinFolder(self.settings):
-                        print "Error while installing files.\n"
-                        
-                # if configuring the third party folder            
-                if( configureThirdPartyFolder ):
-                    self.handler.ConfigureThirdPartyFolder(self.settings)
-                    if self.options.askToLaunchVisualStudio:
-                        self.AskToLaunchVisualStudio( self.handler.GetThirdPartySolutionPath(self.settings) )
+        try:
+            # if configuring the target project...            
+            if configureProject:
+                if self.handler.ConfigureProjectToBinFolder(alsoRunCMake):
+                    elapsedTime = time.time() - startTime
+                    if self.context.instance.lower() == "gimias":
+                        self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+                    if self.options.askToLaunchIDE:
+                        self.AskToLaunchIDE( self.handler.GetTargetSolutionPath(_reuseInstance = True) )
+    
+            # if installing dlls to the bin folder            
+            copyDlls = self.cmbAction.GetValue() in ("Install files to Bin Folder")
+            if copyDlls:
+                if not self.handler.InstallBinariesToBinFolder():
+                    print "Error while installing files.\n"
+                elapsedTime = time.time() - startTime
+                    
+            # if configuring the third party folder            
+            if( configureThirdPartyFolder ):
+                self.handler.ConfigureThirdPartyFolder()
+                elapsedTime = time.time() - startTime
+                if self.options.askToLaunchIDE:
+                    self.AskToLaunchIDE( self.handler.GetThirdPartySolutionPath() )
 
-            except AssertionError, e:
-                print str(e) + '\n'
+        except AssertionError, e:
+            print str(e) + '\n'
                 
-        print "--- Done ---\n"
-        self.RefreshGUI()
+        print "--- Done (%d seconds) ---\n" % elapsedTime
+        self.UpdateGUIAndSaveContextAndOptions()
+
+        
         #self.Restart()
         
     def Restart(self):
@@ -390,13 +387,13 @@ class CSnakeGUIFrame(wx.Frame):
         os.execv(sys.executable, arglist)
                 
     def OnKillFocus(self, event):
-        self.settings.buildFolder = self.txtBinFolder.GetValue()
-        self.settings.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue()
-        self.settings.installFolder = self.txtInstallFolder.GetValue()
-        self.settings.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue()
-        self.settings.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue()
-        if os.path.exists(self.options.currentGUISettingsFilename):
-            self.SaveSettings(self.options.currentGUISettingsFilename)
+        self.context.buildFolder = self.txtBinFolder.GetValue()
+        self.context.thirdPartyBinFolder = self.txtThirdPartyBinFolder.GetValue()
+        self.context.installFolder = self.txtInstallFolder.GetValue()
+        self.context.thirdPartyRootFolder = self.txtThirdPartyRootFolder.GetValue()
+        if hasattr(self.context, "kdevelopProjectFolder"):
+            self.context.kdevelopProjectFolder = self.txtKDevelopProjectFolder.GetValue()
+        self.SaveContextAndOptions()
     
     def OnSelectBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -404,8 +401,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.DirDialog(None, "Select Binary Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.buildFolder = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.buildFolder = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSelectThirdPartyBinFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -413,8 +410,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.DirDialog(None, "Select Third Party Binary Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.thirdPartyBinFolder = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.thirdPartyBinFolder = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
             
     def OnSelectInstallFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -422,8 +419,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.DirDialog(None, "Select Install Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.installFolder = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.installFolder = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSelectThirdPartyRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -431,8 +428,8 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.DirDialog(None, "Select Third Party Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.thirdPartyRootFolder = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.thirdPartyRootFolder = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSelectCSnakeFile(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -440,14 +437,14 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.py")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.csnakeFile = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.csnakeFile = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSelectKDevelopProjectFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         dlg = wx.DirDialog(None, "Select folder for saving the KDevelop project file")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.kdevelopProjectFolder = dlg.GetPath()
-            self.RefreshGUI()
+            self.context.kdevelopProjectFolder = dlg.GetPath()
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnAddRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -455,97 +452,105 @@ class CSnakeGUIFrame(wx.Frame):
         """
         dlg = wx.DirDialog(None, "Add Root Folder")
         if dlg.ShowModal() == wx.ID_OK:
-            self.settings.rootFolders.append(dlg.GetPath())
-            self.RefreshGUI()
+            self.context.rootFolders.append(dlg.GetPath())
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Remove folder where CSnake files must be searched from lbRootFolders.
         """
-        self.settings.rootFolders.remove(self.lbRootFolders.GetStringSelection())
-        self.RefreshGUI()
+        self.context.rootFolders.remove(self.lbRootFolders.GetStringSelection())
+        self.UpdateGUIAndSaveContextAndOptions()
 
-    def OnLoadSettings(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Let the user load configuration settings.
+        Let the user load a context.
         """
-        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI")
+        dlg = wx.FileDialog(None, "Select CSnake context file", wildcard = "*.CSnakeGUI;*.csnakecontext")
         if dlg.ShowModal() == wx.ID_OK:
-            self.LoadSettings(dlg.GetPath())
+            self.LoadContext(dlg.GetPath())
+            self.BackupContextFile()
 
-    def OnSaveSettingsAs(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def OnContextCreateACopy(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Let the user save configuration settings.
+        Let the user save the context.
         """
-        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        dlg = wx.FileDialog(None, "Copy CSnake context to...", wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             (root, ext) = os.path.splitext(dlg.GetPath())
             if ext == ".CSnakeGUI":
-                settingsFilename = dlg.GetPath()
+                contextFilename = dlg.GetPath()
             else:
-                settingsFilename = "%s.CSnakeGUI" % root
-            settingsFilename = dlg.GetPath()
-            self.SaveSettings(settingsFilename)
+                contextFilename = "%s.CSnakeGUI" % root
+            contextFilename = dlg.GetPath()
+            self.SaveContextAndOptions(contextFilename)
 
-    def RefreshGUI(self):
-        """ Also saves the current settings to the currentGUISettingsFilename """
+    def UpdateGUIAndSaveContextAndOptions(self):
+        """ Also saves the current context to the contextFilename """
         self.cmbCSnakeFile.Clear()
-        self.cmbCSnakeFile.Append(self.settings.csnakeFile)
-        for x in self.settings.recentlyUsed:
+        self.cmbCSnakeFile.Append(self.context.csnakeFile)
+        for x in self.context.recentlyUsed:
             self.cmbCSnakeFile.Append("%s - In %s" % (x.instance, x.csnakeFile))
         self.cmbCSnakeFile.SetSelection(0)
         
         self.lbRootFolders.Clear()
-        for rootFolder in self.settings.rootFolders:
+        for rootFolder in self.context.rootFolders:
             self.lbRootFolders.Append(rootFolder)
-        self.txtThirdPartyRootFolder.SetValue(self.settings.thirdPartyRootFolder)
-        self.txtBinFolder.SetValue( self.settings.buildFolder )
-        self.txtInstallFolder.SetValue( self.settings.installFolder )
-        self.txtThirdPartyBinFolder.SetValue( self.settings.thirdPartyBinFolder )
-        self.txtKDevelopProjectFolder.SetValue( self.settings.kdevelopProjectFolder )
+        self.txtThirdPartyRootFolder.SetValue(self.context.thirdPartyRootFolder)
+        self.txtBinFolder.SetValue( self.context.buildFolder )
+        self.txtInstallFolder.SetValue( self.context.installFolder )
+        self.txtThirdPartyBinFolder.SetValue( self.context.thirdPartyBinFolder )
+        if hasattr(self.context, "kdevelopProjectFolder"):
+            self.txtKDevelopProjectFolder.SetValue( self.context.kdevelopProjectFolder )
         self.cmbInstance.Clear()
-        if self.settings.instance != "":
-            self.cmbInstance.Append(self.settings.instance)
+        if self.context.instance != "":
+            self.cmbInstance.Append(self.context.instance)
             self.cmbInstance.SetSelection(0)
             
-        self.panelKDevelop.Show( self.options.compiler in ("KDevelop3", "Unix Makefiles") )
+        self.panelKDevelop.Show( self.context.compiler in ("KDevelop3", "Unix Makefiles") )
         self.Layout()
-        
-        if os.path.exists(self.options.currentGUISettingsFilename):
-            self.SaveSettings(self.options.currentGUISettingsFilename)
+        self.SaveContextAndOptions()
     
-    def LoadSettings(self, filename = ""):
+    def LoadContext(self, contextFilename = ""):
         """
-        Load configuration settings from filename.
+        Load configuration context from contextFilename.
         """
-        if filename == "":
-            filename = self.options.currentGUISettingsFilename
+        if contextFilename == "":
+            contextFilename = self.options.contextFilename
+        else:
+            self.options.contextFilename = contextFilename
+            self.converter.Convert(contextFilename)
                 
-        if os.path.exists( filename ):
-            self.settings.Load(filename)
-            self.RefreshGUI()
+        okay = os.path.exists( contextFilename )
+        if okay:
+            self.context = self.handler.LoadContext(contextFilename)
+            self.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+            self.UpdateGUIAndSaveContextAndOptions()
+        return okay
             
-        self.StoreSettingsFilename(filename)
-    
     def OnEditOptions(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Let user edit the application options.
         """
         frmEditOptions = csnGUIOptions.CSnakeOptionsFrame(None, -1, "")
-        frmEditOptions.ShowOptions(self.options, self.optionsFilename)
+        frmEditOptions.ShowOptions(self.context, self.options)
         frmEditOptions.MakeModal()
-        frmEditOptions.Show(True, self.RefreshGUI)
+        frmEditOptions.Show(True, self.AfterShowOptions)
+        
+    def AfterShowOptions(self):
+        self.SaveContextAndOptions()
+        # If the compiler has changed (for example to KDevelop) then LoadContext will take care of switching the context to csnKDevelop.Context
+        self.LoadContext()
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        self.SaveSettings()
-        targets = self.handler.GetListOfPossibleTargets(self.settings)
+        self.SaveContextAndOptions()
+        targets = self.handler.GetListOfPossibleTargets()
         self.cmbInstance.SetItems(targets)
         if len(targets):
             self.cmbInstance.SetSelection(0)
-            self.SaveSettings()
+            self.SaveContextAndOptions()
 
-    def ProposeToDeletePluginDlls(self):
-        spuriousDlls = self.handler.GetListOfSpuriousPluginDlls(self.settings)
+    def ProposeToDeletePluginDlls(self, spuriousDlls):
         if len(spuriousDlls) == 0:
             return
             
@@ -561,17 +566,17 @@ class CSnakeGUIFrame(wx.Frame):
         for dll in spuriousDlls:
             os.remove(dll)
 
-    def AskToLaunchVisualStudio(self, pathToSolution):
+    def AskToLaunchIDE(self, pathToSolution):
         message = "Launch Visual Studio with solution %s?" % pathToSolution
         dlg = wx.MessageDialog(self, message, style = wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
-            argList = [self.options.visualStudioPath, pathToSolution]
-            retcode = subprocess.Popen(argList)
+            argList = [self.context.idePath, pathToSolution]
+            subprocess.Popen(argList)
                 
     def OnExit(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        self.CopyGUIToSettings()
-        if os.path.exists(self.options.currentGUISettingsFilename):
-            self.SaveSettings(self.options.currentGUISettingsFilename)
+        self.CopyGUIToContextAndOptions()
+        if os.path.exists(self.options.contextFilename):
+            self.SaveContextAndOptions(self.options.contextFilename)
         self.Destroy()
 
     def Validate(self, action):
@@ -580,22 +585,29 @@ class CSnakeGUIFrame(wx.Frame):
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         item = self.cmbCSnakeFile.GetSelection() - 1
-        settings = self.settings.recentlyUsed[item]
-        self.settings.csnakeFile = settings.csnakeFile
-        self.settings.instance = settings.instance
-        self.RefreshGUI()
+        context = self.context.recentlyUsed[item]
+        self.context.csnakeFile = context.csnakeFile
+        self.context.instance = context.instance
+        self.UpdateGUIAndSaveContextAndOptions()
 
     def OnButtonSelectProjects(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        previousFilter = self.settings.filter 
-        self.settings.filter = list()
-        categories = self.handler.GetCategories(self.settings)
-        self.settings.filter = previousFilter
+        previousFilter = self.context.filter 
+        self.context.filter = list()
+        categories = self.handler.GetCategories()
+        self.context.filter = previousFilter
         dlg = csnGUISelectProjects.Dialog(None, -1, "")
-        if dlg.ShowItems(categories, self.settings.filter) == wx.ID_OK:
+        if dlg.ShowItems(categories, self.context.filter, self.context.subCategoriesOf) == wx.ID_OK:
             pass
 
-# end of class CSnakeGUIFrame
+    def OnContextAbandonChanges(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        try:
+            shutil.copy(self.contextBeforeEditingFilename, self.options.contextFilename)
+            self.LoadContext()
+        except:
+            print "Sorry, could not copy %s to %s. You can try copying the file manually\n" % (self.contextBeforeEditingFilename, self.options.contextFilename)
+           
 
+# end of class CSnakeGUIFrame
 
 class CSnakeGUIApp(wx.App):
     def OnInit(self):

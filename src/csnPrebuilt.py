@@ -54,7 +54,7 @@ class ProjectRelocator:
         f.close()
         
         text = text.replace("${PrebuiltProjectFolder}", self.prebuiltProjectFolder)
-        text = text.replace("${ProjectSourceRootFolder}", self.project.sourceRootFolder)
+        text = text.replace("${ProjectSourceRootFolder}", self.project.GetSourceRootFolder())
         f = open(_toFile, 'w')
         f.write(text)
         f.close()
