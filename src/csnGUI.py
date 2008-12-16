@@ -350,7 +350,6 @@ class CSnakeGUIFrame(wx.Frame):
             # if configuring the target project...            
             if configureProject:
                 if self.handler.ConfigureProjectToBinFolder(alsoRunCMake):
-                    elapsedTime = time.time() - startTime
                     if self.context.instance.lower() == "gimias":
                         self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
                     if self.options.askToLaunchIDE:
@@ -361,22 +360,19 @@ class CSnakeGUIFrame(wx.Frame):
             if copyDlls:
                 if not self.handler.InstallBinariesToBinFolder():
                     print "Error while installing files.\n"
-                elapsedTime = time.time() - startTime
                     
             # if configuring the third party folder            
             if( configureThirdPartyFolder ):
                 self.handler.ConfigureThirdPartyFolder()
-                elapsedTime = time.time() - startTime
                 if self.options.askToLaunchIDE:
                     self.AskToLaunchIDE( self.handler.GetThirdPartySolutionPath() )
 
         except AssertionError, e:
             print str(e) + '\n'
                 
+        elapsedTime = time.time() - startTime
         print "--- Done (%d seconds) ---\n" % elapsedTime
         self.UpdateGUIAndSaveContextAndOptions()
-
-        
         #self.Restart()
         
     def Restart(self):
