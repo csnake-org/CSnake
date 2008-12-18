@@ -1,4 +1,5 @@
 import csnContext
+import csnProject
 
 class Context(csnContext.Context):
     def __init__(self):
