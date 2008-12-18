@@ -205,7 +205,14 @@ class Writer:
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.project.name, csnUtility.Join(self.project.compileManager.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.project.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         if len(self.project.compileManager.public.libraries):
-            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.project.name, self.project.name, csnUtility.Join(self.project.compileManager.public.libraries, _addQuotes = 1)) )
+            libraries = ""
+            for type in self.project.compileManager.public.libraries.keys():
+                typeString = ""
+                if type != "":
+                    typeString = "\"%s\" " % type # something like "debug "
+                for library in self.project.compileManager.public.libraries[type]:
+                    libraries += "%s\"%s\"" % (typeString, library)
+            f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.project.name, self.project.name, libraries) )
 
         # add the target of this project to the list of libraries that should be linked
         if _public and len(self.project.GetSources()) > 0 and (self.project.type == "library" or self.project.type == "dll"):

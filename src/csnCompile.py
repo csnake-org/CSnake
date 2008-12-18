@@ -7,7 +7,7 @@ class CompileAndLinkSettings:
     """
     def __init__(self):
         self.definitions = list()
-        self.libraries = list()
+        self.libraries = dict()
         self.includeFolders = list()
         self.libraryFolders = list()
 
@@ -106,7 +106,10 @@ class Manager:
             type = "optimized"
 
         for library in _listOfLibraries:
-            self.public.libraries.append("%s %s" % (type, library))
+            if not self.public.libraries.has_key(type):
+                self.public.libraries[type] = []
+            
+            self.public.libraries[type].append(library)
  
     def __FindPath(self, _path):
         """ 
