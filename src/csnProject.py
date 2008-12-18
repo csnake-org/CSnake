@@ -113,14 +113,14 @@ class GenericProject(object):
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         self.installManager.AddFilesToInstall(_list, _location, _debugOnly, _releaseOnly, _WIN32, _NOT_WIN32)
                 
-    def AddIncludeFolders(self, _listOfIncludeFolders):
-        self.compileManager.AddIncludeFolders(_listOfIncludeFolders)
+    def AddIncludeFolders(self, _listOfIncludeFolders, _WIN32 = 0, _NOT_WIN32 = 0):
+        self.compileManager.AddIncludeFolders(_listOfIncludeFolders, _WIN32, _NOT_WIN32)
         
     def SetPrecompiledHeader(self, _precompiledHeader):
         self.compileManager.SetPrecompiledHeader(_precompiledHeader)
         
-    def AddLibraryFolders(self, _listOfLibraryFolders):
-        self.compileManager.AddLibraryFolders(_listOfLibraryFolders)
+    def AddLibraryFolders(self, _listOfLibraryFolders, _WIN32 = 0, _NOT_WIN32 = 0):
+        self.compileManager.AddLibraryFolders(_listOfLibraryFolders, _WIN32, _NOT_WIN32)
         
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         self.compileManager.AddLibraries(_listOfLibraries, _WIN32, _NOT_WIN32, _debugOnly, _releaseOnly)

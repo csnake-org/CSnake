@@ -62,24 +62,28 @@ class Manager:
                         if source in self.sourceGroups[sourceGroupKey]:
                             self.sourceGroups[sourceGroupKey].remove(source)
 
-    def AddIncludeFolders(self, _listOfIncludeFolders):
+    def AddIncludeFolders(self, _listOfIncludeFolders, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.publicIncludeFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
+        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+            return
         for includeFolder in _listOfIncludeFolders:
             for folder in self.project.Glob(includeFolder):
                 if (not os.path.exists(folder)) or os.path.isdir(folder):
                     self.public.includeFolders.append( folder )
 
-    def AddLibraryFolders(self, _listOfLibraryFolders):
+    def AddLibraryFolders(self, _listOfLibraryFolders, _WIN32 = 0, _NOT_WIN32 = 0):
         """
         Adds items to self.publicLibraryFolders. 
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
+        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+            return
         for libraryFolder in _listOfLibraryFolders:
             self.public.libraryFolders.append( self.__FindPath(libraryFolder) )
 
