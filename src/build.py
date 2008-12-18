@@ -6,33 +6,23 @@
 
 import sys
 import csnGUIHandler
-import csnGUIOptions
-import csnGenerator
 
 # Check command line arguments
-if len(sys.argv) != 3:
-    sys.exit("Error: not enough arguments. You need to provide an option and a configuration file.")
+if not len(sys.argv) in (2,3):
+    sys.exit("Error: not enough arguments. You need to provide a context file and (optionally) an options file.")
 
-# Command line inputs
-options_file = sys.argv[1]
-config_file = sys.argv[2]
-
+if len(sys.argv) == 3:
+    print "Converting %s using options file %s\n" % (sys.argv[1], sys.argv[2])
+    converter = csnContextConverter(sys.argv[2])
+    converter.Convert(sys.argv[1])
+    
 # Create GUI handler
 handler = csnGUIHandler.Handler()
-# Read options
-options = csnGUIOptions.Options()
-options.Load( options_file )
-# Read settings
-settings = csnGenerator.Settings()
-settings.Load( config_file )
-# Set the options
-handler.SetOptions( options )
-# Configure the project with the settings
-if settings.instance == "thirdParty":
-    res = handler.ConfigureThirdPartyFolder(settings)
+context = handler.LoadContext(sys.argv[1])
+
+# Configure the project
+if context.instance == "thirdParty":
+    handler.ConfigureThirdPartyFolder()
 else:
-    res = handler.ConfigureProjectToBinFolder( settings, 1 )
-# exit with error if there was a problem
-if res == False:
-  sys.exit(1)
+    handler.ConfigureProjectToBinFolder( True )
 
