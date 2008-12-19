@@ -8,7 +8,7 @@ import sys
 import csnGUIHandler
 
 # Check command line arguments
-if len(sys.argv) != 1:
+if len(sys.argv) != 2:
     sys.exit("Error: not enough arguments. You need to provide a context file.")
 
 # Create GUI handler
