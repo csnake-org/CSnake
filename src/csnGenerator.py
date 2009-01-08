@@ -62,6 +62,8 @@ import shutil
 # - Place non-essential fields of csnContext in members such as gui.compiler
 # - Create third parties CMakeLists with CSnake
 # - Give similar paths similar colours in csnGUI as visual feedback
+# - Rename configuration to buildType
+# - Prevent confusion with choosing toolkit as the target project
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -193,6 +195,9 @@ class Generator:
                         result = fileResult and result
                         if not fileResult:
                             print "Failed to copy %s to %s\n" % (file, absLocation)
+                        else:
+                            pass
+                            #print "Copied %s to %s\n" % (file, absLocation)
         return result
                         
     def PostProcess(self, _targetProject):

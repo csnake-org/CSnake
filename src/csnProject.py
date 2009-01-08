@@ -29,6 +29,11 @@ def Library(_name, _sourceRootFolder = None, _categories = None):
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
     return Project(_name, "library", _sourceRootFolder, _categories)
 
+def Executable(_name, _sourceRootFolder = None, _categories = None):
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    return Project(_name, "executable", _sourceRootFolder, _categories)
+
 class Rule:
     """ This class contains a build rule for e.g. Visual Studio, Make, etc """
     def __init__(self):
