@@ -49,8 +49,9 @@
 										<object class="sizeritem">
 											<option>0</option>
 											<flag>wxRIGHT|wxEXPAND</flag>
-											<border>0</border>
+											<border>5</border>
 											<object class="wxStaticText" name="label_1">
+												<size>120,-1</size>
 												<bg>#ece9d8</bg>
 												<label>Root Folders </label>
 											</object>
@@ -103,7 +104,7 @@
 											<flag>wxRIGHT|wxEXPAND</flag>
 											<border>5</border>
 											<object class="wxStaticText" name="lbCSnakeFile">
-												<size>100, 15</size>
+												<size>120,15</size>
 												<label>CSnake File\n</label>
 											</object>
 										</object>
@@ -139,6 +140,7 @@
 											<flag>wxRIGHT|wxEXPAND</flag>
 											<border>5</border>
 											<object class="wxStaticText" name="labelInstance">
+												<size>120,-1</size>
 												<label>Instance</label>
 											</object>
 										</object>
@@ -313,7 +315,7 @@
 											<flag>wxRIGHT|wxEXPAND</flag>
 											<border>5</border>
 											<object class="wxStaticText" name="label_1_copy">
-												<size>100, 15</size>
+												<size>120,15</size>
 												<label>Bin Folder\n</label>
 											</object>
 										</object>
@@ -350,7 +352,7 @@
 											<flag>wxRIGHT|wxEXPAND</flag>
 											<border>5</border>
 											<object class="wxStaticText" name="label_2">
-												<size>100, 15</size>
+												<size>120,15</size>
 												<label>Install Folder\n</label>
 											</object>
 										</object>
@@ -436,7 +438,7 @@
 					</object>
 					<object class="notebookpage">
 						<label>Options</label>
-						<selected>0</selected>
+						<selected>1</selected>
 						<object class="wxPanel" name="panelOptions">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">
@@ -477,6 +479,7 @@
 													<flag></flag>
 													<border>0</border>
 													<object class="wxButton" name="btnSetCMakePath">
+														<size>150,-1</size>
 														<label>Set path to CMake</label>
 														<default>0</default>
 													</object>
@@ -516,6 +519,7 @@
 											<flag></flag>
 											<border>0</border>
 											<object class="wxButton" name="btnSetPythonPath">
+												<size>150,-1</size>
 												<label>Set path to Python</label>
 												<default>0</default>
 											</object>
@@ -552,6 +556,7 @@
 											<flag></flag>
 											<border>0</border>
 											<object class="wxButton" name="btnSetVisualStudioPath">
+												<size>150,-1</size>
 												<label>Set path to Visual Studio</label>
 												<default>0</default>
 											</object>
@@ -573,7 +578,7 @@
 					</object>
 					<object class="notebookpage">
 						<label>Select Projects</label>
-						<selected>1</selected>
+						<selected>0</selected>
 						<object class="wxScrolledWindow" name="panelSelectProjects">
 							<style>wxHSCROLL|wxVSCROLL</style>
 							<object class="wxBoxSizer">

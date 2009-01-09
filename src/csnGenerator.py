@@ -103,8 +103,8 @@ class Generator:
         _generatedList -- List of projects for which Generate was already called (internal to the function).
         """
 
-        isTopLevelProject = _generatedList is None
-        if isTopLevelProject:
+        _targetProject.dependenciesManager.isTopLevel = _generatedList is None
+        if _targetProject.dependenciesManager.isTopLevel:
             _generatedList = []
 
         # assert that this project is not filtered
@@ -173,7 +173,7 @@ class Generator:
         writer.GenerateConfigFile( _public = 0)
         writer.GenerateConfigFile( _public = 1)
         writer.GenerateUseFile()
-        writer.GenerateCMakeLists(generatedProjects, requiredProjects, _writeInstallCommands = isTopLevelProject)
+        writer.GenerateCMakeLists(generatedProjects, requiredProjects, _writeInstallCommands = _targetProject.dependenciesManager.isTopLevel)
 
     def InstallBinariesToBinFolder(self, _targetProject):
         """ 

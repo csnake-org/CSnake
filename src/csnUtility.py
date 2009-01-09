@@ -136,3 +136,9 @@ def FindFilePathInStack(keyWord):
         if not callString.find(keyWord) == -1:
             return NormalizePath(os.path.dirname(x[1]))
     return ""
+
+def GetSourceFileExtensions():
+    return ["cxx", "cc", "cpp"]
+    
+def GetIncludeFileExtensions():
+    return ["h", "hpp", "txx"]

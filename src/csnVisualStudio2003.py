@@ -35,6 +35,10 @@ class PostProcessor:
         """
         # vc proj to patch
         vcprojFilename = "%s/%s.vcproj" % (_project.GetBuildFolder(), _project.name)
+        if not _project.dependenciesManager.isTopLevel:
+            slnFilename = "%s/%s.sln" % (_project.GetBuildFolder(), _project.name)
+            if os.path.exists(slnFilename):
+                os.remove(slnFilename)
 
         # if there is a vcproj, and we want a precompiled header
         if _project.compileManager.precompiledHeader != "" and os.path.exists(vcprojFilename):

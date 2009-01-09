@@ -5,12 +5,6 @@ import os.path
 import new
 import inspect
 
-def GetSourceFileExtensions():
-    return ["cxx", "cc", "cpp"]
-    
-def GetIncludeFileExtensions():
-    return ["h", "hpp", "txx"]
-    
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
     folder = "%s/%s" % (csnProject.globalCurrentContext.thirdPartyRootFolder, _subFolder)
@@ -34,10 +28,10 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
         moduleFolder = "%s/%s" % (_modulesFolder, module)
         sourceFiles = []
         headerFiles = []
-        for extension in GetSourceFileExtensions():
+        for extension in csnUtility.GetSourceFileExtensions():
             sourceFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
 
-        for extension in GetIncludeFileExtensions():
+        for extension in csnUtility.GetIncludeFileExtensions():
             headerFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
         
         for sourceFile in sourceFiles:
@@ -86,9 +80,9 @@ class CilabModuleProject(csnProject.GenericProject):
                 srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
                 if( os.path.exists(srcFolderAbs) ):
                     self.AddIncludeFolders([srcFolder])
-                    for extension in GetSourceFileExtensions():
+                    for extension in csnUtility.GetSourceFileExtensions():
                         self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-                    for extension in GetIncludeFileExtensions():
+                    for extension in csnUtility.GetIncludeFileExtensions():
                         self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
 
         if( len(self.GetSources()) == 0 ):
@@ -101,7 +95,7 @@ class CilabModuleProject(csnProject.GenericProject):
                 includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
                 if( os.path.exists(includeFolderAbs) ):
                     self.AddIncludeFolders([includeFolder])
-                    for extension in GetIncludeFileExtensions():
+                    for extension in csnUtility.GetIncludeFileExtensions():
                         self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
     def AddDemos(self, _modules, _pch = "", _applicationDependenciesList = None):
@@ -174,7 +168,7 @@ class GimiasPluginProject(csnProject.GenericProject):
             srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
             if( os.path.exists(srcFolderAbs) ):
                 self.AddIncludeFolders([srcFolder])
-                for extension in GetSourceFileExtensions():
+                for extension in csnUtility.GetSourceFileExtensions():
                     self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Widgets")
                 if _useQt:
                     self.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
@@ -183,5 +177,5 @@ class GimiasPluginProject(csnProject.GenericProject):
             includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
             if( os.path.exists(includeFolderAbs) ):
                 self.AddIncludeFolders([includeFolder])
-                for extension in GetIncludeFileExtensions():
+                for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")

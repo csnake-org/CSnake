@@ -1,4 +1,5 @@
 import csnUtility
+import os
 
 class Writer:
     def __init__(self, _project):
@@ -109,10 +110,15 @@ class Writer:
         if len(self.project.compileManager.private.definitions):
             self.file.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.private.definitions) )
 
+    def __HasCompilableFiles(self):
+        extensions = ["." + x for x in csnUtility.GetSourceFileExtensions()]
+        files = filter(lambda x: os.path.splitext(x)[1] in extensions, self.project.GetSources())
+        return len( files ) > 0
+        
     def __CreateCMakeSection_Sources(self, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar):
         """ Add sources to the target in the CMakeLists.txt """
         sources = self.project.GetSources()
-        if len(sources) == 0:
+        if not self.__HasCompilableFiles():
             sources.append( csnUtility.GetDummyCppFilename() )
         if self.project.type == "executable":
             self.file.write( "ADD_EXECUTABLE(%s %s %s %s %s)\n" % (self.project.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )

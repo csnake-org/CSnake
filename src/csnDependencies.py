@@ -11,6 +11,7 @@ class Manager:
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.useBefore = []
+        self.isTopLevel = False
         
     def AddProjects(self, _projects, _dependency = True):
         for project in _projects:
