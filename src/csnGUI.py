@@ -52,7 +52,8 @@ class CSnakeGUIApp(wx.App):
         self.projectCheckBoxes = dict()
         
         wx.InitAllImageHandlers()
-        self.res = xrc.XmlResource("./csnGUI.xrc")
+        xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
+        self.res = xrc.XmlResource(xrcFile)
         self.InitFrame()
         self.InitMenu()
         self.InitOtherGUIStuff()		

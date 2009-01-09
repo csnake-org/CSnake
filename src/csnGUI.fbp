@@ -13,7 +13,7 @@
         <property name="internationalize">0</property>
         <property name="name">MyProject1</property>
         <property name="namespace"></property>
-        <property name="path">.</property>
+        <property name="path">../resources</property>
         <property name="precompiled_header"></property>
         <property name="relative_path">1</property>
         <property name="use_enum">0</property>
@@ -305,7 +305,7 @@
                                                     <property name="orient">wxHORIZONTAL</property>
                                                     <property name="permission">none</property>
                                                     <object class="sizeritem" expanded="1">
-                                                        <property name="border">0</property>
+                                                        <property name="border">5</property>
                                                         <property name="flag">wxRIGHT|wxEXPAND</property>
                                                         <property name="proportion">0</property>
                                                         <object class="wxStaticText" expanded="1">
@@ -322,7 +322,7 @@
                                                             <property name="name">label_1</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size"></property>
+                                                            <property name="size">120,-1</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -551,7 +551,7 @@
                                                             <property name="name">lbCSnakeFile</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size">100, 15</property>
+                                                            <property name="size">120,15</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -719,7 +719,7 @@
                                                             <property name="name">labelInstance</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size">-1,-1</property>
+                                                            <property name="size">120,-1</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -1545,7 +1545,7 @@
                                                             <property name="name">label_1_copy</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size">100, 15</property>
+                                                            <property name="size">120,15</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -1714,7 +1714,7 @@
                                                             <property name="name">label_2</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size">100, 15</property>
+                                                            <property name="size">120,15</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -2136,7 +2136,7 @@
                                 <object class="notebookpage" expanded="1">
                                     <property name="bitmap"></property>
                                     <property name="label">Options</property>
-                                    <property name="select">0</property>
+                                    <property name="select">1</property>
                                     <object class="wxPanel" expanded="0">
                                         <property name="bg"></property>
                                         <property name="context_help"></property>
@@ -2289,7 +2289,7 @@
                                                                     <property name="name">btnSetCMakePath</property>
                                                                     <property name="permission">protected</property>
                                                                     <property name="pos"></property>
-                                                                    <property name="size"></property>
+                                                                    <property name="size">150,-1</property>
                                                                     <property name="style"></property>
                                                                     <property name="subclass"></property>
                                                                     <property name="tooltip"></property>
@@ -2463,7 +2463,7 @@
                                                             <property name="name">btnSetPythonPath</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size"></property>
+                                                            <property name="size">150,-1</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -2633,7 +2633,7 @@
                                                             <property name="name">btnSetVisualStudioPath</property>
                                                             <property name="permission">protected</property>
                                                             <property name="pos"></property>
-                                                            <property name="size"></property>
+                                                            <property name="size">150,-1</property>
                                                             <property name="style"></property>
                                                             <property name="subclass"></property>
                                                             <property name="tooltip"></property>
@@ -2729,7 +2729,7 @@
                                 <object class="notebookpage" expanded="1">
                                     <property name="bitmap"></property>
                                     <property name="label">Select Projects</property>
-                                    <property name="select">1</property>
+                                    <property name="select">0</property>
                                     <object class="wxScrolledWindow" expanded="1">
                                         <property name="bg"></property>
                                         <property name="context_help"></property>
