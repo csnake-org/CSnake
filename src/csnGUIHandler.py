@@ -92,7 +92,7 @@ class Handler:
         
         return self.cachedProjectInstance
     
-    def ConfigureProjectToBinFolder(self, _alsoRunCMake):
+    def ConfigureProjectToBinFolder(self, _alsoRunCMake, _callback = None):
         """ 
         Configures the project to the bin folder.
         """
@@ -103,14 +103,19 @@ class Handler:
             
         if _alsoRunCMake:
             argList = [self.context.cmakePath, "-G", self.context.compiler, instance.GetCMakeListsFilename()]
-            retcode = subprocess.Popen(argList, cwd = instance.GetBuildFolder()).wait()
-            if retcode == 0:
+            process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
+            while process.poll() is None:
+                (outdata, errdata) = process.communicate()
+                if _callback:
+                    _callback.Report(outdata)
+                    _callback.Error(errdata)
+            if process.poll() == 0:
                 self.generator.PostProcess(instance)
                 return True
             else:
-                print "Configuration failed.\n"   
+                _callback.Warn("Configuration failed.")
                 if not self.CMakeIsFound():
-                    print "CMake not found at %s" % self.context.cmakePath 
+                    _callback.Warn("CMake not found at %s" % self.context.cmakePath)
                 return False
             
     def InstallBinariesToBinFolder(self):
@@ -185,8 +190,9 @@ class Handler:
         csnCilab.thirdPartyBinFolder = self.context.thirdPartyBinFolder
         projectModule = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(projectModule):
-            if isinstance(member[1], csnProject.GenericProject):
-                result.append(member[0])
+            (targetName, target) = (member[0], member[1])
+            if isinstance(target, csnProject.GenericProject):
+                result.append(targetName)
         
         rollbackHandler.TearDown()
         return result

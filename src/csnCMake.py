@@ -14,6 +14,7 @@ class Writer:
         self.file.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         self.file.write( "PROJECT(%s)\n" % (self.project.name) )
         self.file.write( "SET( BINARY_DIR \"%s\")\n" % (self.project.context.GetOutputFolder(self.project.context.configurationName)) )
+        self.file.write( "MESSAGE( STATUS \"Processing %s\" )\n" % self.project.name )
 
         if not self.project.context.configurationName == "DebugAndRelease":
             self.file.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (self.project.context.configurationName) )

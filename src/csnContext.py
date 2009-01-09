@@ -159,7 +159,7 @@ def Load(filename):
     elif compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
         context = csnVisualStudio2005.Context()
     else:
-        assert False, "\n\nError: Unknown compiler %s\n" % compiler
+        assert False, "\n\nError: Unknown compiler %s in context %s\n" % (compiler, filename)
         
     okay = context.Load(filename)
     assert okay, "Error loading from %s\n" % filename

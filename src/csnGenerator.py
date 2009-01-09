@@ -45,25 +45,27 @@ import shutil
 #
 
 # ToDo:
-# - Have public and private related projects (hide the include paths from its clients)
-# - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
-# - Fix module reloading
-# - Better GUI: do more checks, give nice error messages, show progress bar (call cmake asynchronous, poll file system).
-# - Try to detect compiler location (in a few standard locations) and python location
-# - E&xit
-# - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
+# - Need to add GetDummyCppFilename explicitly?
+# - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
-# - In CSnakeGUI, have separate "tab" for third party and for options. Third party tab works similar to Generate tab. The option tabs remembers where the compiler is stored.
 # - Fix bug with /ZM definitions
-# - Bad smell: Relative paths in _list are assumed to be relative to the third party binary folder. Disallow relative paths? Document in AddFilesToInstall and ResolvePathsOfFilesToInstall
-# - See which csnProject functions can be removed from the public interface
 # - Why fails to add installSubFolder as property?
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - Place non-essential fields of csnContext in members such as gui.compiler
-# - Create third parties CMakeLists with CSnake
+# - See which csnProject functions can be removed from the public interface
+# - Try to detect compiler location (in a few standard locations) and python location
+# - CSnakeGUI should remember al the IDE paths for different ides.
+# - Add recently used context files
+# - Move cmake path and ide path from context file to options file
+# - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
+# - Better GUI: do more checks, give nice error messages, show progress bar (call cmake asynchronous, poll file system) with cancel button. Try catching cmake output using Pexpect
+# - Put special file in source root folder. When csn file is selected, check all parent path if they contain this special file and add source root folder.
+# - Have public and private related projects (hide the include paths from its clients)
+# - If ITK doesn't implement the DONT_INHERIT keyword, then use environment variables to work around the cmake propagation behaviour
+# - Fix module reloading
+# - Bad smell: Relative paths in _list are assumed to be relative to the third party binary folder. Disallow relative paths? Document in AddFilesToInstall and ResolvePathsOfFilesToInstall
 # - Give similar paths similar colours in csnGUI as visual feedback
-# - Rename configuration to buildType
-# - Prevent confusion with choosing toolkit as the target project
+# - Replace string labels with class types
 # End: ToDo.
 
 # add root of csnake to the system path
@@ -195,9 +197,6 @@ class Generator:
                         result = fileResult and result
                         if not fileResult:
                             print "Failed to copy %s to %s\n" % (file, absLocation)
-                        else:
-                            pass
-                            #print "Copied %s to %s\n" % (file, absLocation)
         return result
                         
     def PostProcess(self, _targetProject):

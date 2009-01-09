@@ -3,12 +3,12 @@ import ConfigParser
 class Converter:
     def __init__(self, optionsFilename):
         self.section = "CSnake"
+        self.optionsFilename = optionsFilename
         self.convertedOptionsFilename = optionsFilename + ".archiveFromVersion"
-        self.__ConvertOptions(optionsFilename)
         
-    def __ConvertOptions(self, optionsFilename):
+    def ConvertOptions(self):
         parserOptions = ConfigParser.ConfigParser()
-        parserOptions.read([optionsFilename])
+        parserOptions.read([self.optionsFilename])
         
         versionNumber = 0.0
         if parserOptions.has_option(self.section, "version"):
@@ -29,7 +29,7 @@ class Converter:
             self.MoveOption(parserOptions, self.section, "cmakebuildtype", toParser = parserNewOptions,  toOption = "configurationname")
             
             parserOptions.set(self.section, "version", "1.0")
-            f = open(optionsFilename, 'w')
+            f = open(self.optionsFilename, 'w')
             parserOptions.write(f)
             f.close()            
 
@@ -45,8 +45,15 @@ class Converter:
         parserContext.read([contextFilename])
         
         inputVersion = 0.0
+        validFile = False
         if parserContext.has_option(self.section, "version"):
             inputVersion = parserContext.getfloat(self.section, "version")
+            validFile = True
+        else:
+            validFile = parserContext.has_section(self.section)
+
+        if not validFile:
+            return False
             
         if inputVersion < 1.0:
             parserContext.set(self.section, "version", "1.0")
@@ -80,7 +87,9 @@ class Converter:
 
             f = open(contextFilename, 'w')
             parserContext.write(f)
-            f.close()            
+            f.close() 
+            
+        return True
 
     def MoveOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None):
         self.CopyOption(fromParser, fromSection, fromOption, toParser, toSection, toOption)
