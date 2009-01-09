@@ -3,7 +3,6 @@ import csnBuild
 import csnContext
 import csnGenerator
 import csnProject
-import csnCilab
 import csnPrebuilt
 import RollbackImporter
 import glob
@@ -71,10 +70,6 @@ class Handler:
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
         rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.thirdPartyRootFolder)
-        
-        csnCilab.thirdPartyModuleFolder = self.context.thirdPartyRootFolder
-        csnCilab.thirdPartyBinFolder = self.context.thirdPartyBinFolder
-        
         (projectFolder, name) = os.path.split(self.context.csnakeFile)
         (name, _) = os.path.splitext(name)
         
@@ -186,8 +181,6 @@ class Handler:
         # find csnake targets in the loaded module
         (projectFolder, name) = os.path.split(self.context.csnakeFile)
         (name, _) = os.path.splitext(name)
-        csnCilab.thirdPartyModuleFolder = self.context.thirdPartyRootFolder
-        csnCilab.thirdPartyBinFolder = self.context.thirdPartyBinFolder
         projectModule = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(projectModule):
             (targetName, target) = (member[0], member[1])

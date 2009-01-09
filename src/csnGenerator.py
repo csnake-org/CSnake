@@ -45,14 +45,12 @@ import shutil
 #
 
 # ToDo:
-# - Need to add GetDummyCppFilename explicitly?
+# - See which csnProject functions can be removed from the public interface
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
-# - Fix bug with /ZM definitions
 # - Why fails to add installSubFolder as property?
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - Place non-essential fields of csnContext in members such as gui.compiler
-# - See which csnProject functions can be removed from the public interface
 # - Try to detect compiler location (in a few standard locations) and python location
 # - CSnakeGUI should remember al the IDE paths for different ides.
 # - Add recently used context files
