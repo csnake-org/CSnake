@@ -29,10 +29,10 @@
             <property name="hidden"></property>
             <property name="id">wxID_ANY</property>
             <property name="maximum_size">-1,-1</property>
-            <property name="minimum_size"></property>
+            <property name="minimum_size">-1,-1</property>
             <property name="name">frmCSnakeGUI</property>
             <property name="pos"></property>
-            <property name="size">750,400</property>
+            <property name="size">750,450</property>
             <property name="style">wxDEFAULT_FRAME_STYLE</property>
             <property name="subclass"></property>
             <property name="title">CSnake GUI</property>
@@ -247,7 +247,7 @@
                                 <object class="notebookpage" expanded="1">
                                     <property name="bitmap"></property>
                                     <property name="label">Context</property>
-                                    <property name="select">0</property>
+                                    <property name="select">1</property>
                                     <object class="wxPanel" expanded="0">
                                         <property name="bg"></property>
                                         <property name="context_help"></property>
@@ -1874,7 +1874,7 @@
                                                     <property name="name">textLog</property>
                                                     <property name="permission">protected</property>
                                                     <property name="pos"></property>
-                                                    <property name="size">100, 50</property>
+                                                    <property name="size">100,100</property>
                                                     <property name="style">wxTE_MULTILINE|wxTE_READONLY|wxTE_WORDWRAP</property>
                                                     <property name="subclass"></property>
                                                     <property name="tooltip"></property>
@@ -2136,7 +2136,7 @@
                                 <object class="notebookpage" expanded="1">
                                     <property name="bitmap"></property>
                                     <property name="label">Options</property>
-                                    <property name="select">1</property>
+                                    <property name="select">0</property>
                                     <object class="wxPanel" expanded="0">
                                         <property name="bg"></property>
                                         <property name="context_help"></property>

@@ -2,7 +2,7 @@
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxFrame" name="frmCSnakeGUI">
 		<style>wxDEFAULT_FRAME_STYLE</style>
-		<size>750,400</size>
+		<size>750,450</size>
 		<title>CSnake GUI</title>
 		<object class="wxMenuBar" name="frmCSnakeGUI_menubar">
 			<label></label>
@@ -35,7 +35,7 @@
 				<object class="wxNotebook" name="noteBook">
 					<object class="notebookpage">
 						<label>Context</label>
-						<selected>0</selected>
+						<selected>1</selected>
 						<object class="wxPanel" name="panelContext">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">
@@ -384,7 +384,7 @@
 									<border>5</border>
 									<object class="wxTextCtrl" name="textLog">
 										<style>wxTE_MULTILINE|wxTE_READONLY|wxTE_WORDWRAP</style>
-										<size>100, 50</size>
+										<size>100,100</size>
 										<value></value>
 										<maxlength>0</maxlength>
 									</object>
@@ -438,7 +438,7 @@
 					</object>
 					<object class="notebookpage">
 						<label>Options</label>
-						<selected>1</selected>
+						<selected>0</selected>
 						<object class="wxPanel" name="panelOptions">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">

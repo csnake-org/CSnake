@@ -191,7 +191,6 @@ class CSnakeGUIApp(wx.App):
         sys.stderr=self.redir
 
     def PrintWelcomeMessages(self):
-        self.Report("CSnakeGUI loaded.")
         self.Report("CSnake version = %s\n" % csnBuild.version)
 
     def CreateHandler(self):
@@ -209,7 +208,7 @@ class CSnakeGUIApp(wx.App):
             self.converter.ConvertOptions()
             self.options.Load(self.optionsFilename)
         else:
-            self.options.contextFilename = "%s/context" % self.thisFolder
+            self.options.contextFilename = "%s/default.csnakecontext" % self.thisFolder
             self.options.Save(self.optionsFilename)
             
         if not os.path.exists(self.options.contextFilename):
