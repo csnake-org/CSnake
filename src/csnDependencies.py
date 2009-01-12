@@ -101,7 +101,7 @@ class Manager:
         _otherProject - May be a project, or a function returning a project.
         """
         otherProject = csnProject.ToProject(_otherProject)
-        if otherProject.WantsToBeUsedBefore(self.project):
+        if otherProject.dependenciesManager.WantsToBeUsedBefore(self.project):
             raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, otherProject.name)
         self.useBefore.append(otherProject)
         
@@ -147,7 +147,7 @@ class Manager:
             # check if we must skip this project for now, because another project must be used before this one
             skipThisProjectForNow = 0
             for otherProject in projectsToUse:
-                if otherProject.WantsToBeUsedBefore(project):
+                if otherProject.dependenciesManager.WantsToBeUsedBefore(project):
                     assert not otherProject is self.project, "\n\nLogical error: %s cannot be used before %s" % (self.project.name, project.name)
                     skipThisProjectForNow = 1
             if skipThisProjectForNow:

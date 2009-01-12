@@ -42,7 +42,7 @@ class Writer:
     
     def __WriteInstallCommands(self):
         for mode in ("Debug", "Release"):
-            for project in self.project.ProjectsToUse():
+            for project in self.project.dependenciesManager.ProjectsToUse():
                 # iterate over filesToInstall to be copied in this mode
                 for location in project.installManager.filesToInstall[mode].keys():
                     files = ""
@@ -58,12 +58,12 @@ class Writer:
         add the use and config file for this project (do this last, so that all definitions from
         the dependency projects are already included).
         """
-        for project in self.project.ProjectsToUse():
+        for project in self.project.dependenciesManager.ProjectsToUse():
             self.file.write( "\n# use %s\n" % (project.name) )
             self.file.write( "IF( NOT AlreadyUsing%s )\n" % (project.name) )
             self.file.write( "SET( AlreadyUsing%s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
-            self.file.write( "INCLUDE(\"%s\")\n" % (project.GetPathToConfigFile(_public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())) ))
-            self.file.write( "INCLUDE(\"%s\")\n" % (project.GetPathToUseFile()) )
+            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(_public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())) ))
+            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
             self.file.write( "ENDIF( NOT AlreadyUsing%s )\n" % (project.name) )
     
     def __CreateCMakeSection_SourceGroups(self):
@@ -195,7 +195,7 @@ class Writer:
         _public - If true, generates a config file that can be used in any cmake file. If false,
         it generates the private config file that is used in the csnake-generated cmake files.
         """
-        fileConfig = self.project.GetPathToConfigFile(_public)
+        fileConfig = self.project.pathsManager.GetPathToConfigFile(_public)
         f = open(fileConfig, 'w')
         
         # create list with folder where libraries should be found. Add the bin folder where all the
@@ -208,7 +208,7 @@ class Writer:
         f.write( "# File generated automatically by the CSnake generator.\n" )
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND TRUE )\n" % (self.project.name) )
-        f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.project.name, self.project.GetPathToUseFile() ) )
+        f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.project.name, self.project.pathsManager.GetPathToUseFile() ) )
         f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.project.name, csnUtility.Join(self.project.compileManager.public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.project.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         if len(self.project.compileManager.public.libraries):
@@ -230,7 +230,7 @@ class Writer:
         """
         Generates the UseXXX.cmake file for this project.
         """
-        fileUse = self.project.GetPathToUseFile()
+        fileUse = self.project.pathsManager.GetPathToUseFile()
         f = open(fileUse, 'w')
         
         # write header and some cmake fields

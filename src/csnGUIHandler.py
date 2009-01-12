@@ -92,9 +92,9 @@ class Handler:
         Configures the project to the bin folder.
         """
         instance = self.__GetProjectInstance()
-        instance.ResolvePathsOfFilesToInstall(self.context.thirdPartyBinFolder)
+        instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBinFolder)
         self.generator.Generate(instance)
-        instance.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
+        instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
             argList = [self.context.cmakePath, "-G", self.context.compiler, instance.GetCMakeListsFilename()]

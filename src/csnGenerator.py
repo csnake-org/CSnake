@@ -45,11 +45,10 @@ import shutil
 #
 
 # ToDo:
-# - See which csnProject functions can be removed from the public interface
+# - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
 # - Why fails to add installSubFolder as property?
-# - Rename GetOutputFolder to GetBuildResultsFolder
 # - Place non-essential fields of csnContext in members such as gui.compiler
 # - Try to detect compiler location (in a few standard locations) and python location
 # - CSnakeGUI should remember al the IDE paths for different ides.
@@ -129,8 +128,8 @@ class Generator:
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
     
         # create Win32Header
-        if _targetProject.type != "executable" and _targetProject.GetGenerateWin32Header():
-            _targetProject.GenerateWin32Header()
+        if _targetProject.type != "executable" and _targetProject.compileManager.generateWin32Header:
+            _targetProject.compileManager.GenerateWin32Header()
             # add search path to the generated win32 header
             if not _targetProject.GetBuildFolder() in _targetProject.compileManager.public.includeFolders:
                 _targetProject.compileManager.public.includeFolders.append(_targetProject.GetBuildFolder())
@@ -179,7 +178,7 @@ class Generator:
         binary folder without having to build the INSTALL target.
         """
         result = True
-        _targetProject.ResolvePathsOfFilesToInstall()
+        _targetProject.installManager.ResolvePathsOfFilesToInstall()
         
         for mode in ("Debug", "Release"):
             outputFolder = _targetProject.context.GetOutputFolder(mode)

@@ -142,26 +142,6 @@ class GenericProject(object):
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
 
-    def WantsToBeUsedBefore(self, _otherProject):
-        # remove from this interface
-        return self.dependenciesManager.WantsToBeUsedBefore(_otherProject)
-           
-    def ProjectsToUse(self):
-        # remove from this interface
-        return self.dependenciesManager.ProjectsToUse()
-
-    def GetPathToUseFile(self):
-        # remove from this interface
-        return self.pathsManager.GetPathToUseFile()
-
-    def GetPathToConfigFile(self, _public):
-        # remove from this interface
-        return self.pathsManager.GetPathToConfigFile(_public)
-            
-    def ResolvePathsOfFilesToInstall(self, _skipCVS = 1):
-        # remove from this interface
-        self.installManager.ResolvePathsOfFilesToInstall(_skipCVS)
-    
     def AddRule(self, description, command, workingDirectory = "."):
         """
         Adds a new rule to the self.rules dictionary, using description as the key.
@@ -197,20 +177,12 @@ class GenericProject(object):
     def GetBuildFolder(self):
         return self.pathsManager.GetBuildFolder()
 
-    def WriteDependencyStructureToXML(self, filename):
-        # remove from this interface
-        self.dependenciesManager.WriteDependencyStructureToXML(filename)
-
     def GetBinaryInstallFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         return self.pathsManager.GetBinaryInstallFolder(_configurationName)
 
     def GetCMakeListsFilename(self):
         """ Return the filename for the CMakeLists.txt file for this project. """
         return "%s/%s" % (self.context.buildFolder, self.pathsManager.cmakeListsSubpath)
-
-    def GenerateWin32Header(self):
-        # remove from this interface
-        self.compileManager.GenerateWin32Header()
 
     def GetConfig(self, _isPrivate):
         if _isPrivate:
@@ -227,32 +199,6 @@ class GenericProject(object):
     def GetSourceRootFolder(self):
         return self.pathsManager.GetSourceRootFolder()
 
-    def GetUseFilePath(self):
-        # remove from this interface
-        return self.pathsManager.useFilePath
-        
-    def SetUseFilePath(self, x):
-        # remove from this interface
-        self.pathsManager.useFilePath = x
-
-    def GetConfigFilePath(self):
-        # remove from this interface
-        return self.pathsManager.configFilePath
-        
-    def SetConfigFilePath(self, x):
-        # remove from this interface
-        self.pathsManager.configFilePath = x
-        
-    def SetGenerateWin32Header(self, _flag):
-        # remove from this interface
-        """ If _flag, then the Win32Header is generated for this project. """
-        self.compileManager.generateWin32Header = _flag
-
-    def GetGenerateWin32Header(self):
-        # remove from this interface
-        """ See SetGenerateWin32Header """
-        return self.compileManager.generateWin32Header
-        
     def GetTestProject(self):
         return self.testsManager.testProject
         
@@ -263,9 +209,6 @@ class GenericProject(object):
                     return True
         return False
 
-    useFilePath = property(GetUseFilePath, SetUseFilePath)
-    configFilePath = property(GetConfigFilePath, SetConfigFilePath)
-    generateWin32Header = property(GetGenerateWin32Header, SetGenerateWin32Header)
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
     

@@ -49,7 +49,7 @@ class PostProcessor:
             return
             
         f = open(self.__GetFilelistFilename(_project), 'w')
-        for project in _project.ProjectsToUse():
+        for project in _project.dependenciesManager.ProjectsToUse():
             for source in project.GetSources():
                 fileListItem = csnUtility.RemovePrefixFromPath(source, kdevelopProjectFolder)
                 fileListItem = csnUtility.NormalizePath(fileListItem)

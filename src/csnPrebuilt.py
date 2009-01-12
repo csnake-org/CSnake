@@ -36,12 +36,12 @@ class ProjectRelocator:
     def InitializeRelocatedProject(self):
         self.project.sources = []
         self.project.type = "prebuilt"
-        self.project.ResolvePathsOfFilesToInstall(self.prebuiltProjectFolder)
+        self.project.installManager.ResolvePathsOfFilesToInstall(self.prebuiltProjectFolder)
         
     def DefaultConfigureConfigAndUseFile(self):        
-        self.project.configFilePath = "%s/%sConfig.cmake" % (self.prebuiltProjectFolder, self.project.name)
-        self.project.useFilePath = "%s/Use%s.cmake" % (self.prebuiltProjectFolder, self.project.name)
-        self.ConfigureFile( "%s.in" % self.project.configFilePath, self.project.configFilePath )
+        self.project.pathsManager.configFilePath = "%s/%sConfig.cmake" % (self.prebuiltProjectFolder, self.project.name)
+        self.project.pathsManager.useFilePath = "%s/Use%s.cmake" % (self.prebuiltProjectFolder, self.project.name)
+        self.ConfigureFile( "%s.in" % self.project.pathsManager.configFilePath, self.project.pathsManager.configFilePath )
         
     def ConfigureFile(self, _fromFile, _toFile, _folder = ""):
         if not os.path.isabs(_fromFile):

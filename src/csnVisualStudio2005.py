@@ -32,5 +32,8 @@ class PostProcessor:
         to _binaryFolder.         
         """
         
-        # print "Skip postprocessing of visual studio 2005 file"
+        if not _project.dependenciesManager.isTopLevel:
+            slnFilename = "%s/%s.sln" % (_project.GetBuildFolder(), _project.name)
+            if os.path.exists(slnFilename):
+                os.remove(slnFilename)
         return
