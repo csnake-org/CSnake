@@ -164,13 +164,12 @@ class Writer:
         (cmakeUIHInputVar, cmakeUICppInputVar) = self.__CreateCMakeSection_UicRules()
             
         # write section that is specific for the project type   
-        if len(self.project.GetSources()):
-            self.file.write( "\n# Add target\n" )
-            self.__CreateCMakeSection_Sources(cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
-            self.__CreateCMakeSection_Link()
-            self.__CreateCMakeSection_Definitions()
-            self.__CreateCMakeSection_InstallRules()
-            self.__CreateCMakeSection_Rules()
+        self.file.write( "\n# Add target\n" )
+        self.__CreateCMakeSection_Sources(cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar)
+        self.__CreateCMakeSection_Link()
+        self.__CreateCMakeSection_Definitions()
+        self.__CreateCMakeSection_InstallRules()
+        self.__CreateCMakeSection_Rules()
     
     def __CloseFile(self):
         self.file.close()
