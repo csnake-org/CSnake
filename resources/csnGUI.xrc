@@ -35,7 +35,7 @@
 				<object class="wxNotebook" name="noteBook">
 					<object class="notebookpage">
 						<label>Context</label>
-						<selected>1</selected>
+						<selected>0</selected>
 						<object class="wxPanel" name="panelContext">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">
@@ -431,6 +431,15 @@
 												<default>0</default>
 											</object>
 										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="btnLaunchIDE">
+												<label>Launch IDE</label>
+												<default>0</default>
+											</object>
+										</object>
 									</object>
 								</object>
 							</object>
@@ -578,11 +587,20 @@
 					</object>
 					<object class="notebookpage">
 						<label>Select Projects</label>
-						<selected>0</selected>
+						<selected>1</selected>
 						<object class="wxScrolledWindow" name="panelSelectProjects">
 							<style>wxHSCROLL|wxVSCROLL</style>
 							<object class="wxBoxSizer">
 								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxButton" name="btnForceRefreshProjects">
+										<label>Refresh List</label>
+										<default>0</default>
+									</object>
+								</object>
 							</object>
 						</object>
 					</object>

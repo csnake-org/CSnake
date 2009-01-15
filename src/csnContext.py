@@ -146,6 +146,7 @@ class Context:
 import csnKDevelop
 import csnVisualStudio2003
 import csnVisualStudio2005
+import csnVisualStudio2008
         
 def Load(filename):
     parser = ConfigParser.ConfigParser()
@@ -158,6 +159,8 @@ def Load(filename):
         context = csnVisualStudio2003.Context()
     elif compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
         context = csnVisualStudio2005.Context()
+    elif compiler in ("Visual Studio 9 2008", "Visual Studio 9 2008 Win64"):
+        context = csnVisualStudio2008.Context()
     else:
         assert False, "\n\nError: Unknown compiler %s in context %s\n" % (compiler, filename)
         

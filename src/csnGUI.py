@@ -97,6 +97,9 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, id=xrc.XRCID("btnSelectCSnakeFile"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, id=xrc.XRCID("btnSetVisualStudioPath"))
+
+        self.frame.Bind(wx.EVT_BUTTON, self.RefreshProjects, id=xrc.XRCID("btnForceRefreshProjects"))
+        self.btnForceRefreshProjects = xrc.XRCCTRL(self.frame, "btnForceRefreshProjects")
         
         self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveRootFolder, id=xrc.XRCID("btnRemoveRootFolder"))
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelectRecentlyUsed, id=xrc.XRCID("cmbCSnakeFile"))
@@ -105,6 +108,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_BUTTON, self.OnOnlyCreateCMakeFiles, id=xrc.XRCID("btnOnlyCreateCMakeFiles"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureThirdPartyFolder, id=xrc.XRCID("btnConfigureThirdPartyFolder"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnInstallFilesToBinFolder, id=xrc.XRCID("btnInstallFilesToBinFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnLaunchIDE, id=xrc.XRCID("btnLaunchIDE"))
         self.frame.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnNoteBookPageChanged, id=xrc.XRCID("noteBook"))
         
     def OnNoteBookPageChanged(self, event):
@@ -228,9 +232,16 @@ class CSnakeGUIApp(wx.App):
         self.CopyGUIToContextAndOptions()
         if not contextFilename == "":
             self.options.contextFilename = contextFilename
-        self.context.Save(self.options.contextFilename)
-        self.options.Save(self.optionsFilename)
-        self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+        try:
+            self.context.Save(self.options.contextFilename)
+            self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+        except:
+            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % self.options.contextFilename)
+            
+        try:
+            self.options.Save(self.optionsFilename)
+        except:
+            self.Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
     
     def OnCreateCMakeFilesAndRunCMake(self, event):
         self.action = self.ActionCreateCMakeFilesAndRunCMake
@@ -240,8 +251,6 @@ class CSnakeGUIApp(wx.App):
         if self.handler.ConfigureProjectToBinFolder(_alsoRunCMake = True, _callback = self):
             if self.context.instance.lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
-            if self.options.askToLaunchIDE:
-                self.AskToLaunchIDE( self.handler.GetTargetSolutionPath(_reuseInstance = True) )
         
     def OnOnlyCreateCMakeFiles(self, event):
         self.action = self.ActionOnlyCreateCMakeFiles
@@ -251,8 +260,6 @@ class CSnakeGUIApp(wx.App):
         if self.handler.ConfigureProjectToBinFolder(_alsoRunCMake = False):
             if self.context.instance.lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
-            if self.options.askToLaunchIDE:
-                self.AskToLaunchIDE( self.handler.GetTargetSolutionPath(_reuseInstance = True) )
         
     def OnConfigureThirdPartyFolder(self, event):
         self.action = self.ActionConfigureThirdPartyFolder
@@ -363,6 +370,8 @@ class CSnakeGUIApp(wx.App):
         result.append("Visual Studio 7 .NET 2003")
         result.append("Visual Studio 8 2005")
         result.append("Visual Studio 8 2005 Win64")
+        result.append("Visual Studio 9 2008")
+        result.append("Visual Studio 9 2008 Win64")
         result.append("KDevelop3")
         result.append("Unix Makefiles")        
         return result
@@ -449,7 +458,11 @@ class CSnakeGUIApp(wx.App):
         if dlg.ShowModal() == wx.ID_YES:
             argList = [self.context.idePath, pathToSolution]
             subprocess.Popen(argList)
-                
+
+    def OnLaunchIDE(self, event = None):
+        argList = [self.context.idePath, self.handler.GetTargetSolutionPath()]
+        subprocess.Popen(argList)
+    
     def OnExit(self, event = None):
         if not self.destroyed:
             self.destroyed = True
@@ -493,15 +506,12 @@ class CSnakeGUIApp(wx.App):
             self.context.idePath = dlg.GetPath()
             self.UpdateGUIAndSaveContextAndOptions()
 
-    def OnCheckAskToLaunchVisualStudio(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
-        self.CopyGUIToContextAndOptions()
-        
-    def SelectProjects(self):
+    def SelectProjects(self, forceRefresh = False):
         # get list of ALL the categories on which the user can filter
         previousFilter = self.context.filter 
         self.context.filter = list()
         try:
-            categories = self.handler.GetCategories()
+            categories = self.handler.GetCategories(forceRefresh)
         except:
             message = "Could not load project dependencies for instance %s from file %s." % (self.context.instance, self.context.csnakeFile)
             message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
@@ -519,7 +529,7 @@ class CSnakeGUIApp(wx.App):
         for category in sorted(categories):
             self.projectCheckBoxes[category] = wx.CheckBox(self.panelSelectProjects, -1, category)
             self.projectCheckBoxes[category].SetValue( not category in self.context.filter )
-            self.panelSelectProjects.GetSizer().Add(self.projectCheckBoxes[category], 0, 0, 0)
+            self.panelSelectProjects.GetSizer().Add(self.projectCheckBoxes[category], 0, 0, 3)
             self.panelSelectProjects.Bind(wx.EVT_CHECKBOX, self.OnCategoryCheckBoxChanged, self.projectCheckBoxes[category])
 
         # create list of checkboxes for the 'super categories' (which are groups of normal categories, such as Tests)
@@ -530,9 +540,10 @@ class CSnakeGUIApp(wx.App):
                     
             self.projectCheckBoxes[super] = wx.CheckBox(self.panelSelectProjects, -1, super)
             self.projectCheckBoxes[super].SetValue( value )
-            self.panelSelectProjects.GetSizer().Insert(0, self.projectCheckBoxes[super], 0, 0, 0)
+            self.panelSelectProjects.GetSizer().Insert(0, self.projectCheckBoxes[super], 0, 0, 3)
             self.panelSelectProjects.Bind(wx.EVT_CHECKBOX, self.OnSuperCategoryCheckBoxChanged, self.projectCheckBoxes[super])
             
+        self.panelSelectProjects.GetSizer().Add(self.btnForceRefreshProjects, 0, 0, 3)
         self.panelSelectProjects.Layout()
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -558,7 +569,10 @@ class CSnakeGUIApp(wx.App):
                 self.context.filter.remove(category)
             if not self.projectCheckBoxes[category].GetValue():
                 self.context.filter.append(category)
-        
+
+    def RefreshProjects(self, event):
+        self.SelectProjects(forceRefresh=True)
+    
 if __name__ == "__main__":
     app = CSnakeGUIApp(0)
     app.MainLoop()

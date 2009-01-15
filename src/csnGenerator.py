@@ -45,14 +45,15 @@ import shutil
 #
 
 # ToDo:
+# To obtain solution path, check if the context has changed (using pickly and string comparison) and if not, return the cached path
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
-# - Why fails to add installSubFolder as property?
+# - Use FIND_PACKAGE always
 # - Place non-essential fields of csnContext in members such as gui.compiler
 # - Try to detect compiler location (in a few standard locations) and python location
 # - CSnakeGUI should remember al the IDE paths for different ides.
-# - Add recently used context files
+# - Add recently used context files (wx.FileHistory)
 # - Move cmake path and ide path from context file to options file
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
 # - Better GUI: do more checks, give nice error messages, show progress bar (call cmake asynchronous, poll file system) with cancel button. Try catching cmake output using Pexpect
@@ -67,7 +68,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.12
+version = 2.14
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 

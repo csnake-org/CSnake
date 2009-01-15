@@ -9,6 +9,7 @@ import glob
 import inspect
 import string
 import os
+import pickle
 import subprocess
 import sys
 
@@ -56,6 +57,7 @@ class Handler:
         self.generator = csnGenerator.Generator()
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None
+        self.cachedContextAsString = None
     
     def LoadContext(self, filename):
         self.contextFilename = filename
@@ -77,6 +79,7 @@ class Handler:
             projectModule = csnUtility.LoadModule(projectFolder, name)
             projectModule # prevent warning
             exec "self.cachedProjectInstance = csnProject.ToProject(projectModule.%s)" % self.context.instance
+            self.cachedContextAsString = pickle.dumps(self.context)
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
@@ -92,6 +95,7 @@ class Handler:
         Configures the project to the bin folder.
         """
         instance = self.__GetProjectInstance()
+        
         instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBinFolder)
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
@@ -219,9 +223,13 @@ class Handler:
                     
         return result
 
-    def GetTargetSolutionPath(self, _reuseInstance = False):
+    def ContextHasChanged(self):
+        result = pickle.dumps(self.context) != self.cachedContextAsString
+        return result
+        
+    def GetTargetSolutionPath(self):
         instance = self.cachedProjectInstance
-        if not _reuseInstance:
+        if self.ContextHasChanged():
             instance = self.__GetProjectInstance()
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
@@ -231,8 +239,10 @@ class Handler:
     def UpdateRecentlyUsedCSnakeFiles(self):
         self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)
 
-    def GetCategories(self):
-        instance = self.__GetProjectInstance()
+    def GetCategories(self, _forceRefresh = False):
+        instance = self.cachedProjectInstance
+        if _forceRefresh or self.ContextHasChanged():
+            instance = self.__GetProjectInstance()
         categories = list()
         for project in instance.GetProjects(_recursive = True):
             for cat in project.categories:
