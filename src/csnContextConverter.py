@@ -1,4 +1,5 @@
 import ConfigParser
+import csnContext
 
 class Converter:
     def __init__(self, optionsFilename):
@@ -14,7 +15,7 @@ class Converter:
         if parserOptions.has_option(self.section, "version"):
             versionNumber = parserOptions.getfloat(self.section, "version")
             
-        if versionNumber < 1.0:
+        if versionNumber == 0.0:
             parserNewOptions = ConfigParser.ConfigParser()
 
             # rename an option within the input options file
@@ -28,7 +29,7 @@ class Converter:
             self.MoveOption(parserOptions, self.section, "compiler", toParser = parserNewOptions)
             self.MoveOption(parserOptions, self.section, "cmakebuildtype", toParser = parserNewOptions,  toOption = "configurationname")
             
-            parserOptions.set(self.section, "version", "1.0")
+            parserOptions.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
             f = open(self.optionsFilename, 'w')
             parserOptions.write(f)
             f.close()            
@@ -54,9 +55,8 @@ class Converter:
 
         if not validFile:
             return False
-            
-        if inputVersion < 1.0:
-            parserContext.set(self.section, "version", "1.0")
+
+        if inputVersion == 0.0:
             
             self.CopyOption(parserOptions, self.section, "idepath", toParser = parserContext)
             self.CopyOption(parserOptions, self.section, "askToLaunchIDE", toParser = parserContext)
@@ -66,6 +66,8 @@ class Converter:
             self.CopyOption(parserOptions, self.section, "configurationname", toParser = parserContext)
             
             self.MoveOption(parserContext, self.section, "binfolder",  toOption = "buildfolder")
+            self.MoveOption(parserContext, self.section, "thirdpartybinfolder",  toOption = "thirdpartybuildfolder")
+            parserContext.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
             
             index = 0
             while parserContext.has_section("RecentlyUsedCSnakeFile%s" % index):
@@ -89,6 +91,14 @@ class Converter:
             parserContext.write(f)
             f.close() 
             
+        if inputVersion == 1.0:
+            parserContext.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
+            self.MoveOption(parserContext, self.section, "thirdpartybinfolder",  toOption = "thirdpartybuildfolder")
+            
+            f = open(contextFilename, 'w')
+            parserContext.write(f)
+            f.close() 
+        
         return True
 
     def MoveOption(self, fromParser, fromSection, fromOption, toParser = None, toSection = None, toOption = None):

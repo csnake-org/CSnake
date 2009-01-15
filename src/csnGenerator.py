@@ -17,7 +17,7 @@ import shutil
 # dependency project - Project that must also be built in order to built the target project. Modelled by class csnBuild.Project.
 # public dependency - If a project A is publicly dependent on B, then projects that are dependent on A will have to include from (and link to)  B.
 # build folder - Folder where all intermediate build results (CMakeCache.txt, .obj files, etc) are stored for the target project and all dependency projects.
-# binary folder - Folder where all final build results (executables, dlls etc) are stored.
+# build results folder - Folder where all final build results (executables, dlls etc) are stored.
 # install folder - Folder to which the build results are copied, and from which you can run the application. Note that CSnake allows you to use the build folder as the install folder as well.
 # configuration name - Identifies a build configuration, such as "Debug" or "Release". The name "DebugAndRelease" means that both Debug and Release must be generated.
 # source root folder - Folder used for locating the source files for a project. When adding sources to a project, names relative to the source root folder may be used.
@@ -45,7 +45,7 @@ import shutil
 #
 
 # ToDo:
-# To obtain solution path, check if the context has changed (using pickly and string comparison) and if not, return the cached path
+# - Automatically delete CMakeCache if this is needed
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
@@ -68,7 +68,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.14
+version = 2.15
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -118,14 +118,14 @@ class Generator:
         
         # check for backward slashes
         if csnUtility.HasBackSlash(_targetProject.context.buildFolder):
-            raise SyntaxError, "Error, backslash found in binary folder %s" % _targetProject.context.buildFolder
+            raise SyntaxError, "Error, backslash found in build folder %s" % _targetProject.context.buildFolder
         
         # check  trying to build a third party library
         if _targetProject.type == "third party":
             warnings.warn( "CSnake warning: you are trying to generate CMake scripts for a third party module (nothing generated)\n" )
             return
          
-        # create binary project folder
+        # create build folder
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
     
         # create Win32Header
@@ -173,10 +173,10 @@ class Generator:
         writer.GenerateUseFile()
         writer.GenerateCMakeLists(generatedProjects, requiredProjects, _writeInstallCommands = _targetProject.dependenciesManager.isTopLevel)
 
-    def InstallBinariesToBinFolder(self, _targetProject):
+    def InstallBinariesToBuildFolder(self, _targetProject):
         """ 
-        This function copies all third party dlls to the binary folder, so that you can run the executables in the
-        binary folder without having to build the INSTALL target.
+        This function copies all third party dlls to the build folder, so that you can run the executables in the
+        build folder without having to build the INSTALL target.
         """
         result = True
         _targetProject.installManager.ResolvePathsOfFilesToInstall()
@@ -188,7 +188,7 @@ class Generator:
                 for location in project.installManager.filesToInstall[mode].keys():
                     for file in project.installManager.filesToInstall[mode][location]:
                         absLocation = "%s/%s" % (outputFolder, location)
-                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBinFolder cannot install a folder (%s)" % file
+                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
                         fileResult = (0 != shutil.copy(file, absLocation))

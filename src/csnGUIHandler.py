@@ -90,13 +90,13 @@ class Handler:
         
         return self.cachedProjectInstance
     
-    def ConfigureProjectToBinFolder(self, _alsoRunCMake, _callback = None):
+    def ConfigureProjectToBuildFolder(self, _alsoRunCMake, _callback = None):
         """ 
-        Configures the project to the bin folder.
+        Configures the project to the build folder.
         """
         instance = self.__GetProjectInstance()
         
-        instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBinFolder)
+        instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBuildFolder)
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
@@ -117,8 +117,8 @@ class Handler:
                     _callback.Warn("CMake not found at %s" % self.context.cmakePath)
                 return False
             
-    def InstallBinariesToBinFolder(self):
-        return self.generator.InstallBinariesToBinFolder(self.__GetProjectInstance())
+    def InstallBinariesToBuildFolder(self):
+        return self.generator.InstallBinariesToBuildFolder(self.__GetProjectInstance())
              
     def CMakeIsFound(self):
         found = os.path.exists(self.context.cmakePath) and os.path.isfile(self.context.cmakePath)
@@ -137,10 +137,10 @@ class Handler:
         some problems with incomplete configurations.
         """
         result = True
-        os.path.exists(self.context.thirdPartyBinFolder) or os.makedirs(self.context.thirdPartyBinFolder)
+        os.path.exists(self.context.thirdPartyBuildFolder) or os.makedirs(self.context.thirdPartyBuildFolder)
         argList = [self.context.cmakePath, "-G", self.context.compiler, self.context.thirdPartyRootFolder]
         for _ in range(0, _nrOfTimes):
-            result = result and 0 == subprocess.Popen(argList, cwd = self.context.thirdPartyBinFolder).wait() 
+            result = result and 0 == subprocess.Popen(argList, cwd = self.context.thirdPartyBuildFolder).wait() 
 
         if not result:
             print "Configuration failed.\n"   
@@ -234,7 +234,7 @@ class Handler:
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
     def GetThirdPartySolutionPath(self):
-        return "%s/CILAB_TOOLKIT.sln" % (self.context.thirdPartyBinFolder)
+        return "%s/CILAB_TOOLKIT.sln" % (self.context.thirdPartyBuildFolder)
     
     def UpdateRecentlyUsedCSnakeFiles(self):
         self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)
@@ -250,3 +250,13 @@ class Handler:
                     categories.append(cat)
         return categories
                     
+    def FindAdditionalRootFolders(self):
+        result = []
+        folder = os.path.dirname(self.context.csnakeFile)
+        previousFolder = ""
+        while folder != previousFolder:
+            if os.path.exists("%s/rootFolder.csnake" % folder) and not folder in self.context.rootFolders:
+                result.append(folder)
+            previousFolder = folder
+            folder = os.path.split(folder)[0]
+        return result

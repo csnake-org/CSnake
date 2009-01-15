@@ -63,7 +63,7 @@ class GenericProject(object):
     self.rules - CMake rules. See AddRule function.
     self.sourcesToBeMoced -- Sources for which a qt moc file must be generated.
     self.sourcesToBeUIed -- Sources for which qt's UI.exe must be run.
-    self.filesToInstall -- Contains files to be installed in the binary folder. It has the structure filesToInstall[mode][installPath] = files.
+    self.filesToInstall -- Contains files to be installed in the build results folder. It has the structure filesToInstall[mode][installPath] = files.
     For example: if self.filesToInstall[\"Debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
     then c:/one.txt and c:/two.txt must be installed in the data subfolder of the install folder when in debug mode.
     self.useFilePath -- Path to the use file of the project. If it is relative, then the build folder will be prepended.
@@ -177,8 +177,8 @@ class GenericProject(object):
     def GetBuildFolder(self):
         return self.pathsManager.GetBuildFolder()
 
-    def GetBinaryInstallFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
-        return self.pathsManager.GetBinaryInstallFolder(_configurationName)
+    def GetBuildResultsFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
+        return self.pathsManager.GetBuildResultsFolder(_configurationName)
 
     def GetCMakeListsFilename(self):
         """ Return the filename for the CMakeLists.txt file for this project. """

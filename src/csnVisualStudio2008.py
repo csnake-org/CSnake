@@ -28,8 +28,7 @@ class Context(csnContext.Context):
 class PostProcessor:
     def Do(self, _project):
         """
-        Post processes the vcproj file generated for _project, where the vc proj file was written
-        to _binaryFolder.         
+        Post processes the vcproj file generated for _project.
         """
         
         if not _project.dependenciesManager.isTopLevel:

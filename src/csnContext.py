@@ -2,12 +2,15 @@ import ConfigParser
 import OrderedSet
 import re
 
+latestFileFormatVersionAsString = "2.0"
+
+
 class Context:
     """
-    Contains configuration settings such as source folder/bin folder/etc.
+    Contains configuration settings such as source folder/build folder/etc.
     kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
-    copied from the bin folder to this folder. This is work around for a problem in 
-    KDevelop: it does not show the source tree if the kdevelop project file is in the bin folder.
+    copied from the build folder to this folder. This is work around for a problem in 
+    KDevelop: it does not show the source tree if the kdevelop project file is in the build folder.
     configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
     if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
     """
@@ -15,7 +18,7 @@ class Context:
         self.buildFolder = ""    
         self.installFolder = ""    
         self.prebuiltBinariesFolder = ""    
-        self.thirdPartyBinFolder = ""
+        self.thirdPartyBuildFolder = ""
         self.csnakeFile = ""
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
@@ -31,7 +34,7 @@ class Context:
         self.idePath = ""
             
         self.basicFields = [
-            "buildFolder", "installFolder", "prebuiltBinariesFolder", "thirdPartyBinFolder", "csnakeFile",
+            "buildFolder", "installFolder", "prebuiltBinariesFolder", "thirdPartyBuildFolder", "csnakeFile",
             "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler",
             "cmakePath", "pythonPath", "idePath"
         ]
@@ -117,7 +120,7 @@ class Context:
         parser = ConfigParser.ConfigParser()
         section = "CSnake"
         parser.add_section(section)
-        parser.set(section, "version", "1.0")
+        parser.set(section, "version", latestFileFormatVersionAsString)
         rootFolderSection = "RootFolders"
         parser.add_section(rootFolderSection)
 

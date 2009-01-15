@@ -22,8 +22,8 @@ class Writer:
         
         self.file.write( "\n# All binary outputs are written to the same folder.\n" )
         self.file.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        self.file.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % self.project.GetBinaryInstallFolder(self.project.context.configurationName) )
-        self.file.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % self.project.GetBinaryInstallFolder(self.project.context.configurationName) )
+        self.file.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
+        self.file.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
 
     def __WriteCommandsToGenerate(self, projectsToGenerate):
         self.file.write( "\n" )
@@ -197,11 +197,10 @@ class Writer:
         fileConfig = self.project.pathsManager.GetPathToConfigFile(_public)
         f = open(fileConfig, 'w')
         
-        # create list with folder where libraries should be found. Add the bin folder where all the
-        # targets are placed to this list. 
+        # create list with folder where libraries should be found. Add the folder where all the targets are placed to this list. 
         publicLibraryFolders = self.project.compileManager.public.libraryFolders
         if _public:
-            publicLibraryFolders.append(self.project.GetBinaryInstallFolder()) 
+            publicLibraryFolders.append(self.project.GetBuildResultsFolder()) 
 
         # write header and some cmake fields
         f.write( "# File generated automatically by the CSnake generator.\n" )

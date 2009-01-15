@@ -43,7 +43,7 @@ class Manager:
                     for dllPattern in project.installManager.filesToInstall[mode][location]:
                         path = csnUtility.NormalizePath(dllPattern)
                         if not os.path.isabs(path):
-                            path = "%s/%s" % (self.project.context.thirdPartyBinFolder, path)
+                            path = "%s/%s" % (self.project.context.thirdPartyBuildFolder, path)
                         for file in glob.glob(path):
                             if (os.path.basename(file) in excludedFolderList) and _skipCVS and os.path.isdir(file):
                                 continue

@@ -68,14 +68,14 @@ class Manager:
 
     def GetBuildFolder(self):
         """
-        Returns the bin folder for storing intermediate build files for this project.
+        Returns the folder for storing intermediate build files for this project.
         """
         return self.project.context.buildFolder + "/" + self.buildSubFolder
         
-    def GetBinaryInstallFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
+    def GetBuildResultsFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         """ 
         Returns location in the binary folder where binaries for this project must be installed.
-        This functions is used for being able to "install" all files in the binary folder that are needed to run the application
+        This functions is used for being able to "install" all files in the build folder that are needed to run the application
         from the binary folder without having to install to the Install Folder.
         """
         result = self.project.context.GetOutputFolder(_configurationName)
