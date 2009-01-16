@@ -18,7 +18,7 @@ Cruise Control project configuration file.
       
     <!-- Properties -->
     <!-- Note: config paths are relative to the cruise control location on the server -->
-    <property name="project.source_path" value="${main.csnake_src_folder"/>
+    <property name="project.source_path" value="${main.csnake_src_folder}"/>
 
     <!-- Listeners: notified with every project event -->
     <listeners>
