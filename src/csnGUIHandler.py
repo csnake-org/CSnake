@@ -163,12 +163,12 @@ class Handler:
         while len(folderList) > 0:
             newFolders = []
             for folder in folderList:
-                pycFiles = [x.replace("\\", "/") for x in glob.glob("%s/*.pyc" % folder)]
+                pycFiles = [csnUtility.NormalizePath(x) for x in glob.glob("%s/*.pyc" % folder)]
                 for pycFile in pycFiles:
                     if not os.path.basename(pycFile) == "__init__.pyc":
                         os.remove(pycFile)
 
-                newFolders.extend( [os.path.dirname(x).replace("\\", "/") for x in glob.glob("%s/*/__init__.py" % folder)] )
+                newFolders.extend( [csnUtility.NormalizePath(os.path.dirname(x)) for x in glob.glob("%s/*/__init__.py" % folder)] )
             folderList = list(newFolders)
         
     def GetListOfPossibleTargets(self):
@@ -252,11 +252,11 @@ class Handler:
                     
     def FindAdditionalRootFolders(self):
         result = []
-        folder = os.path.dirname(self.context.csnakeFile)
+        folder = csnUtility.NormalizePath(os.path.dirname(self.context.csnakeFile))
         previousFolder = ""
         while folder != previousFolder:
             if os.path.exists("%s/rootFolder.csnake" % folder) and not folder in self.context.rootFolders:
                 result.append(folder)
             previousFolder = folder
-            folder = os.path.split(folder)[0]
+            folder = csnUtility.NormalizePath(os.path.split(folder)[0])
         return result
