@@ -45,9 +45,11 @@ class Manager:
         Returns self.project.useFilePath if it is absolute. Otherwise, returns self.project.GetBuildRootFolder() + self.project.useFilePath.
         """
         if os.path.isabs(self.useFilePath):
-            return self.useFilePath
+            result = self.useFilePath
         else:
-            return "%s/%s" % (self.project.context.buildFolder, self.useFilePath)
+            result = "%s/%s" % (self.project.context.buildFolder, self.useFilePath)
+            
+        return csnUtility.NormalizePath(result)
 
     def GetPathToConfigFile(self, _public):
         """ 
@@ -64,13 +66,13 @@ class Manager:
         if self.project.type in ("dll", "library", "executable") and (not _public):
             postfix = ".private"
 
-        return result + postfix
+        return csnUtility.NormalizePath(result + postfix)
 
     def GetBuildFolder(self):
         """
         Returns the folder for storing intermediate build files for this project.
         """
-        return self.project.context.buildFolder + "/" + self.buildSubFolder
+        return csnUtility.NormalizePath(self.project.context.buildFolder + "/" + self.buildSubFolder)
         
     def GetBuildResultsFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         """ 
@@ -83,7 +85,7 @@ class Manager:
             if _configurationName == "DebugAndRelease":
                 result += "/${CMAKE_CFG_INTDIR}"
             result += "/%s" % self.project.installSubFolder
-        return result
+        return csnUtility.NormalizePath(result)
 
     def GetSourceRootFolder(self):
-        return self.sourceRootFolder
+        return csnUtility.NormalizePath(self.sourceRootFolder)

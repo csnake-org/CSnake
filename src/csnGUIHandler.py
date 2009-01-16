@@ -112,9 +112,10 @@ class Handler:
                 self.generator.PostProcess(instance)
                 return True
             else:
-                _callback.Warn("Configuration failed.")
-                if not self.CMakeIsFound():
-                    _callback.Warn("CMake not found at %s" % self.context.cmakePath)
+                if _callback:
+                    _callback.Warn("Configuration failed.")
+                    if not self.CMakeIsFound():
+                        _callback.Warn("CMake not found at %s" % self.context.cmakePath)
                 return False
             
     def InstallBinariesToBuildFolder(self):

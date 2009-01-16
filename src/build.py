@@ -17,7 +17,9 @@ context = handler.LoadContext(sys.argv[1])
 
 # Configure the project
 if context.instance == "thirdParty":
-    handler.ConfigureThirdPartyFolder()
+    res = handler.ConfigureThirdPartyFolder()
 else:
-    handler.ConfigureProjectToBuildFolder( True )
+    res = handler.ConfigureProjectToBuildFolder( True )
 
+if not res:
+  sys.exit("Error configuring instance %s" % context.instance)
