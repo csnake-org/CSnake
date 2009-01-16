@@ -69,7 +69,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.16
+version = 2.17
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 

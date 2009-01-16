@@ -145,6 +145,11 @@ class Context:
         if not self.subCategoriesOf.has_key(super):
             self.subCategoriesOf[super] = OrderedSet.OrderedSet()
         self.subCategoriesOf[super].add(sub)
+        
+    def GetThirdPartyBuildFolder(self):
+        return self.thirdPartyBuildFolder
+        
+    thirdPartyBinFolder = property(GetThirdPartyBuildFolder) # for backward compatibility
 
 import csnKDevelop
 import csnVisualStudio2003
