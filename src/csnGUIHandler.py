@@ -1,4 +1,5 @@
 import csnUtility
+import csnCilab # do not remove, this file needs to be included in the CSnake distribution
 import csnBuild
 import csnContext
 import csnGenerator

@@ -36,7 +36,7 @@ class Manager:
             for x in _path:
                 moreResults = self.Glob(x)
                 result.extend(moreResults)
-            return result
+            return [csnUtility.NormalizePath(x) for x in result]
         else:
             return [csnUtility.NormalizePath(x) for x in glob.glob(self.PrependRootFolderToRelativePath(_path))]
         

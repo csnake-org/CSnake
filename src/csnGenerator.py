@@ -46,6 +46,7 @@ import shutil
 
 # ToDo:
 # - Automatically delete CMakeCache if this is needed
+# - Only configure third parties that are needed for the target
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
@@ -68,7 +69,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.15
+version = 2.16
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
