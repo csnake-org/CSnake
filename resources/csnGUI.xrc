@@ -196,6 +196,15 @@
 														<default>0</default>
 													</object>
 												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>0</border>
+													<object class="wxButton" name="btnDetectRootFolders">
+														<label>Detect</label>
+														<default>0</default>
+													</object>
+												</object>
 											</object>
 										</object>
 									</object>

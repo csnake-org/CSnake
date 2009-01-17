@@ -45,7 +45,8 @@ import shutil
 #
 
 # ToDo:
-# - Automatically delete CMakeCache if this is needed
+# - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
+# - Automatically delete CMakeCache if this is needed (using .csnake/context in build folder)
 # - Only configure third parties that are needed for the target
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll

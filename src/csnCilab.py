@@ -10,7 +10,7 @@ def LoadThirdPartyModule(_subFolder, _name):
     folder = "%s/%s" % (csnProject.globalCurrentContext.thirdPartyRootFolder, _subFolder)
     return csnUtility.LoadModule(folder, _name)
 
-def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = ""):
+def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
     project does not depend on these application projects.
@@ -39,7 +39,9 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
                 continue
             name = os.path.splitext( os.path.basename(sourceFile) )[0]
             name = name.replace(' ', '_')
-            app = csnBuild.Project("%s_%s" % (_holderProject.name, name), "executable", _sourceRootFolder = _holderProject.GetSourceRootFolder())
+            if _holderName is None:
+                _holderName = _holderProject.name
+            app = csnBuild.Project("%s_%s" % (_holderName, name), "executable", _sourceRootFolder = _holderProject.GetSourceRootFolder())
             app.AddIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])
@@ -98,7 +100,7 @@ class CilabModuleProject(csnProject.GenericProject):
                     for extension in csnUtility.GetIncludeFileExtensions():
                         self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-    def AddDemos(self, _modules, _pch = "", _applicationDependenciesList = None):
+    def AddDemos(self, _modules, _pch = "", _applicationDependenciesList=None, _holderName=None):
         """
         Creates extra CSnake projects, each project building one demo in the demos subfolder of the current project.
         _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
@@ -108,16 +110,17 @@ class CilabModuleProject(csnProject.GenericProject):
         if not _applicationDependenciesList is None:
             dependencies.extend(_applicationDependenciesList)
 
-        demosName = "%sDemos" % self.name
-        csnProject.globalCurrentContext.SetSuperSubCategory("Demos", demosName)
+        if _holderName is None:
+            _holderName = "%sDemos" % self.name
+        csnProject.globalCurrentContext.SetSuperSubCategory("Demos", _holderName)
         if self.demosProject is None:
-            self.demosProject = csnBuild.Project(demosName, "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [demosName])
+            self.demosProject = csnBuild.Project(_holderName, "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
             self.demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
             self.demosProject.AddProjects([self])
             self.AddProjects([self.demosProject], _dependency = 0)
-        AddApplications(self.demosProject, dependencies, _modules, "%s/demos" % self.GetSourceRootFolder(), _pch)
+        AddApplications(self.demosProject, dependencies, _modules, "%s/demos" % self.GetSourceRootFolder(), _pch, _holderName)
 
-    def AddApplications(self, _modules, _pch = "", _applicationDependenciesList = None):
+    def AddApplications(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None):
         """
         Similar to AddDemos, but works on the Applications subfolder.
         """
@@ -125,14 +128,16 @@ class CilabModuleProject(csnProject.GenericProject):
         if not _applicationDependenciesList is None:
             dependencies.extend(_applicationDependenciesList)
             
-        applicationsName = "%sApplications" % self.name
-        csnProject.globalCurrentContext.SetSuperSubCategory("Applications", applicationsName)
+        if _holderName is None:
+            _holderName = "%sApplications" % self.name
+            
+        csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
         if self.applicationsProject is None:
-            self.applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [applicationsName])
+            self.applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
             self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
             self.applicationsProject.AddProjects([self])
             self.AddProjects([self.applicationsProject], _dependency = 0)
-        AddApplications(self.applicationsProject, dependencies, _modules, "%s/Applications" % self.GetSourceRootFolder(), _pch)
+        AddApplications(self.applicationsProject, dependencies, _modules, "%s/Applications" % self.GetSourceRootFolder(), _pch, _holderName)
     
 class GimiasPluginProject(csnProject.GenericProject):
     """

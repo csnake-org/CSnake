@@ -94,6 +94,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, id=xrc.XRCID("btnSelectCSnakeFile"))
@@ -253,13 +254,22 @@ class CSnakeGUIApp(wx.App):
         self.action = self.ActionCreateCMakeFilesAndRunCMake
         self.DoAction()
         
-    def FindAdditionalRootFolders(self):
+    def OnDetectRootFolders(self, event):
+        additionalRootFolders = self.handler.FindAdditionalRootFolders()
+        self.context.rootFolders.extend(additionalRootFolders)
+        self.UpdateGUIAndSaveContextAndOptions()
+    
+    def FindAdditionalRootFolders(self, onlyForNewInstance=False):
+        if onlyForNewInstance and self.context.IsCSnakeFileInRecentlyUsed():
+            return
+        
         additionalRootFolders = self.handler.FindAdditionalRootFolders()
         if len(additionalRootFolders):
-            message =  "CSnakeGUI found additional root folders which are likely to be necessary for target %s\n" % self.context.instance
+            message =  "CSnakeGUI found additional root folders which are likely to be necessary for target %s.\n" % self.context.instance
             message += "Should CSnakeGUI add the following root folders?\n\n"
             for folder in additionalRootFolders:
                 message += folder + "\n"
+            message += "\n\nThis question will not appear again for this target, but you can later add the above root folders\nusing the Detect button\n"
                 
             dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
             if dlg.ShowModal() == wx.ID_YES:
@@ -267,7 +277,7 @@ class CSnakeGUIApp(wx.App):
                 self.UpdateGUIAndSaveContextAndOptions()
             
     def ActionCreateCMakeFilesAndRunCMake(self):
-        self.FindAdditionalRootFolders()
+        self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _callback = self):
             if self.context.instance.lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
@@ -277,7 +287,7 @@ class CSnakeGUIApp(wx.App):
         self.DoAction()
         
     def ActionOnlyCreateCMakeFiles(self):
-        self.FindAdditionalRootFolders()
+        self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
             if self.context.instance.lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
@@ -296,7 +306,7 @@ class CSnakeGUIApp(wx.App):
         self.DoAction()
         
     def ActionInstallFilesToBuildFolder(self):
-        self.FindAdditionalRootFolders()
+        self.FindAdditionalRootFolders(True)
         if not self.handler.InstallBinariesToBuildFolder():
             self.Error("Error while installing files.")
             
@@ -410,8 +420,12 @@ class CSnakeGUIApp(wx.App):
     
     def GetCSnakeFileComboBoxItems(self):
         result = list()
+        count = 0
         for x in self.context.recentlyUsed:
             result.append("%s - In %s" % (x.instance, x.csnakeFile))
+            count += 1
+            if count >= 10:
+                break
         return result
     
     def UpdateGUIAndSaveContextAndOptions(self):
@@ -456,10 +470,12 @@ class CSnakeGUIApp(wx.App):
         self.binder.SetBuddyClass("context", self.context)
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        self.SetStatus("Retrieving list of targets")
         self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
         if len(self.listOfPossibleTargets):
             self.context.instance = self.listOfPossibleTargets[0]
         self.UpdateGUIAndSaveContextAndOptions()
+        self.SetStatus("")
 
     def GetInstanceComboBoxItems(self):
         return self.listOfPossibleTargets

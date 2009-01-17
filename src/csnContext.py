@@ -113,8 +113,14 @@ class Context:
         x = Context()
         (x.instance, x.csnakeFile) = (_instance, _csnakeFile)
         self.recentlyUsed.insert(0, x)
-        if len(self.recentlyUsed) > 10:
-            self.recentlyUsed.pop() 
+    
+    def IsCSnakeFileInRecentlyUsed(self):
+        result = False
+        for item in range( len(self.recentlyUsed) ):
+            x = self.recentlyUsed[item]
+            if (x.instance == self.instance and x.csnakeFile == self.csnakeFile):
+                result = True
+        return result
     
     def Save(self, filename):
         parser = ConfigParser.ConfigParser()
