@@ -63,3 +63,27 @@ class Manager:
                     
                 project.installManager.filesToInstall[mode] = filesToInstall
  
+    def InstallBinariesToBuildFolder(self):
+        """ 
+        This function copies all third party dlls to the build folder, so that you can run the executables in the
+        build folder without having to build the INSTALL target.
+        """
+        result = True
+        self.ResolvePathsOfFilesToInstall()
+
+        for mode in ("Debug", "Release"):
+            outputFolder = self.context.GetOutputFolder(mode)
+            os.path.exists(outputFolder) or os.makedirs(outputFolder)
+            for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
+                for location in project.installManager.filesToInstall[mode].keys():
+                    for file in project.installManager.filesToInstall[mode][location]:
+                        absLocation = "%s/%s" % (outputFolder, location)
+                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
+                        os.path.exists(absLocation) or os.makedirs(absLocation)
+                        assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
+                        #print "Copying %s to %s\n" % (file, absLocation)
+                        fileResult = (0 != shutil.copy(file, absLocation))
+                        result = fileResult and result
+                        if not fileResult:
+                            print "Failed to copy %s to %s\n" % (file, absLocation)
+        return result

@@ -85,7 +85,9 @@ class Manager:
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         for libraryFolder in _listOfLibraryFolders:
-            self.public.libraryFolders.append( self.__FindPath(libraryFolder) )
+            for folder in self.project.Glob(libraryFolder):
+                if (not os.path.exists(folder)) or os.path.isdir(folder):
+                    self.public.libraryFolders.append( folder )
 
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
         """

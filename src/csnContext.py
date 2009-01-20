@@ -115,10 +115,11 @@ class Context:
         self.recentlyUsed.insert(0, x)
     
     def IsCSnakeFileInRecentlyUsed(self):
+        """ Returns True if self.csnakeFile is in the list of recently used csnake files """
         result = False
         for item in range( len(self.recentlyUsed) ):
             x = self.recentlyUsed[item]
-            if (x.instance == self.instance and x.csnakeFile == self.csnakeFile):
+            if (x.csnakeFile == self.csnakeFile):
                 result = True
         return result
     

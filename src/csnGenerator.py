@@ -45,7 +45,10 @@ import shutil
 #
 
 # ToDo:
+# - Move recently used files list out of csnContext class
+# - Can we move the third party root folder into the list of other root folders?
 # - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
+# - Also store thirdparty folders in rootfolders.csnake. Use an ini file.
 # - Automatically delete CMakeCache if this is needed (using .csnake/context in build folder)
 # - Only configure third parties that are needed for the target
 # - Rename GetOutputFolder to GetBuildResultsFolder
@@ -70,7 +73,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.17
+version = 2.18
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -180,24 +183,7 @@ class Generator:
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
         """
-        result = True
-        _targetProject.installManager.ResolvePathsOfFilesToInstall()
-        
-        for mode in ("Debug", "Release"):
-            outputFolder = _targetProject.context.GetOutputFolder(mode)
-            os.path.exists(outputFolder) or os.makedirs(outputFolder)
-            for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
-                for location in project.installManager.filesToInstall[mode].keys():
-                    for file in project.installManager.filesToInstall[mode][location]:
-                        absLocation = "%s/%s" % (outputFolder, location)
-                        assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
-                        os.path.exists(absLocation) or os.makedirs(absLocation)
-                        assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
-                        fileResult = (0 != shutil.copy(file, absLocation))
-                        result = fileResult and result
-                        if not fileResult:
-                            print "Failed to copy %s to %s\n" % (file, absLocation)
-        return result
+        return _targetProject.InstallBinariesToBuildFolder()
                         
     def PostProcess(self, _targetProject):
         """
