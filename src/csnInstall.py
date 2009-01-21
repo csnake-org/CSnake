@@ -72,7 +72,7 @@ class Manager:
         self.ResolvePathsOfFilesToInstall()
 
         for mode in ("Debug", "Release"):
-            outputFolder = self.context.GetOutputFolder(mode)
+            outputFolder = self.project.context.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
             for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
                 for location in project.installManager.filesToInstall[mode].keys():

@@ -185,7 +185,7 @@ class Generator:
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
         """
-        return _targetProject.InstallBinariesToBuildFolder()
+        return _targetProject.installManager.InstallBinariesToBuildFolder()
                         
     def PostProcess(self, _targetProject):
         """
