@@ -1,6 +1,7 @@
 import csnUtility
 import os
 import glob
+import shutil
 import GlobDirectoryWalker
 
 class Manager:
