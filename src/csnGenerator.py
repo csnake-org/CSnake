@@ -53,10 +53,13 @@ import shutil
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
+# - More functions at bottom of csnProject can be removed?
+# - Drop down box: Edit csnake file (one item for each csnake file in the solution)
 # - Use FIND_PACKAGE always
+# - Instead of having AddLibraries and AddLibraryFolders, only have AddLibraries and let CSnake take care of extracting list of library folders.
 # - Place non-essential fields of csnContext in members such as gui.compiler
 # - Try to detect compiler location (in a few standard locations) and python location
-# - CSnakeGUI should remember al the IDE paths for different ides.
+# - CSnakeGUI should remember all the IDE paths for different ides.
 # - Add recently used context files (wx.FileHistory)
 # - Move cmake path and ide path from context file to options file
 # - Build all stuff in DebugAndRelease, Debug or Release. Support DebugAndRelease in Linux by building to both Debug and Release
@@ -152,7 +155,7 @@ class Generator:
             generateProject = not projectToGenerate in _generatedList and projectToGenerate.type in ("dll", "executable", "library")
             if generateProject:
                 for requiredProject in _targetProject.GetProjects(_recursive = 0, _onlyRequiredProjects = 1):
-                    if requiredProject.DependsOn(projectToGenerate):
+                    if requiredProject.dependenciesManager.DependsOn(projectToGenerate):
                         generateProject = 0
             if generateProject:
                 projectsToGenerate.add(projectToGenerate)

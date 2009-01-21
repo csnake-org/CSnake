@@ -133,11 +133,8 @@ class GenericProject(object):
     def Glob(self, _path):
         return self.pathsManager.Glob(_path)
     
-    def DependsOn(self, _otherProject, _skipList = None):
-        return self.dependenciesManager.DependsOn(_otherProject, _skipList)
-        
-    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False, _skipList = None):
-        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies, _onlyNonRequiredProjects, _skipList)
+    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False):
+        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies, _onlyNonRequiredProjects)
         
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
@@ -151,29 +148,19 @@ class GenericProject(object):
         rule.workingDirectory = workingDirectory
         self.rules[description] = rule
 
-    def AddCustomCommand(self, command):
-        """ 
-        Adds command to the list of custom commands. Each command must accept this instance (self) as the one and only argument. 
-        For example:
-        
-        project.AddCustomCommand(project.DoSomethingSpecial)
-        
-        (... in class of project)
-        def DoSomethingSpecial(self):
-            # do special stuff
-            pass
-            
-        """
-        self.customCommands.append(command)
+    def AddCustomCommand(self, _command):
+        self.customCommands.append(_command)
 
     def RunCustomCommands(self):
-        """ Runs commands in self.customCommands, passing self as the one and only argument. """
         for command in self.customCommands:
             command(self)
             
     def AddTests(self, _listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
         self.testsManager.AddTests(_listOfTests, _cxxTestProject, _enableWxWidgets, _dependencies)
 
+    def GetTestProject(self):
+        return self.testsManager.testProject
+        
     def GetBuildFolder(self):
         return self.pathsManager.GetBuildFolder()
 
@@ -181,17 +168,7 @@ class GenericProject(object):
         return self.pathsManager.GetBuildResultsFolder(_configurationName)
 
     def GetCMakeListsFilename(self):
-        """ Return the filename for the CMakeLists.txt file for this project. """
         return "%s/%s" % (self.context.buildFolder, self.pathsManager.cmakeListsSubpath)
-
-    def GetConfig(self, _isPrivate):
-        if _isPrivate:
-            return self.compileManager.private
-        else:
-            return self.compileManager.public
-
-    def GetPostProcessor(self):
-        return self.postProcessor    
 
     def GetSources(self):
         return self.compileManager.sources
@@ -199,9 +176,6 @@ class GenericProject(object):
     def GetSourceRootFolder(self):
         return self.pathsManager.GetSourceRootFolder()
 
-    def GetTestProject(self):
-        return self.testsManager.testProject
-        
     def MatchesFilter(self):
         for pattern in self.context.filter:
             for string in self.categories:

@@ -23,6 +23,12 @@ class Manager:
         self.precompiledHeader = ""
         self.generateWin32Header = 1
  
+     def GetConfig(self, _isPrivate):
+        if _isPrivate:
+            return self.private
+        else:
+            return self.public
+
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         for sourceFile in _listOfSourceFiles:
             sources = self.project.Glob(sourceFile)
@@ -136,7 +142,7 @@ class Manager:
         """
         if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
             return
-        self.project.GetConfig(_private).definitions.extend(_listOfDefinitions)
+        self.GetConfig(_private).definitions.extend(_listOfDefinitions)
 
     def SetPrecompiledHeader(self, _precompiledHeader):
         """

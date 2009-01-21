@@ -13,6 +13,7 @@ class Context(csnContext.Context):
         
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
+	project.compileManager.private.definitions.append("-fPIC")
         return project
         
     def IsForPlatform(self, _WIN32, _NOT_WIN32):

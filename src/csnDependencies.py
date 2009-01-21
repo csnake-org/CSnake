@@ -23,7 +23,7 @@ class Manager:
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
             if not projectToAdd in self.projects:
-                if _dependency and projectToAdd.DependsOn(self.project):
+                if _dependency and projectToAdd.dependenciesManager.DependsOn(self.project):
                     raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.project.name, projectToAdd.name)
                 self.projects.add( projectToAdd )
                 if not _dependency:
@@ -44,7 +44,7 @@ class Manager:
         for requiredProject in self.GetProjects(_onlyRequiredProjects = 1):
             if requiredProject in _skipList:
                 continue
-            if requiredProject is otherProject or requiredProject.DependsOn(otherProject, _skipList ):
+            if requiredProject is otherProject or requiredProject.dependenciesManager.DependsOn(otherProject, _skipList ):
                 return 1
         return 0
         
@@ -64,8 +64,6 @@ class Manager:
             
         if _onlyRequiredProjects:
             toSubtract.update(self.projectsNonRequired)
-        if _onlyPublicDependencies:
-            toSubtract.update(self.projectsPublic)
         result.update(toAdd - toSubtract)
             
         if _recursive:
