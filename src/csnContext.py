@@ -2,8 +2,7 @@ import ConfigParser
 import OrderedSet
 import re
 
-latestFileFormatVersionAsString = "2.0"
-
+latestFileFormatVersion = 2.0
 
 class Context:
     """
@@ -127,7 +126,7 @@ class Context:
         parser = ConfigParser.ConfigParser()
         section = "CSnake"
         parser.add_section(section)
-        parser.set(section, "version", latestFileFormatVersionAsString)
+        parser.set(section, "version", str(latestFileFormatVersion))
         rootFolderSection = "RootFolders"
         parser.add_section(rootFolderSection)
 

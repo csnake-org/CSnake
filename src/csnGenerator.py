@@ -46,7 +46,6 @@ import shutil
 
 # ToDo:
 # - Move recently used files list out of csnContext class
-# - Can we move the third party root folder into the list of other root folders?
 # - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
 # - Also store thirdparty folders in rootfolders.csnake. Use an ini file.
 # - Automatically delete CMakeCache if this is needed (using .csnake/context in build folder)
@@ -73,7 +72,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.18
+version = 2.19
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 

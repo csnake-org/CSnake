@@ -29,7 +29,7 @@ class Converter:
             self.MoveOption(parserOptions, self.section, "compiler", toParser = parserNewOptions)
             self.MoveOption(parserOptions, self.section, "cmakebuildtype", toParser = parserNewOptions,  toOption = "configurationname")
             
-            parserOptions.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
+            parserOptions.set(self.section, "version", str(csnContext.latestFileFormatVersion))
             f = open(self.optionsFilename, 'w')
             parserOptions.write(f)
             f.close()            
@@ -56,8 +56,7 @@ class Converter:
         if not validFile:
             return False
 
-        if inputVersion == 0.0:
-            
+        if inputVersion <= 0.0:
             self.CopyOption(parserOptions, self.section, "idepath", toParser = parserContext)
             self.CopyOption(parserOptions, self.section, "askToLaunchIDE", toParser = parserContext)
             self.CopyOption(parserOptions, self.section, "pythonpath", toParser = parserContext)
@@ -66,8 +65,6 @@ class Converter:
             self.CopyOption(parserOptions, self.section, "configurationname", toParser = parserContext)
             
             self.MoveOption(parserContext, self.section, "binfolder",  toOption = "buildfolder")
-            self.MoveOption(parserContext, self.section, "thirdpartybinfolder",  toOption = "thirdpartybuildfolder")
-            parserContext.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
             
             index = 0
             while parserContext.has_section("RecentlyUsedCSnakeFile%s" % index):
@@ -87,14 +84,11 @@ class Converter:
                 )
                 index += 1
 
-            f = open(contextFilename, 'w')
-            parserContext.write(f)
-            f.close() 
-            
-        if inputVersion == 1.0:
-            parserContext.set(self.section, "version", csnContext.latestFileFormatVersionAsString)
+        if inputVersion <= 1.0:
             self.MoveOption(parserContext, self.section, "thirdpartybinfolder",  toOption = "thirdpartybuildfolder")
-            
+
+        if inputVersion < csnContext.latestFileFormatVersion:
+            parserContext.set(self.section, "version", str(csnContext.latestFileFormatVersion))
             f = open(contextFilename, 'w')
             parserContext.write(f)
             f.close() 
