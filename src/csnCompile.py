@@ -23,7 +23,7 @@ class Manager:
         self.precompiledHeader = ""
         self.generateWin32Header = 1
  
-     def GetConfig(self, _isPrivate):
+    def GetConfig(self, _isPrivate):
         if _isPrivate:
             return self.private
         else:
