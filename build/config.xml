@@ -43,7 +43,9 @@ Cruise Control project configuration file.
       <ant anthome="${main.ant_home}"
         buildfile="${main.build_src_folder}/build.xml"
         uselogger="true"
-        target="do_nothing">
+        target="python_check">
+      	<!-- target: path to source -->
+        <property name="path" value="${main.csnake_src_folder}/src"/>
       </ant>
     </schedule>
 
