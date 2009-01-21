@@ -77,7 +77,7 @@ class Manager:
                 # add project to the skip list, and recurse
                 _skipList.append(project)
                 moreResults.update( 
-                    project.GetProjects(
+                    project.dependenciesManager.GetProjects(
                         _recursive, 
                         _onlyRequiredProjects, 
                         _includeSelf, 
