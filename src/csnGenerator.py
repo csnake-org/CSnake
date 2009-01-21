@@ -45,6 +45,7 @@ import shutil
 #
 
 # ToDo:
+# - Button Launch IDE third parties
 # - Move recently used files list out of csnContext class
 # - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
 # - Also store thirdparty folders in rootfolders.csnake. Use an ini file.

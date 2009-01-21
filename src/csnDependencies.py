@@ -16,7 +16,7 @@ class Manager:
     def AddProjects(self, _projects, _dependency = True):
         for project in _projects:
             projectToAdd = csnProject.ToProject(project)
-            if projectToAdd.MatchesFilter():
+            if projectToAdd.MatchesFilter() or projectToAdd in self.GetProjects():
                 continue
                     
             if self.project is projectToAdd:

@@ -27,7 +27,9 @@ class Manager:
         self.testProject.AddDefinitions(["-DCXXTEST_HAVE_EH"], _private = 1, _NOT_WIN32 = 1)
         
         self.testProject.AddProjects([_cxxTestProject, self.holdingProject])
-        self.holdingProject.AddProjects([self.testProject], _dependency = 0)
+        if csnUtility.IsRunningOnWindows():
+            self.holdingProject.AddProjects([self.testProject], _dependency = False)
+        
         self.testRunnerSourceFile = "%s/%s.cpp" % (self.testProject.GetBuildFolder(), self.testProject.name)
         if not os.path.exists(self.testRunnerSourceFile):
             if not os.path.exists(self.testProject.GetBuildFolder()):
