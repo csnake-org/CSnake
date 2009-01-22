@@ -46,6 +46,8 @@ import shutil
 
 # ToDo:
 # - Button Launch IDE third parties
+# - Install to build folder using symbolic links
+# - If you choose GeoAPIApplications in GIMIAS without any plugin, you do not see the GeoAPI apps in the solution
 # - Move recently used files list out of csnContext class
 # - Create .csnake subfolder in the build folder for storing csnake specific files, including the context used to configure the project
 # - Also store thirdparty folders in rootfolders.csnake. Use an ini file.
@@ -54,7 +56,6 @@ import shutil
 # - Rename GetOutputFolder to GetBuildResultsFolder
 # - SelectProjects tab should scroll
 # - Get rid of prebuiltBinariesFolder
-# - More functions at bottom of csnProject can be removed?
 # - Drop down box: Edit csnake file (one item for each csnake file in the solution)
 # - Use FIND_PACKAGE always
 # - Instead of having AddLibraries and AddLibraryFolders, only have AddLibraries and let CSnake take care of extracting list of library folders.
