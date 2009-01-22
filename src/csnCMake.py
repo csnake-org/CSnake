@@ -59,12 +59,16 @@ class Writer:
         the dependency projects are already included).
         """
         for project in self.project.dependenciesManager.ProjectsToUse():
-            self.file.write( "\n# use %s\n" % (project.name) )
-            self.file.write( "IF( NOT AlreadyUsing%s )\n" % (project.name) )
-            self.file.write( "SET( AlreadyUsing%s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
-            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(_public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())) ))
+            public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())
+            includeGuard = "AlreadyUsing%s" % project.name
+            if not public:
+                includeGuard += "Private"
+            self.file.write( "\n# use %s\n" % project.name )
+            self.file.write( "IF( NOT %s)\n" % includeGuard )
+            self.file.write( "SET( %s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % includeGuard )
+            self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
-            self.file.write( "ENDIF( NOT AlreadyUsing%s )\n" % (project.name) )
+            self.file.write( "ENDIF( NOT %s )\n" % includeGuard )
     
     def __CreateCMakeSection_SourceGroups(self):
         """ Create source groups in the CMakeLists.txt """
@@ -181,6 +185,7 @@ class Writer:
         if _writeInstallCommands:
             for project in self.project.GetProjects(_recursive = True, _includeSelf = True):
                 self.file.write( "SET( AlreadyUsing%s FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
+                self.file.write( "SET( AlreadyUsing%sPrivate FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
         self.__CreateCMakeSections()
         self.__WriteCommandsToGenerate(_generatedProjects)
         self.__WriteDependencyCommands(_requiredProjects)
