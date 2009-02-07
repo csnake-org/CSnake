@@ -4,7 +4,7 @@ import re
 
 latestFileFormatVersion = 2.0
 
-class Context:
+class Context(object):
     """
     Contains configuration settings such as source folder/build folder/etc.
     kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
