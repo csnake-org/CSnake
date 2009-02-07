@@ -122,13 +122,13 @@ class ControlBinder:
         return labels
     
     def AddTextControl(self, control, buddyClass = None, buddyField = None, isFilename = False):
-        self.controls.append(TextControl(self, control, self.__GetLabels(), buddyClass, buddyField))
+        self.controls.append(TextControl(self, control, self.__GetLabels(isFilename), buddyClass, buddyField))
 
     def AddComboBox(self, control, valueListFunctor, buddyClass = None, buddyField = None, isFilename = False):
-        self.controls.append(ComboBoxControl(self, control, valueListFunctor, self.__GetLabels(), buddyClass, buddyField))
+        self.controls.append(ComboBoxControl(self, control, valueListFunctor, self.__GetLabels(isFilename), buddyClass, buddyField))
 
     def AddListBox(self, control, buddyClass = None, buddyField = None, isFilename = False):
-        self.controls.append(ListBoxControl(self, control, self.__GetLabels(), buddyClass, buddyField))
+        self.controls.append(ListBoxControl(self, control, self.__GetLabels(isFilename), buddyClass, buddyField))
 
     def AddCheckBox(self, control, buddyClass = None, buddyField = None):
         self.controls.append(CheckBoxControl(self, control, self.__GetLabels(), buddyClass, buddyField))
