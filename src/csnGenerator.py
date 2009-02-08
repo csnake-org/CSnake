@@ -112,6 +112,7 @@ class Generator:
 
         _targetProject.dependenciesManager.isTopLevel = _generatedList is None
         if _targetProject.dependenciesManager.isTopLevel:
+            _targetProject.installManager.ResolvePathsOfFilesToInstall()
             _generatedList = []
 
         # assert that this project is not filtered
