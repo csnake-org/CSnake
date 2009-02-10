@@ -69,7 +69,7 @@ class Manager:
         for source in self.testProject.GetSources():
             if os.path.splitext(source)[1] in (".h", ".hpp"):
                 command += "\"%s\"" % source
-        self.testProject.AddRule("Create test runner", command)
+        self.holdingProject.AddRule("Create test runner", command)
         
         if not _dependencies is None:
             self.testProject.AddProjects(_dependencies)
