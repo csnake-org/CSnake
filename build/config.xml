@@ -49,7 +49,10 @@ Cruise Control project configuration file.
       </ant>
     </schedule>
 
-	  <!-- Publishers are run *after* a build completes -->
+    <!-- Use the svn revision in the build number -->
+    <svnlabelincrementer workingcopypath="${project.source_path}" />
+
+	<!-- Publishers are run *after* a build completes -->
     <publishers>
       <!-- Email to interested persons -->
       <htmlemail mailhost="mx.upf.edu"
