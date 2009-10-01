@@ -34,15 +34,19 @@ class SelectFolderCallback:
     Lets the user choose a path, then calls 'callback' to set the path value in the domain layer, 
     and calls app.UpdateGUIAndSaveContextAndOptions.
     """
-    def __init__(self, message, callback, app):
+    def __init__(self, message, callbackGet, callbackSet, app):
         self.message = message
-        self.callback = callback
+        self.callbackGet = callbackGet
+        self.callbackSet = callbackSet
         self.app = app
         
     def __call__(self, event = None):
-        dlg = wx.DirDialog(None, self.message)
+        oldValue = self.callbackGet()
+        
+        dlg = wx.DirDialog(None, self.message, oldValue, wx.DD_DIR_MUST_EXIST)
+        
         if dlg.ShowModal() == wx.ID_OK:
-            self.callback(dlg.GetPath().replace("\\", "/"))
+            self.callbackSet(dlg.GetPath().replace("\\", "/"))
         self.app.UpdateGUIAndSaveContextAndOptions()
         
 class CSnakeGUIApp(wx.App):
@@ -88,12 +92,12 @@ class CSnakeGUIApp(wx.App):
         self.panelSelectProjects = xrc.XRCCTRL(self.frame, "panelSelectProjects")
         self.statusBar = xrc.XRCCTRL(self.frame, "statusBar")
 
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.GetInstallFolder, self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.GetThirdPartyRootFolder, self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.GetThirdPartyBuildFolder, self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
@@ -344,7 +348,16 @@ class CSnakeGUIApp(wx.App):
         """
         Select file containing the project that should be configured.
         """
-        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "*.py")
+        # Set path of that file that was selected before
+        oldValue = self.context.csnakeFile
+        if oldValue == "":
+            oldPath = ""
+        else:
+            oldPathAndFilenameSplit = oldValue.rsplit("/", 1)
+            oldPath = oldPathAndFilenameSplit[0] + "/"
+        
+        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "Python source files (*.py)|*.py", defaultDir = oldPath, defaultFile = oldValue)
+        
         if dlg.ShowModal() == wx.ID_OK:
             self.context.csnakeFile = dlg.GetPath()
             self.UpdateGUIAndSaveContextAndOptions()
@@ -352,23 +365,44 @@ class CSnakeGUIApp(wx.App):
     def SetBuildFolder(self, folder):
         self.context.buildFolder = folder
         
+    def GetBuildFolder(self):
+        return self.context.buildFolder
+        
     def SetInstallFolder(self, folder):
         self.context.installFolder = folder
+
+    def GetInstallFolder(self):
+        return self.context.installFolder
         
     def SetThirdPartyRootFolder(self, folder):
         self.context.thirdPartyRootFolder = folder
+    
+    def GetThirdPartyRootFolder(self):
+        return self.context.thirdPartyRootFolder
         
     def SetThirdPartyBuildFolder(self, folder):
         self.context.thirdPartyBuildFolder = folder
         
+    def GetThirdPartyBuildFolder(self):
+        return self.context.thirdPartyBuildFolder
+        
     def SetKDevelopProjectFolder(self, folder):
         self.context.kdevelopProjectFolder = folder
+        
+    def GetKDevelopProjectFolder(self):
+        return self.context.kdevelopProjectFolder
             
     def AddRootFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Add folder where CSnake files must be searched to context.rootFolders.
         """
         self.context.rootFolders.append(folder)
+    
+    def GetLastRootFolder(self):
+        if len(self.context.rootFolders) > 0:
+            return self.context.rootFolders[len(self.context.rootFolders)-1]
+        else:
+            return ""
 
     def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
