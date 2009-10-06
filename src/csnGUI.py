@@ -92,23 +92,15 @@ class CSnakeGUIApp(wx.App):
         self.panelSelectProjects = xrc.XRCCTRL(self.frame, "panelSelectProjects")
         self.statusBar = xrc.XRCCTRL(self.frame, "statusBar")
 
-<<<<<<< .mine
         self.panelContext = xrc.XRCCTRL(self.frame, "panelContext")
-
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
-=======
+		
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.GetInstallFolder, self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.GetThirdPartyRootFolder, self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.GetThirdPartyBuildFolder, self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
->>>>>>> .r388
+
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
