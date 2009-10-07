@@ -1,5 +1,6 @@
 import csnUtility
 import os
+import csnProject
 
 class Writer:
     def __init__(self, _project):
@@ -158,11 +159,29 @@ class Writer:
                     continue
                 targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
             self.file.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.project.name, targetLinkLibraries) )
+
+    def __CreateCMakePrecompiledHeaderPre(self):
+            if self.project.compileManager.precompiledHeader != "":
+				self.file.write("\n#Adding CMake PrecompiledHeader Pre\n")
+				self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.thirdPartyRootFolder )
+				self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+            
+				#Add precompiled header to sources. This file is generated 
+				# after executing CMake, so it doens't exists at the begining
+				precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
+				self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0)
         
+    def __CreateCMakePrecompiledHeaderPost(self):
+            if self.project.compileManager.precompiledHeader != "":
+				self.file.write("\n#Adding CMake PrecompiledHeader Post\n")
+				self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+
     def __CreateCMakeSections(self):
         """ Writes different CMake sections for this project to the file f. """
     
         self.__CreateCMakeSection_IncludeConfigAndUseFiles()
+
+        self.__CreateCMakePrecompiledHeaderPre()
         self.__CreateCMakeSection_SourceGroups()
         cmakeMocInputVar = self.__CreateCMakeSection_MocRules()
         (cmakeUIHInputVar, cmakeUICppInputVar) = self.__CreateCMakeSection_UicRules()
@@ -174,6 +193,7 @@ class Writer:
         self.__CreateCMakeSection_Definitions()
         self.__CreateCMakeSection_InstallRules()
         self.__CreateCMakeSection_Rules()
+        self.__CreateCMakePrecompiledHeaderPost()
     
     def __CloseFile(self):
         self.file.close()
@@ -246,3 +266,4 @@ class Writer:
         # write definitions     
         if len(self.project.compileManager.public.definitions):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.public.definitions) )
+
