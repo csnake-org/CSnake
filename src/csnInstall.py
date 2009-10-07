@@ -71,6 +71,9 @@ class Manager:
         """
         result = True
         self.ResolvePathsOfFilesToInstall()
+        
+        logFilename = "%s/Install.log" % self.project.pathsManager.GetBuildFolder()
+        f = open(logFilename, 'w')
 
         for mode in ("Debug", "Release"):
             outputFolder = self.project.context.GetOutputFolder(mode)
@@ -87,4 +90,9 @@ class Manager:
                         result = fileResult and result
                         if not fileResult:
                             print "Failed to copy %s to %s\n" % (file, absLocation)
+                        else:
+                            message = "copied %s to %s\n" % (file, absLocation)
+                            f.write( message )
+                            
+        f.close()
         return result
