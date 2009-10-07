@@ -370,8 +370,9 @@ class CSnakeGUIApp(wx.App):
         else:
             oldPathAndFilenameSplit = oldValue.rsplit("/", 1)
             oldPath = oldPathAndFilenameSplit[0] + "/"
-        
-        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "Python source files (*.py)|*.py", defaultDir = oldPath, defaultFile = oldValue)
+            oldValue=oldPathAndFilenameSplit[1]
+
+        dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "Python source files (*.py)|*.py",defaultDir = oldPath, defaultFile = oldValue)
         
         if dlg.ShowModal() == wx.ID_OK:
             self.context.csnakeFile = dlg.GetPath()
