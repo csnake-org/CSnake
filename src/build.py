@@ -20,8 +20,9 @@ if context.instance == "thirdParty":
     res = handler.ConfigureThirdPartyFolder()
 else:
     res = handler.ConfigureProjectToBuildFolder( True )
+    handler.InstallBinariesToBuildFolder( )
 
-handler.InstallBinariesToBuildFolder( )
+
     
 if not res:
   sys.exit("Error configuring instance %s" % context.instance)
