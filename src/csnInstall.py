@@ -72,7 +72,8 @@ class Manager:
         result = True
         self.ResolvePathsOfFilesToInstall()
 
-        os.mkdir( self.project.pathsManager.GetBuildFolder() )
+        if not os.path.exists( self.project.pathsManager.GetBuildFolder() ):
+            os.mkdir( self.project.pathsManager.GetBuildFolder() )
         logFilename = "%s/Install.log" % self.project.pathsManager.GetBuildFolder()
         f = open(logFilename, 'w')
 
