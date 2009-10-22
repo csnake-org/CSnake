@@ -169,7 +169,7 @@ class Writer:
 				#Add precompiled header to sources. This file is generated 
 				# after executing CMake, so it doens't exists at the begining
 				precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
-				self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0)
+				self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)
         
     def __CreateCMakePrecompiledHeaderPost(self):
             if self.project.compileManager.precompiledHeader != "":
