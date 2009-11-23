@@ -26,10 +26,19 @@ class Writer:
         self.file.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
         self.file.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
 
+		# Forced for CMake 2.8
+        self.file.write( "cmake_minimum_required(VERSION 2.4.6)\n\n" )
+        
+        # Adding two types of libraries (with full path or just the name)
+        self.file.write( "if(COMMAND cmake_policy)\n" )
+        self.file.write( "  cmake_policy(SET CMP0003 NEW)\n" )
+        self.file.write( "endif(COMMAND cmake_policy)\n\n" )
+
     def __WriteCommandsToGenerate(self, projectsToGenerate):
         self.file.write( "\n" )
         for projectToGenerate in projectsToGenerate:
             self.file.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (projectToGenerate.GetBuildFolder(), projectToGenerate.GetBuildFolder()) )
+        self.file.write( "\n" )
     
     def __WriteDependencyCommands(self, dependencyProjects):
         self.file.write( "\n" )
@@ -64,12 +73,12 @@ class Writer:
             includeGuard = "AlreadyUsing%s" % project.name
             if not public:
                 includeGuard += "Private"
-            self.file.write( "\n# use %s\n" % project.name )
-            self.file.write( "IF( NOT %s)\n" % includeGuard )
-            self.file.write( "SET( %s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % includeGuard )
+            #self.file.write( "\n# use %s\n" % project.name )
+            #self.file.write( "IF( NOT %s)\n" % includeGuard )
+            #self.file.write( "SET( %s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % includeGuard )
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
-            self.file.write( "ENDIF( NOT %s )\n" % includeGuard )
+            #self.file.write( "ENDIF( NOT %s )\n" % includeGuard )
     
     def __CreateCMakeSection_SourceGroups(self):
         """ Create source groups in the CMakeLists.txt """
@@ -133,6 +142,9 @@ class Writer:
         
         elif self.project.type == "dll":
             self.file.write( "ADD_LIBRARY(%s SHARED %s %s %s %s)\n" % (self.project.name, cmakeUIHInputVar, cmakeUICppInputVar, cmakeMocInputVar, csnUtility.Join(sources, _addQuotes = 1)) )
+
+        elif self.project.type == "container":
+        	self.file.write( "# Container project\n" )
             
         else:
             raise NameError, "Unknown project type %s" % self.project.type
@@ -154,10 +166,10 @@ class Writer:
         """ Create link commands in the CMakeLists.txt """
         if self.project.type in ("dll", "executable"):
             targetLinkLibraries = ""
-            for project in self.project.GetProjects(_recursive = 1, _onlyRequiredProjects = 1, _includeSelf=1):
+            for project in self.project.GetProjects(_recursive = 1, _onlyRequiredProjects = 1, _includeSelf=0):
                 if not project.type in ("dll", "library", "executable", "prebuilt"):
                     continue
-                targetLinkLibraries = targetLinkLibraries + ("${%s_LIBRARIES} " % project.name) 
+                targetLinkLibraries = targetLinkLibraries + ("%s " % project.name) 
             self.file.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.project.name, targetLinkLibraries) )
 
     def __CreateCMakePrecompiledHeaderPre(self):
@@ -204,15 +216,18 @@ class Writer:
     def GenerateCMakeLists(self, _generatedProjects, _requiredProjects, _writeInstallCommands):
         self.__OpenFile()
         self.__WriteHeader()
-        if _writeInstallCommands:
-            for project in self.project.GetProjects(_recursive = True, _includeSelf = True):
-                self.file.write( "SET( AlreadyUsing%s FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
-                self.file.write( "SET( AlreadyUsing%sPrivate FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
-        self.__CreateCMakeSections()
+        #if _writeInstallCommands:
+        #    for project in self.project.GetProjects(_recursive = True, _includeSelf = True):
+        #        self.file.write( "SET( AlreadyUsing%s FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
+        #        self.file.write( "SET( AlreadyUsing%sPrivate FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
+
+        # wxMitkApplications is a container project that just have ADD_SUBDIRECTORY for each application
         self.__WriteCommandsToGenerate(_generatedProjects)
-        self.__WriteDependencyCommands(_requiredProjects)
-        if _writeInstallCommands:
-            self.__WriteInstallCommands()
+        if self.project.type != "container":
+            self.__CreateCMakeSections()
+            self.__WriteDependencyCommands(_requiredProjects)
+            if _writeInstallCommands:
+                self.__WriteInstallCommands()
         self.__CloseFile()
     
     def GenerateConfigFile(self, _public):

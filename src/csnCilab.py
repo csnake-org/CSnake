@@ -128,8 +128,8 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         
     csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
     if self.applicationsProject is None:
-        self.applicationsProject = csnBuild.Project(self.name + "Applications", "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
-        self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
+        self.applicationsProject = csnBuild.Project(self.name + "Applications", "container", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
+        #self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         self.applicationsProject.AddProjects([self])
         self.AddProjects([self.applicationsProject], _dependency = 0)
     AddApplications(self.applicationsProject, dependencies, _modules, "%s/Applications" % self.GetSourceRootFolder(), _pch, _holderName)
