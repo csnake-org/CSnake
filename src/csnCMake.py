@@ -165,7 +165,9 @@ class Writer:
     def __CreateCMakeSection_Link(self):
         """ Create link commands in the CMakeLists.txt """
         if self.project.type in ("dll", "executable"):
-            targetLinkLibraries = ""
+            # if the name of the project is self, use libraries to include the ones
+            # added using AddLibraries( )
+            targetLinkLibraries = ("${%s_LIBRARIES} " % self.project.name)
             for project in self.project.GetProjects(_recursive = 1, _onlyRequiredProjects = 1, _includeSelf=0):
                 if not project.type in ("dll", "library", "executable", "prebuilt"):
                     continue
