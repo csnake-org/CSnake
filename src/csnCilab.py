@@ -124,7 +124,7 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         dependencies.extend(_applicationDependenciesList)
         
     if _holderName is None:
-        _holderName = "%sApplications" % self.name
+        _holderName = "%sApp" % self.name
         
     csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
     if self.applicationsProject is None:
