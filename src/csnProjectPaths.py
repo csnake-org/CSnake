@@ -7,9 +7,9 @@ class Manager:
     def __init__(self, _project, _sourceRootFolder):
         self.project = _project
         if self.project.type == "dll":
-            self.buildSubFolder = "library/%s" % (self.project.name)
+            self.buildSubFolder = self.project.context.compiler.GetBuildSubFolder("library", self.project.name)
         else:
-            self.buildSubFolder = "%s/%s" % (self.project.type, self.project.name)
+            self.buildSubFolder = self.project.context.compiler.GetBuildSubFolder(self.project.type, self.project.name)
 
         self.configFilePath = "%s/%sConfig.cmake" % (self.buildSubFolder, self.project.name)
         self.useFilePath = "%s/Use%s.cmake" % (self.buildSubFolder, self.project.name)

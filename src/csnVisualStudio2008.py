@@ -1,31 +1,50 @@
-import csnContext
-import csnProject
+import csnCompiler
 import csnUtility
 import os
 
-class Context(csnContext.Context):
+class Compiler(csnCompiler.Compiler):
     def __init__(self):
-        csnContext.Context.__init__(self)
+        csnCompiler.Compiler.__init__(self)
         self.postProcessor = PostProcessor()
         
-    def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
-        project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
-        project.compileManager.private.definitions.append("/Zm200")        
-        return project
+    def GetCompileFlags(self):
+        return ["/Zm200"]
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
 
-    def GetOutputFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
+    def GetOutputSubFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
         Returns the folder where the compiler should place binaries for _configuration.
         The default value for _configuration returns the output folder for the current configuration.
         for storing binaries.
         """
         if _configuration == "DebugAndRelease":
-            return "%s/bin" % self.buildFolder
+            return "bin"
         else:
-            return "%s/bin/%s" % (self.buildFolder, _configuration)
+            return "bin/%s" % (_configuration)
+        
+    def GetBuildSubFolder(self, _projectType, _projectName):
+        return "%s/%s" % (_projectType, _projectName)
+        
+    def GetThirdPartySubFolder(self):
+        return ""
+    
+    def GetThirdPartyCMakeParameters(self):
+        return []
+    
+    def GetAllowedConfigurations(self):
+        return ["DebugAndRelease"]
+    
+    def GetName(self):
+        return "Visual Studio 9 2008"
+    
+    def GetPostProcessor(self):
+        return self.postProcessor
+
+class Compiler64(Compiler):
+    def GetName(self):
+        return "Visual Studio 9 2008 Win64"
         
 class PostProcessor:
     def Do(self, _project):

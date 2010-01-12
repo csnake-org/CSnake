@@ -77,7 +77,7 @@ import shutil
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.21
+version = 2.22
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
@@ -195,4 +195,7 @@ class Generator:
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
         """
         for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
-            _targetProject.context.postProcessor.Do(project)
+            postprocessor = _targetProject.context.compiler.GetPostProcessor()
+            if not (postprocessor is None):
+                _targetProject.context.compiler.GetPostProcessor().Do(project)
+

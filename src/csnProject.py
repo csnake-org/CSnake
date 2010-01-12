@@ -66,8 +66,6 @@ class GenericProject(object):
     self.filesToInstall -- Contains files to be installed in the build results folder. It has the structure filesToInstall[mode][installPath] = files.
     For example: if self.filesToInstall[\"Debug\"][\"data\"] = [\"c:/one.txt\", \"c:/two.txt\"], 
     then c:/one.txt and c:/two.txt must be installed in the data subfolder of the install folder when in debug mode.
-    self.useFilePath -- Path to the use file of the project. If it is relative, then the build folder will be prepended.
-    self.cmakeListsSubpath -- Path to the cmake file (relative to the build folder) that builds this project.
     self.projects -- Set of related project instances. These projects have been added to self using AddProjects.
     self.projectsNonRequired -- Subset of self.projects. Contains projects that self doesn't depend on.
     The project does not add a dependency on any project in this list.      

@@ -97,12 +97,12 @@ class Handler:
         """
         instance = self.__GetProjectInstance()
         
-        instance.installManager.ResolvePathsOfFilesToInstall(self.context.thirdPartyBuildFolder)
+        instance.installManager.ResolvePathsOfFilesToInstall(self.context.GetThirdPartyBuildFolder())
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
-            argList = [self.context.cmakePath, "-G", self.context.compiler, instance.GetCMakeListsFilename()]
+            argList = [self.context.cmakePath, "-G", self.context.compiler.GetName(), instance.GetCMakeListsFilename()]
             process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
             while process.poll() is None:
                 (outdata, errdata) = process.communicate()
@@ -138,11 +138,13 @@ class Handler:
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
+        #print self.context.compiler.GetName()
+        #print self.context.configurationName
         result = True
-        os.path.exists(self.context.thirdPartyBuildFolder) or os.makedirs(self.context.thirdPartyBuildFolder)
-        argList = [self.context.cmakePath, "-G", self.context.compiler, self.context.thirdPartyRootFolder]
+        os.path.exists(self.context.GetThirdPartyBuildFolder()) or os.makedirs(self.context.GetThirdPartyBuildFolder())
+        argList = [self.context.cmakePath, "-G", self.context.compiler.GetName()] + self.context.compiler.GetThirdPartyCMakeParameters() + [self.context.thirdPartyRootFolder]
         for _ in range(0, _nrOfTimes):
-            result = result and 0 == subprocess.Popen(argList, cwd = self.context.thirdPartyBuildFolder).wait() 
+            result = result and 0 == subprocess.Popen(argList, cwd = self.context.GetThirdPartyBuildFolder()).wait() 
 
         if not result:
             print "Configuration failed.\n"   
@@ -236,7 +238,7 @@ class Handler:
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
     def GetThirdPartySolutionPath(self):
-        return "%s/CILAB_TOOLKIT.sln" % (self.context.thirdPartyBuildFolder)
+        return "%s/CILAB_TOOLKIT.sln" % (self.context.GetThirdPartyBuildFolder())
     
     def UpdateRecentlyUsedCSnakeFiles(self):
         self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)

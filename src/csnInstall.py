@@ -12,7 +12,7 @@ class Manager:
         self.filesToInstall["Release"] = dict()
 
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
-        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
             
         if _location is None:

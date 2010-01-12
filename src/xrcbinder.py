@@ -78,7 +78,40 @@ class ComboBoxControl(ControlWithField):
         """ User moved from one field to the other, copy latest values to the context """
         self.UpdateBuddy()
         event.Skip()
+
+class DropDownListControl(BoundControl):
+    def __init__(self, binder, control, valueListFunctor, labels = None, buddyClass = None, buddyField = None):
+        BoundControl.__init__(self, binder, control, labels, buddyClass, buddyField)
+        self.valueListFunctor = valueListFunctor
+        control.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, control)
+        control.Bind(wx.EVT_COMBOBOX, self.OnSelectItem, control)
+    
+    def GetControlValue(self):
+        return self.control.GetValue()
+    
+    def UpdateBuddy(self):
+        self.SetBuddyValue(self.GetControlValue())
+
+    def UpdateControl(self):
+        self.control.Clear()
+        items = self.valueListFunctor()
+        value = self.GetBuddyValue()
+        self.control.SetItems(items)
+        if value in items:
+            self.control.SetValue(value)
+        elif len(items) > 0:
+            self.control.SetValue(items[0])
+            self.UpdateBuddy()
+        else:
+            self.control.SetValue("")
+            self.UpdateBuddy()
+        wx.CallAfter(self.control.SetValue, self.GetBuddyValue())
         
+    def OnSelectItem(self, event):
+        """ User moved from one field to the other, copy latest values to the context """
+        self.UpdateBuddy()
+        event.Skip()
+
 class ListBoxControl(BoundControl):
     def __init__(self, binder, control, labels = None, buddyClass = None, buddyField = None):
         BoundControl.__init__(self, binder, control, labels, buddyClass, buddyField)
@@ -126,6 +159,9 @@ class ControlBinder:
 
     def AddComboBox(self, control, valueListFunctor, buddyClass = None, buddyField = None, isFilename = False):
         self.controls.append(ComboBoxControl(self, control, valueListFunctor, self.__GetLabels(isFilename), buddyClass, buddyField))
+        
+    def AddDropDownList(self, control, valueListFunctor, buddyClass = None, buddyField = None, isFilename = False):
+        self.controls.append(DropDownListControl(self, control, valueListFunctor, self.__GetLabels(isFilename), buddyClass, buddyField))
 
     def AddListBox(self, control, buddyClass = None, buddyField = None, isFilename = False):
         self.controls.append(ListBoxControl(self, control, self.__GetLabels(isFilename), buddyClass, buddyField))
@@ -163,6 +199,13 @@ class Binder(ControlBinder):
         setattr(self.target, controlName, xrc.XRCCTRL(container, controlName))
         control = getattr(self.target, controlName)
         ControlBinder.AddComboBox(self, control, valueListFunctor, buddyClass, buddyField, isFilename)
+        
+    def AddDropDownList(self, controlName, valueListFunctor, container = None, buddyClass = None, buddyField = None, isFilename = False):
+        if container is None:
+            container = self.defaultContainer
+        setattr(self.target, controlName, xrc.XRCCTRL(container, controlName))
+        control = getattr(self.target, controlName)
+        ControlBinder.AddDropDownList(self, control, valueListFunctor, buddyClass, buddyField, isFilename)
 
     def AddListBox(self, controlName, container = None, buddyClass = None, buddyField = None, isFilename = False):
         if container is None:

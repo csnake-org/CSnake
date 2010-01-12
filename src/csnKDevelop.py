@@ -1,33 +1,70 @@
 import csnContext
-import csnProject
+import csnCompiler
 import os
 import shutil
 import csnUtility
 
-class Context(csnContext.Context):
+class Common(csnCompiler.Compiler):
     def __init__(self):
-        csnContext.Context.__init__(self)
-        self.kdevelopProjectFolder = ""    
-        self.basicFields.append("kdevelopProjectFolder")
-        self.postProcessor = PostProcessor()
+        csnCompiler.Compiler.__init__(self)   
+        #self.basicFields.append("kdevelopProjectFolder")
         
-    def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
-        project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
-	project.compileManager.private.definitions.append("-fPIC")
-        return project
+    def GetCompileFlags(self):
+        return ["-fPIC"]
         
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
 
-    def GetOutputFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
+    def GetOutputSubFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
         Returns the folder where the compiler places binaries for _configuration.
         The default value for _configuration returns the output folder for the current configuration.
         for storing binaries.
         """
-        return "%s/bin/%s" % (self.buildFolder, _configuration)
+        return "bin/%s" % (_configuration)
+    
+    def GetBuildSubFolder(self, _projectType, _projectName):
+        return "%s/%s/%s" % (_projectType, self.context.configurationName, _projectName)
+
+    def GetThirdPartySubFolder(self):
+        return self.context.configurationName
+    
+    def GetThirdPartyCMakeParameters(self):
+        return [
+            "-D", "CMAKE_BUILD_TYPE=" + self.context.configurationName,
+            "-D", "CMAKE_C_FLAGS=-fPIC",
+            "-D", "CMAKE_CXX_FLAGS=-fPIC"
+        ]
+    
+    def GetThirdPartyBuildFolder(self):
+        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
+        return self.context.thirdPartyBuildFolder + "/" + self.context.configurationName
+    
+    def GetAllowedConfigurations(self):
+        return ["Debug", "Release"]
+
+class KDevelop(Common):
+    def __init__(self):
+        Common.__init__(self)
+        self.postProcessor = KDevelopPostProcessor()
+
+    def GetName(self):
+        return "KDevelop3"
+    
+    def GetPostProcessor(self):
+        return self.postProcessor
+
+class Makefile(Common):
+    def __init__(self):
+        Common.__init__(self)
+
+    def GetName(self):
+        return "Unix Makefiles"
+    
+    def GetPostProcessor(self):
+        return None
         
-class PostProcessor:
+class KDevelopPostProcessor:
     def __GetKDevelopProjectFilename(self, _project, _folder = None):
         if _folder is None:
             return "%s/%s.kdevelop" % (_project.GetBuildFolder(), _project.name)
@@ -48,7 +85,9 @@ class PostProcessor:
 
         if not os.path.exists(self.__GetKDevelopProjectFilename(_project)):
             return
-            
+        
+        # Postprocess "*.kdevelop.filelist" file (KDevelop filelist)
+        
         f = open(self.__GetFilelistFilename(_project), 'w')
         for project in _project.dependenciesManager.ProjectsToUse():
             for source in project.GetSources():
@@ -59,15 +98,24 @@ class PostProcessor:
         
         csnUtility.ReplaceDestinationFileIfDifferent(self.__GetFilelistFilename(_project), self.__GetFilelistFilename(_project, kdevelopProjectFolder))
         
+        # Postprocess "*.kdevelop" file (KDevelop project)
+        
         f = open(self.__GetKDevelopProjectFilename(_project), 'r')
         kdevelopProjectText = f.read()
         f.close()
+        
         searchText = "<projectdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<projectdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
+        
         searchText = "<filelistdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<filelistdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
+        
+        #searchText = "<mainprogram>%s" % _project.GetBuildFolder()
+        #replaceText = "<mainprogram>%s" % _project.context.GetOutputFolder(_project.context.configurationName)
+        #kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
+        
         if csnUtility.FileToString(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder)) != kdevelopProjectText:
             f = open(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder), 'w')
             f.write(kdevelopProjectText)

@@ -75,7 +75,7 @@ class Manager:
         Added include paths must exist on the filesystem.
         If an item in _listOfIncludeFolders has wildcards, all matching folders will be added to the list.
         """
-        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         for includeFolder in _listOfIncludeFolders:
             for folder in self.project.Glob(includeFolder):
@@ -103,7 +103,7 @@ class Manager:
         _debug -- Only for the Debug configuration.
         _release  -- Only for the Release configuration.
         """
-        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
             
         assert not( _debugOnly and _releaseOnly)
@@ -140,7 +140,7 @@ class Manager:
         _WIN32 -- Only for Windows platforms.
         _NOT_WIN32 -- Only for non-Windows platforms.
         """
-        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
             return
         self.GetConfig(_private).definitions.extend(_listOfDefinitions)
 

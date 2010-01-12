@@ -80,8 +80,8 @@ class CSnakeGUIApp(wx.App):
         self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "idePath", isFilename = True)
         self.binder.AddComboBox("cmbCSnakeFile", valueListFunctor = self.GetCSnakeFileComboBoxItems, buddyClass = "context", buddyField = "csnakeFile", isFilename = True)
         self.binder.AddComboBox("cmbInstance", valueListFunctor = self.GetInstanceComboBoxItems, buddyClass = "context", buddyField = "instance")
-        self.binder.AddComboBox("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "compiler")
-        self.binder.AddComboBox("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "configurationName")
+        self.binder.AddDropDownList("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "compilername")
+        self.binder.AddDropDownList("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "configurationName")
         self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "rootFolders", isFilename = True)
         self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "askToLaunchIDE")
         
@@ -120,6 +120,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_BUTTON, self.OnInstallFilesToBuildFolder, id=xrc.XRCID("btnInstallFilesToBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnLaunchIDE, id=xrc.XRCID("btnLaunchIDE"))
         self.frame.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnNoteBookPageChanged, id=xrc.XRCID("noteBook"))
+        self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelectCompiler, id=xrc.XRCID("cmbCompiler"))
         
     def OnNoteBookPageChanged(self, event):
         if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
@@ -458,15 +459,12 @@ class CSnakeGUIApp(wx.App):
         result.append("Visual Studio 9 2008")
         result.append("Visual Studio 9 2008 Win64")
         result.append("KDevelop3")
-        result.append("Unix Makefiles")        
+        result.append("Unix Makefiles")
         return result
         
     def GetBuildTypeComboBoxItems(self):
-        result = []
-        result.append("DebugAndRelease")
-        result.append("Release")
-        result.append("Debug")
-        return result
+        #print self.context.compiler.GetAllowedConfigurations()
+        return self.context.compiler.GetAllowedConfigurations()
     
     def GetCSnakeFileComboBoxItems(self):
         result = list()
@@ -481,7 +479,7 @@ class CSnakeGUIApp(wx.App):
     def UpdateGUIAndSaveContextAndOptions(self):
         """ Refreshes the GUI based on the current context. Also saves the current context to the contextFilename """
         self.binder.UpdateControls()
-        self.panelKDevelop.Show( self.context.compiler in ("KDevelop3", "Unix Makefiles") )
+        self.panelKDevelop.Show( self.context.compiler.GetName() in ("KDevelop3") )
         self.SaveContextAndOptions()
         self.frame.Layout()
         self.frame.Refresh()
@@ -502,16 +500,16 @@ class CSnakeGUIApp(wx.App):
             self.Error("CSnakeGUI could not find context file %s" % self.options.contextFilename)
             return False
         
-        try:
-            if not self.converter.Convert(self.options.contextFilename):
-                self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.contextFilename)
-                return False
-            self.SetContext(self.handler.LoadContext(contextFilename))
-            self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
-            self.UpdateGUIAndSaveContextAndOptions()
-        except:
+        #try:
+        if not self.converter.Convert(self.options.contextFilename):
             self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.contextFilename)
             return False
+        self.SetContext(self.handler.LoadContext(contextFilename))
+        self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+        self.UpdateGUIAndSaveContextAndOptions()
+        #except:
+        #    self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.contextFilename)
+        #    return False
 
         return True
 
@@ -670,6 +668,12 @@ class CSnakeGUIApp(wx.App):
                 self.context.filter.remove(category)
             if not self.projectCheckBoxes[category].GetValue():
                 self.context.filter.append(category)
+                
+    def OnSelectCompiler(self, event):
+        #self.binder.UpdateControls()
+        #self.SetContext(csnContext.FindCompiler(self.context.compiler))
+        self.context.FindCompiler()
+        self.UpdateGUIAndSaveContextAndOptions()
 
     def RefreshProjects(self, event):
         self.SelectProjects(forceRefresh=True)

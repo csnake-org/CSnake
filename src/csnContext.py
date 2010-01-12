@@ -1,6 +1,9 @@
 import ConfigParser
 import OrderedSet
 import re
+import csnProject
+import os
+
 
 latestFileFormatVersion = 2.0
 
@@ -26,18 +29,51 @@ class Context(object):
         self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
         self.configurationName = "DebugAndRelease"
-        self.compiler = "Visual Studio 7 .NET 2003"
+        self.compilername = "Visual Studio 7 .NET 2003"
+        self.compiler = None
         self.cmakePath = "CMake"    
         self.subCategoriesOf = dict()
         self.pythonPath = "D:/Python24/python.exe"
         self.idePath = ""
+        self.kdevelopProjectFolder = ""
             
         self.basicFields = [
             "buildFolder", "installFolder", "prebuiltBinariesFolder", "thirdPartyBuildFolder", "csnakeFile",
-            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compiler",
-            "cmakePath", "pythonPath", "idePath"
+            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compilername",
+            "cmakePath", "pythonPath", "idePath", "kdevelopProjectFolder"
         ]
-            
+        
+        self.compilermap = {}
+        self.RegisterCompiler(csnKDevelop.KDevelop())
+        self.RegisterCompiler(csnKDevelop.Makefile())
+        self.RegisterCompiler(csnVisualStudio2003.Compiler())
+        self.RegisterCompiler(csnVisualStudio2005.Compiler())
+        self.RegisterCompiler(csnVisualStudio2005.Compiler64())
+        self.RegisterCompiler(csnVisualStudio2008.Compiler())
+        self.RegisterCompiler(csnVisualStudio2008.Compiler64())
+    
+    def RegisterCompiler(self, compiler):
+        self.compilermap[compiler.GetName()] = compiler
+        compiler.context = self
+    
+    def LoadCompilerName(self, parser):
+        activateOutput = False
+        # temporary workaround to support old versions of the context file
+        compilerfieldnames = ["compilername", "compiler"]
+        for compilerfieldname in compilerfieldnames:
+            try:
+                if activateOutput:
+                    print "Try with \"%s\"" % compilerfieldname
+                self.compilername = parser.get("CSnake", compilerfieldname)
+                if activateOutput:
+                    print "Worked"
+                return
+            except:
+                activateOutput = True
+                print "Reading field \"%s\" failed!" % compilerfieldname
+        if activateOutput:
+            print "Stop trying and keep default value"
+    
     def Load(self, filename):
         try:
             parser = ConfigParser.ConfigParser()
@@ -45,6 +81,12 @@ class Context(object):
             self.__LoadBasicFields(parser)
             self.__LoadRootFolders(parser)
             self.__LoadRecentlyUsedCSnakeFiles(parser)
+            
+            # Temporary workaround to support old versions of the context file;
+            # later this line as well as the function "LoadCompilerName" can be removed
+            self.LoadCompilerName(parser)
+            
+            self.FindCompiler()
             return 1
         except:
             return 0
@@ -153,34 +195,36 @@ class Context(object):
         self.subCategoriesOf[super].add(sub)
         
     def GetThirdPartyBuildFolder(self):
-        return self.thirdPartyBuildFolder
-        
-    thirdPartyBinFolder = property(GetThirdPartyBuildFolder) # for backward compatibility
+        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
+        return self.thirdPartyBuildFolder + "/" + self.compiler.GetThirdPartySubFolder()
+    
+    def FindCompiler(self):
+        #print "FindCompiler"
+        if self.compiler is None or self.compiler.GetName() != self.compilername:
+            #print "FindCompiler: Update"
+            self.compiler = self.compilermap[self.compilername]
+            self.compilername = self.compiler.GetName()
+    
+    def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
+        project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
+        for flag in self.compiler.GetCompileFlags():
+            project.compileManager.private.definitions.append(flag)
+        return project
+    
+    def GetOutputFolder(self, mode):
+        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
+        return self.buildFolder + "/" + self.compiler.GetOutputSubFolder(mode)
+    
+    #thirdPartyBinFolder = property(GetThirdPartyBuildFolder) # for backward compatibility
 
 import csnKDevelop
 import csnVisualStudio2003
 import csnVisualStudio2005
 import csnVisualStudio2008
-import csnVisualStudio2008x64
         
 def Load(filename):
-    parser = ConfigParser.ConfigParser()
-    parser.read([filename])
-    compiler = parser.get("CSnake", "compiler")
-    context = None
-    if compiler in ("KDevelop3", "Unix Makefiles"):
-        context = csnKDevelop.Context()
-    elif compiler == "Visual Studio 7 .NET 2003":
-        context = csnVisualStudio2003.Context()
-    elif compiler in ("Visual Studio 8 2005", "Visual Studio 8 2005 Win64"):
-        context = csnVisualStudio2005.Context()
-    elif compiler == "Visual Studio 9 2008 Win64":
-        context = csnVisualStudio2008x64.Context()
-    elif compiler == "Visual Studio 9 2008":
-        context = csnVisualStudio2008.Context()
-    else:
-        assert False, "\n\nError: Unknown compiler %s in context %s\n" % (compiler, filename)
-        
+    context = Context()
     okay = context.Load(filename)
     assert okay, "Error loading from %s\n" % filename
     return context
+    

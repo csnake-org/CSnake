@@ -182,7 +182,7 @@ class Writer:
             
 				#Add precompiled header to sources. This file is generated for windows only 
 				# after executing CMake, so it doens't exists at the begining
-				if not self.project.context.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
+				if not self.project.context.compiler.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
 					return
 				precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
 				self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)
