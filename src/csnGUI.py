@@ -159,6 +159,8 @@ class CSnakeGUIApp(wx.App):
         if self.LoadContext(contextToLoad):
             self.BackupContextFile()
 
+        self.panelSelectProjects.SetScrollRate(25, 25)
+
         self.UpdateGUIAndSaveContextAndOptions()
         
     def Warn(self, message):
