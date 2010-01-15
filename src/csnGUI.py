@@ -645,6 +645,7 @@ class CSnakeGUIApp(wx.App):
             
         self.panelSelectProjects.GetSizer().Add(self.btnForceRefreshProjects, 0, 0, 3)
         self.panelSelectProjects.Layout()
+        self.panelSelectProjects.FitInside()
         self.SetStatus("")
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
