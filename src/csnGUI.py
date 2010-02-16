@@ -462,6 +462,7 @@ class CSnakeGUIApp(wx.App):
         result.append("Visual Studio 9 2008 Win64")
         result.append("KDevelop3")
         result.append("Unix Makefiles")
+        result.append("Eclipse CDT4 - Unix Makefiles")
         return result
         
     def GetBuildTypeComboBoxItems(self):

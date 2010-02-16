@@ -3,49 +3,32 @@ import csnCompiler
 import os
 import shutil
 import csnUtility
+from csnLinuxCommon import LinuxCommon
 
-class Common(csnCompiler.Compiler):
+
+class Makefile(LinuxCommon):
     def __init__(self):
-        csnCompiler.Compiler.__init__(self)   
-        #self.basicFields.append("kdevelopProjectFolder")
-        
-    def GetCompileFlags(self):
-        return ["-fPIC"]
-        
-    def IsForPlatform(self, _WIN32, _NOT_WIN32):
-        return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
+        LinuxCommon.__init__(self)
 
-    def GetOutputSubFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
-        """
-        Returns the folder where the compiler places binaries for _configuration.
-        The default value for _configuration returns the output folder for the current configuration.
-        for storing binaries.
-        """
-        return "bin/%s" % (_configuration)
+    def GetName(self):
+        return "Unix Makefiles"
     
-    def GetBuildSubFolder(self, _projectType, _projectName):
-        return "%s/%s/%s" % (_projectType, self.context.configurationName, _projectName)
+    def GetPostProcessor(self):
+        return None
 
-    def GetThirdPartySubFolder(self):
-        return self.context.configurationName
-    
-    def GetThirdPartyCMakeParameters(self):
-        return [
-            "-D", "CMAKE_BUILD_TYPE=" + self.context.configurationName,
-            "-D", "CMAKE_C_FLAGS=-fPIC",
-            "-D", "CMAKE_CXX_FLAGS=-fPIC"
-        ]
-    
-    def GetThirdPartyBuildFolder(self):
-        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
-        return self.context.thirdPartyBuildFolder + "/" + self.context.configurationName
-    
-    def GetAllowedConfigurations(self):
-        return ["Debug", "Release"]
-
-class KDevelop(Common):
+class Eclipse(LinuxCommon):
     def __init__(self):
-        Common.__init__(self)
+        LinuxCommon.__init__(self)
+
+    def GetName(self):
+        return "Eclipse CDT4 - Unix Makefiles"
+    
+    def GetPostProcessor(self):
+        return None
+
+class KDevelop(LinuxCommon):
+    def __init__(self):
+        LinuxCommon.__init__(self)
         self.postProcessor = KDevelopPostProcessor()
 
     def GetName(self):
@@ -53,16 +36,6 @@ class KDevelop(Common):
     
     def GetPostProcessor(self):
         return self.postProcessor
-
-class Makefile(Common):
-    def __init__(self):
-        Common.__init__(self)
-
-    def GetName(self):
-        return "Unix Makefiles"
-    
-    def GetPostProcessor(self):
-        return None
         
 class KDevelopPostProcessor:
     def __GetKDevelopProjectFilename(self, _project, _folder = None):

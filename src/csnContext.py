@@ -46,10 +46,11 @@ class Context(object):
         self.compilermap = {}
         self.RegisterCompiler(csnKDevelop.KDevelop())
         self.RegisterCompiler(csnKDevelop.Makefile())
+        self.RegisterCompiler(csnKDevelop.Eclipse())
         self.RegisterCompiler(csnVisualStudio2003.Compiler())
-        self.RegisterCompiler(csnVisualStudio2005.Compiler())
+        self.RegisterCompiler(csnVisualStudio2005.Compiler32())
         self.RegisterCompiler(csnVisualStudio2005.Compiler64())
-        self.RegisterCompiler(csnVisualStudio2008.Compiler())
+        self.RegisterCompiler(csnVisualStudio2008.Compiler32())
         self.RegisterCompiler(csnVisualStudio2008.Compiler64())
     
     def RegisterCompiler(self, compiler):

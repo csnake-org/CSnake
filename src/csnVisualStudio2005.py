@@ -36,11 +36,12 @@ class Compiler(csnCompiler.Compiler):
     def GetAllowedConfigurations(self):
         return ["DebugAndRelease"]
     
-    def GetName(self):
-        return "Visual Studio 8 2005"
-    
     def GetPostProcessor(self):
         return self.postProcessor
+
+class Compiler32(Compiler):
+    def GetName(self):
+        return "Visual Studio 8 2005"
 
 class Compiler64(Compiler):
     def GetName(self):
