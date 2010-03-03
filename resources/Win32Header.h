@@ -23,6 +23,8 @@ the dll), imported (in case of using the dll) or neither (in case of building an
 #if defined(_MSC_VER)
 // 'identifier' : identifier was truncated to 'number' characters in the debug information
 #pragma warning ( disable : 4786 ) 
+// Disables warning C4675: resolved overload was found by argument-dependent lookup
+#pragma warning ( disable : 4675 ) 
 #endif
 
 #undef ${PROJECTNAME_UPPERCASE}_EXPORT
