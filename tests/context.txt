@@ -1,0 +1,21 @@
+[CSnake]
+installfolder = E:/devel/src/csnake/CSnake/tests/install
+filter = 
+testrunnertemplate = normalRunner.tpl
+buildfolder = E:/devel/src/csnake/CSnake/tests/bin
+csnakefile = E:/devel/src/csnake/CSnake/tests/src/DummyExe/csnDummyExe.py
+idepath = D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe
+compilername = Visual Studio 9 2008 Win64
+prebuiltbinariesfolder = 
+instance = dummyExe
+configurationname = DebugAndRelease
+version = 2.0
+thirdpartyrootfolder = E:/devel/src/csnake/CSnake/tests/src/thirdParty
+pythonpath = C:/Program Files (x86)/Python 2.4/python.exe
+kdevelopprojectfolder = 
+thirdpartybuildfolder = E:/devel/src/csnake/CSnake/tests/bin/thirdParty
+cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
+
+[RootFolders]
+rootfolder0 = E:/devel/src/csnake/CSnake/tests/src
+
