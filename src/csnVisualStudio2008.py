@@ -1,5 +1,4 @@
 import csnCompiler
-import csnUtility
 import os
 
 class Compiler(csnCompiler.Compiler):
@@ -53,7 +52,6 @@ class PostProcessor:
         Post processes the vcproj file generated for _project.
         """
         # vc proj to patch
-        vcprojFilename = "%s/%s.vcproj" % (_project.GetBuildFolder(), _project.name)
         if not _project.dependenciesManager.isTopLevel:
             slnFilename = "%s/%s.sln" % (_project.GetBuildFolder(), _project.name)
             if os.path.exists(slnFilename):

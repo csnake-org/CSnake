@@ -1,7 +1,6 @@
 import glob
 import os
 import csnUtility
-import inspect
 
 class Manager:
     def __init__(self, _project, _sourceRootFolder):

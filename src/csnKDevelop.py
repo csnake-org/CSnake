@@ -1,7 +1,4 @@
-import csnContext
-import csnCompiler
 import os
-import shutil
 import csnUtility
 from csnLinuxCommon import LinuxCommon
 

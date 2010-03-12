@@ -6,10 +6,7 @@ import csnCompile
 import csnTests
 import inspect
 import os.path
-import glob
 import types
-import GlobDirectoryWalker
-import OrderedSet
 import unittest
 
 globalCurrentContext = None

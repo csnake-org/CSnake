@@ -1,6 +1,4 @@
 import csnUtility
-import csnCilab # do not remove, this file needs to be included in the CSnake distribution
-import csnBuild
 import csnContext
 import csnGenerator
 import csnProject
@@ -18,9 +16,6 @@ class RootNotFound(IOError):
     pass
 
 class NotARoot(IOError):
-    pass
-
-class TypeError(StandardError):
     pass
 
 class RollbackHandler:

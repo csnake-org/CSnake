@@ -1,6 +1,4 @@
 import csnGUIHandler
-import csnGenerator
-import csnContext
 import sys
 from optparse import OptionParser
 

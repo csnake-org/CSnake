@@ -4,7 +4,6 @@ import sys
 import GlobDirectoryWalker
 import shutil
 import inspect
-import pprint
 
 def NormalizePath(path):
     return os.path.normpath(path).replace("\\", "/")
@@ -45,9 +44,9 @@ def GetRootOfCSnake():
     return rootOfCSnake
     
 def Log(logString):
-        f = open("F:\\log.txt", 'a')
-        f.write(logString)
-        f.close()
+    f = open("F:\\log.txt", 'a')
+    f.write(logString)
+    f.close()
 
 def HasBackSlash(_path):
     p = re.compile(r"[^\\]*\\")

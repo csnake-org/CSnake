@@ -2,7 +2,6 @@ import ConfigParser
 import OrderedSet
 import re
 import csnProject
-import os
 
 
 latestFileFormatVersion = 2.0

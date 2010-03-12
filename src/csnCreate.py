@@ -1,3 +1,6 @@
+import os
+from csnGUIHandler import NotARoot, RootNotFound
+
 def CreateCSnakeFolder(_folder, _projectRoot):
     # check that project root exists
     if not os.path.exists(_projectRoot):

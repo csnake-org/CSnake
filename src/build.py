@@ -25,4 +25,4 @@ else:
 
     
 if not res:
-  sys.exit("Error configuring instance %s" % context.instance)
+    sys.exit("Error configuring instance %s" % context.instance)

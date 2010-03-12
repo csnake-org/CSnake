@@ -5,8 +5,6 @@ import warnings
 import sys
 import types
 import OrderedSet
-import re
-import shutil
 
 # General documentation
 #

@@ -60,7 +60,7 @@ class CSnakeGUIApp(wx.App):
         self.res = xrc.XmlResource(xrcFile)
         self.InitFrame()
         self.InitMenu()
-        self.InitOtherGUIStuff()		
+        self.InitOtherGUIStuff()
         self.Initialize()
         self.SetTopWindow(self.frame)
         return 1
@@ -93,7 +93,7 @@ class CSnakeGUIApp(wx.App):
         self.statusBar = xrc.XRCCTRL(self.frame, "statusBar")
 
         self.panelContext = xrc.XRCCTRL(self.frame, "panelContext")
-		
+
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.GetInstallFolder, self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.GetThirdPartyRootFolder, self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
@@ -137,7 +137,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_CLOSE, self.OnExit, self.frame)
         
         #self.frame.GetSizer().Remove(xrc.XRCID(self.frame, "boxInstallFolder"))
-        self.frame.Show()		
+        self.frame.Show()
         
     def Initialize(self):
         """

@@ -1,8 +1,4 @@
-import csnContext
 import csnCompiler
-import os
-import shutil
-import csnUtility
 
 class LinuxCommon(csnCompiler.Compiler):
     def __init__(self):
