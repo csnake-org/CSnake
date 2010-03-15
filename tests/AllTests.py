@@ -1,5 +1,6 @@
 # TestSuite: class to create all test suites to ease running them all at once.
 import unittest
+import xmlrunner
 
 from csnBuildTests import csnBuildTests
 from csnGUIHandlerTests import csnGUIHandlerTests
@@ -18,8 +19,15 @@ class AllTests:
         self.suite = unittest.TestSuite([buildSuite, uiSuite, csnProjectSuite, csnUtilitySuite])
 
     def run(self):
-        """ Run the main suite. """
-        return unittest.TextTestRunner(verbosity=2).run(self.suite)
+        """ Run the main suite. Output as xml. """
+        # output file
+        file = open("testslog.xml", 'w')
+        # test runner
+        res = xmlrunner.XMLTestRunner(file).run(self.suite)
+        # close output
+        file.close()
+        # return result
+        return res
 
 if __name__ == "__main__":
     tests = AllTests();
