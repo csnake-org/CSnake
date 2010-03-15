@@ -43,8 +43,8 @@ Cruise Control project configuration file.
             uselogger="true"
             target="python">
             <property name="path" value="${main.csnake_src_folder}/tests"/>
-            <property name="python_path" value="${main.csnake_src_folder}/src;${main.csnake_src_folder}/tests"/>
-            <property name="arg_line" value="AllTests.py"/>
+            <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests"/>
+            <property name="arg_line" value="AllTests.py '${project.test_log_folder}/testslog.xml'"/>
          </ant>
       </schedule>
 
