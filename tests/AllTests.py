@@ -34,4 +34,4 @@ class AllTests:
 
 if __name__ == "__main__":
     tests = AllTests(sys.argv[1])
-    tests.run()
+    return tests.run()
