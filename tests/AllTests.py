@@ -10,7 +10,10 @@ from csnUtilityTests import csnUtilityTests
 
 class AllTests:
     def __init__(self, _outputFileName):
-        """ Initialise the class: create test suite. """
+        ''' 
+        Initialise the class: create test suite.
+        @param _outputFileName: The name of the output file.
+        '''
         # create suites from unit tests
         buildSuite = unittest.TestLoader().loadTestsFromTestCase(csnBuildTests)
         uiSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIHandlerTests)
@@ -31,7 +34,14 @@ class AllTests:
         outputFile.close()
         # return result
         return res
+    
+def main(argv):
+    '''
+    Main method to run all tests.
+    @param argv: command line arguments; first should be the tests output file name.
+    '''
+    tests = AllTests(argv[1])
+    return tests.run()
 
 if __name__ == "__main__":
-    tests = AllTests(sys.argv[1])
-    return tests.run()
+    sys.exit(main(sys.argv))
