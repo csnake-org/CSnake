@@ -31,7 +31,7 @@ class csnBuildTests(unittest.TestCase):
         # create GUI handler
         handler = csnGUIHandler.Handler()
         # load context
-        context = handler.LoadContext("context.txt")
+        context = handler.LoadContext("config/csnake_context.txt")
         
         # configure the project
         ret = handler.ConfigureProjectToBuildFolder( True )        
