@@ -43,24 +43,28 @@ class csnBuildTests(unittest.TestCase):
         assert os.path.exists(solutionFile)
         
         # run devenv to build solution
-        logFile = "devenv.log"
-        cmdString = "\"%s\" /build Debug %s > %s" % (context.idePath, solutionFile, logFile)
+        if( context.compilername.find("Visual Studio") ):
+            cmdString = "\"%s\" %s /build Debug" % (context.idePath, solutionFile )
+        elif( context.compilername.find("KDevelop3") or context.compilername.find("Makefile") ):
+            cmdString = "./bin/executable/DummyExe/make -s"
+            
         print cmdString
         ret = os.system(cmdString)
-        assert ret == 0, "devenv returned with an error message."
+        assert ret == 0, "Compiler returned with an error message."
 
         # check the built executable
         exeName =  handler.GetListOfPossibleTargets()[0]
-        exeFilename = "%s/bin/debug/%s.exe" % (context.buildFolder, exeName)
+        exeFilename = "%s/bin/debug/%s" % (context.buildFolder, exeName)
+        if( context.compilername.find("Visual Studio") ):
+            exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
         
         # test the built executable
         ret = os.system(exeFilename)
-        assert ret == 6, "DummyExe.exe did not return the correct calculation result."
+        assert ret == 6, "DummyExe did not return the correct result."
 
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
-        os.remove(logFile)
         
 if __name__ == "__main__":
     unittest.main() 
