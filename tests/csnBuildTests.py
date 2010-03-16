@@ -45,10 +45,10 @@ class csnBuildTests(unittest.TestCase):
         # run devenv to build solution
         print context.compilername
         if( context.compilername.find("Visual Studio") != -1 ):
-            mode = "Debug"
+            mode = "Release"
             # Incredibuild case
             if( context.idePath.find("BuildConsole") != -1 ):
-                mode = "Debug|x64" 
+                mode = "Release|x64" 
             cmdString = "\"%s\" %s /build %s" % (context.idePath, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
@@ -60,7 +60,7 @@ class csnBuildTests(unittest.TestCase):
 
         # check the built executable
         exeName =  handler.GetListOfPossibleTargets()[0]
-        exeFilename = "%s/bin/debug/%s" % (context.buildFolder, exeName)
+        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mode, exeName)
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
