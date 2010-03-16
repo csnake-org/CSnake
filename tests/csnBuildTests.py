@@ -45,7 +45,11 @@ class csnBuildTests(unittest.TestCase):
         # run devenv to build solution
         print context.compilername
         if( context.compilername.find("Visual Studio") != -1 ):
-            cmdString = "\"%s\" %s /build Debug" % (context.idePath, solutionFile )
+            mode = "Debug"
+            # Incredibuild case
+            if( context.idePath.find("BuildConsole") != -1 ):
+                mode = "Debug|x64" 
+            cmdString = "\"%s\" %s /build %s" % (context.idePath, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
             cmdString = "./bin/executable/DummyExe/make -s"
