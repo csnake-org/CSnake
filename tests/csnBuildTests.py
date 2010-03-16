@@ -49,7 +49,7 @@ class csnBuildTests(unittest.TestCase):
             # Incredibuild case
             if( context.idePath.find("BuildConsole") != -1 ):
                 mode = "Release|x64" 
-            cmdString = "\"%s\" %s /build %s" % (context.idePath, solutionFile, mode )
+            cmdString = "\"%s\" %s /build '%s'" % (context.idePath, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
             cmdString = "./bin/executable/DummyExe/make -s"
