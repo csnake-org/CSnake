@@ -49,7 +49,7 @@ def main():
     '''
     # extract the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho", ["help", "output="]) #@UnusedVariable
+        opts, args = getopt.getopt(sys.argv[1:], "ho:", ["help", "output="]) #@UnusedVariable
     except getopt.GetoptError:
         usage()
         return 2
