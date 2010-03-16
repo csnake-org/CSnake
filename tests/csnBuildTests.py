@@ -43,9 +43,11 @@ class csnBuildTests(unittest.TestCase):
         assert os.path.exists(solutionFile)
         
         # run devenv to build solution
-        if( context.compilername.find("Visual Studio") ):
+        print context.compilername
+        if( context.compilername.find("Visual Studio") != -1 ):
             cmdString = "\"%s\" %s /build Debug" % (context.idePath, solutionFile )
-        elif( context.compilername.find("KDevelop3") or context.compilername.find("Makefile") ):
+        elif( context.compilername.find("KDevelop3") != -1 or
+              context.compilername.find("Makefile") != -1 ):
             cmdString = "./bin/executable/DummyExe/make -s"
             
         print cmdString
@@ -55,11 +57,12 @@ class csnBuildTests(unittest.TestCase):
         # check the built executable
         exeName =  handler.GetListOfPossibleTargets()[0]
         exeFilename = "%s/bin/debug/%s" % (context.buildFolder, exeName)
-        if( context.compilername.find("Visual Studio") ):
+        if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
         
         # test the built executable
+        print exeFilename
         ret = os.system(exeFilename)
         assert ret == 6, "DummyExe did not return the correct result."
 
