@@ -1,0 +1,28 @@
+[CSnake]
+# Automatically filled in by ANT and Cruise Control
+
+# Specific project settings
+csnakefile = @csnakefile@
+instance = @instance@
+
+# Toolkit settings
+filter = @filter@
+testrunnertemplate = @testrunnertemplate@
+installfolder = @installfolder@
+buildfolder = @buildfolder@
+thirdpartyrootfolder = @thirdpartyrootfolder@
+thirdpartybuildfolder = @thirdpartybuildfolder@
+
+# Compilation settings
+compilername = @compiler@
+configurationname = @configurationname@
+
+# General settings
+pythonpath = @pythonpath@
+cmakepath = @cmakepath@
+idepath = @idepath@
+version = @version@
+
+[RootFolders]
+rootfolder0 = @rootfolder0@
+
