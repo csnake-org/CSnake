@@ -2,6 +2,7 @@
 import unittest
 import xmlrunner
 import sys
+import getopt
 
 from csnBuildTests import csnBuildTests
 from csnGUIHandlerTests import csnGUIHandlerTests
@@ -34,14 +35,35 @@ class AllTests:
         outputFile.close()
         # return result
         return res
-    
-def main(argv):
+ 
+def usage():
+    ''' Usage for main method.'''
+    print "Usage: ", sys.argv[0], " [-o filename]"
+    print "-h: help."
+    print "-o: test output file name, default to 'testslog.xml'."
+   
+def main():
     '''
     Main method to run all tests.
     @param argv: command line arguments; first should be the tests output file name.
     '''
-    tests = AllTests(argv[1])
+    # extract the command line arguments
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ho", ["help", "output="]) #@UnusedVariable
+    except getopt.GetoptError:
+        usage()
+        return 2
+    # process the command line arguments
+    outputFileName = "testslog.xml"
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+            return 0
+        elif opt == '-o':
+            outputFileName = arg
+    # run the tests
+    tests = AllTests(outputFileName)
     return tests.run()
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main())
