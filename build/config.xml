@@ -45,7 +45,7 @@ Cruise Control project configuration file.
             <property name="instance" value="dummyExe"/>
             <property name="csnakefile" value="${main.csnake_src_folder}/tests/src/DummyExe/csnDummyExe.py"/>
             <property name="server_properties_file" value="${main.server_properties_file}"/>
-            <property name="common_properties_file" value="${main.common_properties_file}"/>
+            <property name="common_properties_file" value="${project.source_path}/build"/>
             <!-- target: python -->
             <property name="path" value="${main.csnake_src_folder}/tests"/>
             <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests:${main.csnake_src_folder}/tests/src"/>
