@@ -43,30 +43,32 @@ class csnBuildTests(unittest.TestCase):
         assert os.path.exists(solutionFile)
         
         # run devenv to build solution
-        print context.compilername
+        mainMode = "Release"
         if( context.compilername.find("Visual Studio") != -1 ):
-            mode = "Release"
+            mode = mainMode
+            path = "\"%s\"" % context.idePath
             # Incredibuild case
             if( context.idePath.find("BuildConsole") != -1 ):
-                mode = "Release|x64" 
-            cmdString = "\"%s\" %s /build '%s'" % (context.idePath, solutionFile, mode )
+                mode = "\"%s|x64\"" % mainMode
+                path = "%s" % context.idePath
+            cmdString = "%s %s /build %s" % (path, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
             cmdString = "./bin/executable/DummyExe/make -s"
             
-        print cmdString
+        print "cmdString: '%s'" % cmdString
         ret = os.system(cmdString)
         assert ret == 0, "Compiler returned with an error message."
 
         # check the built executable
         exeName =  handler.GetListOfPossibleTargets()[0]
-        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mode, exeName)
+        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mainMode, exeName)
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
+        print "exeFilename: '%s'" % exeFilename
         assert os.path.exists(exeFilename)
         
         # test the built executable
-        print exeFilename
         ret = os.system(exeFilename)
         assert ret == 6, "DummyExe did not return the correct result."
 
