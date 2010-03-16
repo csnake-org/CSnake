@@ -56,11 +56,6 @@ Cruise Control project configuration file.
       <!-- Use the svn revision in the build number -->
       <svnlabelincrementer/>
 
-      <!-- Log dir and files to merge -->
-      <log dir="${project.log_folder}">
-         <merge dir="${project.test_log_folder}"/>
-      </log>
-
       <!-- Publishers are run *after* a build completes -->
       <publishers>
          <!-- Email to interested persons -->
