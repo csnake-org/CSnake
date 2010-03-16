@@ -4,7 +4,6 @@ import os
 import csnUtility
 import csnBuild
 import csnProject
-import csnContext
 import csnGenerator
 import csnDependencies
 import shutil
@@ -13,8 +12,6 @@ class csnProjectTests(unittest.TestCase):
     
     def setUp(self):
         """ Run before test. """
-        # loads the dummyExe project
-        csnProject.globalCurrentContext = csnContext.Load("context.txt")
 
     def tearDown(self):
         """ Run after test. """
