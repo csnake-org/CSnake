@@ -38,13 +38,12 @@ class csnBuildTests(unittest.TestCase):
         # check that it worked
         assert ret == True, "CMake returned with an error message."
         
-        # check solution file
-        solutionFile = handler.GetTargetSolutionPath()
-        assert os.path.exists(solutionFile)
-        
         # create compiler command
         mainMode = "Release"
         if( context.compilername.find("Visual Studio") != -1 ):
+            # check solution file
+            solutionFile = handler.GetTargetSolutionPath()
+            assert os.path.exists(solutionFile)
             mode = mainMode
             path = "\"%s\"" % context.idePath
             # Incredibuild case
