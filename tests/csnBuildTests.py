@@ -54,15 +54,14 @@ class csnBuildTests(unittest.TestCase):
             cmdString = "%s %s /build %s" % (path, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
-            cmdString = "./bin/executable/DummyExe/make -s"
+            cmdString = "./bin/executable/%s/DummyExe/make -s" % mainMode
         
         # run compiler    
         ret = subprocess.call(cmdString, shell=True)
         assert ret == 0, "Compiler returned with an error message."
 
         # check the built executable
-        exeName =  handler.GetListOfPossibleTargets()[0]
-        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mainMode, exeName)
+        exeFilename = "%s/bin/%s/DummyExe" % (context.buildFolder, mainMode)
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
