@@ -42,7 +42,7 @@ class csnBuildTests(unittest.TestCase):
         solutionFile = handler.GetTargetSolutionPath()
         assert os.path.exists(solutionFile)
         
-        # run devenv to build solution
+        # create compiler command
         mainMode = "Release"
         if( context.compilername.find("Visual Studio") != -1 ):
             mode = mainMode
@@ -55,8 +55,8 @@ class csnBuildTests(unittest.TestCase):
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
             cmdString = "./bin/executable/DummyExe/make -s"
-            
-        print "cmdString: '%s'" % cmdString
+        
+        # run compiler    
         ret = os.system(cmdString)
         assert ret == 0, "Compiler returned with an error message."
 
@@ -65,7 +65,6 @@ class csnBuildTests(unittest.TestCase):
         exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mainMode, exeName)
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
-        print "exeFilename: '%s'" % exeFilename
         assert os.path.exists(exeFilename)
         
         # test the built executable

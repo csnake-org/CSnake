@@ -35,7 +35,7 @@ class AllTests:
         result = runner.run(self.suite)
         # close output
         outputFile.close()
-        # return result
+        # return result (0 for success)
         return not result.wasSuccessful()
  
 def usage():
