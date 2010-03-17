@@ -5,6 +5,7 @@ import csnBuild
 import csnProject
 import csnGUIHandler
 import shutil
+import subprocess
 
 class csnBuildTests(unittest.TestCase):
 
@@ -56,7 +57,7 @@ class csnBuildTests(unittest.TestCase):
             cmdString = "./bin/executable/DummyExe/make -s"
         
         # run compiler    
-        ret = os.system(cmdString)
+        ret = subprocess.call(cmdString, shell=True)
         assert ret == 0, "Compiler returned with an error message."
 
         # check the built executable
@@ -67,7 +68,7 @@ class csnBuildTests(unittest.TestCase):
         assert os.path.exists(exeFilename)
         
         # test the built executable
-        ret = os.system(exeFilename)
+        ret = subprocess.call(exeFilename, shell=True)
         assert ret == 6, "DummyExe did not return the correct result."
 
         # clean up
