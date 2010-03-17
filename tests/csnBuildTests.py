@@ -54,7 +54,7 @@ class csnBuildTests(unittest.TestCase):
             cmdString = "%s %s /build %s" % (path, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
-            cmdString = "./bin/executable/%s/DummyExe/make -s" % mainMode
+            cmdString = "cd ../bin/executable/%s/DummyExe; make -s" % mainMode
         
         # run compiler    
         ret = subprocess.call(cmdString, shell=True)
