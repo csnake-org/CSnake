@@ -30,11 +30,13 @@ class AllTests:
         # output file
         outputFile = open(self.outputFileName, 'w')
         # test runner
-        res = xmlrunner.XMLTestRunner(outputFile).run(self.suite)
+        runner = xmlrunner.XMLTestRunner(outputFile)
+        # run tests
+        result = runner.run(self.suite)
         # close output
         outputFile.close()
         # return result
-        return res
+        return not result.wasSuccessful()
  
 def usage():
     ''' Usage for main method.'''
