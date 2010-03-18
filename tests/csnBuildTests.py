@@ -44,9 +44,11 @@ class csnBuildTests(unittest.TestCase):
         sectionName = "CSnake"
         if type == "executable":
             exeName = projectName
+            makePath = "../bin/executable"
         # ok, a bit fishy, I know the application name...
         elif type == "lib":
             exeName = projectName + "App_myApp"
+            makePath = "../bin/library"
         
         # modify the csnake context file
         cf = ConfigParser.ConfigParser()
@@ -86,7 +88,7 @@ class csnBuildTests(unittest.TestCase):
             cmdString = "%s %s /build %s" % (path, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
-            cmdString = "cd ../bin/executable/%s/%s; make -s" % (mainMode, projectName) 
+            cmdString = "cd %s/%s/%s; make -s" % (makePath, mainMode, projectName) 
         
         # run compiler    
         ret = subprocess.call(cmdString, shell=True)
