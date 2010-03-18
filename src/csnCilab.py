@@ -56,9 +56,7 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
     project = csnProject.Project(_name, _type, _sourceRootFolder)
     project.applicationsProject = None
-    project.demosProject = None
     project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
-    project.AddDemos= new.instancemethod(AddDemosMemberFunction, project)
     project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
     return project
 
@@ -95,29 +93,11 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-def AddDemosMemberFunction(self, _modules, _pch = "", _applicationDependenciesList=None, _holderName=None):
-    """
-    Creates extra CSnake projects, each project building one demo in the demos subfolder of the current project.
-    _modules - List of the subfolders within the demos subfolder that must be scanned for demos.
-    _pch - If not "", this is the include file used to generate a precompiled header for each demo.
-    """
-    dependencies = [self]
-    if not _applicationDependenciesList is None:
-        dependencies.extend(_applicationDependenciesList)
-
-    if _holderName is None:
-        _holderName = "%sDemos" % self.name
-    csnProject.globalCurrentContext.SetSuperSubCategory("Demos", _holderName)
-    if self.demosProject is None:
-        self.demosProject = csnBuild.Project(_holderName, "dll", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
-        self.demosProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        self.demosProject.AddProjects([self])
-        self.AddProjects([self.demosProject], _dependency = 0)
-    AddApplications(self.demosProject, dependencies, _modules, "%s/demos" % self.GetSourceRootFolder(), _pch, _holderName)
-
 def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None):
     """
-    Similar to AddDemos, but works on the Applications subfolder.
+    Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
+    _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
+    _pch - If not "", this is the include file used to generate a precompiled header for each application.
     """
     dependencies = [self]
     if not _applicationDependenciesList is None:
@@ -148,7 +128,6 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
         _categories = ["GIMIAS%s" % _name]
     )
     project.applicationsProject = None
-    project.demosProject = None
     project.installSubFolder = "plugins/%s/lib" % _name
     project.AddIncludeFolders(["."])
     project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
