@@ -25,6 +25,13 @@
 					<help></help>
 				</object>
 			</object>
+            <object class="wxMenu" name="m_menuHelp">
+                <label>Help</label>
+                <object class="wxMenuItem" name="mnuAbout">
+                    <label>About</label>
+                    <help></help>
+                </object>
+            </object>
 		</object>
 		<object class="wxBoxSizer">
 			<orient>wxVERTICAL</orient>

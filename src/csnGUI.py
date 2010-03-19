@@ -17,6 +17,7 @@ import time
 import subprocess
 import xrcbinder
 from optparse import OptionParser
+import csnGenerator
 
 class RedirectText:
     """
@@ -131,6 +132,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_MENU, self.OnContextCreateACopy, id=xrc.XRCID("mnuContextCreateACopy"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextAbandonChanges, id=xrc.XRCID("mnuContextAbandonChanges"))
         self.frame.Bind(wx.EVT_MENU, self.OnExit, id=xrc.XRCID("mnuExit"))
+        self.frame.Bind(wx.EVT_MENU, self.OnAbout, id=xrc.XRCID("mnuAbout"))
         
     def InitOtherGUIStuff(self):
         # connect close event
@@ -571,6 +573,13 @@ class CSnakeGUIApp(wx.App):
                 self.SaveContextAndOptions(self.options.contextFilename)
             self.frame.Destroy()
 
+    def OnAbout(self, event = None):
+        ''' Text displayed in the About box.'''
+        info = wx.AboutDialogInfo()
+        info.SetName("CSnake")
+        info.SetVersion("%s" % csnGenerator.version)
+        wx.AboutBox(info)
+        
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         item = self.cmbCSnakeFile.GetSelection()
         context = self.context.recentlyUsed[item]
