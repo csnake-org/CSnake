@@ -7,7 +7,6 @@ import csnTests
 import inspect
 import os.path
 import types
-import unittest
 
 globalCurrentContext = None
 
@@ -180,23 +179,3 @@ class GenericProject(object):
 
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
-    
-class ProjectTest(unittest.TestCase):
-    def testAddFilesToInstallWindows(self):
-        location = "./Install"
-        project = Project("TestProject", "dll")
-        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
-        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
-        assert project.filesToInstall["Release"][location] == ["Hello.cpp"]
-        assert project.filesToInstall["Debug"][location] == ["Hello.cpp"]
-        
-    def testAddFilesToInstallLinux(self):
-        location = "./Install"
-        project = Project("TestProject", "dll")
-        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
-        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
-        assert project.filesToInstall["Release"][location] == ["Bye.h"]
-        assert project.filesToInstall["Debug"][location] == ["Bye.h"]
-    
-if __name__ == "__main__":
-    unittest.main() 
