@@ -62,6 +62,7 @@ def main():
     outputFile.write("    %s test = %s();\n" % (className, className) )
     outputFile.write("    return test.%s();\n" % testName)
     outputFile.write("}\n")
+    outputFile.write("\n")
     outputFile.close()
          
 if __name__ == "__main__":
