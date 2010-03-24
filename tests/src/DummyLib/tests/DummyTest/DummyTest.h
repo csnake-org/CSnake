@@ -25,4 +25,4 @@ int TestOne()
 
 }; // class DummyTest
 
-#endif DUMMYTEST_H
+#endif //DUMMYTEST_H
