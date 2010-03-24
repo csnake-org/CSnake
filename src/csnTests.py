@@ -30,7 +30,8 @@ class Manager:
         self.holdingProject.AddProjects([self.testProject], _dependency = False)
         
         self.testRunnerSourceFile = "%s/%s.cpp" % (self.testProject.GetBuildFolder(), self.testProject.name)
-        if not os.path.exists(self.testRunnerSourceFile):
+        # create the target file for Visual Studio and CMAKE rule ADD_CUSTOM_COMMAND with PRE_BUILD
+        if (self.holdingProject.context.compilername.find("Visual Studio") != -1) and not os.path.exists(self.testRunnerSourceFile):
             if not os.path.exists(self.testProject.GetBuildFolder()):
                 os.makedirs(self.testProject.GetBuildFolder())
             f = open(self.testRunnerSourceFile, 'w')
