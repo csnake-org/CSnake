@@ -64,11 +64,11 @@ class csnBuildTests(unittest.TestCase):
         # set vars from context
         if buildType == "executable":
             exeName = projectName
-            makePath = "%s/bin/executable" % context.buildFolder
+            makePath = "%s/../bin/executable" % context.buildFolder
         # ok, a bit fishy, I know the application name...
         elif buildType == "lib":
             exeName = projectName + "App_myApp"
-            makePath = "%s/bin/library" % context.buildFolder
+            makePath = "%s/../bin/library" % context.buildFolder
 
         # configure the project
         ret = handler.ConfigureProjectToBuildFolder( True )        
