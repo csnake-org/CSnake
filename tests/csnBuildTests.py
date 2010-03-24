@@ -42,13 +42,6 @@ class csnBuildTests(unittest.TestCase):
         contextFileName = "config/csnake_context.txt"
         contextNewFileName = "config/csnake_context-%s.txt" % projectName
         sectionName = "CSnake"
-        if buildType == "executable":
-            exeName = projectName
-            makePath = "../bin/executable"
-        # ok, a bit fishy, I know the application name...
-        elif buildType == "lib":
-            exeName = projectName + "App_myApp"
-            makePath = "../bin/library"
         
         # modify the csnake context file
         cf = ConfigParser.ConfigParser()
@@ -68,6 +61,15 @@ class csnBuildTests(unittest.TestCase):
         # load context
         context = handler.LoadContext(contextNewFileName)
         
+        # set vars from context
+        if buildType == "executable":
+            exeName = projectName
+            makePath = "%s/bin/executable" % context.buildFolder
+        # ok, a bit fishy, I know the application name...
+        elif buildType == "lib":
+            exeName = projectName + "App_myApp"
+            makePath = "%s/bin/library" % context.buildFolder
+
         # configure the project
         ret = handler.ConfigureProjectToBuildFolder( True )        
         # check that it worked
