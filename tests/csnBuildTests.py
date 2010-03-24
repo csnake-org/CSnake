@@ -35,18 +35,18 @@ class csnBuildTests(unittest.TestCase):
         """ testDummyLibBuild: test configuring and building the DummyLib project. """
         self.build( "DummyLib", "lib", "Release" )
 
-    def build(self, projectName, type, buildMode):
+    def build(self, projectName, buildType, buildMode):
         """ test configuring and building the input project. """
         # names
         instanceName = projectName.lower()[0] + projectName[1:]
         contextFileName = "config/csnake_context.txt"
         contextNewFileName = "config/csnake_context-%s.txt" % projectName
         sectionName = "CSnake"
-        if type == "executable":
+        if buildType == "executable":
             exeName = projectName
             makePath = "../bin/executable"
         # ok, a bit fishy, I know the application name...
-        elif type == "lib":
+        elif buildType == "lib":
             exeName = projectName + "App_myApp"
             makePath = "../bin/library"
         
@@ -74,28 +74,27 @@ class csnBuildTests(unittest.TestCase):
         assert ret == True, "CMake returned with an error message."
         
         # create compiler command
-        mainMode = "Release"
         if( context.compilername.find("Visual Studio") != -1 ):
             # check solution file
             solutionFile = handler.GetTargetSolutionPath()
             assert os.path.exists(solutionFile)
-            mode = mainMode
+            mode = buildMode
             path = "\"%s\"" % context.idePath
             # Incredibuild case
             if( context.idePath.find("BuildConsole") != -1 ):
-                mode = "\"%s|x64\"" % mainMode
+                mode = "\"%s|x64\"" % buildMode
                 path = "%s" % context.idePath
             cmdString = "%s %s /build %s" % (path, solutionFile, mode )
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
-            cmdString = "cd %s/%s/%s; make -s" % (makePath, mainMode, projectName) 
+            cmdString = "cd %s/%s/%s; make -s" % (makePath, buildMode, projectName) 
         
         # run compiler    
         ret = subprocess.call(cmdString, shell=True)
         assert ret == 0, "The compiler returned with an error message."
 
         # check the built executable
-        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, mainMode, exeName)
+        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, buildMode, exeName)
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
@@ -104,6 +103,19 @@ class csnBuildTests(unittest.TestCase):
         ret = subprocess.call(exeFilename, shell=True)
         assert ret == 6, "The generated executable did not return the correct result."
 
+        # run tests with lib
+        if buildType == "lib":
+            # check the built test
+            testName = projectName + "Tests"
+            testExeFilename = "%s/bin/%s/%s" % (context.buildFolder, buildMode, testName)
+            if( context.compilername.find("Visual Studio") != -1 ):
+                testExeFilename = "%s.exe" % (testExeFilename)
+            assert os.path.exists(testExeFilename)
+            
+            # run the test
+            ret = subprocess.call(testExeFilename, shell=True)
+            assert ret == 0, "The generated test did not return the correct result."
+        
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
         
