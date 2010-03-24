@@ -4,6 +4,6 @@
 # --------------------------
 
 # Add csnake src to the python path
-set PYTHONPATH=../src;./src
+export PYTHONPATH=$PYTHONPATH:../src:./src
 # Run all tests
 python AllTests.py
