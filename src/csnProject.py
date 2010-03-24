@@ -35,6 +35,7 @@ class Rule:
     def __init__(self):
         self.workingDirectory = ""
         self.command = ""
+        self.output = ""
 
 def ToProject(project):
     """
@@ -133,11 +134,12 @@ class GenericProject(object):
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
 
-    def AddRule(self, description, command, workingDirectory = "."):
+    def AddRule(self, description, output, command, workingDirectory = "."):
         """
         Adds a new rule to the self.rules dictionary, using description as the key.
         """
         rule = Rule()
+        rule.output = output
         rule.command = command
         rule.workingDirectory = workingDirectory
         self.rules[description] = rule
