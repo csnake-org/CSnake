@@ -30,14 +30,6 @@ class Manager:
         self.holdingProject.AddProjects([self.testProject], _dependency = False)
         
         self.testRunnerSourceFile = "%s/%s.cpp" % (self.testProject.GetBuildFolder(), self.testProject.name)
-        # create the target file for Visual Studio and CMAKE rule ADD_CUSTOM_COMMAND with PRE_BUILD
-        if (self.holdingProject.context.compilername.find("Visual Studio") != -1) and not os.path.exists(self.testRunnerSourceFile):
-            if not os.path.exists(self.testProject.GetBuildFolder()):
-                os.makedirs(self.testProject.GetBuildFolder())
-            f = open(self.testRunnerSourceFile, 'w')
-            f.write("// Test runner source file. To be created by CxxTest.py.")
-            f.close()
-            
         self.testProject.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
     def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
@@ -67,10 +59,13 @@ class Manager:
             wxRunnerArg, 
             self.testRunnerSourceFile
         )
+        depends = []
         for source in self.testProject.GetSources():
             if os.path.splitext(source)[1] in (".h", ".hpp"):
-                command += "\"%s\"" % source
-        self.testProject.AddRule("Create test runner", self.testRunnerSourceFile, command)
+                depend = "\"%s\"" % source
+                depends.append( depend )
+                command += depend
+        self.testProject.AddRule("Create test runner", self.testRunnerSourceFile, command, depends)
         
         if not _dependencies is None:
             self.testProject.AddProjects(_dependencies)

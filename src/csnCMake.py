@@ -160,11 +160,18 @@ class Writer:
         """ Create other rules in the CMakeLists.txt """
         for description, rule in self.project.rules.iteritems():
             self.file.write("\n#Adding rule %s\n" % description)
-            if( self.project.context.compilername.find("Visual Studio") != -1 ):
-                self.file.write("ADD_CUSTOM_COMMAND( TARGET %s PRE_BUILD COMMAND %s WORKING_DIRECTORY \"%s\" COMMENT \"Running rule %s\" VERBATIM )\n" % (self.project.name, rule.command, rule.workingDirectory, description))
-            # non Visual Studio do not support the PRE_BUILD option
-            else:
-                self.file.write("ADD_CUSTOM_COMMAND( OUTPUT %s COMMAND %s WORKING_DIRECTORY \"%s\" COMMENT \"Running rule %s\" VERBATIM )\n" % (rule.output, rule.command, rule.workingDirectory, description))
+            command = "ADD_CUSTOM_COMMAND("
+            command += "OUTPUT %s" % rule.output
+            command += " COMMAND %s" % rule.command
+            if len(rule.depends) > 0:
+                command += " DEPENDS"
+                for depend in rule.depends:
+                    command += " %s" % depend
+            command += " WORKING_DIRECTORY \"%s\"" % rule.workingDirectory
+            command += " COMMENT \"Running rule %s\"" % description
+            command += " VERBATIM"
+            command += " )" 
+            self.file.write(command)
     
     def __CreateCMakeSection_Link(self):
         """ Create link commands in the CMakeLists.txt """
