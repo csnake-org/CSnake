@@ -183,9 +183,9 @@ class CSnakeGUIApp(wx.App):
         self.UpdateGUIAndSaveContextAndOptions()
         
     def Warn(self, message):
+        """ Shows a warning message to the user. ToDo: do some more fancy than print."""
         if message is None:
             return
-        """ Shows a warning message to the user. ToDo: do some more fancy than print."""
         print message + "\n"
         
     def Error(self, message):
@@ -446,7 +446,7 @@ class CSnakeGUIApp(wx.App):
         """
         Remove folder where CSnake files must be searched from context.rootFolders.
         """
-        self.context.rootFolders.remove(self.lbRootFolders.GetStringSelection())
+        self.context.rootFolders.remove(self.context.rootFolder.GetStringSelection())
         self.UpdateGUIAndSaveContextAndOptions()
 
     def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
@@ -598,7 +598,7 @@ class CSnakeGUIApp(wx.App):
         wx.AboutBox(info)
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        item = self.cmbCSnakeFile.GetSelection()
+        item = self.context.csnakeFile.GetSelection()
         context = self.context.recentlyUsed[item]
         self.context.csnakeFile = context.csnakeFile
         self.context.instance = context.instance
@@ -663,7 +663,7 @@ class CSnakeGUIApp(wx.App):
         for super in self.context.subCategoriesOf.keys():
             value = True
             for sub in self.context.subCategoriesOf[super]:
-                    value = value and (not sub in self.context.filter)
+                value = value and (not sub in self.context.filter)
                     
             self.projectCheckBoxes[super] = wx.CheckBox(self.panelSelectProjects, -1, super)
             self.projectCheckBoxes[super].SetValue( value )
