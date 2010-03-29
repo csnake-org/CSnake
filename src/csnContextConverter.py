@@ -1,5 +1,6 @@
 import ConfigParser
 import csnContext
+import sys
 
 class Converter:
     def __init__(self, optionsFilename):
@@ -9,8 +10,12 @@ class Converter:
         
     def ConvertOptions(self):
         parserOptions = ConfigParser.ConfigParser()
-        parserOptions.read([self.optionsFilename])
-        
+        try:
+            parserOptions.read([self.optionsFilename])
+        except ConfigParser.ParsingError as error:
+            sys.stdout.write( "Warning: %s" % error.message )
+            return False
+            
         versionNumber = 0.0
         if parserOptions.has_option(self.section, "version"):
             versionNumber = parserOptions.getfloat(self.section, "version")
@@ -36,7 +41,9 @@ class Converter:
 
             f = open(self.convertedOptionsFilename, 'w')
             parserNewOptions.write(f)
-            f.close()            
+            f.close() 
+            
+            return True           
             
     def Convert(self, contextFilename):
         parserOptions = ConfigParser.ConfigParser()

@@ -43,11 +43,17 @@ class RedirectText:
         self.out.WriteText(string)
         self.out.Update()
         # also write it to the log file
-        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        if (len(string) == 0) or (len(string) > 0 and string[len(string)-1:] != "\n"):
-            string += "\n"
-        outstr = "%s %s" % (date, string) 
-        self.log.write( outstr )
+        log = True
+        # remove spurious end-of-line
+        if (len(string) == 1 and string[len(string)-1:] == '\n'):
+            log = False
+        # append a end-of-line if missing 
+        if (len(string) == 0) or (len(string) > 0 and string[len(string)-1:] != '\n'):
+            string += '\n'
+        if log:
+            date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            outstr = "%s %s" % (date, string) 
+            self.log.write( outstr )
 
 class SelectFolderCallback:
     """ 
@@ -234,7 +240,7 @@ class CSnakeGUIApp(wx.App):
         sys.stderr=self.redir
 
     def PrintWelcomeMessages(self):
-        self.Report("CSnake version = %s\n" % csnBuild.version)
+        self.Report("CSnake version = %s" % csnBuild.version)
 
     def CreateHandler(self):
         self.handler = csnGUIHandler.Handler()
@@ -247,8 +253,12 @@ class CSnakeGUIApp(wx.App):
         self.optionsFilename = "%s/options" % self.thisFolder
         self.converter = csnContextConverter.Converter(self.optionsFilename)
         
+        # convert possible old options
+        converted = False
         if os.path.exists(self.optionsFilename):
-            self.converter.ConvertOptions()
+            converted = self.converter.ConvertOptions()
+            
+        if converted:
             self.options.Load(self.optionsFilename)
         else:
             self.options.contextFilename = "%s/default.csnakecontext" % self.thisFolder
