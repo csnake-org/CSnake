@@ -18,6 +18,7 @@ import subprocess
 import xrcbinder
 from optparse import OptionParser
 import csnGenerator
+import datetime
 
 class RedirectText:
     """
@@ -25,10 +26,26 @@ class RedirectText:
     """
     def __init__(self,aWxTextCtrl):
         self.out=aWxTextCtrl
+        # log file
+        filename = "log.txt"
+        # delete if too big
+        if os.path.exists(filename):
+            filesize = os.path.getsize(filename)
+            # bigger than 5M
+            if filesize > 5242880:
+                os.remove(filename)
+        self.log = open("log.txt", 'a')
 
+    def __del__(self):
+        self.log.close()
+    
     def write(self,string):
         self.out.WriteText(string)
         self.out.Update()
+        # also write it to the log file
+        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        outstr = "%s %s" % (date, string) 
+        self.log.write( outstr )
 
 class SelectFolderCallback:
     """ 
