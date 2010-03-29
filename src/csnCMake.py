@@ -70,15 +70,8 @@ class Writer:
         """
         for project in self.project.dependenciesManager.ProjectsToUse():
             public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())
-            includeGuard = "AlreadyUsing%s" % project.name
-            if not public:
-                includeGuard += "Private"
-            #self.file.write( "\n# use %s\n" % project.name )
-            #self.file.write( "IF( NOT %s)\n" % includeGuard )
-            #self.file.write( "SET( %s TRUE CACHE BOOL \"Internal helper\" FORCE )\n" % includeGuard )
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
-            #self.file.write( "ENDIF( NOT %s )\n" % includeGuard )
     
     def __CreateCMakeSection_SourceGroups(self):
         """ Create source groups in the CMakeLists.txt """
@@ -186,22 +179,22 @@ class Writer:
             self.file.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.project.name, targetLinkLibraries) )
 
     def __CreateCMakePrecompiledHeaderPre(self):
-            if self.project.compileManager.precompiledHeader != "":
-                self.file.write("\n#Adding CMake PrecompiledHeader Pre\n")
-                self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.thirdPartyRootFolder )
-                self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
-            
-                #Add precompiled header to sources. This file is generated for windows only 
-                # after executing CMake, so it doens't exists at the begining
-                if not self.project.context.compiler.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
-                    return
-                precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
-                self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)
+        if self.project.compileManager.precompiledHeader != "":
+            self.file.write("\n#Adding CMake PrecompiledHeader Pre\n")
+            self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.thirdPartyRootFolder )
+            self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+        
+            #Add precompiled header to sources. This file is generated for windows only 
+            # after executing CMake, so it doens't exists at the begining
+            if not self.project.context.compiler.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
+                return
+            precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
+            self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)
         
     def __CreateCMakePrecompiledHeaderPost(self):
-            if self.project.compileManager.precompiledHeader != "":
-                self.file.write("\n#Adding CMake PrecompiledHeader Post\n")
-                self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+        if self.project.compileManager.precompiledHeader != "":
+            self.file.write("\n#Adding CMake PrecompiledHeader Post\n")
+            self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
 
     def __CreateCMakeSections(self):
         """ Writes different CMake sections for this project to the file f. """
