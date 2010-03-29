@@ -44,6 +44,8 @@ class RedirectText:
         self.out.Update()
         # also write it to the log file
         date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        if (len(string) == 0) or (len(string) > 0 and string[len(string)-1:] != "\n"):
+            string += "\n"
         outstr = "%s %s" % (date, string) 
         self.log.write( outstr )
 
