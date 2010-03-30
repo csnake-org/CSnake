@@ -43,7 +43,8 @@ class Converter:
             parserNewOptions.write(f)
             f.close() 
             
-            return True           
+        # all good
+        return True           
             
     def Convert(self, contextFilename):
         parserOptions = ConfigParser.ConfigParser()
