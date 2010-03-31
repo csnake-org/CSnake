@@ -100,7 +100,7 @@ class Manager:
         """
         otherProject = csnProject.ToProject(_otherProject)
         if otherProject.dependenciesManager.WantsToBeUsedBefore(self.project):
-            raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.name, otherProject.name)
+            raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.project.name, otherProject.name)
         self.useBefore.append(otherProject)
         
     def WantsToBeUsedBefore(self, _otherProject):
