@@ -97,10 +97,8 @@ class CSnakeGUIApp(wx.App):
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
         self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "buildFolder", isFilename = True)
-        self.binder.AddTextControl("txtThirdPartyBuildFolder", buddyClass = "context", buddyField = "thirdPartyBuildFolder", isFilename = True)
         self.binder.AddTextControl("txtInstallFolder", buddyClass = "context", buddyField = "installFolder", isFilename = True)
         self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "kdevelopProjectFolder", isFilename = True)
-        self.binder.AddTextControl("txtThirdPartyRootFolder", buddyClass = "context", buddyField = "thirdPartyRootFolder", isFilename = True)
         self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "cmakePath", isFilename = True)
         self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "pythonPath", isFilename = True)
         self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "idePath", isFilename = True)
@@ -111,6 +109,9 @@ class CSnakeGUIApp(wx.App):
         self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "rootFolders", isFilename = True)
         self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "askToLaunchIDE")
         
+        self.binder.AddListBox("lbThirdPartyFolders", buddyClass = "context", buddyField = "thirdPartyFolders", isFilename = True)
+        self.binder.AddListBox("lbThirdPartyBuildFolders", buddyClass = "context", buddyField = "thirdPartyBuildFolders", isFilename = True)
+
         self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
         self.noteBook.SetSelection(0)
@@ -119,15 +120,21 @@ class CSnakeGUIApp(wx.App):
         self.statusBar = xrc.XRCCTRL(self.frame, "statusBar")
 
         self.panelContext = xrc.XRCCTRL(self.frame, "panelContext")
+        self.panelOptions = xrc.XRCCTRL(self.frame, "panelOptions")
 
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.GetInstallFolder, self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Root Folder", self.GetThirdPartyRootFolder, self.SetThirdPartyRootFolder, self), id=xrc.XRCID("btnSelectThirdPartyRootFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Third Party Bin Folder", self.GetThirdPartyBuildFolder, self.SetThirdPartyBuildFolder, self), id=xrc.XRCID("btnSelectThirdPartyBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
+
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add Third Party folder", self.GetLastThirdPartyFolder, self.AddThirdPartyFolder, self), id=xrc.XRCID("btnAddThirdPartyFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveThirdPartyFolder, id=xrc.XRCID("btnRemoveThirdPartyFolder"))
+
+        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add Third Party build folder", self.GetLastThirdPartyBuildFolder, self.AddThirdPartyBuildFolder, self), id=xrc.XRCID("btnAddThirdPartyBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveThirdPartyBuildFolder, id=xrc.XRCID("btnRemoveThirdPartyBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureThirdPartyBuildFolder, id=xrc.XRCID("btnConfigureThirdPartyBuildFolder"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, id=xrc.XRCID("btnSetPythonPath"))
@@ -141,12 +148,41 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelectRecentlyUsed, id=xrc.XRCID("cmbCSnakeFile"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnUpdateListOfTargets, id=xrc.XRCID("btnUpdateListOfTargets"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnCreateCMakeFilesAndRunCMake, id=xrc.XRCID("btnCreateCMakeFilesAndRunCMake"))
-        self.frame.Bind(wx.EVT_BUTTON, self.OnOnlyCreateCMakeFiles, id=xrc.XRCID("btnOnlyCreateCMakeFiles"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureALL, id=xrc.XRCID("btnConfigureALL"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureThirdPartyFolder, id=xrc.XRCID("btnConfigureThirdPartyFolder"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnInstallFilesToBuildFolder, id=xrc.XRCID("btnInstallFilesToBuildFolder"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnLaunchIDE, id=xrc.XRCID("btnLaunchIDE"))
         self.frame.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnNoteBookPageChanged, id=xrc.XRCID("noteBook"))
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelectCompiler, id=xrc.XRCID("cmbCompiler"))
+        
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnRootFoldersDClick, id=xrc.XRCID("lbRootFolders"))
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyFoldersDClick, id=xrc.XRCID("lbThirdPartyFolders"))
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyBuildFoldersDClick, id=xrc.XRCID("lbThirdPartyBuildFolders"))
+        
+        if sys.platform != 'win32':
+            xrc.XRCCTRL(self.panelContext, "btnConfigureALL").Disable()
+            xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").Disable()
+            xrc.XRCCTRL(self.panelOptions, "btnSetVisualStudioPath").Disable()
+            xrc.XRCCTRL(self.panelOptions, "txtVisualStudioPath").Disable()
+            xrc.XRCCTRL(self.panelOptions, "chkAskToLaunchVisualStudio").Disable()
+
+    def OnRootFoldersDClick(self, event):
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        if csnUtility.IsRunningOnWindows():
+            folder_path = csnUtility.UnNormalizePath( self.lbRootFolders.GetStringSelection() )
+            os.system("explorer " + folder_path)
+
+    def OnThirdPartyFoldersDClick(self, event):
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        if csnUtility.IsRunningOnWindows():
+            folder_path = csnUtility.UnNormalizePath( self.lbThirdPartyFolders.GetStringSelection() )
+            os.system("explorer " + folder_path)
+
+    def OnThirdPartyBuildFoldersDClick(self, event):
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        if csnUtility.IsRunningOnWindows():
+            folder_path = csnUtility.UnNormalizePath( self.lbThirdPartyBuildFolders.GetStringSelection() )
+            os.system("explorer " + folder_path)
         
     def OnNoteBookPageChanged(self, event):
         if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
@@ -322,15 +358,24 @@ class CSnakeGUIApp(wx.App):
         self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _callback = self):
             xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnOnlyCreateCMakeFiles").Disable()            
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
             if self.context.instance.lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
         
-    def OnOnlyCreateCMakeFiles(self, event):
-        self.action = self.ActionOnlyCreateCMakeFiles
+    def OnConfigureALL(self, event):
+        self.action = self.ActionConfigureThirdPartyFolder
         self.DoAction()
-        
+        if sys.platform == 'win32':
+            self.handler.Build( self.handler.GetThirdPartySolutionPath() )
+
+        self.action = self.ActionCreateCMakeFilesAndRunCMake
+        self.DoAction()
+        if sys.platform == 'win32':
+            self.handler.Build( self.handler.GetTargetSolutionPath() )
+
+        self.action = self.ActionInstallFilesToBuildFolder
+        self.DoAction()
+
     def ActionOnlyCreateCMakeFiles(self):
         self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
@@ -342,12 +387,17 @@ class CSnakeGUIApp(wx.App):
         self.DoAction()
         
     def ActionConfigureThirdPartyFolder(self):
-        if self.handler.ConfigureThirdPartyFolder():
-            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
+        try:
+            if self.handler.ConfigureThirdPartyFolders():
+                xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
+                xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
 
-            if self.options.askToLaunchIDE:
-                self.AskToLaunchIDE( self.handler.GetThirdPartySolutionPath() )
+                if self.options.askToLaunchIDE:
+                    self.AskToLaunchIDE( self.handler.GetThirdPartySolutionPath() )
+                
+        except Exception, message:
+            dlg = wx.MessageDialog(self.frame, "%s" % message, style = wx.OK)
+            dlg.ShowModal()
         
     def OnInstallFilesToBuildFolder(self, event):
         self.action = self.ActionInstallFilesToBuildFolder
@@ -399,12 +449,12 @@ class CSnakeGUIApp(wx.App):
         """
         # Set path of that file that was selected before
         oldValue = self.context.csnakeFile
-        if oldValue == "":
+        if oldValue.find("/") == -1:
             oldPath = ""
         else:
             oldPathAndFilenameSplit = oldValue.rsplit("/", 1)
             oldPath = oldPathAndFilenameSplit[0] + "/"
-            oldValue=oldPathAndFilenameSplit[1]
+            oldValue = oldPathAndFilenameSplit[1]
 
         dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "Python source files (*.py)|*.py",defaultDir = oldPath, defaultFile = oldValue)
         
@@ -424,18 +474,6 @@ class CSnakeGUIApp(wx.App):
     def GetInstallFolder(self):
         return self.context.installFolder
         
-    def SetThirdPartyRootFolder(self, folder):
-        self.context.thirdPartyRootFolder = folder
-    
-    def GetThirdPartyRootFolder(self):
-        return self.context.thirdPartyRootFolder
-        
-    def SetThirdPartyBuildFolder(self, folder):
-        self.context.thirdPartyBuildFolder = folder
-        
-    def GetThirdPartyBuildFolder(self):
-        return self.context.thirdPartyBuildFolder
-        
     def SetKDevelopProjectFolder(self, folder):
         self.context.kdevelopProjectFolder = folder
         
@@ -446,7 +484,26 @@ class CSnakeGUIApp(wx.App):
         """
         Add folder where CSnake files must be searched to context.rootFolders.
         """
-        self.context.rootFolders.append(folder)
+        try:
+            self.context.AddRootFolder( folder )
+            
+            # Automatically find thirdparty folder
+            defaultThirdPartyFolder = folder + "/../thirdParty/"
+            defaultThirdPartyFolder = csnUtility.NormalizePath( defaultThirdPartyFolder )
+            if not os.path.isdir( defaultThirdPartyFolder ):
+                defaultThirdPartyFolder = folder + "/thirdparties/"
+                defaultThirdPartyFolder = csnUtility.NormalizePath( defaultThirdPartyFolder )
+
+            if os.path.isdir( defaultThirdPartyFolder ):
+                message = "Found thirdparty folder: %s. Do you want to add it?" % defaultThirdPartyFolder
+                dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+                if dlg.ShowModal() == wx.ID_YES:
+                    self.AddThirdPartyFolder( defaultThirdPartyFolder )
+        except Exception, message:
+            mes = "%s" % message
+            dlg = wx.MessageDialog(self.frame, mes, style = wx.OK)
+            dlg.ShowModal()
+    
     
     def GetLastRootFolder(self):
         if len(self.context.rootFolders) > 0:
@@ -461,11 +518,65 @@ class CSnakeGUIApp(wx.App):
         self.context.rootFolders.remove(self.context.rootFolder.GetStringSelection())
         self.UpdateGUIAndSaveContextAndOptions()
 
+    def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Add folder where CSnake files must be searched to context.thirdPartyFolders.
+        """
+        self.context.AddThirdPartyFolder(folder)
+
+        defaultBuildThirdPartyFolder = self.context.buildFolder + "/thirdParty"
+        message = "Do you want to add %s as ThirdPrty Build Folder?" % defaultBuildThirdPartyFolder
+        dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+        if dlg.ShowModal() == wx.ID_YES:
+            self.AddThirdPartyBuildFolder( defaultBuildThirdPartyFolder )
+    
+    def OnRemoveThirdPartyFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Remove folder where CSnake files must be searched from context.thirdPartyFolders.
+        """
+        self.context.RemoveThirdPartyFolder(self.lbThirdPartyFolders.GetStringSelection())
+        self.UpdateGUIAndSaveContextAndOptions()
+
+    def AddThirdPartyBuildFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Add folder where CSnake files must be searched to context.thirdPartyBuildFolders.
+        """
+        self.context.thirdPartyBuildFolders.append(folder)
+        if len(self.context.thirdPartyBuildFolders) > 0:
+            self.context.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ 0 ]
+    
+    def GetLastThirdPartyBuildFolder(self):
+        if len(self.context.thirdPartyBuildFolders) > 0:
+            return self.context.thirdPartyBuildFolders[len(self.context.thirdPartyBuildFolders)-1]
+        else:
+            return ""
+
+    def OnRemoveThirdPartyBuildFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Remove folder where CSnake files must be searched from context.thirdPartyBuildFolders.
+        """
+        self.context.thirdPartyBuildFolders.remove(self.lbThirdPartyBuildFolders.GetStringSelection())
+        if len(self.context.thirdPartyBuildFolders) == 0:
+            self.context.thirdPartyBuildFolder = ""
+        self.UpdateGUIAndSaveContextAndOptions()
+
+    def OnConfigureThirdPartyBuildFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        """
+        Remove folder where CSnake files must be searched from context.thirdPartyBuildFolders.
+        """
+        
+        posBuild = self.lbThirdPartyBuildFolders.GetSelection()
+
+        source = self.context.GetThirdPartyFolder(posBuild)
+        build = self.context.GetThirdPartyBuildFolders(posBuild)
+        
+        self.handler.ConfigureThirdPartyFolder( source, build )
+
     def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Let the user load a context.
         """
-        dlg = wx.FileDialog(None, "Select CSnake context file", wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
+        dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = self.options.contextFilename, wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
         if dlg.ShowModal() == wx.ID_OK:
             if self.LoadContext(dlg.GetPath()):
                 self.BackupContextFile()
@@ -474,7 +585,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user save the context.
         """
-        dlg = wx.FileDialog(None, "Copy CSnake context to...", wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        dlg = wx.FileDialog(None, "Copy CSnake context to...", defaultDir = self.options.contextFilename, wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             (root, ext) = os.path.splitext(dlg.GetPath())
             if ext == ".CSnakeGUI":
@@ -558,7 +669,6 @@ class CSnakeGUIApp(wx.App):
             self.context.instance = self.listOfPossibleTargets[0]
         self.UpdateGUIAndSaveContextAndOptions()
         self.SetStatus("")
-        xrc.XRCCTRL(self.panelContext, "btnOnlyCreateCMakeFiles").Enable()
         xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
         xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Enable()  
         xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Enable()
@@ -639,7 +749,7 @@ class CSnakeGUIApp(wx.App):
             self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
-        dlg = wx.FileDialog(None, "Select path to Python")
+        dlg = wx.FileDialog(None, "Select path to Visual Studio")
         if dlg.ShowModal() == wx.ID_OK:
             self.context.idePath = dlg.GetPath()
             self.UpdateGUIAndSaveContextAndOptions()
@@ -719,6 +829,9 @@ class CSnakeGUIApp(wx.App):
 
     def RefreshProjects(self, event):
         self.SelectProjects(forceRefresh=True)
+
+    def GetLastThirdPartyFolder(self):
+        return self.context.GetLastThirdPartyFolder( )
     
 if __name__ == "__main__":
     app = CSnakeGUIApp(0)

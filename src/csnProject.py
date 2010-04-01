@@ -87,7 +87,16 @@ class GenericProject(object):
         if _sourceRootFolder is None:
             _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
         self.pathsManager = csnProjectPaths.Manager(self, _sourceRootFolder)
-            
+
+        # Set thirdPartyBuildFolder from _sourceRootFolder
+        #this is only valid for thirdparty projects!!!
+        self.thirdPartyBuildFolder = ""    
+        count = 0
+        for folder in self.context.GetThirdPartyFolders( ):
+            if _sourceRootFolder.find( folder ) != -1:
+                self.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ count ]
+            count += 1
+        
         self.installManager = csnInstall.Manager(self)
         self.rules = dict()
         self.customCommands = []
@@ -98,6 +107,10 @@ class GenericProject(object):
         self.compileManager = csnCompile.Manager(self)
         self.installSubFolder = ""
         self.testsManager = csnTests.Manager(self)
+        
+
+    def GetThirdPartyBuildFolder(self): 
+        return self.thirdPartyBuildFolder
         
     def AddProjects(self, _projects, _dependency = True): 
         self.dependenciesManager.AddProjects(_projects, _dependency)

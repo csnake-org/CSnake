@@ -1,12 +1,32 @@
-import os
 import re
 import sys
 import GlobDirectoryWalker
 import shutil
 import inspect
+import os.path
+if sys.platform == 'win32':
+    import _winreg
+
+def CorrectPath(path):
+    (first,second) = os.path.split(path)
+    
+    if second != "":
+        firstCorrected = CorrectPath(first)
+        secondCorrected = second
+        if os.path.exists(first):
+            for name in os.listdir(first):
+                if name.lower() == second.lower():
+                    secondCorrected = name
+        return os.path.join(firstCorrected, secondCorrected)
+    else:
+        return first
 
 def NormalizePath(path):
-    return os.path.normpath(path).replace("\\", "/")
+    newPath = CorrectPath( os.path.normpath(path) ).replace("\\", "/")
+    return newPath
+
+def UnNormalizePath(path):
+    return os.path.normpath(path).replace("/", "\\")
 
 def RemovePrefixFromPath(path, prefix):
     prefix = os.path.commonprefix([NormalizePath(path), NormalizePath(prefix)] )
@@ -58,14 +78,14 @@ def Join(_theList, _addQuotes = 0):
     Returns a string that contains the items of theList separated by spaces.
     _addQuotes - If true, then each item is also placed in "quotes".
     """
-    all = ""
+    joined = ""
     
     for x in _theList:
         item = str(x)
         if _addQuotes:
             item = '"' + item + '"'
-        all = all + item + " "
-    return all
+        joined = joined + item + " "
+    return joined
 
 def LoadModule(_folder, _name):
     """ 
@@ -79,6 +99,19 @@ def LoadModule(_folder, _name):
     sys.path.pop(location)
     return result 
 
+
+def LoadModules(_folders, _name):
+    """ 
+    Loads python module _name from any _folders, or returns previously loaded module from the loadedModules variable (see above).
+    Adds module to loadedModules (if it is not already there).
+    """
+    sys.path.extend(_folders)
+    location = len(sys.path) - 1
+    result = __import__(_name)
+    #assert sys.path[location] == _folders, "\n\nError: expected that importing %s would not remove stuff from sys.path." % _name 
+    sys.path.pop(location)
+    return result 
+    
 def FileToString(_filename):
     x = ""
     if( os.path.exists(_filename) ):
@@ -113,7 +146,7 @@ def Matches(string, pattern):
     if wildCharPosition == -1:
         result = pattern == string
     else:
-        patternLength = len(pattern);
+        patternLength = len(pattern)
         if wildCharPosition == 0:
             pattern = pattern[1:] + '$'
         elif wildCharPosition == patternLength:
@@ -125,7 +158,7 @@ def Matches(string, pattern):
     return result
 
 def LoadFields(parser, section, basicFields, self):
-    for basicField in self.basicFields:
+    for basicField in basicFields:
         if parser.has_option(section, basicField):
             setattr(self, basicField, parser.get(section, basicField))
 
@@ -141,3 +174,43 @@ def GetSourceFileExtensions():
     
 def GetIncludeFileExtensions():
     return ["h", "hpp", "txx"]
+
+def GetDirs( startDir, outDirs, excludedFoldersList ):
+    directories = [startDir]
+    while len(directories)>0:
+        directory = directories.pop()
+        for name in os.listdir(directory):
+            fullpath = os.path.join(directory,name)
+            if os.path.isdir(fullpath) and not (name in excludedFoldersList):
+                outDirs.append(name)  # It's a directory, store it.
+
+def GetRegVisualStudioPath( generator, key_name ):
+
+    if sys.platform != 'win32':
+        return ""
+
+    value = None
+    type_id = None
+    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+    if generator.startswith('Visual Studio 7'):
+        value,type_id = _winreg.QueryValueEx(key, '7.1')
+    elif generator.startswith('Visual Studio 8'):
+        value,type_id = _winreg.QueryValueEx(key, '8.0')
+    elif generator.startswith('Visual Studio 9'):
+        value,type_id = _winreg.QueryValueEx(key, '9.0')
+    elif generator.startswith('Visual Studio 10'):
+        value,type_id = _winreg.QueryValueEx(key, '10.0')
+    else:
+        raise Exception('Cannot find Visual Studio location for: ' + generator)
+    path = value + r'Common7\IDE\devenv.exe'
+    if not os.path.exists(path):
+        raise Exception("'%s' not found." % path)
+    return path
+
+def GetDefaultVisualStudioPath( generator ):
+    try:
+        path = GetRegVisualStudioPath( generator, r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7' )
+    except WindowsError:
+        path = GetRegVisualStudioPath( generator, r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7' )
+    return path
+

@@ -23,6 +23,23 @@ class csnUtilityTests(unittest.TestCase):
         """ csnUtilityTests: test HasBackSlash function. """
         assert csnUtility.HasBackSlash("c:\\hallo")
         assert not csnUtility.HasBackSlash("c://hallo")
+        
+    def testCorrectPath(self):
+        """ csnUtilityTests: test CorrectPath function. """
+        refPathRoot = ".\\src\\DummyLib"
+        refPath = refPathRoot + "\\libmodules"
+        
+        testPath1 = ".\\src\\DummyLib\\libmodules"
+        assert csnUtility.CorrectPath(testPath1) == refPath        
+        testPath2 = ".\\src\\DummyLib\\liBmoDules"
+        assert csnUtility.CorrectPath(testPath2) == refPath        
+        testPath3 = ".\\src\\DuMMyLib\\libmodules"
+        assert csnUtility.CorrectPath(testPath3) == refPath        
+        refPath4 = ".\\src\\DummyLib\\doEsnoTexist"
+        testPath4 = ".\\src\\DuMMyLib\\doEsnoTexist"
+        assert csnUtility.CorrectPath(testPath4) == refPath4        
+        testPath5 = ".\\doEs\\nOt\\eXist"
+        assert csnUtility.CorrectPath(testPath5) == testPath5        
 
 if __name__ == "__main__":
     unittest.main() 

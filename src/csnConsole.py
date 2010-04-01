@@ -15,10 +15,13 @@ handler = csnGUIHandler.Handler()
 context = handler.LoadContext(commandLineArgs[0])
 
 if commandLineOptions.thirdParty:
-    taskMsg = "ConfigureThirdPartyFolder from %s to %s..." % (context.thirdPartyRootFolder, context.thirdPartyBuildFolder) 
-    print "Starting task: " + taskMsg  
-    result = handler.ConfigureThirdPartyFolder()
-    assert result, "\n\nTask failed: ConfigureThirdPartyFolder" 
+    for count in range( 0, context.GetNumberOfThirdPartyFolders() ):
+        sourceFolder = context.GetThirdPartyFolder( count )
+        buildFolder = context.thirdPartyBuildFolders[ count ]
+        taskMsg = "ConfigureThirdPartyFolders from %s to %s..." % (sourceFolder, buildFolder) 
+        print "Starting task: " + taskMsg  
+    result = handler.ConfigureThirdPartyFolders()
+    assert result, "\n\nTask failed: ConfigureThirdPartyFolders" 
     print "Finished " + taskMsg + "\nPlease build the 3rd party sources then press enter...\n"
     raw_input()
 

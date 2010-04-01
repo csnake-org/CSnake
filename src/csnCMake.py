@@ -56,8 +56,8 @@ class Writer:
                 # iterate over filesToInstall to be copied in this mode
                 for location in project.installManager.filesToInstall[mode].keys():
                     files = ""
-                    for file in project.installManager.filesToInstall[mode][location]:
-                        files += "%s " % csnUtility.NormalizePath(file)
+                    for fileToInstall in project.installManager.filesToInstall[mode][location]:
+                        files += "%s " % csnUtility.NormalizePath(fileToInstall)
                     if files != "":
                         destination = "%s/%s" % (self.project.context.installFolder, location)
                         self.file.write( "\n# Rule for installing files in location %s\n" % destination)
@@ -181,9 +181,9 @@ class Writer:
     def __CreateCMakePrecompiledHeaderPre(self):
         if self.project.compileManager.precompiledHeader != "":
             self.file.write("\n#Adding CMake PrecompiledHeader Pre\n")
-            self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.thirdPartyRootFolder )
-            self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
-        
+            self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
+            self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+            
             #Add precompiled header to sources. This file is generated for windows only 
             # after executing CMake, so it doens't exists at the begining
             if not self.project.context.compiler.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
@@ -194,7 +194,7 @@ class Writer:
     def __CreateCMakePrecompiledHeaderPost(self):
         if self.project.compileManager.precompiledHeader != "":
             self.file.write("\n#Adding CMake PrecompiledHeader Post\n")
-            self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" %s)\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+            self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
 
     def __CreateCMakeSections(self):
         """ Writes different CMake sections for this project to the file f. """
@@ -259,11 +259,11 @@ class Writer:
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.project.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
         if len(self.project.compileManager.public.libraries):
             libraries = ""
-            for type in self.project.compileManager.public.libraries.keys():
+            for buildType in self.project.compileManager.public.libraries.keys():
                 typeString = ""
-                if type != "":
-                    typeString = "\"%s\" " % type # something like "debug "
-                for library in self.project.compileManager.public.libraries[type]:
+                if buildType != "":
+                    typeString = "\"%s\" " % buildType # something like "debug "
+                for library in self.project.compileManager.public.libraries[buildType]:
                     libraries += "%s\"%s\"" % (typeString, library)
             f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.project.name, self.project.name, libraries) )
 

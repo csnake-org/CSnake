@@ -7,8 +7,10 @@ import inspect
 
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
-    folder = "%s/%s" % (csnProject.globalCurrentContext.thirdPartyRootFolder, _subFolder)
-    return csnUtility.LoadModule(folder, _name)
+    folderList = []
+    for thirdPartyFolder in csnProject.globalCurrentContext.GetThirdPartyFolders( ):
+        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
+    return csnUtility.LoadModules(folderList, _name)
 
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None):
     """ 

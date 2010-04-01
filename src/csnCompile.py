@@ -33,7 +33,7 @@ class Manager:
         for sourceFile in _listOfSourceFiles:
             sources = self.project.Glob(sourceFile)
             if _checkExists and not len(sources):
-                    raise IOError, "Path file not found %s" % (sourceFile)
+                raise IOError, "Path file not found %s" % (sourceFile)
             if not len(sources) and _forceAdd:
                 sources = [sourceFile]
             
@@ -107,17 +107,17 @@ class Manager:
             return
             
         assert not( _debugOnly and _releaseOnly)
-        type = "" # empty string is the default, meaning both debug and release
+        buildType = "" # empty string is the default, meaning both debug and release
         if _debugOnly:
-            type = "debug"
+            buildType = "debug"
         if _releaseOnly:
-            type = "optimized"
+            buildType = "optimized"
 
         for library in _listOfLibraries:
-            if not self.public.libraries.has_key(type):
-                self.public.libraries[type] = []
+            if not self.public.libraries.has_key(buildType):
+                self.public.libraries[buildType] = []
             
-            self.public.libraries[type].append(library)
+            self.public.libraries[buildType].append(library)
  
     def __FindPath(self, _path):
         """ 

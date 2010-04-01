@@ -1,5 +1,6 @@
 import wx
 from wx import xrc
+import csnUtility
 
 class FilenameLabel:
     def __eq__(self, other):
@@ -40,7 +41,7 @@ class ControlWithField(BoundControl):
     def GetControlValue(self):
         controlValue = self.control.GetValue()
         if FilenameLabel() in self.labels:
-            controlValue = controlValue.replace("\\", "/")
+            controlValue = csnUtility.NormalizePath( controlValue )
         return controlValue
 
 class TextControl(ControlWithField):

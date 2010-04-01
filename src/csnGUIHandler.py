@@ -22,7 +22,7 @@ class RollbackHandler:
     """
     This helper class instantiates the RollbackImporter and extends the python search path 
     """
-    def SetUp(self, _projectPath, _rootFolders, _thirdPartyRootFolder):
+    def SetUp(self, _projectPath, _rootFolders, _thirdPartyFolders):
         """
         Set up the roll back. 
         """
@@ -32,7 +32,8 @@ class RollbackHandler:
         
         # extend python path with project folder, source root and third party root
         newPaths = list(_rootFolders)
-        newPaths.extend([_projectPath, _thirdPartyRootFolder]) 
+        newPaths.extend(_thirdPartyFolders) 
+        newPaths.extend([_projectPath]) 
         for path in newPaths:
             if not path in sys.path:
                 sys.path.append(path)
@@ -67,7 +68,7 @@ class Handler:
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.thirdPartyRootFolder)
+        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.GetThirdPartyFolders( ))
         (projectFolder, name) = os.path.split(self.context.csnakeFile)
         (name, _) = os.path.splitext(name)
         
@@ -127,7 +128,7 @@ class Handler:
             found = retcode == 0
         return found        
     
-    def ConfigureThirdPartyFolder(self, _nrOfTimes = 2):
+    def ConfigureThirdPartyFolders(self, _nrOfTimes = 2):
         """ 
         Runs cmake to install the libraries in the third party folder.
         By default, the third party folder is configured twice because this works around
@@ -136,28 +137,55 @@ class Handler:
         #print self.context.compiler.GetName()
         #print self.context.configurationName
         result = True
-        os.path.exists(self.context.GetThirdPartyBuildFolder()) or os.makedirs(self.context.GetThirdPartyBuildFolder())
-        argList = [self.context.cmakePath, "-G", self.context.compiler.GetName()] + self.context.compiler.GetThirdPartyCMakeParameters() + [self.context.thirdPartyRootFolder]
+
+        for index in range(0, self.context.GetNumberOfThirdPartyFolders( ) ):
+            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.thirdPartyBuildFolders[ index ], _nrOfTimes )
+            if not result:
+                print "Configuration failed.\n"   
+                if not self.CMakeIsFound():
+                    print "Please specify correct path to CMake (current is %s)" % self.context.cmakePath 
+                    return False
+            
+        return result
+
+    def ConfigureThirdPartyFolder(self, source, build, _nrOfTimes = 2):
+        """ 
+        Runs cmake to install the libraries in the third party folder.
+        By default, the third party folder is configured twice because this works around
+        some problems with incomplete configurations.
+        """
+        #print self.context.compiler.GetName()
+        #print self.context.configurationName
+        result = True
+        
+        # create the build folder if it doesn't exist
+        os.path.exists(build) or os.makedirs(build)
+        
+        if not os.path.exists( self.context.cmakePath ):
+            raise Exception( "Please provide a valid CMake path" )
+        
+        argList = [self.context.cmakePath, "-G", self.context.compiler.GetName()] + self.context.compiler.GetThirdPartyCMakeParameters() + [source]
         for _ in range(0, _nrOfTimes):
-            result = result and 0 == subprocess.Popen(argList, cwd = self.context.GetThirdPartyBuildFolder()).wait() 
+            result = result and 0 == subprocess.Popen(argList, cwd = build).wait() 
 
         if not result:
             print "Configuration failed.\n"   
             if not self.CMakeIsFound():
                 print "Please specify correct path to CMake (current is %s)" % self.context.cmakePath 
                 return False
-            
+
         return result
 
     def DeletePycFiles(self):
         """
-        Tries to delete all pyc files from _projectPath, _rootFolders and thirdPartyRootFolder.
+        Tries to delete all pyc files from _projectPath, _rootFolders and thirdPartyFolders.
         However, __init__.pyc files are not removed.
         """
         # determine list of folders to search for pyc files
-        folderList = [self.context.thirdPartyRootFolder]
+        folderList = []
+        folderList.extend(self.context.GetThirdPartyFolders( ))
         folderList.extend(self.context.rootFolders)
-                    
+
         # remove pyc files
         while len(folderList) > 0:
             newFolders = []
@@ -178,7 +206,7 @@ class Handler:
         self.DeletePycFiles()
                 
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.thirdPartyRootFolder)
+        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.GetThirdPartyFolders( ))
         result = []
 
         # find csnake targets in the loaded module
@@ -259,3 +287,18 @@ class Handler:
             previousFolder = folder
             folder = csnUtility.NormalizePath(os.path.split(folder)[0])
         return result
+
+    def Build(self, solutionName):
+        if not os.path.exists(solutionName):
+            raise Exception( "Solution file not found: %s" % solutionName )
+        
+        pathIDE = self.context.idePath.replace(".exe",".com")
+        if not os.path.exists(pathIDE):
+            raise Exception( "Please provide a valid Visual Studio path" )
+        
+        argList = [pathIDE, solutionName, "/build", "debug" ]
+        subprocess.Popen(argList).wait()
+        argList = [pathIDE, solutionName, "/build", "release" ]
+        subprocess.Popen(argList).wait()
+
+        

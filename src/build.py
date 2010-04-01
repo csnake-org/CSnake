@@ -17,7 +17,7 @@ context = handler.LoadContext(sys.argv[1])
 
 # Configure the project
 if context.instance == "thirdParty":
-    res = handler.ConfigureThirdPartyFolder()
+    res = handler.ConfigureThirdPartyFolders()
 else:
     res = handler.ConfigureProjectToBuildFolder( True )
     handler.InstallBinariesToBuildFolder( )

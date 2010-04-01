@@ -2,6 +2,7 @@ import ConfigParser
 import OrderedSet
 import re
 import csnProject
+import csnUtility
 
 
 latestFileFormatVersion = 2.0
@@ -20,9 +21,11 @@ class Context(object):
         self.installFolder = ""    
         self.prebuiltBinariesFolder = ""    
         self.thirdPartyBuildFolder = ""
+        self.thirdPartyBuildFolders = []
         self.csnakeFile = ""
         self.rootFolders = []
         self.thirdPartyRootFolder = ""
+        self.thirdPartyFolders = []
         self.instance = ""
         self.testRunnerTemplate = "normalRunner.tpl"
         self.recentlyUsed = list()
@@ -80,6 +83,8 @@ class Context(object):
             parser.read([filename])
             self.__LoadBasicFields(parser)
             self.__LoadRootFolders(parser)
+            self.__LoadThirdPartyFolders(parser)
+            self.__LoadThirdPartyBuildFolders(parser)
             self.__LoadRecentlyUsedCSnakeFiles(parser)
             
             # Temporary workaround to support old versions of the context file;
@@ -124,6 +129,30 @@ class Context(object):
             self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
             count += 1
         
+    def __LoadThirdPartyFolders(self, parser):
+        section = "ThirdPartyFolders"
+        count = 0
+        self.thirdPartyFolders = []
+        while parser.has_option(section, "ThirdPartyFolder%s" % count):
+            self.thirdPartyFolders.append( parser.get(section, "ThirdPartyFolder%s" % count) )
+            count += 1
+
+        # special case for old version with only root folder
+        if len(self.thirdPartyFolders) == 0 and self.thirdPartyRootFolder != "":
+            self.thirdPartyFolders.append(self.thirdPartyRootFolder)
+            
+    def __LoadThirdPartyBuildFolders(self, parser):
+        section = "ThirdPartyBuildFolders"
+        count = 0
+        self.thirdPartyBuildFolders = []
+        while parser.has_option(section, "ThirdPartyBuildFolder%s" % count):
+            self.thirdPartyBuildFolders.append( parser.get(section, "ThirdPartyBuildFolder%s" % count) )
+            count += 1
+
+        # special case for old version with only root folder
+        if len(self.thirdPartyBuildFolders) == 0 and self.thirdPartyBuildFolder != "":
+            self.thirdPartyBuildFolders.append(self.thirdPartyBuildFolder)
+
     def __LoadRecentlyUsedCSnakeFiles(self, parser):
         self.recentlyUsed = []
         count = 0
@@ -171,14 +200,30 @@ class Context(object):
         parser.set(section, "version", str(latestFileFormatVersion))
         rootFolderSection = "RootFolders"
         parser.add_section(rootFolderSection)
+        thirdPartyFolderSection = "ThirdPartyFolders"
+        parser.add_section(thirdPartyFolderSection)
+        thirdPartyBuildFolderSection = "ThirdPartyBuildFolders"
+        parser.add_section(thirdPartyBuildFolderSection)
 
         for basicField in self.basicFields:
             parser.set(section, basicField, getattr(self, basicField))
         parser.set(section, "filter", ";".join(self.filter))
+        
         count = 0
         while count < len(self.rootFolders):
             parser.set(rootFolderSection, "RootFolder%s" % count, self.rootFolders[count] )
             count += 1
+
+        count = 0
+        while count < len(self.thirdPartyFolders):
+            parser.set(thirdPartyFolderSection, "ThirdPartyFolder%s" % count, self.thirdPartyFolders[count] )
+            count += 1
+
+        count = 0
+        while count < len(self.thirdPartyBuildFolders):
+            parser.set(thirdPartyBuildFolderSection, "ThirdPartyBuildFolder%s" % count, self.thirdPartyBuildFolders[count] )
+            count += 1
+            
         self.__SaveRecentlyUsedCSnakeFiles(parser)
         
         f = open(filename, 'w')
@@ -197,6 +242,53 @@ class Context(object):
     def GetThirdPartyBuildFolder(self):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
         return self.thirdPartyBuildFolder + "/" + self.compiler.GetThirdPartySubFolder()
+
+    def GetThirdPartyBuildFolders(self, index):
+        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
+        return self.thirdPartyBuildFolders[index] + "/" + self.compiler.GetThirdPartySubFolder()
+
+    def GetThirdPartyFolder(self, index = 0):
+        return self.thirdPartyFolders[index]
+
+    def GetThirdPartyFolders(self):
+        return self.thirdPartyFolders
+
+    def GetNumberOfThirdPartyFolders( self ):
+        return len(self.thirdPartyFolders)
+
+    def AddThirdPartyFolder(self, folder):
+        self.thirdPartyFolders.append(folder)
+        if len(self.thirdPartyFolders) > 0:
+            self.thirdPartyRootFolder = self.thirdPartyFolders[ 0 ]
+
+    def RemoveThirdPartyFolder(self, folder):
+        self.thirdPartyFolders.remove(folder)
+        if self.GetNumberOfThirdPartyFolders() == 0:
+            self.thirdPartyRootFolder = ""
+        
+    def GetLastThirdPartyFolder(self):
+        if self.GetNumberOfThirdPartyFolders() > 0:
+            return self.thirdPartyFolders[len(self.thirdPartyFolders)-1]
+        else:
+            return ""
+        
+    def AddRootFolder(self, newRootFolder ):
+        
+        # Check that the new folder doesn't have the same structure than the old ones
+        newRootFolderSubdirs = []
+        excludedFolders = ["CVS", ".svn"]
+        csnUtility.GetDirs( newRootFolder, newRootFolderSubdirs, excludedFolders )
+        for oldRootFolder in self.rootFolders:
+            oldRootFolderSubdirs = []
+            csnUtility.GetDirs( oldRootFolder, oldRootFolderSubdirs, excludedFolders )
+            for oldSubDir in oldRootFolderSubdirs:
+                for newSubDir in newRootFolderSubdirs:
+                    if newSubDir == oldSubDir:
+                        message = "Error: The new folder (%s) cannot contain similar subfolders than an already set folder (%s)" % (newRootFolder,oldRootFolder)
+                        raise Exception( message )
+        
+        self.rootFolders.append(newRootFolder)
+
     
     def FindCompiler(self):
         #print "FindCompiler"
@@ -204,6 +296,12 @@ class Context(object):
             #print "FindCompiler: Update"
             self.compiler = self.compilermap[self.compilername]
             self.compilername = self.compiler.GetName()
+            try:
+                path = csnUtility.GetDefaultVisualStudioPath( self.compilername )
+                if self.idePath != path:
+                    self.idePath = path
+            except Exception, message:
+                print message
     
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
