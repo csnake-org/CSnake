@@ -138,4 +138,4 @@ class csnProjectTests(unittest.TestCase):
             assert project.installManager.filesToInstall["Debug"][location] == ["Bye.h"]
         
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
