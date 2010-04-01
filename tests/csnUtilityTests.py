@@ -1,6 +1,7 @@
 # Unit tests for the csnUtility methods
 import unittest
 import csnUtility
+import os
 
 class csnUtilityTests(unittest.TestCase):
     
@@ -26,21 +27,20 @@ class csnUtilityTests(unittest.TestCase):
         
     def testCorrectPath(self):
         """ csnUtilityTests: test CorrectPath function. """
-        refPathRoot = ".\\src\\DummyLib"
-        refPath = refPathRoot + "\\libmodules"
+        refPathRoot = "src/DummyLib"
+        refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
-        testPath1 = "./src/DummyLib/libmodules"
+        testPath1 = "src/DummyLib/libmodules"
         assert csnUtility.CorrectPath(testPath1) == refPath        
-        testPath2 = "./src/DummyLib/liBmoDules"
+        testPath2 = "src/DummyLib/liBmoDules"
         assert csnUtility.CorrectPath(testPath2) == refPath        
-        testPath3 = "./src/DuMMyLib/libmodules"
+        testPath3 = "src/DuMMyLib/libmodules"
         assert csnUtility.CorrectPath(testPath3) == refPath        
-        refPath4 = ".\\src\\DummyLib\\doEsnoTexist"
-        testPath4 = "./src/DuMMyLib/doEsnoTexist"
-        print csnUtility.CorrectPath(testPath4)
+        refPath4 = os.path.normpath( "src/DummyLib/doEsnoTexist" )
+        testPath4 = "src/DuMMyLib/doEsnoTexist"
         assert csnUtility.CorrectPath(testPath4) == refPath4        
-        refPath5 = ".\\doEs\\nOt\\eXist"
-        testPath5 = "./doEs/nOt/eXist"
+        refPath5 = os.path.normpath( "doEs/nOt/eXist" )
+        testPath5 = "doEs/nOt/eXist"
         assert csnUtility.CorrectPath(testPath5) == refPath5        
 
 if __name__ == "__main__":
