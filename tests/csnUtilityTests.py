@@ -29,17 +29,19 @@ class csnUtilityTests(unittest.TestCase):
         refPathRoot = ".\\src\\DummyLib"
         refPath = refPathRoot + "\\libmodules"
         
-        testPath1 = ".\\src\\DummyLib\\libmodules"
+        testPath1 = "./src/DummyLib/libmodules"
         assert csnUtility.CorrectPath(testPath1) == refPath        
-        testPath2 = ".\\src\\DummyLib\\liBmoDules"
+        testPath2 = "./src/DummyLib/liBmoDules"
         assert csnUtility.CorrectPath(testPath2) == refPath        
-        testPath3 = ".\\src\\DuMMyLib\\libmodules"
+        testPath3 = "./src/DuMMyLib/libmodules"
         assert csnUtility.CorrectPath(testPath3) == refPath        
         refPath4 = ".\\src\\DummyLib\\doEsnoTexist"
-        testPath4 = ".\\src\\DuMMyLib\\doEsnoTexist"
+        testPath4 = "./src/DuMMyLib/doEsnoTexist"
+        print csnUtility.CorrectPath(testPath4)
         assert csnUtility.CorrectPath(testPath4) == refPath4        
-        testPath5 = ".\\doEs\\nOt\\eXist"
-        assert csnUtility.CorrectPath(testPath5) == testPath5        
+        refPath5 = ".\\doEs\\nOt\\eXist"
+        testPath5 = "./doEs/nOt/eXist"
+        assert csnUtility.CorrectPath(testPath5) == refPath5        
 
 if __name__ == "__main__":
     unittest.main() 
