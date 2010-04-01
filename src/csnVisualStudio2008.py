@@ -7,7 +7,7 @@ class Compiler(csnCompiler.Compiler):
         self.postProcessor = PostProcessor()
         
     def GetCompileFlags(self):
-        return ["/Zm200"]
+        return [""]
 
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
