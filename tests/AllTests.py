@@ -8,6 +8,7 @@ from csnBuildTests import csnBuildTests
 from csnGUIHandlerTests import csnGUIHandlerTests
 from csnProjectTests import csnProjectTests
 from csnUtilityTests import csnUtilityTests
+from csnContextConverterTests import csnContextConverterTests
 
 class AllTests:
     def __init__(self, _outputFileName):
@@ -20,8 +21,11 @@ class AllTests:
         uiSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIHandlerTests)
         csnProjectSuite = unittest.TestLoader().loadTestsFromTestCase(csnProjectTests)
         csnUtilitySuite = unittest.TestLoader().loadTestsFromTestCase(csnUtilityTests)
+        csnContextConverterSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextConverterTests)
         # main suite
-        self.suite = unittest.TestSuite([buildSuite, uiSuite, csnProjectSuite, csnUtilitySuite])
+        self.suite = unittest.TestSuite([
+             buildSuite, uiSuite, csnProjectSuite, 
+             csnUtilitySuite, csnContextConverterSuite])
         # output file name
         self.outputFileName = _outputFileName
         
