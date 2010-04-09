@@ -20,6 +20,9 @@ from optparse import OptionParser
 import csnGenerator
 import datetime
 
+# Only there to allow its inclusion when generating executables.
+import csnCilab #@UnusedImport
+
 class RedirectText:
     """
     Used to redirect messages to stdout to the text control in CSnakeGUIFrame.

@@ -1,5 +1,10 @@
-python setup.py py2exe
-move ../CSnakeDist ../CSnakeDistPrev
-move ../CSnakeBuild ../CSnakeBuildPrev
-move dist ../CSnakeDist
-move build ../CSnakeBuild
+@echo off
+REM ------------------------------------
+REM Generate an executable fro CSnake
+REM ------------------------------------
+
+REM Call py2exe
+python ../src/setup.py py2exe
+
+REM Let us see the results
+@pause
