@@ -12,7 +12,7 @@ class Converter:
         parserOptions = ConfigParser.ConfigParser()
         try:
             parserOptions.read([self.optionsFilename])
-        except ConfigParser.ParsingError as error:
+        except ConfigParser.ParsingError, error:
             sys.stdout.write( "Warning: %s" % error.message )
             return False
             
