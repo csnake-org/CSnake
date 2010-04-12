@@ -38,7 +38,7 @@ Cruise Control project configuration file.
       <!-- Schedule: configures the actual build loop, how often and which build file/target -->
       <schedule interval="${main.schedule_interval}">
          <!-- Call ant with the main build.xml -->
-         <ant target="python_config">
+         <ant target="${ant.python_target}">
             <!-- target: create_csnake_config -->
             <property name="src_folder" value="${main.csnake_src_folder}/tests"/>
             <property name="dest_folder" value="${main.csnake_src_folder}/tests/config"/>
@@ -46,10 +46,13 @@ Cruise Control project configuration file.
             <property name="csnakefile" value="${main.csnake_src_folder}/tests/src/TestInstance/csnTestInstance.py"/>
             <property name="server_properties_file" value="${main.server_properties_file}"/>
             <property name="common_properties_file" value="${project.source_path}/build/cruise.properties"/>
-            <!-- target: python -->
-            <property name="path" value="${main.csnake_src_folder}/tests"/>
+            <!-- target: python_test -->
+            <property name="test_path" value="${main.csnake_src_folder}/tests"/>
             <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests:${main.csnake_src_folder}/tests/src"/>
-            <property name="arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
+            <property name="test_arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
+            <!-- target: python_build -->
+            <property name="build_path" value="${main.csnake_src_folder}"/>
+            <property name="build_dest_folder" value="${project.artifacts_folder}"/>
          </ant>
       </schedule>
 
