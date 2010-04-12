@@ -39,7 +39,7 @@ Cruise Control project configuration file.
       <!-- Schedule: configures the actual build loop, how often and which build file/target -->
       <schedule interval="${main.schedule_interval}">
          <!-- Call ant with the main build.xml -->
-         <ant target="${ant.python_target}">
+         <ant target="create_csnake_config ${ant.python_target}">
             <!-- target: create_csnake_config -->
             <property name="src_folder" value="${main.csnake_src_folder}/tests"/>
             <property name="dest_folder" value="${main.csnake_src_folder}/tests/config"/>
