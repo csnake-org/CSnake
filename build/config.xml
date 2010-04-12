@@ -51,7 +51,7 @@ Cruise Control project configuration file.
             <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests:${main.csnake_src_folder}/tests/src"/>
             <property name="test_arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
             <!-- target: python_build -->
-            <property name="build_path" value="${main.csnake_src_folder}"/>
+            <property name="build_path" value="${main.csnake_src_folder}/src"/>
             <property name="build_dest_folder" value="${project.artifacts_folder}"/>
          </ant>
       </schedule>
