@@ -66,6 +66,7 @@ Cruise Control project configuration file.
       <publishers>
          <!-- Email to interested persons -->
          <htmlemail/>
+         <artifactspublisher/>
       </publishers>
 
    </project>
