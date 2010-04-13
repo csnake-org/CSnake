@@ -17,12 +17,11 @@ import time
 import subprocess
 import xrcbinder
 from optparse import OptionParser
-import csnGenerator
-import datetime
+from about import About
 
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
-from about import About
+import logging.config
 
 class RedirectText:
     """
@@ -30,19 +29,10 @@ class RedirectText:
     """
     def __init__(self,aWxTextCtrl):
         self.out=aWxTextCtrl
-        # log file
-        filename = "log.txt"
-        # delete if too big
-        if os.path.exists(filename):
-            filesize = os.path.getsize(filename)
-            # bigger than 5M
-            if filesize > 5242880:
-                os.remove(filename)
-        self.log = open("log.txt", 'a')
+        # logging init
+        logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
+        self.logger = logging.getLogger("CSnake")
 
-    def __del__(self):
-        self.log.close()
-    
     def write(self,string):
         self.out.WriteText(string)
         self.out.Update()
@@ -55,9 +45,7 @@ class RedirectText:
         if (len(string) == 0) or (len(string) > 0 and string[len(string)-1:] != '\n'):
             string += '\n'
         if log:
-            date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            outstr = "%s %s" % (date, string) 
-            self.log.write( outstr )
+            self.logger.info(string)
 
 class SelectFolderCallback:
     """ 
