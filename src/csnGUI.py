@@ -507,7 +507,7 @@ class CSnakeGUIApp(wx.App):
         """
         Remove folder where CSnake files must be searched from context.rootFolders.
         """
-        self.context.rootFolders.remove(self.context.rootFolder.GetStringSelection())
+        self.context.rootFolders.remove(self.lbRootFolders.GetStringSelection())
         self.UpdateGUIAndSaveContextAndOptions()
 
     def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
