@@ -4,6 +4,7 @@ from distutils.core import setup
 import os
 # Added options for setup
 import py2exe #@UnusedImport
+from about import About
 
 class exeSetup():
     ''' Helper class to generate windows executable.'''
@@ -17,13 +18,16 @@ class exeSetup():
             if os.path.isfile(f1): # skip directories
                 f2 = "resources", [f1]
                 self.resources.append(f2)
-        # options
-        self.name = "CSnake"
-        self.version = "2.3"
-        self.description = "Compilation configuration helper."
-        self.author = "SSD Team"
+        # script
         self.script = pathToSrc + "csnGUI.py"
         self.icon_resource = pathToResources + "Laticauda_colubrina.ico"
+        # options
+        about = About()
+        about.read( pathToResources + "about.txt")
+        self.name = about.getName()
+        self.version = about.getVersion()
+        self.description = about.getDescription()
+        self.author = about.getAuthor()
     
     def run(self):
         ''' Run the setup. '''

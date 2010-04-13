@@ -5,6 +5,7 @@ import warnings
 import sys
 import types
 import OrderedSet
+from about import About
 
 # General documentation
 #
@@ -75,7 +76,11 @@ import OrderedSet
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
-version = 2.23
+def getVersion():
+    about = About()
+    about.read(csnUtility.GetRootOfCSnake() + "/resources/about.txt")
+    return about.getVersion()
+version = getVersion()
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 

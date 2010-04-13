@@ -22,6 +22,7 @@ import datetime
 
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
+from about import About
 
 class RedirectText:
     """
@@ -717,10 +718,9 @@ class CSnakeGUIApp(wx.App):
 
     def OnAbout(self, event = None):
         ''' Text displayed in the About box.'''
-        info = wx.AboutDialogInfo()
-        info.SetName("CSnake")
-        info.SetVersion("%s" % csnGenerator.version)
-        wx.AboutBox(info)
+        about = About()
+        about.read(csnUtility.GetRootOfCSnake() + "/resources/about.txt")
+        wx.AboutBox(about.getWxAboutDialogInfo())
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         item = self.context.csnakeFile.GetSelection()
