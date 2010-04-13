@@ -154,7 +154,7 @@ class Writer:
         for description, rule in self.project.rules.iteritems():
             self.file.write("\n#Adding rule %s\n" % description)
             command = "ADD_CUSTOM_COMMAND("
-            command += "OUTPUT %s" % rule.output
+            command += "OUTPUT \"%s\"" % rule.output
             command += " COMMAND %s" % rule.command
             if len(rule.depends) > 0:
                 command += " DEPENDS"
