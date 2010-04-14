@@ -64,7 +64,8 @@ class csnBuildTests(unittest.TestCase):
                 tmp = cf.get(csnakeSectionName, option)
                 tmp = tmp.replace("my bin", "bin")
                 cf.set(csnakeSectionName, option, tmp)
-            tmp = cf.get("RootFolders", "rootfolder0")
+            option = "rootfolder0"
+            tmp = cf.get("RootFolders", option)
             tmp = tmp.replace("my src", "src")
             cf.set(csnakeSectionName, option, tmp)
         # save the new context file
