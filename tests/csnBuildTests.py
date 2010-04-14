@@ -41,27 +41,32 @@ class csnBuildTests(unittest.TestCase):
         instanceName = projectName.lower()[0] + projectName[1:]
         contextFileName = "config/csnake_context.txt"
         contextNewFileName = "config/csnake_context-%s.txt" % projectName
-        sectionName = "CSnake"
+        csnakeSectionName = "CSnake"
         
         # modify the csnake context file
         cf = ConfigParser.ConfigParser()
         cf.read(contextFileName)
         # modify the options
-        cf.set(sectionName, "instance", instanceName)
-        csnakefile = cf.get(sectionName, "csnakefile")
+        cf.set(csnakeSectionName, "instance", instanceName)
+        csnakefile = cf.get(csnakeSectionName, "csnakefile")
         csnakefile = csnakefile.replace("TestInstance", projectName)
-        cf.set(sectionName, "csnakefile", csnakefile)
+        cf.set(csnakeSectionName, "csnakefile", csnakefile)
         # no spaces for cmake/make
-        options = ["csnakefile", "thirdpartyrootfolder", "rootfolder0"]
-        for option in options:
-            tmp = cf.get(sectionName, option)
+        if( cf.get(csnakeSectionName, "compilername").find("KDevelop3") != -1 or
+              cf.get(csnakeSectionName, "compilername").find("Makefile") != -1 ):
+            options = ["csnakefile", "thirdpartyrootfolder"]
+            for option in options:
+                tmp = cf.get(csnakeSectionName, option)
+                tmp = tmp.replace("my src", "src")
+                cf.set(csnakeSectionName, option, tmp)
+            options = ["buildfolder", "thirdpartybuildfolder"]
+            for option in options:
+                tmp = cf.get(csnakeSectionName, option)
+                tmp = tmp.replace("my bin", "bin")
+                cf.set(csnakeSectionName, option, tmp)
+            tmp = cf.get("RootFolders", "rootfolder0")
             tmp = tmp.replace("my src", "src")
-            cf.set(sectionName, option, tmp)
-        options = ["buildfolder", "thirdpartybuildfolder"]
-        for option in options:
-            tmp = cf.get(sectionName, option)
-            tmp = tmp.replace("my bin", "bin")
-            cf.set(sectionName, option, tmp)
+            cf.set(csnakeSectionName, option, tmp)
         # save the new context file
         contextNewFile = open(contextNewFileName, 'w')
         cf.write(contextNewFile)
