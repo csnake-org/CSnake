@@ -108,7 +108,7 @@ class csnProjectTests(unittest.TestCase):
         """ csnProjectTests: test that globbing source files works. """
         # dummyExe project
         dummyExe = csnProject.Project("DummyExe", "executable")
-        dummyExe.AddSources(["src/DummyExe/src/*.cpp"])
+        dummyExe.AddSources(["my src/DummyExe/src/*.cpp"])
         # should have 1 source files
         assert len(dummyExe.GetSources()) == 1, csnUtility.Join(dummyExe.GetSources(), _addQuotes=1)
 
@@ -116,7 +116,7 @@ class csnProjectTests(unittest.TestCase):
         """ csnProjectTests: test that the source root folder, containing csnBuildTest.py, is deduced correctly by the parent class csnBuild.Project. """
         # dummyExe project
         dummyExe = csnProject.Project("DummyExe", "executable")
-        dummyExe.AddSources(["src/DummyExe/src/*.cpp"])
+        dummyExe.AddSources(["my src/DummyExe/src/*.cpp"])
         
         # check folder
         self.assertEqual(os.path.abspath(dummyExe.sourceRootFolder), os.path.abspath(os.path.dirname(__file__)))

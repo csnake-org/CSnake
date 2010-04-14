@@ -27,17 +27,18 @@ class csnUtilityTests(unittest.TestCase):
         
     def testCorrectPath(self):
         """ csnUtilityTests: test CorrectPath function. """
-        refPathRoot = "src/DummyLib"
+        root = "my src/"
+        refPathRoot = root + "DummyLib"
         refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
-        testPath1 = "src/DummyLib/libmodules"
+        testPath1 = root + "DummyLib/libmodules"
         assert csnUtility.CorrectPath(testPath1) == refPath        
-        testPath2 = "src/DummyLib/liBmoDules"
+        testPath2 = root + "DummyLib/liBmoDules"
         assert csnUtility.CorrectPath(testPath2) == refPath        
-        testPath3 = "src/DuMMyLib/libmodules"
+        testPath3 = root + "DuMMyLib/libmodules"
         assert csnUtility.CorrectPath(testPath3) == refPath        
-        refPath4 = os.path.normpath( "src/DummyLib/doEsnoTexist" )
-        testPath4 = "src/DuMMyLib/doEsnoTexist"
+        refPath4 = os.path.normpath( root + "DummyLib/doEsnoTexist" )
+        testPath4 = root + "DuMMyLib/doEsnoTexist"
         assert csnUtility.CorrectPath(testPath4) == refPath4        
         refPath5 = os.path.normpath( "doEs/nOt/eXist" )
         testPath5 = "doEs/nOt/eXist"
