@@ -51,6 +51,17 @@ class csnBuildTests(unittest.TestCase):
         csnakefile = cf.get(sectionName, "csnakefile")
         csnakefile = csnakefile.replace("TestInstance", projectName)
         cf.set(sectionName, "csnakefile", csnakefile)
+        # no spaces for cmake/make
+        options = ["csnakefile", "thirdpartyrootfolder", "rootfolder0"]
+        for option in options:
+            tmp = cf.get(sectionName, option)
+            tmp = tmp.replace("my src", "src")
+            cf.set(sectionName, option, tmp)
+        options = ["buildfolder", "thirdpartybuildfolder"]
+        for option in options:
+            tmp = cf.get(sectionName, option)
+            tmp = tmp.replace("my bin", "bin")
+            cf.set(sectionName, option, tmp)
         # save the new context file
         contextNewFile = open(contextNewFileName, 'w')
         cf.write(contextNewFile)
