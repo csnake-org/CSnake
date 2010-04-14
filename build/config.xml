@@ -44,12 +44,12 @@ Cruise Control project configuration file.
             <property name="src_folder" value="${main.csnake_src_folder}/tests"/>
             <property name="dest_folder" value="${main.csnake_src_folder}/tests/config"/>
             <property name="instance" value="testInstance"/>
-            <property name="csnakefile" value="${main.csnake_src_folder}/tests/src/TestInstance/csnTestInstance.py"/>
+            <property name="csnakefile" value="${main.csnake_src_folder}/tests/my src/TestInstance/csnTestInstance.py"/>
             <property name="server_properties_file" value="${main.server_properties_file}"/>
             <property name="common_properties_file" value="${project.source_path}/build/cruise.properties"/>
             <!-- target: python_test -->
             <property name="test_path" value="${main.csnake_src_folder}/tests"/>
-            <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests:${main.csnake_src_folder}/tests/src"/>
+            <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests:${main.csnake_src_folder}/tests/my src"/>
             <property name="test_arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
             <!-- target: python_build -->
             <property name="build_path" value="${main.csnake_src_folder}/src"/>
