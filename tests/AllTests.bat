@@ -14,7 +14,7 @@ REM  thirdpartyrootfolder = %rootfolder0%
 REM Build and install folders are created and deleted at the end of the tests
 
 REM Add csnake src to the python path
-@set PYTHONPATH=../src;./my src
+@set PYTHONPATH=%PYTHONPATH%;../src
 REM Run all tests
 @python AllTests.py
 REM Let us see the results

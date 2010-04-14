@@ -14,6 +14,6 @@
 # Build and install folders are created and deleted at the end of the tests
 
 # Add csnake src to the python path
-export PYTHONPATH=$PYTHONPATH:../src:./my src
+export PYTHONPATH=$PYTHONPATH:../src
 # Run all tests
 python AllTests.py
