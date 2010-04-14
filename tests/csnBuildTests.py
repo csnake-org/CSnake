@@ -64,10 +64,11 @@ class csnBuildTests(unittest.TestCase):
                 tmp = cf.get(csnakeSectionName, option)
                 tmp = tmp.replace("my bin", "bin")
                 cf.set(csnakeSectionName, option, tmp)
+            sectionName = "RootFolders"
             option = "rootfolder0"
-            tmp = cf.get("RootFolders", option)
+            tmp = cf.get(sectionName, option)
             tmp = tmp.replace("my src", "src")
-            cf.set(csnakeSectionName, option, tmp)
+            cf.set(sectionName, option, tmp)
         # save the new context file
         contextNewFile = open(contextNewFileName, 'w')
         cf.write(contextNewFile)
