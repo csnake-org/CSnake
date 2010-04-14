@@ -64,11 +64,11 @@ class csnBuildTests(unittest.TestCase):
         # set vars from context
         if buildType == "executable":
             exeName = projectName
-            makePath = "%s/../bin/executable" % context.buildFolder
+            buildPath = "%s/executable" % context.buildFolder
         # ok, a bit fishy, I know the application name...
         elif buildType == "lib":
             exeName = projectName + "App_myApp"
-            makePath = "%s/../bin/library" % context.buildFolder
+            buildPath = "%s/library" % context.buildFolder
 
         # configure the project
         ret = handler.ConfigureProjectToBuildFolder( True )        
@@ -78,6 +78,8 @@ class csnBuildTests(unittest.TestCase):
         # create compiler command
         compileArgList = []
         if( context.compilername.find("Visual Studio") != -1 ):
+            # build path
+            buildPath = "%s/%s" % (buildPath, projectName)
             # compiler
             compileArgList.append(context.idePath)
             # solution file
@@ -85,27 +87,19 @@ class csnBuildTests(unittest.TestCase):
             assert os.path.exists(solutionFile)
             compileArgList.append(solutionFile)
             # build mode
-            #mode = buildMode
-            # Incredibuild case
-            #if( context.idePath.find("BuildConsole") != -1 ):
             mode = "%s|x64" % buildMode
             compileArgList.append("/build")
             compileArgList.append(mode)
-            # options
-            #compileArgList.append("/out")
-            #compileArgList.append("buildLog.txt")
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
-            # change directory to bin directory
-            compileArgList.append("cd")
-            path = "%s/%s/%s" % (makePath, buildMode, projectName)
-            compileArgList.append(path + ';')
-            # call make
+            # build path
+            buildPath = "%s/%s/%s" % (buildPath, buildMode, projectName)
+            # make
             compileArgList.append("make")
             compileArgList.append("-s")
         
-        # run compiler
-        ret = subprocess.call(compileArgList)
+        # run compiler (cwd needed for make)
+        ret = subprocess.call(compileArgList, cwd=buildPath)
         assert ret == 0, "The compiler returned with an error message."
 
         # check the built executable
