@@ -29,11 +29,11 @@ MARK_AS_ADVANCED(INTEL_ALTIX350)
 # have it installed or have a different version.
 IF(WIN32)
   INSTALL(FILES
-    "${CILAB_TOOLKIT_SOURCE_DIR}/cilabResources/DLLs/MSVC7.1/msvcr71.dll"
-    "${CILAB_TOOLKIT_SOURCE_DIR}/cilabResources/DLLs/MSVC7.1/msvcp71.dll"
-    "${CILAB_TOOLKIT_SOURCE_DIR}/cilabResources/DLLs/MSVC7.1/msvcr71d.dll"
-    "${CILAB_TOOLKIT_SOURCE_DIR}/cilabResources/DLLs/MSVC7.1/msvcp71d.dll"
-    "${CILAB_TOOLKIT_SOURCE_DIR}/cilabResources/DLLs/MSVC7.1/msvcrtd.dll"
+    "${CILAB_TOOLKIT_SOURCE_DIR}/thirdParty/MSVC/MSVC7.1/msvcr71.dll"
+    "${CILAB_TOOLKIT_SOURCE_DIR}/thirdParty/MSVC/MSVC7.1/msvcp71.dll"
+    "${CILAB_TOOLKIT_SOURCE_DIR}/thirdParty/MSVC/MSVC7.1/msvcr71d.dll"
+    "${CILAB_TOOLKIT_SOURCE_DIR}/thirdParty/MSVC/MSVC7.1/msvcp71d.dll"
+    "${CILAB_TOOLKIT_SOURCE_DIR}/thirdParty/MSVC/MSVC7.1/msvcrtd.dll"
     DESTINATION
     "${CMAKE_INSTALL_PREFIX}/cilabApps/GIMIAS"
   )
