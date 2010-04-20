@@ -36,7 +36,7 @@ class exeSetup():
             version=self.version,
             description=self.description,
             author=self.author,
-            windows=[ 
+            console=[ 
                 {
                     "script": self.script,
                     "icon_resources": [(1, self.icon_resource)]
