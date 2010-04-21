@@ -133,6 +133,11 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     project.installSubFolder = "plugins/%s/lib" % _name
     project.AddIncludeFolders(["."])
     project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
+    
+    installFolder = "%s/debug" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1 )
+    installFolder = "%s/release" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1 )
     return project
 
 def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
