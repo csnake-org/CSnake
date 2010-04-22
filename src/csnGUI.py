@@ -41,9 +41,10 @@ class RedirectText:
         # remove spurious end-of-line
         if (len(string) == 1 and string[len(string)-1:] == '\n'):
             log = False
-        # append a end-of-line if missing 
-        if (len(string) == 0) or (len(string) > 0 and string[len(string)-1:] != '\n'):
-            string += '\n'
+        # remove possible end-of-line
+        if (len(string) > 0 and string[len(string)-1] == '\n'):
+            string = string[0:len(string)-1]
+        # print
         if log:
             self.logger.info(string)
 
