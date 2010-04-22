@@ -1,6 +1,7 @@
 import csnUtility
 import os
 import csnProject
+import sys
 
 class Writer:
     def __init__(self, _project):
@@ -165,6 +166,15 @@ class Writer:
             command += " VERBATIM"
             command += " )" 
             self.file.write(command)
+
+        # Adding specific windows macros
+        if sys.platform == 'win32':
+            self.file.write("\n#Adding specific windows macros\n")
+            self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PlatformDependent.cmake\"" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
+            self.file.write("INCREASE_MSVC_HEAP_LIMIT( 1000 )\n")
+            self.file.write("SUPPRESS_VC8_DEPRECATED_WARNINGS( )\n")
+            self.file.write("SUPPRESS_LINKER_WARNING_4089( %s )\n" % self.project.name )
+            
     
     def __CreateCMakeSection_Link(self):
         """ Create link commands in the CMakeLists.txt """
