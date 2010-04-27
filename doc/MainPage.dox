@@ -1,0 +1,19 @@
+# Main page for the documentation of this library.
+/**
+
+\mainpage CSnake
+
+\section introduction_sec Introduction
+Helper tool for library compilation configuration.
+
+\section details_sec Details
+\li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
+\li Library license: Open Source
+
+\section depends_sec Dependencies
+<em>The dependencies of the library.</em>
+
+\section changelog_sec Change Log
+<em>The main changes that happend to the library.</em>
+
+*/
