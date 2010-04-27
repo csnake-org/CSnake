@@ -19,7 +19,11 @@ Cruise Control project configuration file.
       <!-- Properties -->
       <!-- Note: config paths are relative to the cruise control location on the server -->
       <property name="project.source_path" value="${main.csnake_src_folder}"/>
+      <!-- Redefined specially for this project -->
       <property name="project.artifacts_temp_folder" value="${project.source_path}/artifacts"/>
+      <property name="project.doc_dest_folder" value="${project.artifacts_temp_folder}"/>
+      <property name="project.doc_run_folder" value="${project.source_path}/doc"/>
+      <property name="project.doc_config_file" value="${project.source_path}/doc/Doxyfile.doxy"/>
 
       <!-- Listeners: notified with every project event -->
       <listeners>
@@ -51,12 +55,17 @@ Cruise Control project configuration file.
             <property name="test_path" value="${project.source_path}/tests"/>
             <property name="python_path" value="${project.source_path}/src:${project.source_path}/tests"/>
             <property name="test_arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
-            <!-- target: python_build -->
+            <!-- target: python_build [WINDOWS specific] -->
             <property name="build_path" value="${project.source_path}/build"/>
             <property name="build_dest_folder" value="${project.artifacts_temp_folder}"/>
             <property name="mpi_folder" value="${project.source_path}/build"/>
             <property name="mpi_file" value="csnake.mpi"/>
             <property name="install_generator" value="${project.installer_generator}"/>
+            <!-- target: create doc [WINDOWS specific] -->
+            <property name="doc_dest_folder" value="${project.doc_dest_folder}"/>
+            <property name="doc_run_folder" value="${project.doc_run_folder}"/>
+            <property name="doc_generator" value="${project.doc_generator}"/>
+            <property name="doc_config_file" value="${project.doc_config_file}"/>
          </ant>
       </schedule>
 
