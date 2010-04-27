@@ -19,7 +19,7 @@ Cruise Control project configuration file.
       <!-- Properties -->
       <!-- Note: config paths are relative to the cruise control location on the server -->
       <property name="project.source_path" value="${main.csnake_src_folder}"/>
-      <property name="project.artifacts_temp_folder" value="${main.csnake_src_folder}/artifacts"/>
+      <property name="project.artifacts_temp_folder" value="${project.source_path}/artifacts"/>
 
       <!-- Listeners: notified with every project event -->
       <listeners>
@@ -41,19 +41,22 @@ Cruise Control project configuration file.
          <!-- Call ant with the main build.xml -->
          <ant target="create_csnake_config ${ant.python_target}">
             <!-- target: create_csnake_config -->
-            <property name="src_folder" value="${main.csnake_src_folder}/tests"/>
-            <property name="dest_folder" value="${main.csnake_src_folder}/tests/config"/>
+            <property name="src_folder" value="${project.source_path}/tests"/>
+            <property name="dest_folder" value="${project.source_path}/tests/config"/>
             <property name="instance" value="testInstance"/>
-            <property name="csnakefile" value="${main.csnake_src_folder}/tests/my src/TestInstance/csnTestInstance.py"/>
+            <property name="csnakefile" value="${project.source_path}/tests/my src/TestInstance/csnTestInstance.py"/>
             <property name="server_properties_file" value="${main.server_properties_file}"/>
             <property name="common_properties_file" value="${project.source_path}/build/cruise.properties"/>
             <!-- target: python_test -->
-            <property name="test_path" value="${main.csnake_src_folder}/tests"/>
-            <property name="python_path" value="${main.csnake_src_folder}/src:${main.csnake_src_folder}/tests"/>
+            <property name="test_path" value="${project.source_path}/tests"/>
+            <property name="python_path" value="${project.source_path}/src:${project.source_path}/tests"/>
             <property name="test_arg_line" value="AllTests.py -o '${project.test_log_folder}/testslog.xml'"/>
             <!-- target: python_build -->
-            <property name="build_path" value="${main.csnake_src_folder}/src"/>
+            <property name="build_path" value="${project.source_path}/build"/>
             <property name="build_dest_folder" value="${project.artifacts_temp_folder}"/>
+            <property name="mpi_folder" value="${project.source_path}/build"/>
+            <property name="mpi_file" value="csnake.mpi"/>
+            <property name="install_generator" value="${project.installer_generator}"/>
          </ant>
       </schedule>
 
