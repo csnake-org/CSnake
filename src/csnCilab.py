@@ -115,7 +115,11 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         self.applicationsProject.AddProjects([self])
         self.AddProjects([self.applicationsProject], _dependency = 0)
     
-    AddApplications(self.applicationsProject, dependencies, _modules, "%s/Applications" % self.GetSourceRootFolder(), _pch, _holderName)
+    # look for an 'applications' or 'Applications' folder
+    _modulesFolder = "%s/applications" % self.GetSourceRootFolder()
+    if not os.path.exists(_modulesFolder):
+        _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
+    AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName)
     
 def GimiasPluginProject(_name, _sourceRootFolder = None):
     """
