@@ -85,7 +85,7 @@ class csnBuildTests(unittest.TestCase):
             buildPath = "%s/executable" % context.buildFolder
         # ok, a bit fishy, I know the application name...
         elif buildType == "lib":
-            exeName = projectName + "App_myApp"
+            exeName = projectName + "Applications_myApp"
             buildPath = "%s/library" % context.buildFolder
 
         # configure the project

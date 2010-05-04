@@ -95,7 +95,7 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None):
+def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _addSuffix=True):
     """
     Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
     _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
@@ -106,7 +106,12 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         dependencies.extend(_applicationDependenciesList)
         
     if _holderName is None:
-        _holderName = "%sApp" % self.name
+        _holderName = self.name
+        
+    if _addSuffix is True:
+        _holderName = "%sApplications" % _holderName
+    else:
+        _holderName = "%s" % _holderName
         
     csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
     if self.applicationsProject is None:
@@ -114,6 +119,7 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         #self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
         self.applicationsProject.AddProjects([self])
         self.AddProjects([self.applicationsProject], _dependency = 0)
+    
     AddApplications(self.applicationsProject, dependencies, _modules, "%s/Applications" % self.GetSourceRootFolder(), _pch, _holderName)
     
 def GimiasPluginProject(_name, _sourceRootFolder = None):
