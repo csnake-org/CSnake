@@ -95,7 +95,7 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _addSuffix=True):
+def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None):
     """
     Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
     _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
@@ -106,12 +106,7 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         dependencies.extend(_applicationDependenciesList)
         
     if _holderName is None:
-        _holderName = self.name
-        
-    if _addSuffix is True:
-        _holderName = "%sApplications" % _holderName
-    else:
-        _holderName = "%s" % _holderName
+        _holderName = "%sApplications" % self.name
         
     csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
     if self.applicationsProject is None:
