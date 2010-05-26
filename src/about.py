@@ -2,7 +2,7 @@
 import wx
 import ConfigParser
 
-class About():
+class About:
     ''' Class to store about information. '''
     def __init__(self):
         # file config
