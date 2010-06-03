@@ -569,7 +569,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user load a context.
         """
-        dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = self.options.contextFilename, wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
+        dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = os.path.dirname(self.options.contextFilename), wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
         if dlg.ShowModal() == wx.ID_OK:
             if self.LoadContext(dlg.GetPath()):
                 self.BackupContextFile()
@@ -578,7 +578,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user save the context.
         """
-        dlg = wx.FileDialog(None, "Copy CSnake context to...", defaultDir = self.options.contextFilename, wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        dlg = wx.FileDialog(None, "Copy CSnake context to...", defaultDir = os.path.dirname(self.options.contextFilename), wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             (root, ext) = os.path.splitext(dlg.GetPath())
             if ext == ".CSnakeGUI":
