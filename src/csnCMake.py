@@ -185,7 +185,7 @@ class Writer:
             for project in self.project.GetProjects(_recursive = 1, _onlyRequiredProjects = 1, _includeSelf=0):
                 if not project.type in ("dll", "library", "executable", "prebuilt"):
                     continue
-                targetLinkLibraries = targetLinkLibraries + ("%s " % project.name) 
+                targetLinkLibraries = (" %s " % project.name) + targetLinkLibraries
             self.file.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.project.name, targetLinkLibraries) )
 
     def __CreateCMakePrecompiledHeaderPre(self):

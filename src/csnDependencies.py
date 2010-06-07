@@ -114,6 +114,9 @@ class Manager:
             
         if otherProject in self.useBefore:
             return 1
+        
+        if otherProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
+            return 1
             
         for requiredProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
             if otherProject in requiredProject.dependenciesManager.useBefore:
@@ -154,9 +157,9 @@ class Manager:
             else:
                 result.append(project)
           
-        # ensure that self.project is the last entry in the result
+        # ensure that self.project is the first entry in the result
         result.remove(self.project)
-        result.append(self.project)
+        result.insert(0,self.project)
         return result
 
     def WriteDependencyStructureToXML(self, filename):
