@@ -48,49 +48,59 @@ class Manager:
                 return 1
         return 0
         
-    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False, _skipList = None):
+    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False, _skipList = [], _stack = []):
         """
         Returns list of all projects associated with this project.
         _recursive -- If true, returns not only child projects but all projects in the tree below this project.
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
         """
-        result = OrderedSet.OrderedSet()
+        if self.project in _stack:
+            if _onlyRequiredProjects:
+                namelist = []
+                foundStart = False
+                for project in _stack:
+                     if project == self.project:
+                         foundStart = True
+                     if foundStart:
+                         namelist.append(project.name)
+                namelist.append(self.project.name)
+                print "Cyclic dependency: %s" % namelist
+            return OrderedSet.OrderedSet()
+        _stack = _stack + [self.project]
+            
+        directDependencies = OrderedSet.OrderedSet()
         toSubtract = OrderedSet.OrderedSet()
         toAdd = OrderedSet.OrderedSet()
         if _onlyNonRequiredProjects:
             toAdd.update(self.projectsNonRequired)
         else:
             toAdd.update(self.projects)
-            
+
         if _onlyRequiredProjects:
             toSubtract.update(self.projectsNonRequired)
-        result.update(toAdd - toSubtract)
-            
+        directDependencies.update(toAdd - toSubtract)
+
         if _recursive:
-            moreResults = OrderedSet.OrderedSet()
-            for project in result:
-                # see if project is in the skip list
-                if _skipList is None:
-                    _skipList = []
-                if project in _skipList:
-                    continue
-                # add project to the skip list, and recurse
-                _skipList.append(project)
-                moreResults.update( 
+            fullDependencies = OrderedSet.OrderedSet()
+            for project in directDependencies:
+                fullDependencies.update(
                     project.dependenciesManager.GetProjects(
-                        _recursive, 
-                        _onlyRequiredProjects, 
-                        _includeSelf, 
+                        _recursive,
+                        _onlyRequiredProjects,
+                        True,
                         _onlyPublicDependencies,
                         _onlyNonRequiredProjects,
-                        _skipList
-                    ) 
+                        _skipList,
+                        _stack
+                    )
                 )
-            result.update(moreResults)
+            dependencies = fullDependencies
+        else:
+            dependencies = directDependencies
             
         if _includeSelf:
-            result.add(self.project)
-        return result
+            dependencies.add(self.project)
+        return dependencies
         
     def UseBefore(self, _otherProject):
         """ 
@@ -109,13 +119,16 @@ class Manager:
         _otherProject - May be a project, or a function returning a project.
         """
         otherProject = csnProject.ToProject(_otherProject)
+        
+        #if otherProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
+        #    return 1
+        #if self.project in otherProject.dependenciesManager.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
+        #    return 0
+        
         if self.project is otherProject:
             return 0
             
         if otherProject in self.useBefore:
-            return 1
-        
-        if otherProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
             return 1
             
         for requiredProject in self.GetProjects(_recursive = 1, _onlyRequiredProjects = 1):
