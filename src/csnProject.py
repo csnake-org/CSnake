@@ -94,7 +94,7 @@ class GenericProject(object):
         count = 0
         for folder in self.context.GetThirdPartyFolders( ):
             if _sourceRootFolder.find( folder ) != -1:
-                self.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ count ]
+                self.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ count ] + "/" + self.context.compiler.GetThirdPartySubFolder()
             count += 1
         
         self.installManager = csnInstall.Manager(self)
