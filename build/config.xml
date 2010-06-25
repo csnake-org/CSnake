@@ -47,8 +47,8 @@ Cruise Control project configuration file.
             <!-- target: create_csnake_config -->
             <property name="src_folder" value="${project.source_path}/tests"/>
             <property name="dest_folder" value="${project.source_path}/tests/config"/>
-            <property name="instance" value="testInstance"/>
-            <property name="csnakefile" value="${project.source_path}/tests/my src/TestInstance/csnTestInstance.py"/>
+            <property name="instance" value=""/>
+            <property name="csnakefile" value="${project.source_path}/tests/data"/>
             <property name="server_properties_file" value="${main.server_properties_file}"/>
             <property name="common_properties_file" value="${project.source_path}/build/cruise.properties"/>
             <!-- target: python_test -->
