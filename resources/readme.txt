@@ -2,10 +2,28 @@
 CSnake readme
 --------------
 
-Version: 2.3.0
+Version: 2.3.2
 
 Change log
 ----------
+
+v2.3.2
+
+ * Fix dependency mechanism (linux build failures)
+ * Fix multiple src/third party folder support for linux
+ * Fix install files to build folder for multiple src/third party
+
+Note: 
+- csn files of third parties should not use the {{{project.context.GetThirdPartyBuildFolder()}}} but 
+the {{{project.GetBuildFolder()}}} method, the first one gives you one of the third party folders 
+and the second one gives you the specific one of your third party. This was changed in version 1.1.0 of the 
+toolkit. Project using the first method can be configured only if the toolkit third parties are first in the list.
+- be carefull: all thrid party source folder should have a specific associated bin folder (they cannot use the same one)
+
+v2.3.1
+
+ * Changed application folder to lower case a (still working for both cases)
+ * Reverted application suffix to old one (Applications)
 
 v2.3.0:
 
