@@ -6,7 +6,7 @@ import csnProject
 import csnGUIHandler
 import shutil
 import subprocess
-import ConfigParser
+from TestProjectConfig import TestProjectConfig
 
 class csnBuildTests(unittest.TestCase):
 
@@ -29,99 +29,169 @@ class csnBuildTests(unittest.TestCase):
         
     def testDummyExeBuild(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project. """
-        self.build( "DummyExe", "executable", "Release" )
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src"], "bin",
+                                   ["thirdParty"], ["bin/thirdParty"],
+                                   "src/DummyExe/csnDummyExe.py")
+        self.build( config )
+        
+    def testDummyExeBuildWithSpace(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project
+        with spaces in folders. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["my src"], "my bin",
+                                   ["third party"], ["my bin/third party"],
+                                   "my src/DummyExe/csnDummyExe.py")
+        # Only for visual studio
+        if( config.isVisualStudioConfig() == True ):
+            self.build( config )
+        
+    def testDummyExeBuildNewSyntax(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project
+        with new syntax. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src"], "bin",
+                                   ["thirdParty"], ["bin/thirdParty"],
+                                   "src/DummyExe/csnDummyExe.py", True)
+        self.build( config )
+        
+    def testDummyExeBuildMultiple(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project
+        with new syntax. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src", "src2"], "bin",
+                                   ["thirdParty"], ["bin/thirdParty"],
+                                   "src/DummyExe/csnDummyExe.py", True)
+        self.build( config )
         
     def testDummyLibBuild(self):
         """ testDummyLibBuild: test configuring and building the DummyLib project. """
-        self.build( "DummyLib", "lib", "Release" )
+        config = TestProjectConfig("DummyLib", "lib", "Release", 
+                                   ["src"], "bin",
+                                   ["thirdParty"], ["bin/thirdParty"],
+                                   "src/DummyLib/csnDummyLib.py")
+        self.build( config )
 
-    def build(self, projectName, buildType, buildMode):
+    def testDummyLibBuildMul(self):
+        """ testDummyLibBuildMul: test configuring and building the DummyLib project. """
+        config = TestProjectConfig("DummyLib2", "lib", "Release", 
+                                   ["src", "src2"], "bin",
+                                   ["thirdParty", "thirdParty2"], ["bin/thirdParty", "bin/thirdParty2"],
+                                   "src2/DummyLib2/csnDummyLib2.py", True)
+        self.build( config )
+
+
+    def testDummyLibBuildWithSpace(self):
+        """ testDummyLibBuildWithSpace: test configuring and building the DummyLib project with spaces in folders. """
+        config = TestProjectConfig("DummyLib", "lib", "Release", 
+                                   ["my src"], "my bin",
+                                   ["third party"], ["my bin/third party"],
+                                   "my src/DummyLib/csnDummyLib.py")
+        # Only for visual studio
+        if( config.isVisualStudioConfig() == True ):
+            self.build( config )
+
+    def testDummyLibBuildNewSyntax(self):
+        """ testDummyLibBuildNewSyntax: test configuring and building the DummyLib project with new syntax.
+        """
+        config = TestProjectConfig("DummyLib", "lib", "Release", 
+                                   ["src"], "bin",
+                                   ["thirdParty"], ["bin/thirdParty"],
+                                   "src/DummyLib/csnDummyLib.py", True)
+        self.build( config )
+
+    def build(self, testConfig):
         """ test configuring and building the input project. """
-        # names
-        instanceName = projectName.lower()[0] + projectName[1:]
-        contextFileName = "config/csnake_context.txt"
-        contextNewFileName = "config/csnake_context-%s.txt" % projectName
-        csnakeSectionName = "CSnake"
-        
-        # modify the csnake context file
-        cf = ConfigParser.ConfigParser()
-        cf.read(contextFileName)
-        # modify the options
-        cf.set(csnakeSectionName, "instance", instanceName)
-        csnakefile = cf.get(csnakeSectionName, "csnakefile")
-        csnakefile = csnakefile.replace("TestInstance", projectName)
-        cf.set(csnakeSectionName, "csnakefile", csnakefile)
-        # no spaces for cmake/make
-        if( cf.get(csnakeSectionName, "compilername").find("KDevelop3") != -1 or
-              cf.get(csnakeSectionName, "compilername").find("Makefile") != -1 ):
-            options = ["csnakefile", "thirdpartyrootfolder"]
-            for option in options:
-                tmp = cf.get(csnakeSectionName, option)
-                tmp = tmp.replace("my src", "src")
-                cf.set(csnakeSectionName, option, tmp)
-            options = ["buildfolder", "thirdpartybuildfolder"]
-            for option in options:
-                tmp = cf.get(csnakeSectionName, option)
-                tmp = tmp.replace("my bin", "bin")
-                cf.set(csnakeSectionName, option, tmp)
-            sectionName = "RootFolders"
-            option = "rootfolder0"
-            tmp = cf.get(sectionName, option)
-            tmp = tmp.replace("my src", "src")
-            cf.set(sectionName, option, tmp)
-        # save the new context file
-        contextNewFile = open(contextNewFileName, 'w')
-        cf.write(contextNewFile)
-        contextNewFile.close()
+        # create the context file
+        testConfig.createContext()
         
         # create GUI handler
         handler = csnGUIHandler.Handler()
         # load context
-        context = handler.LoadContext(contextNewFileName)
+        context = handler.LoadContext(testConfig.getContextFileName())
         
-        # set vars from context
-        if buildType == "executable":
-            exeName = projectName
-            buildPath = "%s/executable" % context.buildFolder
-        # ok, a bit fishy, I know the application name...
-        elif buildType == "lib":
-            exeName = projectName + "Applications_myApp"
-            buildPath = "%s/library" % context.buildFolder
-
+        # configure and compile third parties
+        ret = handler.ConfigureThirdPartyFolders()
+        assert ret == True, "CMake returned with an error message while configuring the third parties."
+        
+        # compile third parties
+        
+        if( context.compilername.find("Visual Studio") != -1 ):
+            for index in range(0,context.GetNumberOfThirdPartyFolders()):
+                # create compiler command
+                compileArgList = []
+                # compiler
+                compileArgList.append(context.idePath)
+                # solution file
+                solutionFile = "%s/CILAB_TOOLKIT.sln" % context.GetThirdPartyBuildFolderByIndex(index)
+                assert os.path.exists(solutionFile), "The third party solution file does not exist."
+                compileArgList.append(solutionFile)
+                # build mode
+                mode = "%s|x64" % testConfig.getBuildMode()
+                compileArgList.append("/build")
+                compileArgList.append(mode)
+                # build path
+                buildPath = testConfig.getTpBinDirs()[index]
+                # run compiler
+                ret = subprocess.call(compileArgList, cwd=buildPath)
+                assert ret == 0, "The compiler returned with an error message while compiling the third parties."
+            
+        elif( context.compilername.find("KDevelop3") != -1 or
+              context.compilername.find("Makefile") != -1 ):
+            for index in range(0,context.GetNumberOfThirdPartyFolders()):
+                # create compiler command
+                compileArgList = []
+                # build path
+                buildPath = context.GetThirdPartyBuildFolderByIndex(index)
+                # make
+                compileArgList.append("make")
+                compileArgList.append("-s")
+                # run compiler (cwd needed for make)
+                ret = subprocess.call(compileArgList, cwd=buildPath)
+                assert ret == 0, "The compiler returned with an error message while compiling the third parties."
+        
         # configure the project
-        ret = handler.ConfigureProjectToBuildFolder( True )        
+        runCsnake = True
+        ret = handler.ConfigureProjectToBuildFolder( runCsnake )        
         # check that it worked
-        assert ret == True, "CMake returned with an error message."
+        assert ret == True, "CMake returned with an error message while configuring the project."
+        
+        # install files to bin folder
+        ret = handler.InstallBinariesToBuildFolder()
+        # check that it worked
+        assert ret == True, "Installing binaries to build folder failed."
+        
+        # compile project
         
         # create compiler command
         compileArgList = []
         if( context.compilername.find("Visual Studio") != -1 ):
             # build path
-            buildPath = "%s/%s" % (buildPath, projectName)
+            buildPath = "%s/%s" % (testConfig.getBuildPath(), testConfig.getName())
             # compiler
             compileArgList.append(context.idePath)
             # solution file
             solutionFile = handler.GetTargetSolutionPath()
-            assert os.path.exists(solutionFile)
+            assert os.path.exists(solutionFile), "The project solution file does not exist."
             compileArgList.append(solutionFile)
             # build mode
-            mode = "%s|x64" % buildMode
+            mode = "%s|x64" % testConfig.getBuildMode()
             compileArgList.append("/build")
             compileArgList.append(mode)
         elif( context.compilername.find("KDevelop3") != -1 or
               context.compilername.find("Makefile") != -1 ):
             # build path
-            buildPath = "%s/%s/%s" % (buildPath, buildMode, projectName)
+            buildPath = "%s/%s/%s" % (testConfig.getBuildPath(), testConfig.getBuildMode(), testConfig.getName())
             # make
             compileArgList.append("make")
             compileArgList.append("-s")
         
         # run compiler (cwd needed for make)
         ret = subprocess.call(compileArgList, cwd=buildPath)
-        assert ret == 0, "The compiler returned with an error message."
+        assert ret == 0, "The compiler returned with an error message while compiling the project."
 
         # check the built executable
-        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, buildMode, exeName)
+        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, testConfig.getBuildMode(), testConfig.getExeName())
         if( context.compilername.find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
@@ -131,10 +201,10 @@ class csnBuildTests(unittest.TestCase):
         assert ret == 6, "The generated executable did not return the correct result."
 
         # run tests with lib
-        if buildType == "lib":
+        if testConfig.getType() == "lib":
             # check the built test
-            testName = projectName + "Tests"
-            testExeFilename = "%s/bin/%s/%s" % (context.buildFolder, buildMode, testName)
+            testName = testConfig.getName() + "Tests"
+            testExeFilename = "%s/bin/%s/%s" % (context.buildFolder, testConfig.getBuildMode(), testName)
             if( context.compilername.find("Visual Studio") != -1 ):
                 testExeFilename = "%s.exe" % (testExeFilename)
             assert os.path.exists(testExeFilename)
