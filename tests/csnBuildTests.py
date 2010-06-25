@@ -34,6 +34,7 @@ class csnBuildTests(unittest.TestCase):
         generator.Generate(dummyExe)
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
+        csnProject.globalCurrentContext = None
         
     def testDummyExeBuild(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project. """

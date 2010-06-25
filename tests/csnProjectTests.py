@@ -22,6 +22,7 @@ class csnProjectTests(unittest.TestCase):
 
     def tearDown(self):
         """ Run after test. """
+        csnProject.globalCurrentContext = None
 
     def testName(self):
         """ csnProjectTests: test that the name of the project is correct. """
