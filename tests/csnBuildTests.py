@@ -7,6 +7,7 @@ import csnGUIHandler
 import shutil
 import subprocess
 from TestProjectConfig import TestProjectConfig
+import csnContext
 
 class csnBuildTests(unittest.TestCase):
 
@@ -18,6 +19,13 @@ class csnBuildTests(unittest.TestCase):
 
     def testGenerate(self):
         """ csnBuildTest: test configuring a dummy project. """
+        # load fake context
+        self.context = csnContext.Load("config/csnake_context.txt")
+        # change the build folder
+        self.context.buildFolder = self.context.buildFolder + "/bin"
+        # set it as global context
+        csnProject.globalCurrentContext = self.context
+
         # dummyExe project
         dummyExe = csnProject.Project("DummyExe", "executable")
         
@@ -72,7 +80,7 @@ class csnBuildTests(unittest.TestCase):
                                    "src/DummyLib/csnDummyLib.py")
         self.build( config )
 
-    def testDummyLibBuildMul(self):
+    def testDummyLibBuildMultiple(self):
         """ testDummyLibBuildMul: test configuring and building the DummyLib project. """
         config = TestProjectConfig("DummyLib2", "lib", "Release", 
                                    ["src", "src2"], "bin",
