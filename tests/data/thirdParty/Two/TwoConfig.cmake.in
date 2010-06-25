@@ -1,0 +1,12 @@
+# The project include file directories.
+SET(Two_INCLUDE_DIRS "@Two_INCLUDE_DIRS@")
+
+# The project library directories.
+# Includes project libs directory and OTHER libs directories
+SET(Two_LIBRARY_DIRS "@Two_LIBRARY_DIRS@")
+
+# This includes all libraries (.lib, .so, .a) that the project generates.
+SET(Two_LIBRARIES "@Two_LIBRARIES@")
+
+# Location of the project use file.
+SET(Two_USE_FILE "@Two_USE_FILE@")

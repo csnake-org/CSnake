@@ -1,0 +1,12 @@
+# The project include file directories.
+SET(Three_INCLUDE_DIRS "@Three_INCLUDE_DIRS@")
+
+# The project library directories.
+# Includes project libs directory and OTHER libs directories
+SET(Three_LIBRARY_DIRS "@Three_LIBRARY_DIRS@")
+
+# This includes all libraries (.lib, .so, .a) that the project generates.
+SET(Three_LIBRARIES "@Three_LIBRARIES@")
+
+# Location of the project use file.
+SET(Three_USE_FILE "@Three_USE_FILE@")
