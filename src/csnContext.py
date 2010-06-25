@@ -243,10 +243,13 @@ class Context(object):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
         return self.thirdPartyBuildFolder + "/" + self.compiler.GetThirdPartySubFolder()
 
-    def GetThirdPartyBuildFolders(self, index):
+    def GetThirdPartyBuildFolderByIndex(self, index):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
         return self.thirdPartyBuildFolders[index] + "/" + self.compiler.GetThirdPartySubFolder()
 
+    def GetThirdPartyBuildFolders(self):
+        return self.thirdPartyBuildFolders
+    
     def GetThirdPartyFolder(self, index = 0):
         return self.thirdPartyFolders[index]
 

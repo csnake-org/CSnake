@@ -139,7 +139,7 @@ class Handler:
         result = True
 
         for index in range(0, self.context.GetNumberOfThirdPartyFolders( ) ):
-            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolders( index ), _nrOfTimes )
+            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), _nrOfTimes )
             if not result:
                 print "Configuration failed.\n"   
                 if not self.CMakeIsFound():

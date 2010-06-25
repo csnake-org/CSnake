@@ -42,25 +42,27 @@ class Manager:
                 filesToInstall = dict()
                 for location in project.installManager.filesToInstall[mode].keys():
                     for dllPattern in project.installManager.filesToInstall[mode][location]:
-                        path = csnUtility.NormalizePath(dllPattern)
-                        if not os.path.isabs(path):
-                            path = "%s/%s" % (self.project.context.thirdPartyBuildFolder, path)
-                        for file in glob.glob(path):
-                            if (os.path.basename(file) in excludedFolderList) and _skipCVS and os.path.isdir(file):
-                                continue
-                            if os.path.isdir(file):
-                                for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
-                                    if not os.path.isdir(folderFile):
-                                        normalizedLocation = location + "/" + csnUtility.RemovePrefixFromPath(os.path.dirname(folderFile), file)
-                                        normalizedLocation = csnUtility.NormalizePath(normalizedLocation)
-                                        if not filesToInstall.has_key(normalizedLocation):
-                                            filesToInstall[normalizedLocation] = []
-                                        filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(folderFile))
-                            else:
-                                normalizedLocation = csnUtility.NormalizePath(location)
-                                if not filesToInstall.has_key(normalizedLocation):
-                                    filesToInstall[normalizedLocation] = []
-                                filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(file))
+                        for tpfolder in self.project.context.GetThirdPartyBuildFolders():
+                            tpfolder += "/" + self.project.context.compiler.GetThirdPartySubFolder()
+                            path = csnUtility.NormalizePath(dllPattern)
+                            if not os.path.isabs(path):
+                                path = "%s/%s" % (tpfolder, path)
+                            for file in glob.glob(path):
+                                if (os.path.basename(file) in excludedFolderList) and _skipCVS and os.path.isdir(file):
+                                    continue
+                                if os.path.isdir(file):
+                                    for folderFile in GlobDirectoryWalker.Walker(file, ["*"], excludedFolderList):
+                                        if not os.path.isdir(folderFile):
+                                            normalizedLocation = location + "/" + csnUtility.RemovePrefixFromPath(os.path.dirname(folderFile), file)
+                                            normalizedLocation = csnUtility.NormalizePath(normalizedLocation)
+                                            if not filesToInstall.has_key(normalizedLocation):
+                                                filesToInstall[normalizedLocation] = []
+                                            filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(folderFile))
+                                else:
+                                    normalizedLocation = csnUtility.NormalizePath(location)
+                                    if not filesToInstall.has_key(normalizedLocation):
+                                        filesToInstall[normalizedLocation] = []
+                                    filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(file))
                     
                 project.installManager.filesToInstall[mode] = filesToInstall
  

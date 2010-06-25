@@ -561,7 +561,7 @@ class CSnakeGUIApp(wx.App):
         posBuild = self.lbThirdPartyBuildFolders.GetSelection()
 
         source = self.context.GetThirdPartyFolder(posBuild)
-        build = self.context.GetThirdPartyBuildFolders(posBuild)
+        build = self.context.GetThirdPartyBuildFolderByIndex(posBuild)
         
         self.handler.ConfigureThirdPartyFolder( source, build )
 

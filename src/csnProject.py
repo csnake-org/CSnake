@@ -88,13 +88,14 @@ class GenericProject(object):
             _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
         self.pathsManager = csnProjectPaths.Manager(self, _sourceRootFolder)
 
-        # Set thirdPartyBuildFolder from _sourceRootFolder
-        #this is only valid for thirdparty projects!!!
-        self.thirdPartyBuildFolder = ""    
+        # Get the thirdPartyBuildFolder index
+        # WARNING: this is only valid for a thirdparty projects!!!
+        self.thirdPartyIndex = 0
         count = 0
-        for folder in self.context.GetThirdPartyFolders( ):
-            if _sourceRootFolder.find( folder ) != -1:
-                self.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ count ] + "/" + self.context.compiler.GetThirdPartySubFolder()
+        for folder in self.context.GetThirdPartyFolders():
+            if folder == os.path.dirname(_sourceRootFolder):
+                self.thirdPartyIndex = count
+                break
             count += 1
         
         self.installManager = csnInstall.Manager(self)
@@ -109,9 +110,6 @@ class GenericProject(object):
         self.testsManager = csnTests.Manager(self)
         
 
-    def GetThirdPartyBuildFolder(self): 
-        return self.thirdPartyBuildFolder
-        
     def AddProjects(self, _projects, _dependency = True): 
         self.dependenciesManager.AddProjects(_projects, _dependency)
 
@@ -173,7 +171,10 @@ class GenericProject(object):
         return self.testsManager.testProject
         
     def GetBuildFolder(self):
-        return self.pathsManager.GetBuildFolder()
+        if self.type == "third party":
+            return self.context.GetThirdPartyBuildFolderByIndex(self.thirdPartyIndex)
+        else:
+            return self.pathsManager.GetBuildFolder()
 
     def GetBuildResultsFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         return self.pathsManager.GetBuildResultsFolder(_configurationName)
