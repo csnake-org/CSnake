@@ -28,8 +28,8 @@ class csnInstallTests(unittest.TestCase):
         """ Test the installation of files. """
         # dummyLib project
         dummyInstall = csnProject.Project("DummyInstall", "library")
-        dummyInstall.AddFilesToInstall(["AllTests.bat"], _debugOnly = 1, _WIN32 = 1)
-        dummyInstall.AddFilesToInstall(["AllTests.bat"], _releaseOnly = 1, _WIN32 = 1)
+        dummyInstall.AddFilesToInstall(["AllTests.bat"], _debugOnly = 1, _WIN32 = 1, _NOT_WIN32 = 1)
+        dummyInstall.AddFilesToInstall(["AllTests.bat"], _releaseOnly = 1, _WIN32 = 1, _NOT_WIN32 = 1)
         dummyInstall.installManager.InstallBinariesToBuildFolder()
         # check presence of the files
         self.assertTrue( os.path.exists("bin/bin/Debug/AllTests.bat") )
