@@ -159,16 +159,16 @@ class csnBuildTests(unittest.TestCase):
                 ret = subprocess.call(compileArgList, cwd=buildPath)
                 assert ret == 0, "The compiler returned with an error message while compiling the third parties."
         
+        # install files to bin folder
+        ret = handler.InstallBinariesToBuildFolder()
+        # check that it worked
+        assert ret == True, "Installing binaries to build folder failed."
+        
         # configure the project
         runCsnake = True
         ret = handler.ConfigureProjectToBuildFolder( runCsnake )        
         # check that it worked
         assert ret == True, "CMake returned with an error message while configuring the project."
-        
-        # install files to bin folder
-        ret = handler.InstallBinariesToBuildFolder()
-        # check that it worked
-        assert ret == True, "Installing binaries to build folder failed."
         
         # compile project
         
