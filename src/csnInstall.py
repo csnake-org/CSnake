@@ -3,6 +3,7 @@ import os
 import glob
 import shutil
 import GlobDirectoryWalker
+import logging
 
 class Manager:
     def __init__(self, _project):
@@ -74,11 +75,9 @@ class Manager:
         result = True
         self.ResolvePathsOfFilesToInstall()
 
-        if not os.path.exists( self.project.pathsManager.GetBuildFolder() ):
-            os.mkdir( self.project.pathsManager.GetBuildFolder() )
-        logFilename = "%s/Install.log" % self.project.pathsManager.GetBuildFolder()
-        f = open(logFilename, 'w')
-
+        logger = logging.getLogger("CSnake")
+        logger.info( "Install Binaries To Build Folder." )
+        
         for mode in ("Debug", "Release"):
             outputFolder = self.project.context.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
@@ -89,14 +88,13 @@ class Manager:
                         assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
-                        #print "Copying %s to %s\n" % (file, absLocation)
                         fileResult = (0 != shutil.copy(file, absLocation))
                         result = fileResult and result
                         if not fileResult:
-                            print "Failed to copy %s to %s\n" % (file, absLocation)
+                            message = "Failed to copy %s to %s\n" % (file, absLocation)
+                            logger.error( message )
+                            print message
                         else:
-                            message = "copied %s to %s\n" % (file, absLocation)
-                            f.write( message )
+                            logger.info( "copied %s to %s" % (file, absLocation) )
                             
-        f.close()
         return result
