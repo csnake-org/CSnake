@@ -126,21 +126,5 @@ class csnProjectTests(unittest.TestCase):
         # check folder
         self.assertEqual(os.path.abspath(dummyExe.sourceRootFolder), os.path.abspath(os.path.dirname(__file__)))
 
-    def testAddFilesToInstall(self):
-        """ csnProjectTests: test adding files to install Windows. """
-        location = "./Install"
-        project = csnProject.Project("TestProject", "dll")
-        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
-        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
-        # _WIN32 case
-        if( self.context.compilername.find("Visual Studio") != -1 ):
-            assert project.installManager.filesToInstall["Release"][location] == ["Hello.cpp"]
-            assert project.installManager.filesToInstall["Debug"][location] == ["Hello.cpp"]
-        # _NOT_WIN32 case
-        elif( self.context.compilername.find("KDevelop3") != -1 or
-              self.context.compilername.find("Makefile") != -1 ):
-            assert project.installManager.filesToInstall["Release"][location] == ["Bye.h"]
-            assert project.installManager.filesToInstall["Debug"][location] == ["Bye.h"]
-        
 if __name__ == "__main__":
     unittest.main()

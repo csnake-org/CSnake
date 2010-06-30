@@ -37,5 +37,21 @@ class csnInstallTests(unittest.TestCase):
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
 
+    def testWinSwitch(self):
+        """ csnInstallTests: test install files with windows switch. """
+        location = "./Install"
+        project = csnProject.Project("TestProject", "dll")
+        project.AddFilesToInstall(["Hello.cpp"], location, _WIN32 = 1)
+        project.AddFilesToInstall(["Bye.h"], location, _NOT_WIN32 = 1)
+        # _WIN32 case
+        if( self.context.compilername.find("Visual Studio") != -1 ):
+            assert project.installManager.filesToInstall["Release"][location] == ["Hello.cpp"]
+            assert project.installManager.filesToInstall["Debug"][location] == ["Hello.cpp"]
+        # _NOT_WIN32 case
+        elif( self.context.compilername.find("KDevelop3") != -1 or
+              self.context.compilername.find("Makefile") != -1 ):
+            assert project.installManager.filesToInstall["Release"][location] == ["Bye.h"]
+            assert project.installManager.filesToInstall["Debug"][location] == ["Bye.h"]
+        
 if __name__ == "__main__":
     unittest.main()
