@@ -32,7 +32,7 @@ class csnInstallTests(unittest.TestCase):
         dummyInstall.AddFilesToInstall(["AllTests.bat"], _releaseOnly = 1, _WIN32 = 1, _NOT_WIN32 = 1)
         dummyInstall.installManager.InstallBinariesToBuildFolder()
         # check presence of the files
-        assert os.path.exists("bin/bn/Debug/AllTests.bat"), "File not installed in Debug mode."
+        assert os.path.exists("bin/bin/Debug/AllTests.bat"), "File not installed in Debug mode."
         assert os.path.exists("bin/bin/Release/AllTests.bat"), "File not installed in Release mode."
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
