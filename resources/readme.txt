@@ -2,10 +2,13 @@
 CSnake readme
 --------------
 
-Version: 2.3.2
+Version: 2.3.3
 
 Change log
 ----------
+
+v2.3.3
+ * Fix install files after configure third parties 
 
 v2.3.2
 
