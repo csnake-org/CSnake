@@ -1,0 +1,10 @@
+# Readme information.
+/**
+
+\page readme Readme
+
+This is the readme file of CSnake.
+
+\verbinclude readme.txt
+
+*/
