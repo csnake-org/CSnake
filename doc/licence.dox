@@ -1,0 +1,10 @@
+# License information.
+/**
+
+\page license License
+
+This is the license file of CSnake.
+
+\verbinclude license.txt
+
+*/
