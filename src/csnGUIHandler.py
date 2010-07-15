@@ -139,7 +139,7 @@ class Handler:
         result = True
 
         for index in range(0, self.context.GetNumberOfThirdPartyFolders( ) ):
-            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), _nrOfTimes )
+            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), _nrOfTimes = _nrOfTimes, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
             if not result:
                 print "Configuration failed.\n"   
                 if not self.CMakeIsFound():
@@ -148,7 +148,7 @@ class Handler:
             
         return result
 
-    def ConfigureThirdPartyFolder(self, source, build, _nrOfTimes = 2):
+    def ConfigureThirdPartyFolder(self, source, build, allBuildFolders, _nrOfTimes = 2):
         """ 
         Runs cmake to install the libraries in the third party folder.
         By default, the third party folder is configured twice because this works around
@@ -164,7 +164,15 @@ class Handler:
         if not os.path.exists( self.context.cmakePath ):
             raise Exception( "Please provide a valid CMake path" )
         
-        argList = [self.context.cmakePath, "-G", self.context.compiler.GetName()] + self.context.compiler.GetThirdPartyCMakeParameters() + [source]
+        cmakeModulePath = ""
+        for buildFolder in allBuildFolders:
+            cmakeModulePath = cmakeModulePath + buildFolder + ";"
+        cmakeModulePath = cmakeModulePath[0:-1]
+        argList = [self.context.cmakePath, \
+                  "-G", self.context.compiler.GetName(), \
+                  "-D", "THIRDPARTY_BUILD_FOLDERS:STRING='%s'" % cmakeModulePath] + \
+                  self.context.compiler.GetThirdPartyCMakeParameters() + \
+                  [source]
         for _ in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = build).wait() 
 

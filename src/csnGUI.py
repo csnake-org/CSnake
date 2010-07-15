@@ -563,7 +563,7 @@ class CSnakeGUIApp(wx.App):
         source = self.context.GetThirdPartyFolder(posBuild)
         build = self.context.GetThirdPartyBuildFolderByIndex(posBuild)
         
-        self.handler.ConfigureThirdPartyFolder( source, build )
+        self.handler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
 
     def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """

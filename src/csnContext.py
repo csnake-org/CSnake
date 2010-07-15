@@ -250,6 +250,12 @@ class Context(object):
     def GetThirdPartyBuildFolders(self):
         return self.thirdPartyBuildFolders
     
+    def GetThirdPartyBuildFoldersComplete(self):
+        GetThirdPartyBuildFoldersComplete = []
+        for buildFolder in self.thirdPartyBuildFolders:
+            GetThirdPartyBuildFoldersComplete.append(buildFolder + "/" + self.compiler.GetThirdPartySubFolder())
+        return GetThirdPartyBuildFoldersComplete
+    
     def GetThirdPartyFolder(self, index = 0):
         return self.thirdPartyFolders[index]
 
