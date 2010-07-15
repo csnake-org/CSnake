@@ -8,12 +8,13 @@ Helper tool for library compilation configuration.
 
 \section details_sec Details
 \li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
-\li Library license: Open Source
+\li Library license: Open Source (see \ref license information)
 
 \section depends_sec Dependencies
-<em>The dependencies of the library.</em>
+\li Python: version 2.6 (http://www.python.org)
+\li WxPython: version 2.8 (http://www.wxpython.org)
+\li CMake: version 2.8 (http://www.cmake.org)
 
 \section changelog_sec Change Log
-<em>The main changes that happend to the library.</em>
-
+See the \ref readme information.
 */
