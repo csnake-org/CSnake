@@ -32,10 +32,6 @@ class LinuxCommon(csnCompiler.Compiler):
             "-D", "CMAKE_CXX_FLAGS=-fPIC"
         ]
     
-    def GetThirdPartyBuildFolder(self):
-        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
-        return self.context.thirdPartyBuildFolder + "/" + self.context.configurationName
-    
     def GetAllowedConfigurations(self):
         return ["Debug", "Release"]
 

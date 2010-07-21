@@ -130,6 +130,46 @@ class ListBoxControl(BoundControl):
         self.control.Clear()
         for x in self.GetBuddyValue():
             self.control.Append(x)
+
+class GridControl(BoundControl):
+    def __init__(self, binder, control, labels = None, buddyClass = None, buddyField = None):
+        BoundControl.__init__(self, binder, control, labels, buddyClass, buddyField)
+        control.Bind(wx.grid.EVT_GRID_CELL_CHANGE, self.OnCellChange, control)
+        self.cellChange = False
+        
+    def UpdateBuddy(self):
+        replaceSlashes = False
+        result = []
+        for i in range( self.control.GetNumberRows() ):
+            row = []
+            for j in range( self.control.GetNumberCols() ):
+                value = self.control.GetCellValue(i, j)
+                if replaceSlashes:
+                    value = value.replace("\\", "/")
+                row.append( value )
+            result.append(row)
+        self.SetBuddyValue(result)
+
+    def UpdateControl(self):
+        self.cellChange = True
+        if self.control.GetNumberRows() > 0:
+            self.control.DeleteRows(0, self.control.GetNumberRows(), True)
+        buddyValue = self.GetBuddyValue()
+        self.control.AppendRows(len(buddyValue), True)
+        for row in range( self.control.GetNumberRows() ):
+            for col in range( self.control.GetNumberCols() ):
+                self.control.SetCellValue(row, col, buddyValue[row][col])
+        self.control.AutoSizeColumn(0)
+        self.control.AutoSizeColumn(1)
+        
+        self.control.ForceRefresh()
+        self.cellChange = False
+    
+    def OnCellChange(self, event):
+        self.UpdateBuddy()
+        if not self.cellChange:
+            self.UpdateControl()
+        event.Skip()
         
 class CheckBoxControl(BoundControl):
     def __init__(self, binder, control, labels = None, buddyClass = None, buddyField = None):
@@ -166,6 +206,9 @@ class ControlBinder:
 
     def AddListBox(self, control, buddyClass = None, buddyField = None, isFilename = False):
         self.controls.append(ListBoxControl(self, control, self.__GetLabels(isFilename), buddyClass, buddyField))
+        
+    def AddGrid(self, control, buddyClass = None, buddyField = None, isFilename = False):
+        self.controls.append(GridControl(self, control, self.__GetLabels(isFilename), buddyClass, buddyField))
 
     def AddCheckBox(self, control, buddyClass = None, buddyField = None):
         self.controls.append(CheckBoxControl(self, control, self.__GetLabels(), buddyClass, buddyField))
@@ -214,6 +257,13 @@ class Binder(ControlBinder):
         setattr(self.target, controlName, xrc.XRCCTRL(container, controlName))
         control = getattr(self.target, controlName)
         ControlBinder.AddListBox(self, control, buddyClass, buddyField, isFilename)
+        
+    def AddGrid(self, controlName, container = None, buddyClass = None, buddyField = None, isFilename = False):
+        if container is None:
+            container = self.defaultContainer
+        setattr(self.target, controlName, xrc.XRCCTRL(container, controlName))
+        control = getattr(self.target, controlName)
+        ControlBinder.AddGrid(self, control, buddyClass, buddyField, isFilename)
 
     def AddCheckBox(self, controlName, container = None, buddyClass = None, buddyField = None):
         if container is None:

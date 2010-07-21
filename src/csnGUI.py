@@ -13,15 +13,199 @@ import csnUtility
 import os.path
 import sys
 import shutil
+import string
 import time
 import subprocess
 import xrcbinder
 from optparse import OptionParser
 from about import About
+import wx.grid
 
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
 import logging.config
+
+class PathPickerCtrl(wx.Control):
+    def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
+        wx.Control.__init__(self, parent, id=id, pos=pos, size=size, style=style|wx.BORDER_NONE, validator=validator, name=name)
+        
+        self.evtHandler = evtHandler
+        evtH = evtHandler
+        
+        self.oldValue = None
+        self.grid = None
+        self.row = None
+        self.col = None
+        self.handlerConnected = False
+        self.folderName = folderName
+        self.dontLeaveEditMode = False
+        
+        self.panel = wx.Panel(self, style = wx.BORDER_NONE)
+        self.text = wx.TextCtrl(self.panel, style = wx.TE_PROCESS_TAB | wx.TE_PROCESS_ENTER)
+        self.button = wx.Button(self.panel, label='...')
+        self.button.SetMinSize((30, -1))
+        self.panel.Bind(wx.EVT_BUTTON, self.OnButtonClick)
+        
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.text, flag=wx.EXPAND, proportion=1)
+        self.sizer.Add(self.button, flag=wx.EXPAND, proportion=0)
+        self.panel.SetSizer(self.sizer)
+        
+        self.windows = [self, self.panel, self.text, self.button]
+        for window in self.windows:
+            window.Bind(wx.EVT_KILL_FOCUS, self.OnSomeoneLostFocus)
+        self.Bind(wx.EVT_SET_FOCUS, self.OnGotFocus)
+        self.text.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.button.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        
+    def OnButtonClick(self, event):
+        self.dontLeaveEditMode = True
+        oldValue = self.text.GetValue()
+        dlg = wx.DirDialog(None, "Select %s" % self.folderName, oldValue, wx.DD_DIR_MUST_EXIST)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.text.SetValue(dlg.GetPath().replace("\\", "/"))
+            self.MoveGridCursor(0, 0)
+        self.dontLeaveEditMode = False
+        
+    def OnKeyDown(self, event):
+        if event.GetKeyCode()==wx.WXK_TAB:
+            self.MoveGridCursor(0, 1)
+            event.Skip(False)
+        elif event.GetKeyCode()==wx.WXK_RETURN:
+            self.MoveGridCursor(1, 0)
+            event.Skip(False)
+        elif event.GetKeyCode()==wx.WXK_ESCAPE:
+            self.SetValue(self.oldValue)
+            self.MoveGridCursor(0, 0)
+            self.grid.SetFocus()
+            event.Skip(False)
+        else:
+            event.Skip(True)
+    
+    def MoveGridCursor(self, diffRow, diffCol):
+        newRow = self.row + diffRow
+        self.grid.SetFocus()
+        if newRow >= self.grid.GetTable().GetNumberRows():
+            newRow = self.row
+        newCol = self.col + diffCol
+        if newCol >= self.grid.GetTable().GetNumberCols():
+            newCol = self.col
+        self.grid.SetGridCursor(newRow, newCol)
+        self.grid.ClearSelection()
+        self.grid.SelectRow(newRow)
+    
+    def OnGotFocus(self, event):
+        self.text.SetFocus()
+        event.Skip()
+        
+    def OnSomeoneLostFocus(self, event):
+        if not self.handlerConnected:
+            if not (self.FindFocus() in self.windows) and not self.dontLeaveEditMode:
+                self.evtHandler.ProcessEvent(event)
+    
+    def SetDimensions(self, x, y, width, height, sizeFlags):
+        wx.Control.SetDimensions(self, x, y, width, height, sizeFlags)
+        self.panel.SetDimensions(x=0, y=0, width=width, height=height, sizeFlags=sizeFlags)
+    
+    def SetInitialValue(self, value):
+        self.oldValue = value
+    
+    def SetInitialValue(self, value):
+        self.oldValue = value
+        self.SetValue(value)
+        
+    def SetValue(self, value):
+        self.text.SetValue(value)
+        self.text.SetInsertionPointEnd()
+        
+    def GetValue(self):
+        return self.text.GetValue()
+    
+    def SetGrid(self, row, col, grid):
+        self.row = row
+        self.col = col
+        self.grid = grid
+    
+class PathPickerEditor(wx.grid.PyGridCellEditor):
+    def __init__(self, folderName = "Folder"):
+        wx.grid.PyGridCellEditor.__init__(self)
+        self.handlerConnected = False
+        self.folderName = folderName
+    
+    def ConnectHandler(self):
+        if not self.handlerConnected:
+            self._picker.PushEventHandler(self.evtHandler)
+            self.handlerConnected = True
+            self._picker.handlerConnected = True
+
+    def DisconnectHandler(self):
+        if self.handlerConnected:
+            self._picker.PopEventHandler()
+            self.handlerConnected = False
+            self._picker.handlerConnected = False
+    
+    def Create(self, parent, id, evtHandler):
+        self._picker = PathPickerCtrl(parent=parent, id=id, evtHandler=evtHandler, folderName=self.folderName)
+        self.value = ""
+        self.SetControl(self._picker)
+        self.evtHandler = evtHandler
+        self.ConnectHandler()
+ 
+    def SetSize(self, rect):
+        self._picker.SetDimensions(rect.x, rect.y, rect.width, rect.height, wx.SIZE_ALLOW_MINUS_ONE)
+ 
+    def Show(self, show, attr):
+        super(PathPickerEditor, self).Show(show, attr)
+ 
+    def PaintBackground(self, rect, attr):
+        pass
+ 
+    def BeginEdit(self, row, col, grid):
+        self.DisconnectHandler()
+        self.value = str(grid.GetTable().GetValue(row, col)).strip()
+        self._picker.SetInitialValue(self.value)
+        self._picker.SetGrid(row, col, grid)
+        self._picker.SetFocus()
+ 
+    def EndEdit(self, row, col, grid):
+        changed = False
+        value = self._picker.GetValue()
+        if value != self.value:
+            changed = True
+            grid.SetCellValue(row, col, value) # update the table
+            self.value = value
+        self.ConnectHandler()
+        return changed
+ 
+    def Reset(self):
+        pass
+ 
+    def IsAcceptedKey(self, evt):
+        return (not (evt.ControlDown() or evt.AltDown()) and
+                evt.GetKeyCode() != wx.WXK_SHIFT)
+ 
+    def StartingKey(self, evt):
+        key = evt.GetKeyCode()
+        if key in [ wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, wx.WXK_NUMPAD3,
+                    wx.WXK_NUMPAD4, wx.WXK_NUMPAD5, wx.WXK_NUMPAD6, wx.WXK_NUMPAD7,
+                    wx.WXK_NUMPAD8, wx.WXK_NUMPAD9
+                    ]:
+ 
+            ch = chr(ord('0') + key - wx.WXK_NUMPAD0)
+            self._picker.SetValue(ch)
+        elif key < 256 and key >= 0 and chr(key) in string.printable:
+            ch = chr(key)
+            self._picker.SetValue(ch)
+        elif key in [wx.WXK_DELETE, wx.WXK_BACK]:
+            self._picker.SetValue("")
+        
+        evt.Skip()
+ 
+    def StartingClick(self):
+        pass
+ 
+    def Clone(self):
+        return PathPickerEditor(folderName = self.folderName)
 
 class RedirectText:
     """
@@ -102,8 +286,7 @@ class CSnakeGUIApp(wx.App):
         self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "rootFolders", isFilename = True)
         self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "askToLaunchIDE")
         
-        self.binder.AddListBox("lbThirdPartyFolders", buddyClass = "context", buddyField = "thirdPartyFolders", isFilename = True)
-        self.binder.AddListBox("lbThirdPartyBuildFolders", buddyClass = "context", buddyField = "thirdPartyBuildFolders", isFilename = True)
+        self.binder.AddGrid("lbThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "thirdPartySrcAndBuildFolders", isFilename = True)
 
         self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
@@ -122,12 +305,11 @@ class CSnakeGUIApp(wx.App):
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
 
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add Third Party folder", self.GetLastThirdPartyFolder, self.AddThirdPartyFolder, self), id=xrc.XRCID("btnAddThirdPartyFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveThirdPartyFolder, id=xrc.XRCID("btnRemoveThirdPartyFolder"))
-
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add Third Party build folder", self.GetLastThirdPartyBuildFolder, self.AddThirdPartyBuildFolder, self), id=xrc.XRCID("btnAddThirdPartyBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveThirdPartyBuildFolder, id=xrc.XRCID("btnRemoveThirdPartyBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureThirdPartyBuildFolder, id=xrc.XRCID("btnConfigureThirdPartyBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnAddThirdPartySrcAndBuildFolder, id=xrc.XRCID("btnAddThirdPartySrcAndBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveThirdPartySrcAndBuildFolder, id=xrc.XRCID("btnRemoveThirdPartySrcAndBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnMoveUpThirdPartySrcAndBuildFolder, id=xrc.XRCID("btnMoveUpThirdPartySrcAndBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnMoveDownThirdPartySrcAndBuildFolder, id=xrc.XRCID("btnMoveDownThirdPartySrcAndBuildFolder"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnConfigureThirdPartySrcAndBuildFolder, id=xrc.XRCID("btnConfigureThirdPartySrcAndBuildFolder"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetCMakePath, id=xrc.XRCID("btnSetCMakePath"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetPythonPath, id=xrc.XRCID("btnSetPythonPath"))
@@ -158,6 +340,19 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelOptions, "btnSetVisualStudioPath").Disable()
             xrc.XRCCTRL(self.panelOptions, "txtVisualStudioPath").Disable()
             xrc.XRCCTRL(self.panelOptions, "chkAskToLaunchVisualStudio").Disable()
+        
+        self.lbThirdPartySrcAndBuildFolders.CreateGrid(0,2)
+        self.lbThirdPartySrcAndBuildFolders.SetColLabelValue(0, "Source folder")
+        self.lbThirdPartySrcAndBuildFolders.SetColLabelValue(1, "Build folder")
+        self.lbThirdPartySrcAndBuildFolders.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.OnThirdPartySrcAndBuildFolderSelectCell)
+        
+        attrThirdPartySrc = wx.grid.GridCellAttr()
+        attrThirdPartySrc.SetEditor(PathPickerEditor(folderName = "Third Party Source Folder"))
+        attrThirdPartyBin = wx.grid.GridCellAttr()
+        attrThirdPartyBin.SetEditor(PathPickerEditor(folderName = "Third Party Build Folder"))
+        self.lbThirdPartySrcAndBuildFolders.SetColAttr(0, attrThirdPartySrc)
+        self.lbThirdPartySrcAndBuildFolders.SetColAttr(1, attrThirdPartyBin)
+        self.lbThirdPartySrcAndBuildFolders.ForceRefresh()
 
     def OnRootFoldersDClick(self, event):
         """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
@@ -205,7 +400,7 @@ class CSnakeGUIApp(wx.App):
             self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateHandler()
-        self.InitializeOptions()    
+        self.InitializeOptions()
         
         # load previously saved context
         contextToLoad = self.options.contextFilename
@@ -359,7 +554,8 @@ class CSnakeGUIApp(wx.App):
         self.action = self.ActionConfigureThirdPartyFolder
         self.DoAction()
         if sys.platform == 'win32':
-            self.handler.Build( self.handler.GetThirdPartySolutionPath() )
+            for solutionPath in self.handler.GetThirdPartySolutionPaths():
+                self.handler.Build(solutionPath)
 
         self.action = self.ActionCreateCMakeFilesAndRunCMake
         self.DoAction()
@@ -386,7 +582,7 @@ class CSnakeGUIApp(wx.App):
                 xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
 
                 if self.options.askToLaunchIDE:
-                    self.AskToLaunchIDE( self.handler.GetThirdPartySolutionPath() )
+                    self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
                 
         except Exception, message:
             dlg = wx.MessageDialog(self.frame, "%s" % message, style = wx.OK)
@@ -515,62 +711,116 @@ class CSnakeGUIApp(wx.App):
         """
         Add folder where CSnake files must be searched to context.thirdPartyFolders.
         """
-        self.context.AddThirdPartyFolder(folder)
-
         defaultBuildThirdPartyFolder = self.context.buildFolder + "/thirdParty"
-        message = "Do you want to add %s as ThirdPrty Build Folder?" % defaultBuildThirdPartyFolder
+        message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (defaultBuildThirdPartyFolder, folder)
         dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
-            self.AddThirdPartyBuildFolder( defaultBuildThirdPartyFolder )
-    
-    def OnRemoveThirdPartyFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Remove folder where CSnake files must be searched from context.thirdPartyFolders.
-        """
-        self.context.RemoveThirdPartyFolder(self.lbThirdPartyFolders.GetStringSelection())
-        self.UpdateGUIAndSaveContextAndOptions()
-
-    def AddThirdPartyBuildFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Add folder where CSnake files must be searched to context.thirdPartyBuildFolders.
-        """
-        self.context.thirdPartyBuildFolders.append(folder)
-        if len(self.context.thirdPartyBuildFolders) > 0:
-            self.context.thirdPartyBuildFolder = self.context.thirdPartyBuildFolders[ 0 ]
-    
-    def GetLastThirdPartyBuildFolder(self):
-        if len(self.context.thirdPartyBuildFolders) > 0:
-            return self.context.thirdPartyBuildFolders[len(self.context.thirdPartyBuildFolders)-1]
+            self.context.AddThirdPartySrcAndBuildFolder(folder, defaultBuildThirdPartyFolder)
         else:
-            return ""
+            self.context.AddThirdPartySrcAndBuildFolder(folder, "")
 
-    def OnRemoveThirdPartyBuildFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Remove folder where CSnake files must be searched from context.thirdPartyBuildFolders.
-        """
-        self.context.thirdPartyBuildFolders.remove(self.lbThirdPartyBuildFolders.GetStringSelection())
-        if len(self.context.thirdPartyBuildFolders) == 0:
-            self.context.thirdPartyBuildFolder = ""
+    def OnThirdPartySrcAndBuildFolderSelectCell(self, event):
+        self.lbThirdPartySrcAndBuildFolders.SelectRow(event.GetRow())
+        event.Skip()
+    
+    def ThirdPartySrcAndBuildFolderGetSelectedRows(self):
+        selection = self.lbThirdPartySrcAndBuildFolders.GetSelectedRows()
+        return selection
+
+    def OnAddThirdPartySrcAndBuildFolder(self, event):
+        self.context.AddThirdPartySrcAndBuildFolder("", "")
         self.UpdateGUIAndSaveContextAndOptions()
+        self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+        newRow = self.lbThirdPartySrcAndBuildFolders.GetTable().GetNumberRows()-1
+        self.lbThirdPartySrcAndBuildFolders.SelectRow(newRow, True)
+        self.lbThirdPartySrcAndBuildFolders.SetGridCursor(newRow, 0)
+        self.lbThirdPartySrcAndBuildFolders.SetFocus()
 
-    def OnConfigureThirdPartyBuildFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Remove folder where CSnake files must be searched from context.thirdPartyBuildFolders.
-        """
+    def OnRemoveThirdPartySrcAndBuildFolder(self, event):
+        selection = self.ThirdPartySrcAndBuildFolderGetSelectedRows()
+        if (len(selection) == 0):
+            message = "You have to select at least one row! You can click on the row index to select a row."
+            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+        else:
+            for i in range(len(selection)):
+                self.context.RemoveThirdPartySrcAndBuildFolderByIndex(selection[i])
+                for j in range(i+1, len(selection)):
+                    if selection[j] > selection[i]:
+                        selection[j] = selection[j] - 1
+            self.UpdateGUIAndSaveContextAndOptions()
+            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+        self.lbThirdPartySrcAndBuildFolders.SetFocus()
         
-        posBuild = self.lbThirdPartyBuildFolders.GetSelection()
-
-        source = self.context.GetThirdPartyFolder(posBuild)
-        build = self.context.GetThirdPartyBuildFolderByIndex(posBuild)
+    def OnConfigureThirdPartySrcAndBuildFolder(self, event):
+        selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
+        if (len(selection) == 0):
+            message = "You have to select at least one row! You can click on the row index to select a row."
+            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+            self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        else:
+            self.lbThirdPartySrcAndBuildFolders.SetFocus()
+            for row in selection:
+                source = self.context.GetThirdPartyFolder(row)
+                build = self.context.GetThirdPartyBuildFolderByIndex(row)
+                self.handler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
         
-        self.handler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
-
+    def OnMoveUpThirdPartySrcAndBuildFolder(self, event):
+        selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
+        if (len(selection) == 0):
+            message = "You have to select at least one row! You can click on the row index to select a row."
+            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+        else:
+            newSelection = []
+            boundaryIndex = 0
+            for index in selection:
+                if index > boundaryIndex:
+                    self.context.MoveUpThirdPartySrcAndBuildFolder(index)
+                    newSelection.append(index-1)
+                else:
+                    boundaryIndex = index + 1
+                    newSelection.append(index)
+            self.UpdateGUIAndSaveContextAndOptions()
+            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+            first = True
+            for row in newSelection:
+                self.lbThirdPartySrcAndBuildFolders.SelectRow(row, True)
+                if first:
+                    self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
+                    first = False
+        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        
+    def OnMoveDownThirdPartySrcAndBuildFolder(self, event):
+        selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows(), reverse = True)
+        if (len(selection) == 0):
+            message = "You have to select at least one row! You can click on the row index to select a row."
+            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+        else:
+            newSelection = []
+            boundaryIndex = self.context.GetNumberOfThirdPartyFolders() - 1
+            for index in selection:
+                if index < boundaryIndex:
+                    self.context.MoveDownThirdPartySrcAndBuildFolder(index)
+                    newSelection.append(index+1)
+                else:
+                    boundaryIndex = index - 1
+                    newSelection.append(index)
+            self.UpdateGUIAndSaveContextAndOptions()
+            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+            first = True
+            for row in newSelection:
+                self.lbThirdPartySrcAndBuildFolders.SelectRow(row, True)
+                if first:
+                    self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
+                    first = False
+        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        
     def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Let the user load a context.
         """
         dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = os.path.dirname(self.options.contextFilename), wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
         if dlg.ShowModal() == wx.ID_OK:
+            self.UpdateGUIAndSaveContextAndOptions()
             if self.LoadContext(dlg.GetPath()):
                 self.BackupContextFile()
 

@@ -93,7 +93,7 @@ class Handler:
         """
         instance = self.__GetProjectInstance()
         
-        instance.installManager.ResolvePathsOfFilesToInstall(self.context.GetThirdPartyBuildFolder())
+        instance.installManager.ResolvePathsOfFilesToInstall()
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
@@ -268,9 +268,12 @@ class Handler:
             instance = self.__GetProjectInstance()
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
-    def GetThirdPartySolutionPath(self):
-        return "%s/CILAB_TOOLKIT.sln" % (self.context.GetThirdPartyBuildFolder())
-    
+    def GetThirdPartySolutionPaths(self):
+        result = []
+        for folder in self.context.GetThirdPartyBuildFolders():
+            result.append("%s/CILAB_TOOLKIT.sln" % (folder))
+        return result
+
     def UpdateRecentlyUsedCSnakeFiles(self):
         self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)
 

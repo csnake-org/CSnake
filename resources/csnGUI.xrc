@@ -226,58 +226,6 @@
 										<object class="wxBoxSizer">
 											<orient>wxVERTICAL</orient>
 											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxEXPAND</flag>
-												<border>0</border>
-												<object class="wxBoxSizer">
-													<orient>wxHORIZONTAL</orient>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxRIGHT|wxEXPAND</flag>
-														<border>5</border>
-														<object class="wxStaticText" name="label_1_copy_1">
-															<size>120, 15</size>
-															<label>ThirdParty Root Folders</label>
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>1</option>
-														<flag>wxEXPAND|wxFIXED_MINSIZE</flag>
-														<border>5</border>
-														<object class="wxListBox" name="lbThirdPartyFolders">
-															<style>wxLB_SINGLE</style>
-															<content />
-														</object>
-													</object>
-													<object class="sizeritem">
-														<option>0</option>
-														<flag>wxEXPAND</flag>
-														<border>0</border>
-														<object class="wxBoxSizer">
-															<orient>wxVERTICAL</orient>
-															<object class="sizeritem">
-																<option>1</option>
-																<flag></flag>
-																<border>0</border>
-																<object class="wxButton" name="btnAddThirdPartyFolder">
-																	<label>Add</label>
-																	<default>0</default>
-																</object>
-															</object>
-															<object class="sizeritem">
-																<option>1</option>
-																<flag></flag>
-																<border>0</border>
-																<object class="wxButton" name="btnRemoveThirdPartyFolder">
-																	<label>Remove</label>
-																	<default>0</default>
-																</object>
-															</object>
-														</object>
-													</object>
-												</object>
-											</object>
-											<object class="sizeritem">
 												<option>0</option>
 												<flag>wxEXPAND</flag>
 												<border>0</border>
@@ -289,15 +237,14 @@
 														<border>5</border>
 														<object class="wxStaticText" name="label_1_copy_copy">
 															<size>120, 15</size>
-															<label>ThirdParty Build Folders</label>
+															<label>Third Party Folders</label>
 														</object>
 													</object>
 													<object class="sizeritem">
 														<option>1</option>
 														<flag>wxEXPAND|wxFIXED_MINSIZE</flag>
 														<border>5</border>
-														<object class="wxListBox" name="lbThirdPartyBuildFolders">
-															<style>wxLB_SINGLE</style>
+														<object class="wxGrid" name="lbThirdPartySrcAndBuildFolders">
 															<content />
 														</object>
 													</object>
@@ -311,7 +258,7 @@
 																<option>1</option>
 																<flag></flag>
 																<border>0</border>
-																<object class="wxButton" name="btnAddThirdPartyBuildFolder">
+																<object class="wxButton" name="btnAddThirdPartySrcAndBuildFolder">
 																	<label>Add</label>
 																	<default>0</default>
 																</object>
@@ -320,8 +267,26 @@
 																<option>1</option>
 																<flag></flag>
 																<border>0</border>
-																<object class="wxButton" name="btnRemoveThirdPartyBuildFolder">
+																<object class="wxButton" name="btnRemoveThirdPartySrcAndBuildFolder">
 																	<label>Remove</label>
+																	<default>0</default>
+																</object>
+															</object>
+															<object class="sizeritem">
+																<option>1</option>
+																<flag></flag>
+																<border>0</border>
+																<object class="wxButton" name="btnMoveUpThirdPartySrcAndBuildFolder">
+																	<label>Move Up</label>
+																	<default>0</default>
+																</object>
+															</object>
+															<object class="sizeritem">
+																<option>1</option>
+																<flag></flag>
+																<border>0</border>
+																<object class="wxButton" name="btnMoveDownThirdPartySrcAndBuildFolder">
+																	<label>Move Down</label>
 																	<default>0</default>
 																</object>
 															</object>
@@ -329,7 +294,7 @@
 																<option>1</option>
 																<flag>wxALL</flag>
 																<border>0</border>
-																<object class="wxButton" name="btnConfigureThirdPartyBuildFolder">
+																<object class="wxButton" name="btnConfigureThirdPartySrcAndBuildFolder">
 																	<label>Configure</label>
 																	<default>0</default>
 																</object>

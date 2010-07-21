@@ -20,12 +20,9 @@ class Context(object):
         self.buildFolder = ""    
         self.installFolder = ""    
         self.prebuiltBinariesFolder = ""    
-        self.thirdPartyBuildFolder = ""
-        self.thirdPartyBuildFolders = []
         self.csnakeFile = ""
         self.rootFolders = []
-        self.thirdPartyRootFolder = ""
-        self.thirdPartyFolders = []
+        self.thirdPartySrcAndBuildFolders = []
         self.instance = ""
         self.testRunnerTemplate = "normalRunner.tpl"
         self.recentlyUsed = list()
@@ -40,8 +37,8 @@ class Context(object):
         self.kdevelopProjectFolder = ""
             
         self.basicFields = [
-            "buildFolder", "installFolder", "prebuiltBinariesFolder", "thirdPartyBuildFolder", "csnakeFile",
-            "thirdPartyRootFolder", "instance", "testRunnerTemplate", "configurationName", "compilername",
+            "buildFolder", "installFolder", "prebuiltBinariesFolder", "csnakeFile",
+            "instance", "testRunnerTemplate", "configurationName", "compilername",
             "cmakePath", "pythonPath", "idePath", "kdevelopProjectFolder"
         ]
         
@@ -83,8 +80,7 @@ class Context(object):
             parser.read([filename])
             self.__LoadBasicFields(parser)
             self.__LoadRootFolders(parser)
-            self.__LoadThirdPartyFolders(parser)
-            self.__LoadThirdPartyBuildFolders(parser)
+            self.__LoadThirdPartySrcAndBuildFolders(parser)
             self.__LoadRecentlyUsedCSnakeFiles(parser)
             
             # Temporary workaround to support old versions of the context file;
@@ -129,29 +125,15 @@ class Context(object):
             self.rootFolders.append( parser.get(section, "RootFolder%s" % count) )
             count += 1
         
-    def __LoadThirdPartyFolders(self, parser):
-        section = "ThirdPartyFolders"
+    def __LoadThirdPartySrcAndBuildFolders(self, parser):
+        sectionSrc = "ThirdPartyFolders"
+        sectionBuild = "ThirdPartyBuildFolders"
         count = 0
-        self.thirdPartyFolders = []
-        while parser.has_option(section, "ThirdPartyFolder%s" % count):
-            self.thirdPartyFolders.append( parser.get(section, "ThirdPartyFolder%s" % count) )
+        self.thirdPartySrcAndBuildFolders = []
+        while parser.has_option(sectionSrc, "ThirdPartyFolder%s" % count) and parser.has_option(sectionBuild, "ThirdPartyBuildFolder%s" % count):
+            self.AddThirdPartySrcAndBuildFolder( \
+                parser.get(sectionSrc, "ThirdPartyFolder%s" % count), parser.get(sectionBuild, "ThirdPartyBuildFolder%s" % count))
             count += 1
-
-        # special case for old version with only root folder
-        if len(self.thirdPartyFolders) == 0 and self.thirdPartyRootFolder != "":
-            self.thirdPartyFolders.append(self.thirdPartyRootFolder)
-            
-    def __LoadThirdPartyBuildFolders(self, parser):
-        section = "ThirdPartyBuildFolders"
-        count = 0
-        self.thirdPartyBuildFolders = []
-        while parser.has_option(section, "ThirdPartyBuildFolder%s" % count):
-            self.thirdPartyBuildFolders.append( parser.get(section, "ThirdPartyBuildFolder%s" % count) )
-            count += 1
-
-        # special case for old version with only root folder
-        if len(self.thirdPartyBuildFolders) == 0 and self.thirdPartyBuildFolder != "":
-            self.thirdPartyBuildFolders.append(self.thirdPartyBuildFolder)
 
     def __LoadRecentlyUsedCSnakeFiles(self, parser):
         self.recentlyUsed = []
@@ -215,15 +197,11 @@ class Context(object):
             count += 1
 
         count = 0
-        while count < len(self.thirdPartyFolders):
-            parser.set(thirdPartyFolderSection, "ThirdPartyFolder%s" % count, self.thirdPartyFolders[count] )
+        while count < len(self.thirdPartySrcAndBuildFolders):
+            parser.set(thirdPartyFolderSection, "ThirdPartyFolder%s" % count, self.thirdPartySrcAndBuildFolders[count][0] )
+            parser.set(thirdPartyBuildFolderSection, "ThirdPartyBuildFolder%s" % count, self.thirdPartySrcAndBuildFolders[count][1] )
             count += 1
 
-        count = 0
-        while count < len(self.thirdPartyBuildFolders):
-            parser.set(thirdPartyBuildFolderSection, "ThirdPartyBuildFolder%s" % count, self.thirdPartyBuildFolders[count] )
-            count += 1
-            
         self.__SaveRecentlyUsedCSnakeFiles(parser)
         
         f = open(filename, 'w')
@@ -239,47 +217,45 @@ class Context(object):
             self.subCategoriesOf[super] = OrderedSet.OrderedSet()
         self.subCategoriesOf[super].add(sub)
         
-    def GetThirdPartyBuildFolder(self):
-        # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
-        return self.thirdPartyBuildFolder + "/" + self.compiler.GetThirdPartySubFolder()
-
     def GetThirdPartyBuildFolderByIndex(self, index):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
-        return self.thirdPartyBuildFolders[index] + "/" + self.compiler.GetThirdPartySubFolder()
+        return self.thirdPartySrcAndBuildFolders[index][1] + "/" + self.compiler.GetThirdPartySubFolder()
 
     def GetThirdPartyBuildFolders(self):
-        return self.thirdPartyBuildFolders
+        result = []
+        for srcAndBuildFolder in self.thirdPartySrcAndBuildFolders:
+            result.append(srcAndBuildFolder[1])
+        return result
     
     def GetThirdPartyBuildFoldersComplete(self):
         GetThirdPartyBuildFoldersComplete = []
-        for buildFolder in self.thirdPartyBuildFolders:
-            GetThirdPartyBuildFoldersComplete.append(buildFolder + "/" + self.compiler.GetThirdPartySubFolder())
+        for srcAndBuildFolder in self.thirdPartySrcAndBuildFolders:
+            GetThirdPartyBuildFoldersComplete.append(srcAndBuildFolder[1] + "/" + self.compiler.GetThirdPartySubFolder())
         return GetThirdPartyBuildFoldersComplete
     
     def GetThirdPartyFolder(self, index = 0):
-        return self.thirdPartyFolders[index]
+        return self.thirdPartySrcAndBuildFolders[index][0]
 
     def GetThirdPartyFolders(self):
-        return self.thirdPartyFolders
+        result = []
+        for srcAndBuildFolder in self.thirdPartySrcAndBuildFolders:
+            result.append(srcAndBuildFolder[0])
+        return result
 
     def GetNumberOfThirdPartyFolders( self ):
-        return len(self.thirdPartyFolders)
-
-    def AddThirdPartyFolder(self, folder):
-        self.thirdPartyFolders.append(folder)
-        if len(self.thirdPartyFolders) > 0:
-            self.thirdPartyRootFolder = self.thirdPartyFolders[ 0 ]
-
-    def RemoveThirdPartyFolder(self, folder):
-        self.thirdPartyFolders.remove(folder)
-        if self.GetNumberOfThirdPartyFolders() == 0:
-            self.thirdPartyRootFolder = ""
+        return len(self.thirdPartySrcAndBuildFolders)
+    
+    def AddThirdPartySrcAndBuildFolder(self, srcFolder = "", buildFolder = ""):
+        self.thirdPartySrcAndBuildFolders.append([srcFolder, buildFolder])
+    
+    def RemoveThirdPartySrcAndBuildFolderByIndex(self, index):
+        self.thirdPartySrcAndBuildFolders = self.thirdPartySrcAndBuildFolders[0:index] + self.thirdPartySrcAndBuildFolders[index+1:]
+    
+    def MoveUpThirdPartySrcAndBuildFolder(self, index):
+        self.thirdPartySrcAndBuildFolders = self.thirdPartySrcAndBuildFolders[0:index-1] + [self.thirdPartySrcAndBuildFolders[index], self.thirdPartySrcAndBuildFolders[index-1]] + self.thirdPartySrcAndBuildFolders[index+1:]
         
-    def GetLastThirdPartyFolder(self):
-        if self.GetNumberOfThirdPartyFolders() > 0:
-            return self.thirdPartyFolders[len(self.thirdPartyFolders)-1]
-        else:
-            return ""
+    def MoveDownThirdPartySrcAndBuildFolder(self, index):
+        self.thirdPartySrcAndBuildFolders = self.thirdPartySrcAndBuildFolders[0:index] + [self.thirdPartySrcAndBuildFolders[index+1], self.thirdPartySrcAndBuildFolders[index]] + self.thirdPartySrcAndBuildFolders[index+2:]
         
     def AddRootFolder(self, newRootFolder ):
         
