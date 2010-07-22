@@ -433,7 +433,7 @@ class CSnakeGUIApp(wx.App):
 
     def BackupContextFile(self):
         """ Creates a backup of the current context, so that the user can later abandon all his changes. """
-        self.contextBeforeEditingFilename = "%s/contextBeforeEditing" % self.thisFolder
+        self.contextBeforeEditingFilename = "%s/contextBeforeEditing" % self.csnakeFolder
         try:
             shutil.copy(self.options.contextFilename, self.contextBeforeEditingFilename)
         except:
@@ -456,6 +456,13 @@ class CSnakeGUIApp(wx.App):
         self.thisFolder = self.thisFolder.replace("\\", "/")
         if self.thisFolder == "":
             self.thisFolder = "."
+        csnakeInHome = os.path.expanduser("~/.csnake")
+        if not os.path.isdir(csnakeInHome):
+            os.mkdir(csnakeInHome)
+        if os.path.isdir(csnakeInHome):
+            self.csnakeFolder = csnakeInHome
+        else:
+            self.csnakeFolder = self.thisFolder
     
     def RedirectStdOut(self):
         # redirect std out
@@ -473,8 +480,12 @@ class CSnakeGUIApp(wx.App):
     def InitializeOptions(self):
         self.options = csnGUIOptions.Options()
         self.binder.SetBuddyClass("options", self.options)
-
-        self.optionsFilename = "%s/options" % self.thisFolder
+        
+        optionsInCSnake = "%s/options" % self.csnakeFolder
+        optionsInThis = "%s/options" % self.thisFolder
+        if not os.path.isfile(optionsInCSnake) and os.path.isfile(optionsInThis):
+            shutil.copy(optionsInThis, optionsInCSnake)
+        self.optionsFilename = optionsInCSnake
         self.converter = csnContextConverter.Converter(self.optionsFilename)
         
         # convert possible old options
@@ -485,11 +496,11 @@ class CSnakeGUIApp(wx.App):
         if converted:
             self.options.Load(self.optionsFilename)
         else:
-            self.options.contextFilename = "%s/default.csnakecontext" % self.thisFolder
+            self.options.contextFilename = "%s/default.csnakecontext" % self.csnakeFolder
             self.options.Save(self.optionsFilename)
             
         if not os.path.exists(self.options.contextFilename):
-            self.options.contextFilename = "%s/context" % self.thisFolder
+            self.options.contextFilename = "%s/context" % self.csnakeFolder
             csnContext.Context().Save(self.options.contextFilename)
         
     def CopyGUIToContextAndOptions(self):
