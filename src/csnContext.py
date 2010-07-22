@@ -130,15 +130,16 @@ class Context(object):
         sectionBuild = "ThirdPartyBuildFolders"
         count = 0
         self.thirdPartySrcAndBuildFolders = []
-        # old style: only one folder 
-        if parser.has_option("CSnake", "thirdpartyrootfolder") and parser.has_option("CSnake", "thirdpartybuildfolder"):
-            self.AddThirdPartySrcAndBuildFolder( \
-                parser.get("CSnake", "thirdpartyrootfolder"), parser.get("CSnake", "thirdpartybuildfolder"))
         # new style: multiple folders
         while parser.has_option(sectionSrc, "ThirdPartyFolder%s" % count) and parser.has_option(sectionBuild, "ThirdPartyBuildFolder%s" % count):
             self.AddThirdPartySrcAndBuildFolder( \
                 parser.get(sectionSrc, "ThirdPartyFolder%s" % count), parser.get(sectionBuild, "ThirdPartyBuildFolder%s" % count))
             count += 1
+        # old style: only one folder 
+        if count == 0:
+            if parser.has_option("CSnake", "thirdpartyrootfolder") and parser.has_option("CSnake", "thirdpartybuildfolder"):
+                self.AddThirdPartySrcAndBuildFolder( \
+                    parser.get("CSnake", "thirdpartyrootfolder"), parser.get("CSnake", "thirdpartybuildfolder"))
 
     def __LoadRecentlyUsedCSnakeFiles(self, parser):
         self.recentlyUsed = []
