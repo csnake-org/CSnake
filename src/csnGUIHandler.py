@@ -303,7 +303,12 @@ class Handler:
         if not os.path.exists(solutionName):
             raise Exception( "Solution file not found: %s" % solutionName )
         
-        pathIDE = self.context.idePath.replace(".exe",".com")
+        pathIDE = self.context.idePath
+        # for visual studio (not express), use the devenv.com
+        (head, tail) = os.path.split(pathIDE)
+        if tail == "devenv.exe":
+            pathIDE = pathIDE.replace(".exe",".com")
+        
         if not os.path.exists(pathIDE):
             raise Exception( "Please provide a valid Visual Studio path" )
         
