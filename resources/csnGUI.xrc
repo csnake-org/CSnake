@@ -27,6 +27,10 @@
 			</object>
             <object class="wxMenu" name="m_menuHelp">
                 <label>Help</label>
+                <object class="wxMenuItem" name="mnuHelp">
+                    <label>Help</label>
+                    <help></help>
+                </object>
                 <object class="wxMenuItem" name="mnuAbout">
                     <label>About</label>
                     <help></help>
