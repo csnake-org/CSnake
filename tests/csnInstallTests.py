@@ -5,7 +5,6 @@ import csnProject
 import shutil
 import os.path
 import csnUtility
-import logging.config
 
 class csnInstallTests(unittest.TestCase):
     
@@ -18,7 +17,7 @@ class csnInstallTests(unittest.TestCase):
         # set it as global context
         csnProject.globalCurrentContext = self.context
         # logging init
-        logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
+        csnUtility.InitialiseLogging()
 
     def tearDown(self):
         """ Run after test. """
