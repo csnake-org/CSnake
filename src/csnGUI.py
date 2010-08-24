@@ -258,7 +258,8 @@ class CSnakeGUIApp(wx.App):
         self.res = xrc.XmlResource(xrcFile)
         
         self.csnakeFolder = os.path.expanduser("~/.csnake")
-        
+        self.thisFolder = None
+            
         self.InitFrame()
         self.InitMenu()
         self.InitOtherGUIStuff()
@@ -451,11 +452,11 @@ class CSnakeGUIApp(wx.App):
         parser.add_option("-c", "--console", dest="console", default=False, help="print all messages to the console window")
         (self.commandLineOptions, self.commandLineArgs) = parser.parse_args()
         # if the csnake folder does not exist use the folder where it is run
+        self.thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
+        self.thisFolder = self.thisFolder.replace("\\", "/")
+        if self.thisFolder == "":
+            self.thisFolder = "."
         if not os.path.isdir(self.csnakeFolder):
-            self.thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
-            self.thisFolder = self.thisFolder.replace("\\", "/")
-            if self.thisFolder == "":
-                self.thisFolder = "."
             self.csnakeFolder = self.thisFolder
     
     def RedirectStdOut(self):
