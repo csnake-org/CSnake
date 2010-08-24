@@ -63,11 +63,6 @@ rootOfCSnake = NormalizePath(rootOfCSnake)
 def GetRootOfCSnake():
     return rootOfCSnake
     
-def Log(logString):
-    f = open("F:\\log.txt", 'a')
-    f.write(logString)
-    f.close()
-
 def HasBackSlash(_path):
     p = re.compile(r"[^\\]*\\")
     m = p.match( _path )
