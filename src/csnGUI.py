@@ -30,7 +30,6 @@ class PathPickerCtrl(wx.Control):
         wx.Control.__init__(self, parent, id=id, pos=pos, size=size, style=style|wx.BORDER_NONE, validator=validator, name=name)
         
         self.evtHandler = evtHandler
-        evtH = evtHandler
         
         self.oldValue = None
         self.grid = None
