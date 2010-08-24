@@ -23,8 +23,8 @@ import wx.grid
 
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
-import logging.config
 import webbrowser
+import logging
 
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
@@ -1107,18 +1107,8 @@ class CSnakeGUIApp(wx.App):
         return self.context.GetLastThirdPartyFolder( )
     
 if __name__ == "__main__":
-    # create user folder
-    userFolder = os.path.expanduser("~") + "/.csnake"
-    if not os.path.exists(userFolder):
-        os.mkdir(userFolder)
-    # log file name
-    logfilename = userFolder + "/log.txt"
-    # set an environment variable to retrieve it in the log configuration
-    os.environ["CSNAKELOGFILE"] = logfilename
-    # logging initialization (should create the log file)
-    logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
+    csnUtility.InitialiseLogging()
     logger = logging.getLogger("CSnake")
-    
     logger.info("Starting program.")
 
     app = CSnakeGUIApp(0)

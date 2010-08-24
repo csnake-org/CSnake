@@ -4,6 +4,7 @@ import GlobDirectoryWalker
 import shutil
 import inspect
 import os.path
+import logging.config
 if sys.platform == 'win32':
     import _winreg
 
@@ -209,3 +210,16 @@ def GetDefaultVisualStudioPath( generator ):
         path = GetRegVisualStudioPath( generator, r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7' )
     return path
 
+def InitialiseLogging():
+    # create user folder
+    userFolder = os.path.expanduser("~") + "/.csnake"
+    if not os.path.exists(userFolder):
+        os.mkdir(userFolder)
+    # log file name
+    logfilename = userFolder + "/log.txt"
+    # set an environment variable to retrieve it in the log configuration
+    os.environ["CSNAKELOGFILE"] = logfilename
+    # logging initialization (should create the log file)
+    logging.config.fileConfig(GetRootOfCSnake() + "/resources/logging.conf")
+    
+    
