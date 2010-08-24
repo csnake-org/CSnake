@@ -210,7 +210,6 @@ class RedirectText:
     def __init__(self,aWxTextCtrl):
         self.out=aWxTextCtrl
         # logging init
-        logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
         self.logger = logging.getLogger("CSnake")
 
     def write(self,string):
@@ -257,6 +256,9 @@ class CSnakeGUIApp(wx.App):
         wx.InitAllImageHandlers()
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
         self.res = xrc.XmlResource(xrcFile)
+        
+        self.csnakeFolder = os.path.expanduser("~/.csnake")
+        
         self.InitFrame()
         self.InitMenu()
         self.InitOtherGUIStuff()
@@ -448,16 +450,12 @@ class CSnakeGUIApp(wx.App):
         parser = OptionParser()
         parser.add_option("-c", "--console", dest="console", default=False, help="print all messages to the console window")
         (self.commandLineOptions, self.commandLineArgs) = parser.parse_args()
-        self.thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
-        self.thisFolder = self.thisFolder.replace("\\", "/")
-        if self.thisFolder == "":
-            self.thisFolder = "."
-        csnakeInHome = os.path.expanduser("~/.csnake")
-        if not os.path.isdir(csnakeInHome):
-            os.mkdir(csnakeInHome)
-        if os.path.isdir(csnakeInHome):
-            self.csnakeFolder = csnakeInHome
-        else:
+        # if the csnake folder does not exist use the folder where it is run
+        if not os.path.isdir(self.csnakeFolder):
+            self.thisFolder = "%s" % (os.path.dirname(sys.argv[0]))
+            self.thisFolder = self.thisFolder.replace("\\", "/")
+            if self.thisFolder == "":
+                self.thisFolder = "."
             self.csnakeFolder = self.thisFolder
     
     def RedirectStdOut(self):
@@ -1083,5 +1081,21 @@ class CSnakeGUIApp(wx.App):
         return self.context.GetLastThirdPartyFolder( )
     
 if __name__ == "__main__":
+    # create user folder
+    userFolder = os.path.expanduser("~") + "/.csnake"
+    if not os.path.exists(userFolder):
+        os.mkdir(userFolder)
+    # log file name
+    logfilename = userFolder + "/log.txt"
+    # set an environment variable to retrieve it in the log configuration
+    os.environ["CSNAKELOGFILE"] = logfilename
+    # logging initialization (should create the log file)
+    logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
+    logger = logging.getLogger("StartNewModule")
+    
+    logger.info("Starting CSnake.")
+
     app = CSnakeGUIApp(0)
     app.MainLoop()
+    
+    logger.info("Ending CSnake.")
