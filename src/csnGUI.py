@@ -1092,11 +1092,11 @@ if __name__ == "__main__":
     os.environ["CSNAKELOGFILE"] = logfilename
     # logging initialization (should create the log file)
     logging.config.fileConfig(csnUtility.GetRootOfCSnake() + "/resources/logging.conf")
-    logger = logging.getLogger("StartNewModule")
+    logger = logging.getLogger("CSnake")
     
-    logger.info("Starting CSnake.")
+    logger.info("Starting program.")
 
     app = CSnakeGUIApp(0)
     app.MainLoop()
     
-    logger.info("Ending CSnake.")
+    logger.info("Ending program.")
