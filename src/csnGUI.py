@@ -109,9 +109,6 @@ class PathPickerCtrl(wx.Control):
     
     def SetInitialValue(self, value):
         self.oldValue = value
-    
-    def SetInitialValue(self, value):
-        self.oldValue = value
         self.SetValue(value)
         
     def SetValue(self, value):
@@ -973,9 +970,8 @@ class CSnakeGUIApp(wx.App):
         wx.AboutBox(about.getWxAboutDialogInfo())
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        # get the context from the list
-        context = self.context.recentlyUsed[event.GetSelection()]
-        # update context properties
+        item = self.context.csnakeFile.GetSelection()
+        context = self.context.recentlyUsed[item]
         self.context.csnakeFile = context.csnakeFile
         self.context.instance = context.instance
         self.UpdateGUIAndSaveContextAndOptions()
