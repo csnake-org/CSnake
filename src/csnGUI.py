@@ -973,8 +973,9 @@ class CSnakeGUIApp(wx.App):
         wx.AboutBox(about.getWxAboutDialogInfo())
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        item = self.context.csnakeFile.GetSelection()
-        context = self.context.recentlyUsed[item]
+        # get the context from the list
+        context = self.context.recentlyUsed[event.GetSelection()]
+        # update context properties
         self.context.csnakeFile = context.csnakeFile
         self.context.instance = context.instance
         self.UpdateGUIAndSaveContextAndOptions()
