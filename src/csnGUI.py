@@ -531,9 +531,13 @@ class CSnakeGUIApp(wx.App):
         self.DoAction()
         
     def OnDetectRootFolders(self, event):
-        additionalRootFolders = self.handler.FindAdditionalRootFolders()
-        self.context.rootFolders.extend(additionalRootFolders)
-        self.UpdateGUIAndSaveContextAndOptions()
+        if self.context.csnakeFile != None and os.path.isfile(self.context.csnakeFile):
+            additionalRootFolders = self.handler.FindAdditionalRootFolders()
+            self.context.rootFolders.extend(additionalRootFolders)
+            self.UpdateGUIAndSaveContextAndOptions()
+        else:
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
     
     def FindAdditionalRootFolders(self, onlyForNewInstance=False):
         if onlyForNewInstance and self.context.IsCSnakeFileInRecentlyUsed():
@@ -718,6 +722,9 @@ class CSnakeGUIApp(wx.App):
         if folder in self.context.rootFolders:
             self.context.rootFolders.remove(folder)
             self.UpdateGUIAndSaveContextAndOptions()
+        else:
+            message = "Please select at least one folder."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
 
     def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -751,7 +758,7 @@ class CSnakeGUIApp(wx.App):
     def OnRemoveThirdPartySrcAndBuildFolder(self, event):
         selection = self.ThirdPartySrcAndBuildFolderGetSelectedRows()
         if (len(selection) == 0):
-            message = "You have to select at least one row! You can click on the row index to select a row."
+            message = "Please select at least one row. You can click on the row index to select a row."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             for i in range(len(selection)):
@@ -766,7 +773,7 @@ class CSnakeGUIApp(wx.App):
     def OnConfigureThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
-            message = "You have to select at least one row! You can click on the row index to select a row."
+            message = "Please select at least one row. You can click on the row index to select a row."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
             self.lbThirdPartySrcAndBuildFolders.SetFocus()
         else:
@@ -779,7 +786,7 @@ class CSnakeGUIApp(wx.App):
     def OnMoveUpThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
-            message = "You have to select at least one row! You can click on the row index to select a row."
+            message = "Please select at least one row. You can click on the row index to select a row."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             newSelection = []
@@ -804,7 +811,7 @@ class CSnakeGUIApp(wx.App):
     def OnMoveDownThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows(), reverse = True)
         if (len(selection) == 0):
-            message = "You have to select at least one row! You can click on the row index to select a row."
+            message = "Please select at least one row. You can click on the row index to select a row."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             newSelection = []
@@ -918,16 +925,19 @@ class CSnakeGUIApp(wx.App):
         self.binder.SetBuddyClass("context", self.context)
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        self.SetStatus("Retrieving list of targets")
-        self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
-        if len(self.listOfPossibleTargets):
-            self.context.instance = self.listOfPossibleTargets[0]
-        self.UpdateGUIAndSaveContextAndOptions()
-        self.SetStatus("")
-        xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
-        xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Enable()  
-        xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Enable()
-
+        if self.context.csnakeFile != None and os.path.isfile(self.context.csnakeFile):
+            self.SetStatus("Retrieving list of targets")
+            self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
+            if len(self.listOfPossibleTargets):
+                self.context.instance = self.listOfPossibleTargets[0]
+            self.UpdateGUIAndSaveContextAndOptions()
+            self.SetStatus("")
+            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
+            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Enable()  
+            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Enable()
+        else:
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
 
     def GetInstanceComboBoxItems(self):
         return self.listOfPossibleTargets
