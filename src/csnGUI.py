@@ -24,6 +24,7 @@ import wx.grid
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
 import logging.config
+import webbrowser
 
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
@@ -376,10 +377,13 @@ class CSnakeGUIApp(wx.App):
             self.SelectProjects()
         
     def InitMenu(self):
+        # File
         self.frame.Bind(wx.EVT_MENU, self.OnContextOpen, id=xrc.XRCID("mnuContextOpen"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextCreateACopy, id=xrc.XRCID("mnuContextCreateACopy"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextAbandonChanges, id=xrc.XRCID("mnuContextAbandonChanges"))
         self.frame.Bind(wx.EVT_MENU, self.OnExit, id=xrc.XRCID("mnuExit"))
+        # Help
+        self.frame.Bind(wx.EVT_MENU, self.OnHelp, id=xrc.XRCID("mnuHelp"))
         self.frame.Bind(wx.EVT_MENU, self.OnAbout, id=xrc.XRCID("mnuAbout"))
         
     def InitOtherGUIStuff(self):
@@ -543,7 +547,7 @@ class CSnakeGUIApp(wx.App):
                 message += folder + "\n"
             message += "\n\nThis question will not appear again for this target, but you can later add the above root folders\nusing the Detect button\n"
                 
-            dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
                 self.context.rootFolders.extend(additionalRootFolders)
                 self.UpdateGUIAndSaveContextAndOptions()
@@ -591,7 +595,7 @@ class CSnakeGUIApp(wx.App):
                     self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
                 
         except Exception, message:
-            dlg = wx.MessageDialog(self.frame, "%s" % message, style = wx.OK)
+            dlg = wx.MessageDialog(self.frame, "%s" % message, 'Error', style = wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
         
     def OnInstallFilesToBuildFolder(self, event):
@@ -691,12 +695,12 @@ class CSnakeGUIApp(wx.App):
 
             if os.path.isdir( defaultThirdPartyFolder ):
                 message = "Found thirdparty folder: %s. Do you want to add it?" % defaultThirdPartyFolder
-                dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
                 if dlg.ShowModal() == wx.ID_YES:
                     self.AddThirdPartyFolder( defaultThirdPartyFolder )
         except Exception, message:
             mes = "%s" % message
-            dlg = wx.MessageDialog(self.frame, mes, style = wx.OK)
+            dlg = wx.MessageDialog(self.frame, mes, 'Error', style = wx.OK | wx.ICON_ERROR)
             dlg.ShowModal()
     
     
@@ -710,8 +714,10 @@ class CSnakeGUIApp(wx.App):
         """
         Remove folder where CSnake files must be searched from context.rootFolders.
         """
-        self.context.rootFolders.remove(self.lbRootFolders.GetStringSelection())
-        self.UpdateGUIAndSaveContextAndOptions()
+        folder = self.lbRootFolders.GetStringSelection()
+        if folder in self.context.rootFolders:
+            self.context.rootFolders.remove(folder)
+            self.UpdateGUIAndSaveContextAndOptions()
 
     def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -719,7 +725,7 @@ class CSnakeGUIApp(wx.App):
         """
         defaultBuildThirdPartyFolder = self.context.buildFolder + "/thirdParty"
         message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (defaultBuildThirdPartyFolder, folder)
-        dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+        dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
             self.context.AddThirdPartySrcAndBuildFolder(folder, defaultBuildThirdPartyFolder)
         else:
@@ -746,7 +752,7 @@ class CSnakeGUIApp(wx.App):
         selection = self.ThirdPartySrcAndBuildFolderGetSelectedRows()
         if (len(selection) == 0):
             message = "You have to select at least one row! You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             for i in range(len(selection)):
                 self.context.RemoveThirdPartySrcAndBuildFolderByIndex(selection[i])
@@ -761,7 +767,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
             message = "You have to select at least one row! You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
             self.lbThirdPartySrcAndBuildFolders.SetFocus()
         else:
             self.lbThirdPartySrcAndBuildFolders.SetFocus()
@@ -774,7 +780,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
             message = "You have to select at least one row! You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             newSelection = []
             boundaryIndex = 0
@@ -799,7 +805,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows(), reverse = True)
         if (len(selection) == 0):
             message = "You have to select at least one row! You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, style = wx.OK).ShowModal()
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
         else:
             newSelection = []
             boundaryIndex = self.context.GetNumberOfThirdPartyFolders() - 1
@@ -935,7 +941,7 @@ class CSnakeGUIApp(wx.App):
             dllMessage += ("%s\n" % x)
             
         message = "In the build results folder, CSnake found GIMIAS plugins that have not been configured.\nThe following plugin dlls may crash GIMIAS:\n\n%s\nDelete them?" % dllMessage
-        dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+        dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() != wx.ID_YES:
             return
             
@@ -944,7 +950,7 @@ class CSnakeGUIApp(wx.App):
 
     def AskToLaunchIDE(self, pathToSolution):
         message = "Launch Visual Studio with solution %s?" % pathToSolution
-        dlg = wx.MessageDialog(self.frame, message, style = wx.YES_NO)
+        dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
             argList = [self.context.idePath, pathToSolution]
             subprocess.Popen(argList)
@@ -961,6 +967,15 @@ class CSnakeGUIApp(wx.App):
                 self.SaveContextAndOptions(self.options.contextFilename)
             self.frame.Destroy()
 
+    def OnHelp(self, event = None):
+        ''' Text displayed for help.'''
+        indexFilename = csnUtility.GetRootOfCSnake() + "/doc/html/index.html"
+        if os.path.exists(indexFilename):
+            webbrowser.open(indexFilename)
+        else:
+            dialog = wx.MessageDialog(self.frame, "Missing documentation.", 'Error', style = wx.OK | wx.ICON_ERROR)
+            dialog.ShowModal()
+                                        
     def OnAbout(self, event = None):
         ''' Text displayed in the About box.'''
         about = About()
