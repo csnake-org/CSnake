@@ -422,6 +422,12 @@ class CSnakeGUIApp(wx.App):
                 self.context.cmakePath = csnUtility.GetDefaultCMakePath()
             except WindowsError:
                 self.logger.info("Could not find default CMake.")
+        # find python if not specified
+        if not os.path.isfile(self.context.pythonPath):
+            try:
+                self.context.pythonPath = csnUtility.GetDefaultPythonPath()
+            except WindowsError:
+                self.logger.info("Could not find default Python.")
         
         self.panelSelectProjects.SetScrollRate(25, 25)
 

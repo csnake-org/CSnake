@@ -223,6 +223,19 @@ def GetDefaultCMakePath():
         raise WindowsError("'%s' not found." % path)
     return path
 
+def GetDefaultPythonPath():
+    """ Get the path to Python. """
+    # using registry, not available for non windows
+    if sys.platform != 'win32':
+        return ""
+    key_name = r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath'
+    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+    value,type_id = _winreg.QueryValueEx(key, '')
+    path = value + r'python.exe'
+    if not os.path.exists(path):
+        raise WindowsError("'%s' not found." % path)
+    return path
+
 def InitialiseLogging():
     # create user folder
     userFolder = os.path.expanduser("~") + "/.csnake"
