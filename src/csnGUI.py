@@ -250,6 +250,9 @@ class SelectFolderCallback:
         
 class CSnakeGUIApp(wx.App):
     def OnInit(self):
+        # logging init
+        self.logger = logging.getLogger("CSnake")
+
         self.destroyed = False
         self.listOfPossibleTargets = []
         self.projectCheckBoxes = dict()
@@ -415,7 +418,10 @@ class CSnakeGUIApp(wx.App):
 
         # find cmake if not specified
         if not os.path.isfile(self.context.cmakePath):
-            self.context.cmakePath = csnUtility.GetDefaultCMakePath()
+            try:
+                self.context.cmakePath = csnUtility.GetDefaultCMakePath()
+            except WindowsError:
+                self.logger.info("Could not find default CMake.")
         
         self.panelSelectProjects.SetScrollRate(25, 25)
 

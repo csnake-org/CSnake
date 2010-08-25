@@ -220,7 +220,7 @@ def GetDefaultCMakePath():
     value,type_id = _winreg.QueryValueEx(key, '')
     path = value + r'\bin\cmake.exe'
     if not os.path.exists(path):
-        raise Exception("'%s' not found." % path)
+        raise WindowsError("'%s' not found." % path)
     return path
 
 def InitialiseLogging():
