@@ -28,11 +28,12 @@ class Context(object):
         self.recentlyUsed = list()
         self.filter = ["Demos", "Applications", "Tests"]
         self.configurationName = "DebugAndRelease"
-        self.compilername = "Visual Studio 7 .NET 2003"
+        self.compilername = "Visual Studio 9 2008 Win64"
         self.compiler = None
-        self.cmakePath = "CMake"    
+        self.cmakePath = ""    
         self.subCategoriesOf = dict()
-        self.pythonPath = "D:/Python24/python.exe"
+        # used for creating the CMake rule to create tests with CxxTests
+        self.pythonPath = ""
         self.idePath = ""
         self.kdevelopProjectFolder = ""
             
