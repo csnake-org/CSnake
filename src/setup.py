@@ -11,13 +11,13 @@ class exeSetup():
     def __init__(self):
         pathToResources = "../resources/"
         pathToSrc = "../src/"
-        # Resource files to add to bin folder.
+        # Resources of the setup script
         self.resources = []
-        for resFile in os.listdir(pathToResources):
-            f1 = pathToResources + resFile
-            if os.path.isfile(f1): # skip directories
-                f2 = "resources", [f1]
-                self.resources.append(f2)
+        # Resource files to add to bin folder.
+        self.__addToResources(pathToResources, "resources")
+        # Doc files to add to bin folder.
+        self.__addToResources("../doc/html/", "doc/html")
+        self.__addToResources("../doc/html/search/", "doc/html/search")
         # script
         self.script = pathToSrc + "csnGUI.py"
         self.icon_resource = pathToResources + "Laticauda_colubrina.ico"
@@ -43,6 +43,13 @@ class exeSetup():
                 }
             ],
             data_files = self.resources )
+        
+    def __addToResources(self, origin, destination):
+        for f1 in os.listdir(origin):
+            f2 = origin + f1
+            if os.path.isfile(f2): # skip directories
+                pair = destination, [f2]
+                self.resources.append(pair)
 
 if __name__ == "__main__":
     mainSetup = exeSetup()
