@@ -413,6 +413,10 @@ class CSnakeGUIApp(wx.App):
         if self.LoadContext(contextToLoad):
             self.BackupContextFile()
 
+        # find cmake if not specified
+        if not os.path.isfile(self.context.cmakePath):
+            self.context.cmakePath = csnUtility.GetDefaultCMakePath()
+        
         self.panelSelectProjects.SetScrollRate(25, 25)
 
         self.UpdateGUIAndSaveContextAndOptions()

@@ -210,6 +210,19 @@ def GetDefaultVisualStudioPath( generator ):
         path = GetRegVisualStudioPath( generator, r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7' )
     return path
 
+def GetDefaultCMakePath():
+    """ Get the path to CMake. """
+    # using registry, not available for non windows
+    if sys.platform != 'win32':
+        return ""
+    key_name = r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0'
+    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+    value,type_id = _winreg.QueryValueEx(key, '')
+    path = value + r'\bin\cmake.exe'
+    if not os.path.exists(path):
+        raise Exception("'%s' not found." % path)
+    return path
+
 def InitialiseLogging():
     # create user folder
     userFolder = os.path.expanduser("~") + "/.csnake"
