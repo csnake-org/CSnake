@@ -6,9 +6,9 @@ class Manager:
     def __init__(self, _project, _sourceRootFolder):
         self.project = _project
         if self.project.type == "dll":
-            self.buildSubFolder = self.project.context.compiler.GetBuildSubFolder("library", self.project.name)
+            self.buildSubFolder = self.project.context.GetCompiler().GetBuildSubFolder("library", self.project.name)
         else:
-            self.buildSubFolder = self.project.context.compiler.GetBuildSubFolder(self.project.type, self.project.name)
+            self.buildSubFolder = self.project.context.GetCompiler().GetBuildSubFolder(self.project.type, self.project.name)
 
         self.configFilePath = "%s/%sConfig.cmake" % (self.buildSubFolder, self.project.name)
         self.useFilePath = "%s/Use%s.cmake" % (self.buildSubFolder, self.project.name)
@@ -46,7 +46,7 @@ class Manager:
         if os.path.isabs(self.useFilePath):
             result = self.useFilePath
         else:
-            result = "%s/%s" % (self.project.context.buildFolder, self.useFilePath)
+            result = "%s/%s" % (self.project.context.GetBuildFolder(), self.useFilePath)
             
         return csnUtility.NormalizePath(result)
 
@@ -59,7 +59,7 @@ class Manager:
         if os.path.isabs(self.configFilePath):
             result = self.configFilePath
         else:
-            result = "%s/%s" % (self.project.context.buildFolder, self.configFilePath)
+            result = "%s/%s" % (self.project.context.GetBuildFolder(), self.configFilePath)
 
         postfix = ""
         if self.project.type in ("dll", "library", "executable") and (not _public):
@@ -71,7 +71,7 @@ class Manager:
         """
         Returns the folder for storing intermediate build files for this project.
         """
-        return csnUtility.NormalizePath(self.project.context.buildFolder + "/" + self.buildSubFolder)
+        return csnUtility.NormalizePath(self.project.context.GetBuildFolder() + "/" + self.buildSubFolder)
         
     def GetBuildResultsFolder(self, _configurationName = "${CMAKE_CFG_INTDIR}"):
         """ 

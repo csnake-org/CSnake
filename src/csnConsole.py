@@ -26,13 +26,13 @@ if commandLineOptions.thirdParty:
     raw_input()
 
 if commandLineOptions.install:
-    taskMsg = "InstallBinariesToBuildFolder to %s..." % (context.buildFolder)
+    taskMsg = "InstallBinariesToBuildFolder to %s..." % (context.GetBuildFolder())
     print "Starting task: " + taskMsg 
     result = handler.InstallBinariesToBuildFolder()
     assert result, "\n\nTask failed: InstallBinariesToBuildFolder" 
     print "Finished task: " + taskMsg
 
-taskMsg = "ConfigureProjectToBuildFolder to %s..." % (context.buildFolder)
+taskMsg = "ConfigureProjectToBuildFolder to %s..." % (context.GetBuildFolder())
 print "Starting task: " + taskMsg 
 result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
 assert result, "\n\nTask failed: ConfigureProjectToBuildFolder" 

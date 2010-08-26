@@ -50,11 +50,11 @@ class Manager:
         if _enableWxWidgets:
             wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/resources/wxRunner.tpl")
         else:
-            wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/resources/%s" % self.testProject.context.testRunnerTemplate)    
+            wxRunnerArg = "--template \"%s\"" % (csnUtility.GetRootOfCSnake() + "/resources/%s" % self.testProject.context.GetTestRunnerTemplate())    
             
         pythonScript = "%s/CxxTest/cxxtestgen.py" % cxxTestProject.GetSourceRootFolder()
         command = "\"%s\" \"%s\" %s --have-eh --error-printer -o \"%s\" " % (
-            csnUtility.NormalizePath(self.testProject.context.pythonPath), 
+            csnUtility.NormalizePath(self.testProject.context.GetPythonPath()), 
             pythonScript, 
             wxRunnerArg, 
             self.testRunnerSourceFile

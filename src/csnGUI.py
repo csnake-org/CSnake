@@ -276,20 +276,20 @@ class CSnakeGUIApp(wx.App):
         self.binder = xrcbinder.Binder(self, self.frame)
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
-        self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "buildFolder", isFilename = True)
-        self.binder.AddTextControl("txtInstallFolder", buddyClass = "context", buddyField = "installFolder", isFilename = True)
-        self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "kdevelopProjectFolder", isFilename = True)
-        self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "cmakePath", isFilename = True)
-        self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "pythonPath", isFilename = True)
-        self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "idePath", isFilename = True)
-        self.binder.AddComboBox("cmbCSnakeFile", valueListFunctor = self.GetCSnakeFileComboBoxItems, buddyClass = "context", buddyField = "csnakeFile", isFilename = True)
-        self.binder.AddComboBox("cmbInstance", valueListFunctor = self.GetInstanceComboBoxItems, buddyClass = "context", buddyField = "instance")
-        self.binder.AddDropDownList("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "compilername")
-        self.binder.AddDropDownList("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "configurationName")
-        self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "rootFolders", isFilename = True)
+        self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "_Context__buildFolder", isFilename = True)
+        self.binder.AddTextControl("txtInstallFolder", buddyClass = "context", buddyField = "_Context__installFolder", isFilename = True)
+        self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "_Context__kdevelopProjectFolder", isFilename = True)
+        self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "_Context__cmakePath", isFilename = True)
+        self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "_Context__pythonPath", isFilename = True)
+        self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "_Context__idePath", isFilename = True)
+        self.binder.AddComboBox("cmbCSnakeFile", valueListFunctor = self.GetCSnakeFileComboBoxItems, buddyClass = "context", buddyField = "_Context__csnakeFile", isFilename = True)
+        self.binder.AddComboBox("cmbInstance", valueListFunctor = self.GetInstanceComboBoxItems, buddyClass = "context", buddyField = "_Context__instance")
+        self.binder.AddDropDownList("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "_Context__compilername")
+        self.binder.AddDropDownList("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "_Context__configurationName")
+        self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "_Context__rootFolders", isFilename = True)
         self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "askToLaunchIDE")
         
-        self.binder.AddGrid("lbThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "thirdPartySrcAndBuildFolders", isFilename = True)
+        self.binder.AddGrid("lbThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_Context__thirdPartySrcAndBuildFolders", isFilename = True)
 
         self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
@@ -417,15 +417,15 @@ class CSnakeGUIApp(wx.App):
             self.BackupContextFile()
 
         # find cmake if not specified
-        if not os.path.isfile(self.context.cmakePath):
+        if not os.path.isfile(self.context.GetCmakePath()):
             try:
-                self.context.cmakePath = csnUtility.GetDefaultCMakePath()
+                self.context.SetCmakePath(csnUtility.GetDefaultCMakePath())
             except WindowsError:
                 self.logger.info("Could not find default CMake.")
         # find python if not specified
-        if not os.path.isfile(self.context.pythonPath):
+        if not os.path.isfile(self.context.GetPythonPath()):
             try:
-                self.context.pythonPath = csnUtility.GetDefaultPythonPath()
+                self.context.SetPythonPath(csnUtility.GetDefaultPythonPath())
             except WindowsError:
                 self.logger.info("Could not find default Python.")
         
@@ -547,9 +547,9 @@ class CSnakeGUIApp(wx.App):
         self.DoAction()
         
     def OnDetectRootFolders(self, event):
-        if self.context.csnakeFile != None and os.path.isfile(self.context.csnakeFile):
+        if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
             additionalRootFolders = self.handler.FindAdditionalRootFolders()
-            self.context.rootFolders.extend(additionalRootFolders)
+            self.context.GetRootFolders().extend(additionalRootFolders)
             self.UpdateGUIAndSaveContextAndOptions()
         else:
             message = "Please provide a valid CSnake file."
@@ -561,7 +561,7 @@ class CSnakeGUIApp(wx.App):
         
         additionalRootFolders = self.handler.FindAdditionalRootFolders()
         if len(additionalRootFolders):
-            message =  "CSnakeGUI found additional root folders which are likely to be necessary for target %s.\n" % self.context.instance
+            message =  "CSnakeGUI found additional root folders which are likely to be necessary for target %s.\n" % self.context.GetInstance()
             message += "Should CSnakeGUI add the following root folders?\n\n"
             for folder in additionalRootFolders:
                 message += folder + "\n"
@@ -569,7 +569,7 @@ class CSnakeGUIApp(wx.App):
                 
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
-                self.context.rootFolders.extend(additionalRootFolders)
+                self.context.GetRootFolders().extend(additionalRootFolders)
                 self.UpdateGUIAndSaveContextAndOptions()
             
     def ActionCreateCMakeFilesAndRunCMake(self):
@@ -577,7 +577,7 @@ class CSnakeGUIApp(wx.App):
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _callback = self):
             xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").SetFocus()
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
-            if self.context.instance.lower() == "gimias":
+            if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
         
     def OnConfigureALL(self, event):
@@ -598,7 +598,7 @@ class CSnakeGUIApp(wx.App):
     def ActionOnlyCreateCMakeFiles(self):
         self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
-            if self.context.instance.lower() == "gimias":
+            if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
         
     def OnConfigureThirdPartyFolder(self, event):
@@ -667,7 +667,7 @@ class CSnakeGUIApp(wx.App):
         Select file containing the project that should be configured.
         """
         # Set path of that file that was selected before
-        oldValue = self.context.csnakeFile
+        oldValue = self.context.GetCsnakeFile()
         if oldValue.find("/") == -1:
             oldPath = ""
         else:
@@ -678,30 +678,30 @@ class CSnakeGUIApp(wx.App):
         dlg = wx.FileDialog(None, "Select CSnake file", wildcard = "Python source files (*.py)|*.py",defaultDir = oldPath, defaultFile = oldValue)
         
         if dlg.ShowModal() == wx.ID_OK:
-            self.context.csnakeFile = dlg.GetPath()
+            self.context.SetCsnakeFile(dlg.GetPath())
             self.UpdateGUIAndSaveContextAndOptions()
 
     def SetBuildFolder(self, folder):
-        self.context.buildFolder = folder
+        self.context.SetBuildFolder(folder)
         
     def GetBuildFolder(self):
-        return self.context.buildFolder
+        return self.context.GetBuildFolder()
         
     def SetInstallFolder(self, folder):
-        self.context.installFolder = folder
+        self.context.SetInstallFolder(folder)
 
     def GetInstallFolder(self):
-        return self.context.installFolder
+        return self.context.GetInstallFolder()
         
     def SetKDevelopProjectFolder(self, folder):
-        self.context.kdevelopProjectFolder = folder
+        self.context.SetKdevelopProjectFolder(folder)
         
     def GetKDevelopProjectFolder(self):
-        return self.context.kdevelopProjectFolder
+        return self.context.GetKdevelopProjectFolder()
             
     def AddRootFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Add folder where CSnake files must be searched to context.rootFolders.
+        Add folder where CSnake files must be searched to context rootFolders.
         """
         try:
             self.context.AddRootFolder( folder )
@@ -725,18 +725,18 @@ class CSnakeGUIApp(wx.App):
     
     
     def GetLastRootFolder(self):
-        if len(self.context.rootFolders) > 0:
-            return self.context.rootFolders[len(self.context.rootFolders)-1]
+        if len(self.context.GetRootFolders()) > 0:
+            return self.context.GetRootFolders()[len(self.context.GetRootFolders())-1]
         else:
             return ""
 
     def OnRemoveRootFolder(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
-        Remove folder where CSnake files must be searched from context.rootFolders.
+        Remove folder where CSnake files must be searched from context rootFolders.
         """
         folder = self.lbRootFolders.GetStringSelection()
-        if folder in self.context.rootFolders:
-            self.context.rootFolders.remove(folder)
+        if folder in self.context.GetRootFolders():
+            self.context.GetRootFolders().remove(folder)
             self.UpdateGUIAndSaveContextAndOptions()
         else:
             message = "Please select at least one folder."
@@ -746,7 +746,7 @@ class CSnakeGUIApp(wx.App):
         """
         Add folder where CSnake files must be searched to context.thirdPartyFolders.
         """
-        defaultBuildThirdPartyFolder = self.context.buildFolder + "/thirdParty"
+        defaultBuildThirdPartyFolder = self.context.GetBuildFolder() + "/thirdParty"
         message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (defaultBuildThirdPartyFolder, folder)
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
@@ -886,14 +886,13 @@ class CSnakeGUIApp(wx.App):
         return result
         
     def GetBuildTypeComboBoxItems(self):
-        #print self.context.compiler.GetAllowedConfigurations()
-        return self.context.compiler.GetAllowedConfigurations()
+        return self.context.GetCompiler().GetAllowedConfigurations()
     
     def GetCSnakeFileComboBoxItems(self):
         result = list()
         count = 0
-        for x in self.context.recentlyUsed:
-            result.append("%s - In %s" % (x.instance, x.csnakeFile))
+        for x in self.context.GetRecentlyUsed():
+            result.append("%s - In %s" % (x.GetInstance(), x.GetCsnakeFile()))
             count += 1
             if count >= 10:
                 break
@@ -902,7 +901,7 @@ class CSnakeGUIApp(wx.App):
     def UpdateGUIAndSaveContextAndOptions(self):
         """ Refreshes the GUI based on the current context. Also saves the current context to the contextFilename """
         self.binder.UpdateControls()
-        self.panelKDevelop.Show( self.context.compiler.GetName() in ("KDevelop3") )
+        self.panelKDevelop.Show( self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.SaveContextAndOptions()
         self.frame.Layout()
         self.frame.Refresh()
@@ -941,11 +940,11 @@ class CSnakeGUIApp(wx.App):
         self.binder.SetBuddyClass("context", self.context)
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        if self.context.csnakeFile != None and os.path.isfile(self.context.csnakeFile):
+        if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
             self.SetStatus("Retrieving list of targets")
             self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
             if len(self.listOfPossibleTargets):
-                self.context.instance = self.listOfPossibleTargets[0]
+                self.context.SetInstance(self.listOfPossibleTargets[0])
             self.UpdateGUIAndSaveContextAndOptions()
             self.SetStatus("")
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
@@ -978,11 +977,11 @@ class CSnakeGUIApp(wx.App):
         message = "Launch Visual Studio with solution %s?" % pathToSolution
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
-            argList = [self.context.idePath, pathToSolution]
+            argList = [self.context.GetIdePath(), pathToSolution]
             subprocess.Popen(argList)
 
     def OnLaunchIDE(self, event = None):
-        argList = [self.context.idePath, self.handler.GetTargetSolutionPath()]
+        argList = [self.context.GetIdePath(), self.handler.GetTargetSolutionPath()]
         subprocess.Popen(argList)
     
     def OnExit(self, event = None):
@@ -1009,10 +1008,10 @@ class CSnakeGUIApp(wx.App):
         wx.AboutBox(about.getWxAboutDialogInfo())
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        item = self.context.csnakeFile.GetSelection()
-        context = self.context.recentlyUsed[item]
-        self.context.csnakeFile = context.csnakeFile
-        self.context.instance = context.instance
+        item = self.context.GetCsnakeFile().GetSelection()
+        context = self.context.GetRecentlyUsed()[item]
+        self.context.SetCsnakeFile(context.GetCsnakeFile())
+        self.context.SetInstance(context.GetInstance())
         self.UpdateGUIAndSaveContextAndOptions()
 
     def OnContextAbandonChanges(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
@@ -1028,35 +1027,35 @@ class CSnakeGUIApp(wx.App):
         """
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
-            self.context.cmakePath = dlg.GetPath()
+            self.context.SetCmakePath(dlg.GetPath())
             self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSetPythonPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
-            self.context.pythonPath = dlg.GetPath()
+            self.context.SetPythonPath(dlg.GetPath())
             self.UpdateGUIAndSaveContextAndOptions()
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select path to Visual Studio")
         if dlg.ShowModal() == wx.ID_OK:
-            self.context.idePath = dlg.GetPath()
+            self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUIAndSaveContextAndOptions()
 
     def SelectProjects(self, forceRefresh = False):
-        # get list of ALL the categories on which the user can filter
+        # get list of ALL the categories on which the user can __filter
         self.SetStatus("Retrieving projects...")
-        previousFilter = self.context.filter 
-        self.context.filter = list()
+        previousFilter = self.context.GetFilter() 
+        self.context.SetFilter(list())
         try:
             categories = self.handler.GetCategories(forceRefresh)
         except:
-            message = "Could not load project dependencies for instance %s from file %s." % (self.context.instance, self.context.csnakeFile)
+            message = "Could not load project dependencies for __instance %s from file %s." % (self.context.GetInstance(), self.context.GetCsnakeFile())
             message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
             self.Error(message)
             return
             
-        self.context.filter = previousFilter
+        self.context.SetFilter(previousFilter)
         
         # create list of checkboxes for the categories
         self.panelSelectProjects.GetSizer().Clear()
@@ -1066,15 +1065,15 @@ class CSnakeGUIApp(wx.App):
         
         for category in sorted(categories):
             self.projectCheckBoxes[category] = wx.CheckBox(self.panelSelectProjects, -1, category)
-            self.projectCheckBoxes[category].SetValue( not category in self.context.filter )
+            self.projectCheckBoxes[category].SetValue( not category in self.context.GetFilter() )
             self.panelSelectProjects.GetSizer().Add(self.projectCheckBoxes[category], 0, 0, 3)
             self.panelSelectProjects.Bind(wx.EVT_CHECKBOX, self.OnCategoryCheckBoxChanged, self.projectCheckBoxes[category])
 
         # create list of checkboxes for the 'super categories' (which are groups of normal categories, such as Tests)
-        for super in self.context.subCategoriesOf.keys():
+        for super in self.context.GetSubCategoriesOf().keys():
             value = True
-            for sub in self.context.subCategoriesOf[super]:
-                value = value and (not sub in self.context.filter)
+            for sub in self.context.GetSubCategoriesOf()[super]:
+                value = value and (not sub in self.context.GetFilter())
                     
             self.projectCheckBoxes[super] = wx.CheckBox(self.panelSelectProjects, -1, super)
             self.projectCheckBoxes[super].SetValue( value )
@@ -1091,28 +1090,26 @@ class CSnakeGUIApp(wx.App):
         Respond to checking a supercategory (such as Tests or Demos). Results in (un)checking all subcategories in that
         supercategory.
         """
-        for super in self.context.subCategoriesOf.keys():
+        for super in self.context.GetSubCategoriesOf().keys():
             value = self.projectCheckBoxes[super].GetValue()
                     
             for cbName in self.projectCheckBoxes.keys():
-                if cbName in self.context.subCategoriesOf[super]:
+                if cbName in self.context.GetSubCategoriesOf()[super]:
                     self.projectCheckBoxes[cbName].SetValue(value)
                     
         self.OnCategoryCheckBoxChanged(event)
         
     def OnCategoryCheckBoxChanged(self, event): # wxGlade: Dialog.<event_handler>
         """ 
-        Updates the category filter, based on the current status of the checkbox for each category.
+        Updates the category __filter, based on the current status of the checkbox for each category.
         """
         for category in self.projectCheckBoxes.keys():
-            if category in self.context.filter:
-                self.context.filter.remove(category)
+            if category in self.context.GetFilter():
+                self.context.GetFilter().remove(category)
             if not self.projectCheckBoxes[category].GetValue():
-                self.context.filter.append(category)
+                self.context.GetFilter().append(category)
                 
     def OnSelectCompiler(self, event):
-        #self.binder.UpdateControls()
-        #self.SetContext(csnContext.FindCompiler(self.context.compiler))
         self.context.FindCompiler()
         self.UpdateGUIAndSaveContextAndOptions()
 

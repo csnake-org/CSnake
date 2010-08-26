@@ -130,8 +130,8 @@ class Generator:
         _generatedList.append(_targetProject)
         
         # check for backward slashes
-        if csnUtility.HasBackSlash(_targetProject.context.buildFolder):
-            raise SyntaxError, "Error, backslash found in build folder %s" % _targetProject.context.buildFolder
+        if csnUtility.HasBackSlash(_targetProject.context.GetBuildFolder()):
+            raise SyntaxError, "Error, backslash found in build folder %s" % _targetProject.context.GetBuildFolder()
         
         # check  trying to build a third party library
         if _targetProject.type == "third party":
@@ -198,7 +198,7 @@ class Generator:
         Apply post-processing after the CMake generation for _targetProject and all its child projects.
         """
         for project in _targetProject.GetProjects(_recursive = 1, _includeSelf = True):
-            postprocessor = _targetProject.context.compiler.GetPostProcessor()
+            postprocessor = _targetProject.context.GetCompiler().GetPostProcessor()
             if not (postprocessor is None):
-                _targetProject.context.compiler.GetPostProcessor().Do(project)
+                _targetProject.context.GetCompiler().GetPostProcessor().Do(project)
 

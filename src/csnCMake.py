@@ -16,16 +16,16 @@ class Writer:
         self.file.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         self.file.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         self.file.write( "PROJECT(%s)\n" % (self.project.name) )
-        self.file.write( "SET( BINARY_DIR \"%s\")\n" % (self.project.context.GetOutputFolder(self.project.context.configurationName)) )
+        self.file.write( "SET( BINARY_DIR \"%s\")\n" % (self.project.context.GetOutputFolder(self.project.context.GetConfigurationName())) )
         self.file.write( "MESSAGE( STATUS \"Processing %s\" )\n" % self.project.name )
 
-        if not self.project.context.configurationName == "DebugAndRelease":
-            self.file.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (self.project.context.configurationName) )
+        if not self.project.context.GetConfigurationName() == "DebugAndRelease":
+            self.file.write( "SET( CMAKE_BUILD_TYPE %s )\n" % (self.project.context.GetConfigurationName()) )
         
         self.file.write( "\n# All binary outputs are written to the same folder.\n" )
         self.file.write( "SET( CMAKE_SUPPRESS_REGENERATION TRUE )\n" )
-        self.file.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
-        self.file.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.configurationName) )
+        self.file.write( "SET( EXECUTABLE_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.GetConfigurationName()) )
+        self.file.write( "SET( LIBRARY_OUTPUT_PATH \"%s\")\n" % self.project.GetBuildResultsFolder(self.project.context.GetConfigurationName()) )
 
         # Forced for CMake 2.8
         self.file.write( "cmake_minimum_required(VERSION 2.4.6)\n\n" )
@@ -60,7 +60,7 @@ class Writer:
                     for fileToInstall in project.installManager.filesToInstall[mode][location]:
                         files += "%s " % csnUtility.NormalizePath(fileToInstall)
                     if files != "":
-                        destination = "%s/%s" % (self.project.context.installFolder, location)
+                        destination = "%s/%s" % (self.project.context.GetInstallFolder(), location)
                         self.file.write( "\n# Rule for installing files in location %s\n" % destination)
                         self.file.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
     
@@ -145,8 +145,8 @@ class Writer:
         
     def __CreateCMakeSection_InstallRules(self):
         """ Create install rules in the CMakeLists.txt """
-        if self.project.context.installFolder != "" and self.project.type != "library":
-            destination = "%s/%s" % (self.project.context.installFolder, self.project.installSubFolder)
+        if self.project.context.GetInstallFolder() != "" and self.project.type != "library":
+            destination = "%s/%s" % (self.project.context.GetInstallFolder(), self.project.installSubFolder)
             self.file.write( "\n# Rule for installing files in location %s\n" % destination)
             self.file.write( "INSTALL(TARGETS %s DESTINATION \"%s\")\n" % (self.project.name, destination) )
     
@@ -196,7 +196,7 @@ class Writer:
             
             #Add precompiled header to sources. This file is generated for windows only 
             # after executing CMake, so it doens't exists at the begining
-            if not self.project.context.compiler.IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
+            if not self.project.context.GetCompiler().IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
                 return
             precompiledHeaderCxx = "%s/%s_pch.cxx" % (self.project.GetBuildFolder(),self.project.name)
             self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)

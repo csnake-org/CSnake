@@ -180,7 +180,7 @@ class GenericProject(object):
         return self.pathsManager.GetBuildResultsFolder(_configurationName)
 
     def GetCMakeListsFilename(self):
-        return "%s/%s" % (self.context.buildFolder, self.pathsManager.cmakeListsSubpath)
+        return "%s/%s" % (self.context.GetBuildFolder(), self.pathsManager.cmakeListsSubpath)
 
     def GetSources(self):
         return self.compileManager.sources
@@ -189,7 +189,7 @@ class GenericProject(object):
         return self.pathsManager.GetSourceRootFolder()
 
     def MatchesFilter(self):
-        for pattern in self.context.filter:
+        for pattern in self.context.GetFilter():
             for string in self.categories:
                 if csnUtility.Matches(string, pattern):
                     return True

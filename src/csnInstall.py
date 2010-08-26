@@ -13,7 +13,7 @@ class Manager:
         self.filesToInstall["Release"] = dict()
 
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
-        if not self.project.context.compiler.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.GetCompiler().IsForPlatform(_WIN32, _NOT_WIN32):
             return
             
         if _location is None:
@@ -44,7 +44,7 @@ class Manager:
                 for location in project.installManager.filesToInstall[mode].keys():
                     for dllPattern in project.installManager.filesToInstall[mode][location]:
                         for tpfolder in self.project.context.GetThirdPartyBuildFolders():
-                            tpfolder += "/" + self.project.context.compiler.GetThirdPartySubFolder()
+                            tpfolder += "/" + self.project.context.GetCompiler().GetThirdPartySubFolder()
                             path = csnUtility.NormalizePath(dllPattern)
                             if not os.path.isabs(path):
                                 path = "%s/%s" % (tpfolder, path)

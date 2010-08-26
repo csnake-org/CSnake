@@ -45,13 +45,13 @@ class KDevelopPostProcessor:
         return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
         
     def Do(self, _project):
-        if not os.path.exists(_project.context.kdevelopProjectFolder):
+        if not os.path.exists(_project.context.GetKdevelopProjectFolder()):
             # if _kdevelopProjectFolder does not exist, then it MUST equal "".
-            # otherwise, the user specified an invalid path for kdevelopProjectFolder.  
-            assert _project.context.kdevelopProjectFolder == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _project.context.kdevelopProjectFolder
+            # otherwise, the user specified an invalid path for __kdevelopProjectFolder.  
+            assert _project.context.GetKdevelopProjectFolder() == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _project.context.GetKdevelopProjectFolder()
             return
             
-        kdevelopProjectFolder = csnUtility.NormalizePath(_project.context.kdevelopProjectFolder)
+        kdevelopProjectFolder = csnUtility.NormalizePath(_project.context.GetKdevelopProjectFolder())
 
         if not os.path.exists(self.__GetKDevelopProjectFilename(_project)):
             return
@@ -81,10 +81,6 @@ class KDevelopPostProcessor:
         searchText = "<filelistdirectory>%s" % _project.GetBuildFolder()
         replaceText = "<filelistdirectory>%s" % kdevelopProjectFolder
         kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
-        
-        #searchText = "<mainprogram>%s" % _project.GetBuildFolder()
-        #replaceText = "<mainprogram>%s" % _project.context.GetOutputFolder(_project.context.configurationName)
-        #kdevelopProjectText = kdevelopProjectText.replace(searchText, replaceText)
         
         if csnUtility.FileToString(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder)) != kdevelopProjectText:
             f = open(self.__GetKDevelopProjectFilename(_project, kdevelopProjectFolder), 'w')

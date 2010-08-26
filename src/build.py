@@ -16,7 +16,7 @@ handler = csnGUIHandler.Handler()
 context = handler.LoadContext(sys.argv[1])
 
 # Configure the project
-if context.instance == "thirdParty":
+if context.GetInstance() == "thirdParty":
     res = handler.ConfigureThirdPartyFolders()
 else:
     res = handler.ConfigureProjectToBuildFolder( True )
@@ -25,4 +25,4 @@ else:
 
     
 if not res:
-    sys.exit("Error configuring instance %s" % context.instance)
+    sys.exit("Error configuring instance %s" % context.GetInstance())

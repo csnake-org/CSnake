@@ -20,14 +20,14 @@ class LinuxCommon(csnCompiler.Compiler):
         return "bin/%s" % (_configuration)
     
     def GetBuildSubFolder(self, _projectType, _projectName):
-        return "%s/%s/%s" % (_projectType, self.context.configurationName, _projectName)
+        return "%s/%s/%s" % (_projectType, self.context.GetConfigurationName(), _projectName)
 
     def GetThirdPartySubFolder(self):
-        return self.context.configurationName
+        return self.context.GetConfigurationName()
     
     def GetThirdPartyCMakeParameters(self):
         return [
-            "-D", "CMAKE_BUILD_TYPE=" + self.context.configurationName,
+            "-D", "CMAKE_BUILD_TYPE=" + self.context.GetConfigurationName(),
             "-D", "CMAKE_C_FLAGS=-fPIC",
             "-D", "CMAKE_CXX_FLAGS=-fPIC"
         ]

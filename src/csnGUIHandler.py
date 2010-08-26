@@ -68,21 +68,21 @@ class Handler:
         
         # set up roll back of imported modules
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.GetThirdPartyFolders( ))
-        (projectFolder, name) = os.path.split(self.context.csnakeFile)
+        rollbackHandler.SetUp(self.context.GetCsnakeFile(), self.context.GetRootFolders(), self.context.GetThirdPartyFolders())
+        (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
         (name, _) = os.path.splitext(name)
         
         try:
             projectModule = csnUtility.LoadModule(projectFolder, name)
             projectModule # prevent warning
-            exec "self.cachedProjectInstance = csnProject.ToProject(projectModule.%s)" % self.context.instance
+            exec "self.cachedProjectInstance = csnProject.ToProject(projectModule.%s)" % self.context.GetInstance()
             self.cachedContextAsString = pickle.dumps(self.context)
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
 
         relocator = csnPrebuilt.ProjectRelocator()
-        relocator.Do(self.cachedProjectInstance, self.context.prebuiltBinariesFolder)
+        relocator.Do(self.cachedProjectInstance, self.context.GetPrebuiltBinariesFolder())
         self.UpdateRecentlyUsedCSnakeFiles()
         
         return self.cachedProjectInstance
@@ -98,7 +98,7 @@ class Handler:
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
             
         if _alsoRunCMake:
-            argList = [self.context.cmakePath, "-G", self.context.compiler.GetName(), instance.GetCMakeListsFilename()]
+            argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
             process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
             while process.poll() is None:
                 (outdata, errdata) = process.communicate()
@@ -112,17 +112,17 @@ class Handler:
                 if _callback:
                     _callback.Warn("Configuration failed.")
                     if not self.CMakeIsFound():
-                        _callback.Warn("CMake not found at %s" % self.context.cmakePath)
+                        _callback.Warn("CMake not found at %s" % self.context.GetCmakePath())
                 return False
             
     def InstallBinariesToBuildFolder(self):
         return self.generator.InstallBinariesToBuildFolder(self.__GetProjectInstance())
              
     def CMakeIsFound(self):
-        found = os.path.exists(self.context.cmakePath) and os.path.isfile(self.context.cmakePath)
+        found = os.path.exists(self.context.GetCmakePath()) and os.path.isfile(self.context.GetCmakePath())
         if not found:
             try:
-                retcode = subprocess.Popen(self.context.cmakePath).wait()
+                retcode = subprocess.Popen(self.context.GetCmakePath()).wait()
             except:
                 retcode = 1
             found = retcode == 0
@@ -134,8 +134,6 @@ class Handler:
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
-        #print self.context.compiler.GetName()
-        #print self.context.configurationName
         result = True
 
         for index in range(0, self.context.GetNumberOfThirdPartyFolders( ) ):
@@ -143,7 +141,7 @@ class Handler:
             if not result:
                 print "Configuration failed.\n"   
                 if not self.CMakeIsFound():
-                    print "Please specify correct path to CMake (current is %s)" % self.context.cmakePath 
+                    print "Please specify correct path to CMake (current is %s)" % self.context.GetCmakePath() 
                     return False
             
         return result
@@ -154,24 +152,22 @@ class Handler:
         By default, the third party folder is configured twice because this works around
         some problems with incomplete configurations.
         """
-        #print self.context.compiler.GetName()
-        #print self.context.configurationName
         result = True
         
         # create the build folder if it doesn't exist
         os.path.exists(build) or os.makedirs(build)
         
-        if not os.path.exists( self.context.cmakePath ):
+        if not os.path.exists( self.context.GetCmakePath() ):
             raise Exception( "Please provide a valid CMake path" )
         
         cmakeModulePath = ""
         for buildFolder in allBuildFolders:
             cmakeModulePath = cmakeModulePath + buildFolder + ";"
         cmakeModulePath = cmakeModulePath[0:-1]
-        argList = [self.context.cmakePath, \
-                  "-G", self.context.compiler.GetName(), \
+        argList = [self.context.GetCmakePath(), \
+                  "-G", self.context.GetCompiler().GetName(), \
                   "-D", "THIRDPARTY_BUILD_FOLDERS:STRING='%s'" % cmakeModulePath] + \
-                  self.context.compiler.GetThirdPartyCMakeParameters() + \
+                  self.context.GetCompiler().GetThirdPartyCMakeParameters() + \
                   [source]
         for _ in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = build).wait() 
@@ -179,7 +175,7 @@ class Handler:
         if not result:
             print "Configuration failed.\n"   
             if not self.CMakeIsFound():
-                print "Please specify correct path to CMake (current is %s)" % self.context.cmakePath 
+                print "Please specify correct path to CMake (current is %s)" % self.context.GetCmakePath() 
                 return False
 
         return result
@@ -191,8 +187,8 @@ class Handler:
         """
         # determine list of folders to search for pyc files
         folderList = []
-        folderList.extend(self.context.GetThirdPartyFolders( ))
-        folderList.extend(self.context.rootFolders)
+        folderList.extend(self.context.GetThirdPartyFolders())
+        folderList.extend(self.context.GetRootFolders())
 
         # remove pyc files
         while len(folderList) > 0:
@@ -214,11 +210,11 @@ class Handler:
         self.DeletePycFiles()
                 
         rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.csnakeFile, self.context.rootFolders, self.context.GetThirdPartyFolders( ))
+        rollbackHandler.SetUp(self.context.GetCsnakeFile(), self.context.GetRootFolders(), self.context.GetThirdPartyFolders())
         result = []
 
         # find csnake targets in the loaded module
-        (projectFolder, name) = os.path.split(self.context.csnakeFile)
+        (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
         (name, _) = os.path.splitext(name)
         projectModule = csnUtility.LoadModule(projectFolder, name)   
         for member in inspect.getmembers(projectModule):
@@ -242,7 +238,7 @@ class Handler:
     
         configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
         for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (self.context.buildFolder, configuration)
+            pluginsFolder = "%s/bin/%s/plugins/*" % (self.context.GetBuildFolder(), configuration)
 
             for pluginFolder in glob.glob( pluginsFolder ):
                 pluginName = os.path.basename(pluginFolder)
@@ -275,7 +271,7 @@ class Handler:
         return result
 
     def UpdateRecentlyUsedCSnakeFiles(self):
-        self.context.AddRecentlyUsed(self.context.instance, self.context.csnakeFile)
+        self.context.AddRecentlyUsed(self.context.GetInstance(), self.context.GetCsnakeFile())
 
     def GetCategories(self, _forceRefresh = False):
         instance = self.cachedProjectInstance
@@ -290,10 +286,10 @@ class Handler:
                     
     def FindAdditionalRootFolders(self):
         result = []
-        folder = csnUtility.NormalizePath(os.path.dirname(self.context.csnakeFile))
+        folder = csnUtility.NormalizePath(os.path.dirname(self.context.GetCsnakeFile()))
         previousFolder = ""
         while folder != previousFolder:
-            if os.path.exists("%s/rootFolder.csnake" % folder) and not folder in self.context.rootFolders:
+            if os.path.exists("%s/rootFolder.csnake" % folder) and not folder in self.context.GetRootFolders():
                 result.append(folder)
             previousFolder = folder
             folder = csnUtility.NormalizePath(os.path.split(folder)[0])
@@ -303,7 +299,7 @@ class Handler:
         if not os.path.exists(solutionName):
             raise Exception( "Solution file not found: %s" % solutionName )
         
-        pathIDE = self.context.idePath
+        pathIDE = self.context.GetIdePath()
         # for visual studio (not express), use the devenv.com
         (head, tail) = os.path.split(pathIDE)
         if tail == "devenv.exe":
