@@ -51,6 +51,7 @@ class RollbackHandler:
 class Handler:
     def __init__(self):
         self.context = None
+        self.contextFilename = None
         self.generator = csnGenerator.Generator()
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None

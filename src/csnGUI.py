@@ -287,7 +287,7 @@ class CSnakeGUIApp(wx.App):
         self.binder.AddDropDownList("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "_Context__compilername")
         self.binder.AddDropDownList("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "_Context__configurationName")
         self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "_Context__rootFolders", isFilename = True)
-        self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "askToLaunchIDE")
+        self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "_Options__askToLaunchIDE")
         
         self.binder.AddGrid("lbThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_Context__thirdPartySrcAndBuildFolders", isFilename = True)
 
@@ -409,7 +409,7 @@ class CSnakeGUIApp(wx.App):
         self.InitializeOptions()
         
         # load previously saved context
-        contextToLoad = self.options.contextFilename
+        contextToLoad = self.options.GetContextFilename()
         if len(self.commandLineArgs) >= 1:
             contextToLoad = self.commandLineArgs[0]
             
@@ -454,9 +454,9 @@ class CSnakeGUIApp(wx.App):
         """ Creates a backup of the current context, so that the user can later abandon all his changes. """
         self.contextBeforeEditingFilename = "%s/contextBeforeEditing" % self.csnakeFolder
         try:
-            shutil.copy(self.options.contextFilename, self.contextBeforeEditingFilename)
+            shutil.copy(self.options.GetContextFilename(), self.contextBeforeEditingFilename)
         except:
-            message = "Warning: could not copy %s to backup location %s" % (self.options.contextFilename, self.contextBeforeEditingFilename)
+            message = "Warning: could not copy %s to backup location %s" % (self.options.GetContextFilename(), self.contextBeforeEditingFilename)
             self.Warn(message)
 
     def SetStatus(self, message):
@@ -511,12 +511,12 @@ class CSnakeGUIApp(wx.App):
         if converted:
             self.options.Load(self.optionsFilename)
         else:
-            self.options.contextFilename = "%s/default.csnakecontext" % self.csnakeFolder
+            self.options.SetContextFilename("%s/default.csnakecontext" % self.csnakeFolder)
             self.options.Save(self.optionsFilename)
             
-        if not os.path.exists(self.options.contextFilename):
-            self.options.contextFilename = "%s/context" % self.csnakeFolder
-            csnContext.Context().Save(self.options.contextFilename)
+        if not os.path.exists(self.options.GetContextFilename()):
+            self.options.GetContextFilename("%s/context" % self.csnakeFolder)
+            csnContext.Context().Save(self.options.GetContextFilename())
         
     def CopyGUIToContextAndOptions(self):
         """ Copy all GUI fields to the current context """
@@ -530,12 +530,12 @@ class CSnakeGUIApp(wx.App):
         """
         self.CopyGUIToContextAndOptions()
         if not contextFilename == "":
-            self.options.contextFilename = contextFilename
+            self.options.SetContextFilename(contextFilename)
         try:
-            self.context.Save(self.options.contextFilename)
-            self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+            self.context.Save(self.options.GetContextFilename())
+            self.frame.SetTitle("CSnake GUI - %s" % self.options.GetContextFilename())
         except:
-            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % self.options.contextFilename)
+            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % self.options.GetContextFilename())
             
         try:
             self.options.Save(self.optionsFilename)
@@ -611,7 +611,7 @@ class CSnakeGUIApp(wx.App):
                 xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
                 xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
 
-                if self.options.askToLaunchIDE:
+                if self.options.GetaskToLaunchIDE():
                     self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
                 
         except Exception, message:
@@ -853,7 +853,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user load a context.
         """
-        dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = os.path.dirname(self.options.contextFilename), wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
+        dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = os.path.dirname(self.options.GetContextFilename()), wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
         if dlg.ShowModal() == wx.ID_OK:
             self.UpdateGUIAndSaveContextAndOptions()
             if self.LoadContext(dlg.GetPath()):
@@ -863,7 +863,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user save the context.
         """
-        dlg = wx.FileDialog(None, "Copy CSnake context to...", defaultDir = os.path.dirname(self.options.contextFilename), wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        dlg = wx.FileDialog(None, "Copy CSnake context to...", defaultDir = os.path.dirname(self.options.GetContextFilename()), wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             (root, ext) = os.path.splitext(dlg.GetPath())
             if ext == ".CSnakeGUI":
@@ -899,7 +899,7 @@ class CSnakeGUIApp(wx.App):
         return result
     
     def UpdateGUIAndSaveContextAndOptions(self):
-        """ Refreshes the GUI based on the current context. Also saves the current context to the contextFilename """
+        """ Refreshes the GUI based on the current context. Also saves the current context to the context filename """
         self.binder.UpdateControls()
         self.panelKDevelop.Show( self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.SaveContextAndOptions()
@@ -910,27 +910,27 @@ class CSnakeGUIApp(wx.App):
     
     def LoadContext(self, contextFilename = ""):
         """
-        Load configuration context from contextFilename.
+        Load configuration context from context filename.
         """
             
         if contextFilename == "":
-            contextFilename = self.options.contextFilename
+            contextFilename = self.options.GetContextFilename()
         else:
-            self.options.contextFilename = contextFilename
+            self.options.SetContextFilename(contextFilename)
             
-        if not os.path.exists(self.options.contextFilename):
-            self.Error("CSnakeGUI could not find context file %s" % self.options.contextFilename)
+        if not os.path.exists(self.options.GetContextFilename()):
+            self.Error("CSnakeGUI could not find context file %s" % self.options.GetContextFilename())
             return False
         
         #try:
-        if not self.converter.Convert(self.options.contextFilename):
-            self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.contextFilename)
+        if not self.converter.Convert(self.options.GetContextFilename()):
+            self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.GetContextFilename())
             return False
         self.SetContext(self.handler.LoadContext(contextFilename))
-        self.frame.SetTitle("CSnake GUI - %s" % self.options.contextFilename)
+        self.frame.SetTitle("CSnake GUI - %s" % self.options.GetContextFilename())
         self.UpdateGUIAndSaveContextAndOptions()
         #except:
-        #    self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.contextFilename)
+        #    self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % self.options.GetContextFilename())
         #    return False
 
         return True
@@ -988,8 +988,8 @@ class CSnakeGUIApp(wx.App):
         if not self.destroyed:
             self.destroyed = True
             self.CopyGUIToContextAndOptions()
-            if os.path.exists(self.options.contextFilename):
-                self.SaveContextAndOptions(self.options.contextFilename)
+            if os.path.exists(self.options.GetContextFilename()):
+                self.SaveContextAndOptions(self.options.GetContextFilename())
             self.frame.Destroy()
 
     def OnHelp(self, event = None):
@@ -1016,10 +1016,10 @@ class CSnakeGUIApp(wx.App):
 
     def OnContextAbandonChanges(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         try:
-            shutil.copy(self.contextBeforeEditingFilename, self.options.contextFilename)
+            shutil.copy(self.contextBeforeEditingFilename, self.options.GetContextFilename())
             self.LoadContext()
         except:
-            self.Warn("Sorry, could not copy %s to %s. You can try copying the file manually" % (self.contextBeforeEditingFilename, self.options.contextFilename))
+            self.Warn("Sorry, could not copy %s to %s. You can try copying the file manually" % (self.contextBeforeEditingFilename, self.options.GetContextFilename()))
 
     def OnSetCMakePath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         """
