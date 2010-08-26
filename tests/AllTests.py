@@ -13,7 +13,7 @@ from aboutTests import AboutTests
 from csnInstallTests import csnInstallTests
 
 class AllTests:
-    def __init__(self, _outputFileName):
+    def __init__(self, outputFileName):
         ''' 
         Initialise the class: create test suite.
         @param _outputFileName: The name of the output file.
@@ -27,21 +27,21 @@ class AllTests:
         aboutSuite = unittest.TestLoader().loadTestsFromTestCase(AboutTests)
         installSuite = unittest.TestLoader().loadTestsFromTestCase(csnInstallTests)
         # main suite
-        self.suite = unittest.TestSuite([
+        self.__suite = unittest.TestSuite([
              buildSuite, uiSuite, csnProjectSuite, 
              csnUtilitySuite, csnContextConverterSuite,
              aboutSuite, installSuite])
         # output file name
-        self.outputFileName = _outputFileName
+        self.__outputFileName = outputFileName
         
     def run(self):
         """ Run the main suite. Output as xml. """
         # output file
-        outputFile = open(self.outputFileName, 'w')
+        outputFile = open(self.__outputFileName, 'w')
         # test runner
         runner = xmlrunner.XMLTestRunner(outputFile)
         # run tests
-        result = runner.run(self.suite)
+        result = runner.run(self.__suite)
         # close output
         outputFile.close()
         # return result (0 for success)
