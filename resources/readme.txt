@@ -2,12 +2,12 @@
 CSnake readme
 --------------
 
-Version: 2.3.4beta
+Version: 2.4beta
 
 Change log
 ----------
 
-v2.3.4beta
+v2.4beta
  * ...
 
 v2.3.3
