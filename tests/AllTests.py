@@ -44,8 +44,8 @@ class AllTests:
         result = runner.run(self.__suite)
         # close output
         outputFile.close()
-        # return result (0 for success)
-        return not result.wasSuccessful()
+        # return result (1 for success)
+        return result.wasSuccessful()
  
 def usage():
     ''' Usage for main method.'''
@@ -74,7 +74,13 @@ def main():
             outputFileName = arg
     # run the tests
     tests = AllTests(outputFileName)
-    return tests.run()
+    res = tests.run()
+    if res:
+        print "\n== All Tests Successful! =="
+    else:
+        print "\n== Failed Tests! =="
+    # return result (0 for success)
+    return not res
 
 if __name__ == "__main__":
     sys.exit(main())
