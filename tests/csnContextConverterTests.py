@@ -35,8 +35,8 @@ class csnContextConverterTests(unittest.TestCase):
         # try to read the new one
         options = Options()
         options.Load(filename)
-        assert options.askToLaunchIDE == True
-        assert options.contextFilename == contextFilename
+        assert options.GetAskToLaunchIDE() == True
+        assert options.GetContextFilename() == contextFilename
         
         # clean up
         os.remove(filename)

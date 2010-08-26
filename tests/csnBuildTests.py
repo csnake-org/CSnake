@@ -22,7 +22,7 @@ class csnBuildTests(unittest.TestCase):
         # load fake context
         self.context = csnContext.Load("config/csnake_context.txt")
         # change the build folder
-        self.context.buildFolder = self.context.buildFolder + "/bin"
+        self.context.SetBuildFolder(self.context.GetBuildFolder() + "/build")
         # set it as global context
         csnProject.globalCurrentContext = self.context
 
@@ -33,14 +33,13 @@ class csnBuildTests(unittest.TestCase):
         generator = csnBuild.Generator()
         generator.Generate(dummyExe)
         # clean up
-        shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
-        csnProject.globalCurrentContext = None
+        shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
         
     def testDummyExeBuild(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
-                                   ["src"], "bin",
-                                   ["thirdParty"], ["bin/thirdParty"],
+                                   ["src"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
                                    "src/DummyExe/csnDummyExe.py")
         self.build( config )
         
@@ -48,8 +47,8 @@ class csnBuildTests(unittest.TestCase):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with spaces in folders. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
-                                   ["my src"], "my bin",
-                                   ["third party"], ["my bin/third party"],
+                                   ["my src"], "my build",
+                                   ["third party"], ["my build/third party"],
                                    "my src/DummyExe/csnDummyExe.py")
         # Only for visual studio
         if( config.isVisualStudioConfig() == True ):
@@ -59,8 +58,8 @@ class csnBuildTests(unittest.TestCase):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with new syntax. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
-                                   ["src"], "bin",
-                                   ["thirdParty"], ["bin/thirdParty"],
+                                   ["src"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
                                    "src/DummyExe/csnDummyExe.py", True)
         self.build( config )
         
@@ -68,24 +67,24 @@ class csnBuildTests(unittest.TestCase):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with new syntax. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
-                                   ["src", "src2"], "bin",
-                                   ["thirdParty"], ["bin/thirdParty"],
+                                   ["src", "src2"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
                                    "src/DummyExe/csnDummyExe.py", True)
         self.build( config )
         
     def testDummyLibBuild(self):
         """ testDummyLibBuild: test configuring and building the DummyLib project. """
         config = TestProjectConfig("DummyLib", "lib", "Release", 
-                                   ["src"], "bin",
-                                   ["thirdParty"], ["bin/thirdParty"],
+                                   ["src"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
                                    "src/DummyLib/csnDummyLib.py")
         self.build( config )
 
     def testDummyLibBuildMultiple(self):
         """ testDummyLibBuildMul: test configuring and building the DummyLib project. """
         config = TestProjectConfig("DummyLib2", "lib", "Release", 
-                                   ["src", "src2"], "bin",
-                                   ["thirdParty", "thirdParty2"], ["bin/thirdParty", "bin/thirdParty2"],
+                                   ["src", "src2"], "build",
+                                   ["thirdParty", "thirdParty2"], ["build/thirdParty", "build/thirdParty2"],
                                    "src2/DummyLib2/csnDummyLib2.py", True)
         self.build( config )
 
@@ -93,8 +92,8 @@ class csnBuildTests(unittest.TestCase):
     def testDummyLibBuildWithSpace(self):
         """ testDummyLibBuildWithSpace: test configuring and building the DummyLib project with spaces in folders. """
         config = TestProjectConfig("DummyLib", "lib", "Release", 
-                                   ["my src"], "my bin",
-                                   ["third party"], ["my bin/third party"],
+                                   ["my src"], "my build",
+                                   ["third party"], ["my build/third party"],
                                    "my src/DummyLib/csnDummyLib.py")
         # Only for visual studio
         if( config.isVisualStudioConfig() == True ):
@@ -104,8 +103,8 @@ class csnBuildTests(unittest.TestCase):
         """ testDummyLibBuildNewSyntax: test configuring and building the DummyLib project with new syntax.
         """
         config = TestProjectConfig("DummyLib", "lib", "Release", 
-                                   ["src"], "bin",
-                                   ["thirdParty"], ["bin/thirdParty"],
+                                   ["src"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
                                    "src/DummyLib/csnDummyLib.py", True)
         self.build( config )
 
@@ -125,12 +124,12 @@ class csnBuildTests(unittest.TestCase):
         
         # compile third parties
         
-        if( context.compilername.find("Visual Studio") != -1 ):
+        if( context.GetCompilername().find("Visual Studio") != -1 ):
             for index in range(0,context.GetNumberOfThirdPartyFolders()):
                 # create compiler command
                 compileArgList = []
                 # compiler
-                compileArgList.append(context.idePath)
+                compileArgList.append(context.GetIdePath())
                 # solution file
                 solutionFile = "%s/CILAB_TOOLKIT.sln" % context.GetThirdPartyBuildFolderByIndex(index)
                 assert os.path.exists(solutionFile), "The third party solution file does not exist."
@@ -145,8 +144,8 @@ class csnBuildTests(unittest.TestCase):
                 ret = subprocess.call(compileArgList, cwd=buildPath)
                 assert ret == 0, "The compiler returned with an error message while compiling the third parties."
             
-        elif( context.compilername.find("KDevelop3") != -1 or
-              context.compilername.find("Makefile") != -1 ):
+        elif( context.GetCompilername().find("KDevelop3") != -1 or
+              context.GetCompilername().find("Makefile") != -1 ):
             for index in range(0,context.GetNumberOfThirdPartyFolders()):
                 # create compiler command
                 compileArgList = []
@@ -174,11 +173,11 @@ class csnBuildTests(unittest.TestCase):
         
         # create compiler command
         compileArgList = []
-        if( context.compilername.find("Visual Studio") != -1 ):
+        if( context.GetCompilername().find("Visual Studio") != -1 ):
             # build path
             buildPath = "%s/%s" % (testConfig.getBuildPath(), testConfig.getName())
             # compiler
-            compileArgList.append(context.idePath)
+            compileArgList.append(context.GetIdePath())
             # solution file
             solutionFile = handler.GetTargetSolutionPath()
             assert os.path.exists(solutionFile), "The project solution file does not exist."
@@ -187,8 +186,8 @@ class csnBuildTests(unittest.TestCase):
             mode = "%s|x64" % testConfig.getBuildMode()
             compileArgList.append("/build")
             compileArgList.append(mode)
-        elif( context.compilername.find("KDevelop3") != -1 or
-              context.compilername.find("Makefile") != -1 ):
+        elif( context.GetCompilername().find("KDevelop3") != -1 or
+              context.GetCompilername().find("Makefile") != -1 ):
             # build path
             buildPath = "%s/%s/%s" % (testConfig.getBuildPath(), testConfig.getBuildMode(), testConfig.getName())
             # make
@@ -200,8 +199,8 @@ class csnBuildTests(unittest.TestCase):
         assert ret == 0, "The compiler returned with an error message while compiling the project."
 
         # check the built executable
-        exeFilename = "%s/bin/%s/%s" % (context.buildFolder, testConfig.getBuildMode(), testConfig.getExeName())
-        if( context.compilername.find("Visual Studio") != -1 ):
+        exeFilename = "%s/bin/%s/%s" % (context.GetBuildFolder(), testConfig.getBuildMode(), testConfig.getExeName())
+        if( context.GetCompilername().find("Visual Studio") != -1 ):
             exeFilename = "%s.exe" % (exeFilename)
         assert os.path.exists(exeFilename)
         
@@ -213,8 +212,8 @@ class csnBuildTests(unittest.TestCase):
         if testConfig.getType() == "lib":
             # check the built test
             testName = testConfig.getName() + "Tests"
-            testExeFilename = "%s/bin/%s/%s" % (context.buildFolder, testConfig.getBuildMode(), testName)
-            if( context.compilername.find("Visual Studio") != -1 ):
+            testExeFilename = "%s/bin/%s/%s" % (context.GetBuildFolder(), testConfig.getBuildMode(), testName)
+            if( context.GetCompilername().find("Visual Studio") != -1 ):
                 testExeFilename = "%s.exe" % (testExeFilename)
             assert os.path.exists(testExeFilename)
             
@@ -223,7 +222,7 @@ class csnBuildTests(unittest.TestCase):
             assert ret == 0, "The generated test did not return the correct result."
         
         # clean up
-        shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
+        shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
         
 if __name__ == "__main__":
     unittest.main() 

@@ -16,7 +16,7 @@ class csnProjectTests(unittest.TestCase):
         # load fake context
         self.context = csnContext.Load("config/csnake_context.txt")
         # change the build folder
-        self.context.buildFolder = self.context.buildFolder + "/bin"
+        self.context.SetBuildFolder(self.context.GetBuildFolder() + "/build")
         # set it as global context
         csnProject.globalCurrentContext = self.context
 
@@ -74,7 +74,7 @@ class csnProjectTests(unittest.TestCase):
         # test NameError
         self.assertRaises(NameError, generator.Generate, dummyExe)
         # clean up
-        shutil.rmtree( csnProject.globalCurrentContext.buildFolder )
+        shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
         
     def testAddProjectsSelfDependency(self):
         """ csnProjectTests: test that a project cannot depend on itself. """
@@ -105,7 +105,7 @@ class csnProjectTests(unittest.TestCase):
         generator = csnBuild.Generator()
         # replace the build folder
         testPath = os.path.abspath(os.path.dirname(__file__)).replace("\\", "/")
-        csnProject.globalCurrentContext.buildFolder = "%s\\%s" % (testPath, "temp_bin")
+        csnProject.globalCurrentContext.SetBuildFolder("%s\\%s" % (testPath, "temp_bin"))
         # test SyntaxError
         self.assertRaises(csnGenerator.SyntaxError, generator.Generate, dummyExe)
 
