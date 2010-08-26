@@ -21,65 +21,65 @@ class TestProjectConfig():
           arrays will be used).
         """
         # set at input
-        self._name = name
-        self._type = pType
-        self._buildMode = buildMode
-        self._rootDirs = rootDirs
-        self._binDir = binDir
-        self._tpSrcDirs = tpSrcDirs
-        self._tpBinDirs = tpBinDirs
-        self._csnakeFile = csnakeFile
-        self._newSyntax = newSyntax
+        self.__name = name
+        self.__type = pType
+        self.__buildMode = buildMode
+        self.__rootDirs = rootDirs
+        self.__binDir = binDir
+        self.__tpSrcDirs = tpSrcDirs
+        self.__tpBinDirs = tpBinDirs
+        self.__csnakeFile = csnakeFile
+        self.__newSyntax = newSyntax
         # internals
-        self._isVisualStudioConfig = None
+        self.__isVisualStudioConfig = None
 
     # Get inputs
     
     def getName(self):
-        return self._name
+        return self.__name
 
     def getType(self):
-        return self._type
+        return self.__type
     
     def getBuildMode(self):
-        return self._buildMode
+        return self.__buildMode
 
     def getRootDirs(self):
-        return self._rootDirs
+        return self.__rootDirs
 
     def getBinDir(self):
-        return self._binDir
+        return self.__binDir
 
     def getTpSrcDirs(self):
-        return self._tpSrcDirs
+        return self.__tpSrcDirs
 
     def getTpBinDirs(self):
-        return self._tpBinDirs
+        return self.__tpBinDirs
     
     def getCsnakeFile(self):
-        return self._csnakeFile
+        return self.__csnakeFile
     
     def isNewSyntax(self):
-        return self._newSyntax
+        return self.__newSyntax
     
     # Methods
     
     def getInstanceName(self):
-        return self._name.lower()[0] + self._name[1:]
+        return self.__name.lower()[0] + self.__name[1:]
     
     def getExeName(self):
-        if self._type == "exe":
+        if self.__type == "exe":
             exeName = self.getName()
         # ok, a bit fishy, I know the application name...
-        elif self._type == "lib":
+        elif self.__type == "lib":
             exeName = self.getName() + "Applications_myApp"
         return exeName
 
     def getBuildPath(self):
-        if self._type == "exe":
-            buildPath = "%s/executable" % self._binDir
-        elif self._type == "lib":
-            buildPath = "%s/library" % self._binDir
+        if self.__type == "exe":
+            buildPath = "%s/executable" % self.__binDir
+        elif self.__type == "lib":
+            buildPath = "%s/library" % self.__binDir
         return buildPath
         
     
@@ -87,20 +87,20 @@ class TestProjectConfig():
         return "config/csnake_context.txt"
     
     def getContextFileName(self):
-        return "config/csnake_context-%s.txt" % self._name
+        return "config/csnake_context-%s.txt" % self.__name
     
     def isVisualStudioConfig(self):
         """ Is the context for a visual studio configuration. """
-        if self._isVisualStudioConfig == None:
+        if self.__isVisualStudioConfig == None:
             cf = ConfigParser.ConfigParser()
             cf.read(self.getTemplateContextFileName())
             csnakeSectionName = "CSnake"
             if( cf.get(csnakeSectionName, "compilername").find("Visual Studio") != -1 ):
-                self._isVisualStudioConfig = True
+                self.__isVisualStudioConfig = True
             else:
-                self._isVisualStudioConfig = False
+                self.__isVisualStudioConfig = False
         # default
-        return self._isVisualStudioConfig
+        return self.__isVisualStudioConfig
         
     def createContext(self):
         # modify the csnake context file
@@ -117,65 +117,65 @@ class TestProjectConfig():
         
         # modify: csnake file
         oldValue = cf.get(csnakeSectionName, "csnakefile")
-        newValue = oldValue + "/" + self._csnakeFile
+        newValue = oldValue + "/" + self.__csnakeFile
         cf.set(csnakeSectionName, "csnakefile", newValue)
         
         # modify: build mode
         if self.isVisualStudioConfig():
             cf.set(csnakeSectionName, "configurationname", "DebugAndRelease")
         else:
-            cf.set(csnakeSectionName, "configurationname", self._buildMode)
+            cf.set(csnakeSectionName, "configurationname", self.__buildMode)
         
         # modify: root folder
         oldValue = cf.get(rootFoldersSectionName, "rootfolder0")
-        if self._newSyntax:
+        if self.__newSyntax:
             count = 0
-            for srcDir in self._rootDirs:
+            for srcDir in self.__rootDirs:
                 newValue = oldValue + "/" + srcDir
                 option = "rootfolder%s" % count
                 cf.set(rootFoldersSectionName, option, newValue )
                 count += 1
         else:
-            newValue = oldValue + "/" + self._rootDirs[0]
+            newValue = oldValue + "/" + self.__rootDirs[0]
             cf.set(rootFoldersSectionName, "rootfolder0", newValue )
         
         # modify: bin folder
         oldValue = cf.get(csnakeSectionName, "buildfolder")
-        newValue = oldValue + "/" + self._binDir
+        newValue = oldValue + "/" + self.__binDir
         cf.set(csnakeSectionName, "buildfolder", newValue )
         
         # modify: third party src folder
         oldValue = cf.get(csnakeSectionName, "thirdpartyrootfolder")
-        if self._newSyntax:
+        if self.__newSyntax:
             # remove old option (TODO: not yet working)
             #cf.remove_option(csnakeSectionName, "thirdpartyrootfolder")
             # add new one
             cf.add_section(tpSourceSectionName)
             count = 0
-            for srcDir in self._tpSrcDirs:
+            for srcDir in self.__tpSrcDirs:
                 newValue = oldValue + "/" + srcDir
                 option = "thirdpartyfolder%s" % count
                 cf.set(tpSourceSectionName, option, newValue )
                 count += 1
         else:
-            newValue = oldValue + "/" + self._tpSrcDirs[0]
+            newValue = oldValue + "/" + self.__tpSrcDirs[0]
             cf.set(csnakeSectionName, "thirdpartyrootfolder", newValue )
         
         # modify: third party bin folder
         oldValue = cf.get(csnakeSectionName, "thirdpartybuildfolder")
-        if self._newSyntax:
+        if self.__newSyntax:
             # remove old syntax (TODO: not yet working)
             #cf.remove_option(csnakeSectionName, "thirdpartybuildfolder")
             # add new one
             cf.add_section(tpBinSectionName)
             count = 0
-            for srcDir in self._tpBinDirs:
+            for srcDir in self.__tpBinDirs:
                 newValue = oldValue + "/" + srcDir
                 option = "thirdpartybuildfolder%s" % count
                 cf.set(tpBinSectionName, option, newValue )
                 count += 1
         else:
-            newValue = oldValue + "/" + self._tpBinDirs[0]
+            newValue = oldValue + "/" + self.__tpBinDirs[0]
             cf.set(csnakeSectionName, "thirdpartybuildfolder", newValue )
         
         # save the new context file
