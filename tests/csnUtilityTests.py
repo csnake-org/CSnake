@@ -8,10 +8,13 @@ class csnUtilityTests(unittest.TestCase):
     def testNormalizePath(self):
         """ csnUtilityTests: test NormalizePath function. """
         refString = "c:/hallo"
+
+        assert csnUtility.NormalizePath("") == "."
+        assert csnUtility.NormalizePath(".") == "."
         testString1 = "c:/hallo"
-        assert refString == csnUtility.NormalizePath(testString1)
+        assert csnUtility.NormalizePath(testString1) == refString
         testString2 = "c:\\hallo"
-        assert refString == csnUtility.NormalizePath(testString2)
+        assert csnUtility.NormalizePath(testString2) == refString
 
     def testRemovePrefixFromPath(self):
         """ csnUtilityTests: test RemovePrefixFromPath function. """
@@ -31,6 +34,8 @@ class csnUtilityTests(unittest.TestCase):
         refPathRoot = root + "DummyLib"
         refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
+        assert csnUtility.CorrectPath("") == ""        
+        assert csnUtility.CorrectPath(".") == "."        
         testPath1 = root + "DummyLib/libmodules"
         assert csnUtility.CorrectPath(testPath1) == refPath        
         testPath2 = root + "DummyLib/liBmoDules"
