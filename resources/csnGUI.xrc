@@ -80,7 +80,6 @@
 											<flag></flag>
 											<border>0</border>
 											<object class="wxButton" name="btnSelectCSnakeFile">
-												<size>30, -1</size>
 												<label>...</label>
 												<default>0</default>
 											</object>
@@ -152,7 +151,6 @@
 											<flag></flag>
 											<border>0</border>
 											<object class="wxButton" name="btnSelectBuildFolder">
-												<size>30, -1</size>
 												<label>...</label>
 												<default>0</default>
 											</object>
@@ -482,8 +480,8 @@
 										<orient>wxVERTICAL</orient>
 										<object class="sizeritem">
 											<option>0</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
+											<flag>wxTOP|wxEXPAND</flag>
+											<border>10</border>
 											<object class="wxStaticBoxSizer">
 												<orient>wxHORIZONTAL</orient>
 												<label>Compiler</label>
@@ -497,115 +495,153 @@
 														<content />
 													</object>
 												</object>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
-											<object class="wxBoxSizer">
-												<orient>wxHORIZONTAL</orient>
-												<object class="sizeritem">
-													<option>0</option>
-													<flag></flag>
-													<border>0</border>
-													<object class="wxButton" name="btnSetCMakePath">
-														<size>150,-1</size>
-														<label>Set path to CMake</label>
-														<default>0</default>
-													</object>
-												</object>
-												<object class="sizeritem">
-													<option>1</option>
-													<flag></flag>
-													<border>0</border>
-													<object class="wxTextCtrl" name="txtCMakePath">
-														<size>20,20</size>
-														<value></value>
-														<maxlength>0</maxlength>
-													</object>
-												</object>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag>wxEXPAND</flag>
-											<border>0</border>
-											<object class="wxComboBox" name="cmbBuildType">
-												<style>wxCB_READONLY</style>
-												<value></value>
-												<content />
+		                                        <object class="sizeritem">
+                                                    <option>1</option>
+                                                    <flag>wxEXPAND</flag>
+                                                    <border>0</border>
+                                                    <object class="wxComboBox" name="cmbBuildType">
+                                                        <style>wxCB_READONLY</style>
+                                                        <value></value>
+                                                        <content />
+                                                    </object>
+                                                </object>
 											</object>
 										</object>
 									</object>
 								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSetPythonPath">
-												<size>150,-1</size>
-												<label>Set path to Python</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxTextCtrl" name="txtPythonPath">
-												<size>20,20</size>
-												<value></value>
-												<maxlength>0</maxlength>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag></flag>
-									<border>0</border>
-									<object class="wxCheckBox" name="chkAskToLaunchVisualStudio">
-										<label>Ask to launch VisualStudio</label>
-										<checked>0</checked>
-									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxEXPAND</flag>
-									<border>0</border>
-									<object class="wxBoxSizer">
-										<orient>wxHORIZONTAL</orient>
-										<object class="sizeritem">
-											<option>0</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxButton" name="btnSetVisualStudioPath">
-												<size>150,-1</size>
-												<label>Set path to Visual Studio</label>
-												<default>0</default>
-											</object>
-										</object>
-										<object class="sizeritem">
-											<option>1</option>
-											<flag></flag>
-											<border>0</border>
-											<object class="wxTextCtrl" name="txtVisualStudioPath">
-												<size>20,20</size>
-												<value></value>
-												<maxlength>0</maxlength>
-											</object>
-										</object>
-									</object>
-								</object>
-							</object>
-						</object>
+                                <object class="sizeritem">
+                                    <option>0</option>
+                                    <flag>wxEXPAND</flag>
+                                    <border>0</border>
+                                    <object class="wxBoxSizer">
+                                        <orient>wxVERTICAL</orient>
+                                        <object class="sizeritem">
+                                            <option>0</option>
+                                            <flag>wxTOP|wxEXPAND</flag>
+                                            <border>10</border>
+                                            <object class="wxStaticBoxSizer">
+                                                <orient>wxVERTICAL</orient>
+                                                <label>Settings</label>
+                                                <object class="sizeritem">
+                                                    <option>0</option>
+                                                    <flag>wxEXPAND</flag>
+                                                    <border>0</border>
+                                                    <object class="wxBoxSizer">
+                                                        <orient>wxHORIZONTAL</orient>
+                                                        <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxStaticText" name="lblPathToCmake">
+                                                                <size>150,-1</size>
+                                                                <label>Path to CMake</label>
+                                                            </object>
+                                                        </object>
+                                                        <object class="sizeritem">
+                                                            <option>1</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxTextCtrl" name="txtCMakePath">
+                                                                <value></value>
+                                                                <maxlength>0</maxlength>
+                                                            </object>
+                                                        </object>
+                                                        <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxButton" name="btnSetCMakePath">
+                                                               <label>...</label>
+                                                                <default>0</default>
+                                                            </object>
+                                                        </object>
+                                                    </object>
+                                                </object>
+                								<object class="sizeritem">
+                									<option>0</option>
+                									<flag>wxEXPAND</flag>
+                									<border>0</border>
+                									<object class="wxBoxSizer">
+                										<orient>wxHORIZONTAL</orient>
+                                                        <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxStaticText" name="lblPathToPython">
+                                                                <label>Path to Python</label>
+                                                                <size>150,-1</size>
+                                                            </object>
+                                                        </object>
+                										<object class="sizeritem">
+                											<option>1</option>
+                											<flag></flag>
+                											<border>0</border>
+                											<object class="wxTextCtrl" name="txtPythonPath">
+                												<value></value>
+                												<maxlength>0</maxlength>
+                											</object>
+                										</object>
+                                                        <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxButton" name="btnSetPythonPath">
+                                                                <label>...</label>
+                                                                <default>0</default>
+                                                            </object>
+                                                        </object>
+                									</object>
+                								</object>
+                								<object class="sizeritem">
+                									<option>0</option>
+                									<flag>wxEXPAND</flag>
+                									<border>0</border>
+                									<object class="wxBoxSizer">
+                										<orient>wxHORIZONTAL</orient>
+                                                       <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxStaticText" name="lblPathToPython">
+                                                                <label>Path to Visual Studio</label>
+                                                                <size>150,-1</size>
+                                                            </object>
+                                                        </object>
+                										<object class="sizeritem">
+                											<option>1</option>
+                											<flag></flag>
+                											<border>0</border>
+                											<object class="wxTextCtrl" name="txtVisualStudioPath">
+                												<value></value>
+                												<maxlength>0</maxlength>
+                											</object>
+                										</object>
+                                                        <object class="sizeritem">
+                                                            <option>0</option>
+                                                            <flag></flag>
+                                                            <border>0</border>
+                                                            <object class="wxButton" name="btnSetVisualStudioPath">
+                                                                <label>...</label>
+                                                                <default>0</default>
+                                                            </object>
+                                                        </object>
+                									</object>
+                								</object>
+                                                <object class="sizeritem">
+                                                    <option>0</option>
+                                                    <flag></flag>
+                                                    <border>0</border>
+                                                    <object class="wxCheckBox" name="chkAskToLaunchVisualStudio">
+                                                        <label>Ask to launch VisualStudio</label>
+                                                        <checked>0</checked>
+                                                    </object>
+                                                </object>
+                							</object>
+                						</object>
+                                    </object>
+                                </object>
+                            </object>
+                        </object>
 					</object>
 					<object class="notebookpage">
 						<label>Select Projects</label>
