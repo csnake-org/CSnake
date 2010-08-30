@@ -714,6 +714,7 @@ class CSnakeGUIApp(wx.App):
         
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetCsnakeFile(dlg.GetPath())
+            self.UpdateListOfTargets()
             self.SetContextModified(True)
             self.UpdateGUI()
 
@@ -990,6 +991,9 @@ class CSnakeGUIApp(wx.App):
         self.binder.SetBuddyClass("context", self.context)
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        self.UpdateListOfTargets()
+
+    def UpdateListOfTargets(self):
         if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
             self.SetStatus("Retrieving list of targets")
             self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
@@ -1003,7 +1007,7 @@ class CSnakeGUIApp(wx.App):
         else:
             message = "Please provide a valid CSnake file."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
-
+    
     def GetInstanceComboBoxItems(self):
         return self.listOfPossibleTargets
             
