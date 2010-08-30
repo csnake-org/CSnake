@@ -28,13 +28,13 @@ class ContextData():
         self.__idePath = ""
         self.__kdevelopProjectFolder = ""
             
+        # List of items to filter out of build
         self.__filter = ["Demos", "Applications", "Tests"]
 
         self.__rootFolders = []
         self.__thirdPartySrcAndBuildFolders = []
 
         self.__recentlyUsed = list()
-        self.__subCategoriesOf = dict()
         
     def GetBuildFolder(self):
         return self.__buildFolder
@@ -109,9 +109,6 @@ class ContextData():
     def SetCmakePath(self, value):
         self.__cmakePath = value
 
-    def GetSubCategoriesOf(self):
-        return self.__subCategoriesOf
-
     def GetPythonPath(self):
         return self.__pythonPath
 
@@ -144,7 +141,6 @@ class ContextData():
             self.__configurationName == other.GetConfigurationName() and \
             self.__compilername == other.GetCompilername() and \
             self.__cmakePath == other.GetCmakePath() and \
-            self.__subCategoriesOf == other.GetSubCategoriesOf() and \
             self.__pythonPath == other.GetPythonPath() and \
             self.__idePath == other.GetIdePath() and \
             self.__kdevelopProjectFolder == other.GetKdevelopProjectFolder():
@@ -183,6 +179,8 @@ class Context(object):
         self.RegisterCompiler(csnVisualStudio2008.Compiler32())
         self.RegisterCompiler(csnVisualStudio2008.Compiler64())
         
+        self.__subCategoriesOf = dict()
+
         # listeners
         self.__listeners = []
         
@@ -254,7 +252,7 @@ class Context(object):
         self.__data.SetCmakePath(value)
 
     def GetSubCategoriesOf(self):
-        return self.__data.GetSubCategoriesOf()
+        return self.__subCategoriesOf
 
     def GetPythonPath(self):
         return self.__data.GetPythonPath()
@@ -429,6 +427,10 @@ class Context(object):
         parser.write(f)
         f.close()
         
+    # ----------------------------
+    # Sub categories handling 
+    # ----------------------------
+    
     def SetSuperSubCategory(self, super, sub):
         """ 
         Makes super a supercategory of sub. This information is used to be able to disable all Tests with a single
@@ -437,7 +439,12 @@ class Context(object):
         if not self.GetSubCategoriesOf().has_key(super):
             self.GetSubCategoriesOf()[super] = OrderedSet.OrderedSet()
         self.GetSubCategoriesOf()[super].add(sub)
+        self.__NotifyListeners(ChangeEvent(self))
         
+    # ----------------------------
+    # Third party handling 
+    # ----------------------------
+    
     def GetThirdPartyBuildFolderByIndex(self, index):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
         return self._GetThirdPartySrcAndBuildFolders()[index][1] + "/" + self.GetCompiler().GetThirdPartySubFolder()
@@ -485,6 +492,10 @@ class Context(object):
         self.__data._SetThirdPartySrcAndBuildFolders(folders[0:index] + [folders[index+1], folders[index]] + folders[index+2:])
         self.__NotifyListeners(ChangeEvent(self))
         
+    # ----------------------------
+    # Root folders handling 
+    # ----------------------------
+    
     def GetNumberOfRootFolders(self):
         return len(self.__data.GetRootFolders())
 
@@ -511,13 +522,32 @@ class Context(object):
         self.__NotifyListeners(ChangeEvent(self))
 
     def RemoveRootFolder(self, folder):
-        self.__data.GetRootFolders().remove(folder)
+        self.__data.GetRootFolders().append(folder)
         self.__NotifyListeners(ChangeEvent(self))
         
     def ExtendRootFolders(self, folders):
         self.__data.GetRootFolders().extend(folders)
         self.__NotifyListeners(ChangeEvent(self))
 
+    # ----------------------------
+    # Filter handling 
+    # ----------------------------
+    
+    def HasFilter(self, filter):
+        return self.__data.GetFilter().count(filter) != 0
+    
+    def AddFilter(self, filter):
+        self.__data.GetFilter().append(filter)
+        self.__NotifyListeners(ChangeEvent(self))
+        
+    def RemoveFilter(self, filter):
+        self.__data.GetFilter().remove(filter)
+        self.__NotifyListeners(ChangeEvent(self))
+    
+    # ----------------------------
+    # Other
+    # ----------------------------
+    
     def FindCompiler(self):
         #print "FindCompiler"
         if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():

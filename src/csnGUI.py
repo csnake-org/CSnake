@@ -1102,20 +1102,22 @@ class CSnakeGUIApp(wx.App):
         # get list of ALL the categories on which the user can filter
         self.SetStatus("Retrieving projects...")
         
-        # empty the filter to get the full list
-        previousFilter = self.context.GetFilter() 
-        self.context.SetFilter(list())
-        try:
-            categories = self.handler.GetCategories(forceRefresh)
-        except:
-            message = "Could not load project dependencies for instance %s from file %s." % (self.context.GetInstance(), self.context.GetCsnakeFile())
-            message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
-            wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR).ShowModal()
-            self.SetStatus("")
-            return
-        self.context.SetFilter(previousFilter)
-        
         if len(self.projectCheckBoxes.keys()) == 0 or forceRefresh:
+            # empty the filter to get the full list
+            previousFilter = self.context.GetFilter()
+            self.context.SetFilter(list())
+            try:
+                categories = self.handler.GetCategories(forceRefresh)
+            except:
+                message = "Could not load project dependencies for instance %s from file %s." % (self.context.GetInstance(), self.context.GetCsnakeFile())
+                message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
+                wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR).ShowModal()
+                self.SetStatus("")
+                return
+            self.context.SetFilter(previousFilter)
+            
+            self.SetContextModified(True)
+        
             # create list of checkboxes for the categories
             self.panelSelectProjects.GetSizer().Clear()
             for category in self.projectCheckBoxes.keys():
@@ -1142,7 +1144,7 @@ class CSnakeGUIApp(wx.App):
             self.panelSelectProjects.GetSizer().Add(self.btnForceRefreshProjects, 0, 0, 3)
             self.panelSelectProjects.Layout()
             self.panelSelectProjects.FitInside()
-       
+            
         self.SetStatus("")
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -1150,25 +1152,28 @@ class CSnakeGUIApp(wx.App):
         Respond to checking a supercategory (such as Tests or Demos). Results in (un)checking all subcategories in that
         supercategory.
         """
-        for super in self.context.GetSubCategoriesOf().keys():
-            value = self.projectCheckBoxes[super].GetValue()
+        super = event.GetEventObject().GetLabel()
+        value = self.projectCheckBoxes[super].GetValue()
+        self.UpdateContextFilter(super, not event.IsChecked())
+                
+        # set the check boxes of sub categories
+        for cbName in self.projectCheckBoxes.keys():
+            if cbName in self.context.GetSubCategoriesOf()[super]:
+                self.projectCheckBoxes[cbName].SetValue(value)
+                self.UpdateContextFilter(cbName, not event.IsChecked())
                     
-            for cbName in self.projectCheckBoxes.keys():
-                if cbName in self.context.GetSubCategoriesOf()[super]:
-                    self.projectCheckBoxes[cbName].SetValue(value)
-                    
-        self.SetContextModified(True)
-        self.OnCategoryCheckBoxChanged(event)
-        
     def OnCategoryCheckBoxChanged(self, event): # wxGlade: Dialog.<event_handler>
         """ 
-        Updates the category __filter, based on the current status of the checkbox for each category.
+        Updates the category filter, based on the current status of the checkbox for each category.
         """
-        for category in self.projectCheckBoxes.keys():
-            if category in self.context.GetFilter():
-                self.context.GetFilter().remove(category)
-            if not self.projectCheckBoxes[category].GetValue():
-                self.context.GetFilter().append(category)
+        category = event.GetEventObject().GetLabel()
+        self.UpdateContextFilter(category, not event.IsChecked())
+            
+    def UpdateContextFilter(self, category, filterOut):
+        if filterOut and not self.context.HasFilter(category):
+            self.context.AddFilter(category)
+        elif not filterOut and self.context.HasFilter(category):
+            self.context.RemoveFilter(category)
                 
     def OnSelectCompiler(self, event):
         self.context.FindCompiler()
