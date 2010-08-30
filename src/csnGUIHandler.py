@@ -8,9 +8,9 @@ import glob
 import inspect
 import string
 import os
-import pickle
 import subprocess
 import sys
+from csnListener import ChangeListener
 
 class RootNotFound(IOError):
     pass
@@ -55,11 +55,14 @@ class Handler:
         self.generator = csnGenerator.Generator()
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None
-        self.cachedContextAsString = None
+        
+        self.contextModified = False
+        self.changeListener = ChangeListener(self)
     
     def LoadContext(self, filename):
         self.contextFilename = filename
         self.context = csnContext.Load(filename)
+        self.context.AddListener(self.changeListener)
         csnProject.globalCurrentContext = self.context
         return self.context
         
@@ -77,7 +80,6 @@ class Handler:
             projectModule = csnUtility.LoadModule(projectFolder, name)
             projectModule # prevent warning
             exec "self.cachedProjectInstance = csnProject.ToProject(projectModule.%s)" % self.context.GetInstance()
-            self.cachedContextAsString = pickle.dumps(self.context)
         finally:
             # undo additions to the python path
             rollbackHandler.TearDown()
@@ -255,13 +257,12 @@ class Handler:
                     
         return result
 
-    def ContextHasChanged(self):
-        result = pickle.dumps(self.context) != self.cachedContextAsString
-        return result
+    def IsContextModified(self):
+        return self.contextModified
         
     def GetTargetSolutionPath(self):
         instance = self.cachedProjectInstance
-        if self.ContextHasChanged():
+        if self.IsContextModified():
             instance = self.__GetProjectInstance()
         return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
 
@@ -276,7 +277,7 @@ class Handler:
 
     def GetCategories(self, _forceRefresh = False):
         instance = self.cachedProjectInstance
-        if _forceRefresh or self.ContextHasChanged():
+        if _forceRefresh or self.IsContextModified() or instance == None:
             instance = self.__GetProjectInstance()
         categories = list()
         for project in instance.GetProjects(_recursive = True):
@@ -286,6 +287,7 @@ class Handler:
         return categories
                     
     def FindAdditionalRootFolders(self):
+        ''' Look for folders with the rootFolder.csnake file. '''
         result = []
         folder = csnUtility.NormalizePath(os.path.dirname(self.context.GetCsnakeFile()))
         previousFolder = ""
@@ -314,4 +316,10 @@ class Handler:
         argList = [pathIDE, solutionName, "/build", "release" ]
         subprocess.Popen(argList).wait()
 
+    def SetContextModified(self, modified):
+        self.contextModified = modified
+
+    def StateChanged(self, event):
+        if event.IsChange():
+            self.SetContextModified(True)
         

@@ -22,14 +22,14 @@ class BoundControl:
         return self.binder.GetBuddyClass(self)
         
     def HasBuddyValue(self):
-        return hasattr(self.GetBuddyClass(), self.buddyField)
+        return self.GetBuddyClass().HasField(self.buddyField)
         
     def SetBuddyValue(self, value):
         if self.HasBuddyValue():
-            setattr(self.GetBuddyClass(), self.buddyField, value)
+            self.GetBuddyClass().SetField(self.buddyField, value)
         
     def GetBuddyValue(self):
-        return getattr(self.GetBuddyClass(), self.buddyField)
+        return self.GetBuddyClass().GetField(self.buddyField)
         
     def OnKillFocus(self, event):
         """ User moved from one field to the other, copy latest values to the context """
@@ -40,7 +40,7 @@ class BoundControl:
 class ControlWithField(BoundControl):
     def GetControlValue(self):
         controlValue = self.control.GetValue()
-        if FilenameLabel() in self.labels:
+        if controlValue != "" and FilenameLabel() in self.labels:
             controlValue = csnUtility.NormalizePath( controlValue )
         return controlValue
 

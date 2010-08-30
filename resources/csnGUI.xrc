@@ -7,17 +7,17 @@
 		<object class="wxMenuBar" name="frmCSnakeGUI_menubar">
 			<label></label>
 			<object class="wxMenu" name="m_menu1">
-				<label>Context</label>
+				<label>File</label>
 				<object class="wxMenuItem" name="mnuContextOpen">
 					<label>Open...\tCTRL-O</label>
 					<help></help>
 				</object>
-				<object class="wxMenuItem" name="mnuContextCreateACopy">
-					<label>Create a Copy...</label>
-					<help></help>
-				</object>
-				<object class="wxMenuItem" name="mnuContextAbandonChanges">
-					<label>Abandon Changes</label>
+                <object class="wxMenuItem" name="mnuContextSave">
+                    <label>Save\tCTRL-S</label>
+                    <help></help>
+                </object>
+				<object class="wxMenuItem" name="mnuContextSaveAs">
+					<label>Save As...</label>
 					<help></help>
 				</object>
 				<object class="wxMenuItem" name="mnuExit">
