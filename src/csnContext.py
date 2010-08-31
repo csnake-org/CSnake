@@ -20,8 +20,8 @@ class ContextData():
         self.__csnakeFile = ""
         self.__instance = ""
         self.__testRunnerTemplate = "normalRunner.tpl"
-        self.__configurationName = "DebugAndRelease"
-        self.__compilername = "Visual Studio 9 2008 Win64"
+        self.__configurationName = ""
+        self.__compilername = ""
         self.__cmakePath = ""    
         # used for creating the CMake rule to create tests with CxxTests
         self.__pythonPath = ""
@@ -199,12 +199,14 @@ class Context(object):
 
     def SetBuildFolder(self, value):
         self.__data.SetBuildFolder(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetInstallFolder(self):
         return self.__data.GetInstallFolder()
 
     def SetInstallFolder(self, value):
         self.__data.SetInstallFolde(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetPrebuiltBinariesFolder(self):
         return self.__data.GetPrebuiltBinariesFolder()
@@ -214,6 +216,7 @@ class Context(object):
 
     def SetCsnakeFile(self, value):
         self.__data.SetCsnakeFile(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetRootFolders(self):
         return self.__data.GetRootFolders()
@@ -226,6 +229,7 @@ class Context(object):
 
     def SetInstance(self, value):
         self.__data.SetInstance(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetTestRunnerTemplate(self):
         return self.__data.GetTestRunnerTemplate()
@@ -238,6 +242,7 @@ class Context(object):
 
     def SetFilter(self, value):
         self.__data.SetFilter(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetConfigurationName(self):
         return self.__data.GetConfigurationName()
@@ -250,6 +255,7 @@ class Context(object):
 
     def SetCmakePath(self, value):
         self.__data.SetCmakePath(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetSubCategoriesOf(self):
         return self.__subCategoriesOf
@@ -259,18 +265,21 @@ class Context(object):
 
     def SetPythonPath(self, value):
         self.__data.SetPythonPath(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetIdePath(self):
         return self.__data.GetIdePath()
 
     def SetIdePath(self, value):
         self.__data.SetIdePath(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     def GetKdevelopProjectFolder(self):
         return self.__data.GetKdevelopProjectFolder()
 
     def SetKdevelopProjectFolder(self, value):
         self.__data.SetKdevelopProjectFolder(value)
+        self.__NotifyListeners(ChangeEvent(self))
 
     # Methods ================
 
@@ -547,19 +556,12 @@ class Context(object):
     # ----------------------------
     # Other
     # ----------------------------
-    
     def FindCompiler(self):
-        #print "FindCompiler"
-        if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
-            self.__compiler = self.__compilermap[self.GetCompilername()]
-            self.__compiler.SetConfigurationName(self.GetConfigurationName())
-            self.__data._SetCompilername(self.GetCompiler().GetName())
-            try:
-                path = csnUtility.GetDefaultVisualStudioPath( self.GetCompilername() )
-                if self.GetIdePath() != path:
-                    self.SetIdePath(path)
-            except Exception, message:
-                print message
+        if self.GetCompilername() != None and self.GetCompilername() != "":
+            if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
+                self.__compiler = self.__compilermap[self.GetCompilername()]
+                self.__compiler.SetConfigurationName(self.GetConfigurationName())
+                self.__data._SetCompilername(self.GetCompiler().GetName())
     
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
@@ -587,7 +589,7 @@ class Context(object):
         # Set the field value if different from the current one
         if getattr(self.__data, field) != value:
             setattr(self.__data, field, value)
-            if field == "_ContextData__configurationName":
+            if field == "_ContextData__configurationName" and self.__compiler != None:
                 self.__compiler.SetConfigurationName(self.GetConfigurationName())
             self.__NotifyListeners(ChangeEvent(self))
     
@@ -607,11 +609,3 @@ class Context(object):
             self.__listeners.remove(listener)
         except ValueError:
             print "Error removing listener from context."
-
-
-def Load(filename):
-    context = Context()
-    okay = context.Load(filename)
-    assert okay, "Error loading from %s\n" % filename
-    return context
-    
