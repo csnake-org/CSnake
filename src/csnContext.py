@@ -8,6 +8,7 @@ import csnVisualStudio2003
 import csnVisualStudio2005
 import csnVisualStudio2008
 from csnListener import ChangeEvent
+import os.path
 
 latestFileFormatVersion = 2.1
 
@@ -609,3 +610,15 @@ class Context(object):
             self.__listeners.remove(listener)
         except ValueError:
             print "Error removing listener from context."
+
+def Load(filename):
+    """ Shortcut method to avoid creation and calling Load. """
+    context = None
+    # Check if the file name is specified
+    if filename != None and filename != "":
+        # Check if the file exists
+        if os.path.exists(filename):
+            context = Context()
+            okay = context.Load(filename)
+    assert okay, "Error loading from %s\n" % filename
+    return context
