@@ -546,6 +546,9 @@ class Context(object):
     def HasFilter(self, filter):
         return self.__data.GetFilter().count(filter) != 0
     
+    def ResetFilter(self):
+        self.__data.SetFilter([])
+    
     def AddFilter(self, filter):
         self.__data.GetFilter().append(filter)
         self.__NotifyListeners(ChangeEvent(self))
