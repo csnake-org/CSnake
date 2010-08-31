@@ -95,6 +95,6 @@ class Manager:
                             logger.error( message )
                             print message
                         else:
-                            logger.info( "copied %s to %s" % (file, absLocation) )
+                            logger.debug( "copied %s to %s" % (file, absLocation) )
                             
         return result
