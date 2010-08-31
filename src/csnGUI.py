@@ -264,6 +264,8 @@ class CSnakeGUIApp(wx.App):
         self.contextModified = False
         self.changeListener = ChangeListener(self)
         
+        self.projectNeedUpdate = False
+        
         wx.InitAllImageHandlers()
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
         self.res = xrc.XmlResource(xrcFile)
@@ -385,7 +387,7 @@ class CSnakeGUIApp(wx.App):
         
     def OnNoteBookPageChanged(self, event):
         if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
-            self.SelectProjects(self.IsContextModified())
+            self.SelectProjects(self.DoProjectNeedUpdate())
         
     def InitMenu(self):
         # File
@@ -459,6 +461,7 @@ class CSnakeGUIApp(wx.App):
         return self.contextFilename
     
     def SetContextModified(self, modified):
+        # check if new context is different from the original one
         if self.originalContextData != None:
             equal = self.context.GetData().Equal(self.originalContextData)
             if modified and equal:
@@ -477,9 +480,15 @@ class CSnakeGUIApp(wx.App):
         else:
             if oldTitle[len(oldTitle)-1] == '*':
                 self.frame.SetTitle(oldTitle[0:len(oldTitle)-1])
+        # update project update flag
+        if modified:
+            self.projectNeedUpdate = True         
         
     def IsContextModified(self):
         return self.contextModified
+    
+    def DoProjectNeedUpdate(self):
+        return self.projectNeedUpdate
     
     def LoadIcon(self):
         iconFile = csnUtility.GetRootOfCSnake() + "/resources/Laticauda_colubrina.ico"
@@ -1041,6 +1050,8 @@ class CSnakeGUIApp(wx.App):
             self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
             if len(self.listOfPossibleTargets):
                 self.context.SetInstance(self.listOfPossibleTargets[0])
+                self.context.ResetFilter()
+                self.projectNeedUpdate = True
             self.UpdateGUI()
             self.SetStatus("")
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
@@ -1123,6 +1134,8 @@ class CSnakeGUIApp(wx.App):
         # update context properties
         self.context.SetCsnakeFile(context.GetCsnakeFile())
         self.context.SetInstance(context.GetInstance())
+        self.context.ResetFilter()
+        self.projectNeedUpdate = True
         # update frame
         self.UpdateGUI()
 
@@ -1196,6 +1209,9 @@ class CSnakeGUIApp(wx.App):
             self.panelSelectProjects.Layout()
             self.panelSelectProjects.FitInside()
             
+            # update flog
+            self.projectNeedUpdate = False
+            
         self.SetStatus("")
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -1249,7 +1265,7 @@ class CSnakeGUIApp(wx.App):
         self.UpdateGUI()
         
     def RefreshProjects(self, event):
-        self.SelectProjects(forceRefresh=True)
+        self.SelectProjects(True)
 
     def GetLastThirdPartyFolder(self):
         return self.context.GetLastThirdPartyFolder( )
