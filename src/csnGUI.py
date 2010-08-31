@@ -389,6 +389,16 @@ class CSnakeGUIApp(wx.App):
         if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
             self.SelectProjects(self.DoProjectNeedUpdate())
         
+    def EnableConfigBar(self, enable):
+        if enable:
+            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
+            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Enable()  
+            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Enable()
+        else:
+            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
+            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable() 
+            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
+            
     def InitMenu(self):
         # File
         self.frame.Bind(wx.EVT_MENU, self.OnContextOpen, id=xrc.XRCID("mnuContextOpen"))
@@ -482,7 +492,8 @@ class CSnakeGUIApp(wx.App):
                 self.frame.SetTitle(oldTitle[0:len(oldTitle)-1])
         # update project update flag
         if modified:
-            self.projectNeedUpdate = True         
+            self.projectNeedUpdate = True
+            self.EnableConfigBar(True)      
         
     def IsContextModified(self):
         return self.contextModified
@@ -1051,10 +1062,8 @@ class CSnakeGUIApp(wx.App):
             if len(self.listOfPossibleTargets):
                 self.context.SetInstance(self.listOfPossibleTargets[0])
             self.UpdateGUI()
+            self.EnableConfigBar(True)
             self.SetStatus("")
-            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
-            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Enable()  
-            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Enable()
         else:
             message = "Please provide a valid CSnake file."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
