@@ -548,6 +548,7 @@ class Context(object):
     
     def ResetFilter(self):
         self.__data.SetFilter([])
+        self.__NotifyListeners(ChangeEvent(self))
     
     def AddFilter(self, filter):
         self.__data.GetFilter().append(filter)
