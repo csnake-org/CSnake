@@ -1050,8 +1050,6 @@ class CSnakeGUIApp(wx.App):
             self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
             if len(self.listOfPossibleTargets):
                 self.context.SetInstance(self.listOfPossibleTargets[0])
-                self.context.ResetFilter()
-                self.projectNeedUpdate = True
             self.UpdateGUI()
             self.SetStatus("")
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Enable()
@@ -1134,8 +1132,6 @@ class CSnakeGUIApp(wx.App):
         # update context properties
         self.context.SetCsnakeFile(context.GetCsnakeFile())
         self.context.SetInstance(context.GetInstance())
-        self.context.ResetFilter()
-        self.projectNeedUpdate = True
         # update frame
         self.UpdateGUI()
 
