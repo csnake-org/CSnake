@@ -1002,7 +1002,8 @@ class CSnakeGUIApp(wx.App):
                 # Check if correct file (if not convert)
                 if self.converter.Convert(contextFilename):
                     # Load the context
-                    if context.Load(contextFilename):
+                    context = self.handler.LoadContext(contextFilename)
+                    if context != None:
                         loaded = True
                     else:
                         self.Error("Could not load the context file: '%s'." % contextFilename)
@@ -1088,9 +1089,12 @@ class CSnakeGUIApp(wx.App):
                 if ret == wx.ID_YES:
                     if self.contextFilename == None or not os.path.isfile(self.contextFilename):
                         if self.SaveContextAs():
-                            self.SaveContext(self.contextFilename)
                             self.destroyed = True
                             self.frame.Destroy()
+                    else:
+                        self.SaveContext(self.contextFilename)
+                        self.destroyed = True
+                        self.frame.Destroy()
                 elif ret == wx.ID_NO:
                     self.destroyed = True
                     self.frame.Destroy()
