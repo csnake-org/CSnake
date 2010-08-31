@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 from csnListener import ChangeListener
+import logging
 
 class RootNotFound(IOError):
     pass
@@ -55,7 +56,9 @@ class Handler:
         self.generator = csnGenerator.Generator()
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None
-        
+        # logger
+        self.__logger = logging.getLogger("CSnake")
+        # change flags
         self.contextModified = False
         self.changeListener = ChangeListener(self)
     
@@ -299,22 +302,36 @@ class Handler:
         return result
 
     def Build(self, solutionName):
-        if not os.path.exists(solutionName):
-            raise Exception( "Solution file not found: %s" % solutionName )
+        # visual studio case
+        if self.context.GetCompilername().startswith("Visual Studio"):
+            # check solution exists
+            if not os.path.exists(solutionName):
+                raise Exception( "Solution file not found: %s" % solutionName )
+            # set the path to the IDE
+            pathIDE = self.context.GetIdePath()
+            # for visual studio (not express), use the devenv.com
+            (head, tail) = os.path.split(pathIDE)
+            if tail == "devenv.exe":
+                pathIDE = pathIDE.replace(".exe",".com")
+            # exit if not found
+            if not os.path.exists(pathIDE):
+                raise Exception( "Please provide a valid Visual Studio path" )
+            
+            result = True
+            # build in debug
+            self.__logger.info("Building '%s' in debug mode." % solutionName)
+            argList = [pathIDE, solutionName, "/build", "debug" ]
+            sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            result = result and sub.wait() == 0
+            csnUtility.LogSubprocess(self.__logger, sub)
+            # build in release
+            self.__logger.info("Building '%s' in release mode." % solutionName)
+            argList = [pathIDE, solutionName, "/build", "release" ]
+            sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            result = result and sub.wait() == 0
+            csnUtility.LogSubprocess(self.__logger, sub)
         
-        pathIDE = self.context.GetIdePath()
-        # for visual studio (not express), use the devenv.com
-        (head, tail) = os.path.split(pathIDE)
-        if tail == "devenv.exe":
-            pathIDE = pathIDE.replace(".exe",".com")
-        
-        if not os.path.exists(pathIDE):
-            raise Exception( "Please provide a valid Visual Studio path" )
-        
-        argList = [pathIDE, solutionName, "/build", "debug" ]
-        subprocess.Popen(argList).wait()
-        argList = [pathIDE, solutionName, "/build", "release" ]
-        subprocess.Popen(argList).wait()
+            return result
 
     def SetContextModified(self, modified):
         self.contextModified = modified
@@ -322,4 +339,4 @@ class Handler:
     def StateChanged(self, event):
         if event.IsChange():
             self.SetContextModified(True)
-        
+    

@@ -676,17 +676,22 @@ class CSnakeGUIApp(wx.App):
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
         
     def OnConfigureALL(self, event):
+        # configure thrid parties
         self.action = self.ActionConfigureThirdPartyFolder
         self.DoAction()
-        if sys.platform == 'win32':
-            for solutionPath in self.handler.GetThirdPartySolutionPaths():
-                self.handler.Build(solutionPath)
-
+        # compile third parties
+        for solutionPath in self.handler.GetThirdPartySolutionPaths():
+            if not self.handler.Build(solutionPath):
+                self.Error("Failed building %s" % solutionPath)
+                return
+        # configure project
         self.action = self.ActionCreateCMakeFilesAndRunCMake
         self.DoAction()
-        if sys.platform == 'win32':
-            self.handler.Build( self.handler.GetTargetSolutionPath() )
-
+        # compile project
+        if not self.handler.Build( self.handler.GetTargetSolutionPath()):
+            self.Error("Failed building %s" % solutionPath)
+            return
+        # install files
         self.action = self.ActionInstallFilesToBuildFolder
         self.DoAction()
 
