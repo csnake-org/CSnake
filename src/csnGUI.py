@@ -416,27 +416,15 @@ class CSnakeGUIApp(wx.App):
         self.CreateHandler()
         self.InitializeOptions()
         
+        self.panelSelectProjects.SetScrollRate(25, 25)
+
         # load previously saved context
         contextToLoad = self.options.GetContextFilename()
         if len(self.commandLineArgs) >= 1:
             contextToLoad = self.commandLineArgs[0]
         self.LoadContext(contextToLoad)
 
-        # find cmake if not specified
-        if not os.path.isfile(self.context.GetCmakePath()):
-            try:
-                self.context.SetCmakePath(csnUtility.GetDefaultCMakePath())
-            except WindowsError:
-                self.logger.info("Could not find default CMake.")
-        # find python if not specified
-        if not os.path.isfile(self.context.GetPythonPath()):
-            try:
-                self.context.SetPythonPath(csnUtility.GetDefaultPythonPath())
-            except WindowsError:
-                self.logger.info("Could not find default Python.")
-        
-        self.panelSelectProjects.SetScrollRate(25, 25)
-
+        self.InitializePaths()
         self.UpdateGUI()
         
     def Warn(self, message):
@@ -523,6 +511,47 @@ class CSnakeGUIApp(wx.App):
         self.handler = csnGUIHandler.Handler()
         self.context = None
     
+    def InitializePaths(self):
+        # found flags
+        foundCmake = False
+        foundPython = False
+        foundIde = False
+        # original paths
+        cmakePath = self.context.GetCmakePath()
+        pythonPath = self.context.GetPythonPath()
+        idePath = self.context.GetIdePath()
+        # find cmake if not specified
+        if not os.path.isfile(cmakePath):
+            try:
+                cmakePath = csnUtility.GetDefaultCMakePath()
+                foundCmake = True
+            except WindowsError:
+                self.logger.info("Could not find default CMake.")
+        # find python if not specified
+        if not os.path.isfile(pythonPath):
+            try:
+                pythonPath = csnUtility.GetDefaultPythonPath()
+                foundPython = True
+            except WindowsError:
+                self.logger.info("Could not find default Python.")
+        # find visual studio if not specified
+        if self.context.GetCompilername().find("Visual Studio") != -1 and \
+            not os.path.isfile(idePath):
+            try:
+                idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
+                foundIde = True
+            except WindowsError:
+                self.logger.info("Could not find default Visual Studio.")
+        # mention it to the user
+        if foundCmake or foundPython or foundIde:
+            message = "CSnake found paths to settings in the registry. Use them?"
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+            if dlg.ShowModal() == wx.ID_YES:
+                self.context.SetCmakePath(cmakePath)
+                self.context.SetPythonPath(pythonPath)
+                if( foundIde ):
+                    self.context.SetIdePath(idePath)
+    
     def InitializeOptions(self):
         self.options = csnGUIOptions.Options()
         self.binder.SetBuddyClass("options", self.options)
@@ -541,25 +570,35 @@ class CSnakeGUIApp(wx.App):
             
         if converted:
             self.options.Load(self.optionsFilename)
-        else:
-            self.options.SetContextFilename("%s/default.csnakecontext" % self.csnakeFolder)
-            self.SaveOptions()
             
-        if not os.path.exists(self.options.GetContextFilename()):
-            self.options.GetContextFilename("%s/context" % self.csnakeFolder)
-            csnContext.Context().Save(self.options.GetContextFilename())
-        
     def CopyGUIToContextAndOptions(self):
         """ Copy all GUI fields to the current context """
         self.binder.UpdateBuddies()
         
+    def SaveContextAs(self):
+        dlg = wx.FileDialog(None, "Save As...", defaultDir = os.path.dirname(self.options.GetContextFilename()), wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
+        if dlg.ShowModal() == wx.ID_OK:
+            # Add default extension if not present
+            (root, ext) = os.path.splitext(dlg.GetPath())
+            if ext == ".CSnakeGUI":
+                contextFilename = dlg.GetPath()
+            else:
+                contextFilename = "%s.CSnakeGUI" % root
+            # Save the context
+            self.SaveContext(contextFilename)
+            # the context was properly saved
+            return True
+        else:
+            # the context was not saved
+            return False
+    
     def SaveContext(self, contextFilename):
         """ Save the current context. """
         # Get content from frame
         self.CopyGUIToContextAndOptions()
+        # save the file name in the options
+        self.options.SetContextFilename(contextFilename)
         # Try to save
-        if not contextFilename == "":
-            self.options.SetContextFilename(contextFilename)
         try:
             self.context.Save(self.options.GetContextFilename())
             self.frame.SetTitle("CSnake GUI - %s" % self.options.GetContextFilename())
@@ -569,7 +608,7 @@ class CSnakeGUIApp(wx.App):
         self.__SetContextFilename(contextFilename)
         # Save a copy
         self.originalContextData = copy.deepcopy(self.context.GetData())
-        
+        # reset modified flag
         self.SetContextModified(False)
     
     def SaveOptions(self):
@@ -715,7 +754,6 @@ class CSnakeGUIApp(wx.App):
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetCsnakeFile(dlg.GetPath())
             self.UpdateListOfTargets()
-            self.SetContextModified(True)
             self.UpdateGUI()
 
     def SetBuildFolder(self, folder):
@@ -780,7 +818,6 @@ class CSnakeGUIApp(wx.App):
             # remove
             self.context.RemoveRootFolder(folder)
             self.UpdateGUI()
-            self.SetContextModified(True)
 
     def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
@@ -824,7 +861,6 @@ class CSnakeGUIApp(wx.App):
                         selection[j] = selection[j] - 1
             self.UpdateGUI()
             self.lbThirdPartySrcAndBuildFolders.ClearSelection()
-            self.SetContextModified(True)
             
         self.lbThirdPartySrcAndBuildFolders.SetFocus()
         
@@ -864,7 +900,6 @@ class CSnakeGUIApp(wx.App):
                 if first:
                     self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
                     first = False
-            self.SetContextModified(True)
                     
         self.lbThirdPartySrcAndBuildFolders.SetFocus()
         
@@ -891,7 +926,6 @@ class CSnakeGUIApp(wx.App):
                 if first:
                     self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
                     first = False
-            self.SetContextModified(True)
             
         self.lbThirdPartySrcAndBuildFolders.SetFocus()
         
@@ -906,25 +940,19 @@ class CSnakeGUIApp(wx.App):
 
     def OnContextSave(self, event):
         """ Save the context to the current file. """
-        self.SaveContext(self.contextFilename)
+        # check if the file name is correct
+        if self.contextFilename == None or self.contextFilename == "" or not os.path.exists(self.contextFilename):
+            self.SaveContextAs()
+        else:
+            self.SaveContext(self.contextFilename)
 
     def OnContextSaveAs(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        """
-        Let the user save the context to a specific file.
-        """
-        dlg = wx.FileDialog(None, "Save As...", defaultDir = os.path.dirname(self.options.GetContextFilename()), wildcard = "*.CSnakeGUI", style = wx.FD_SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            (root, ext) = os.path.splitext(dlg.GetPath())
-            # Add default extension if not present
-            if ext == ".CSnakeGUI":
-                contextFilename = dlg.GetPath()
-            else:
-                contextFilename = "%s.CSnakeGUI" % root
-            # Save the context
-            self.SaveContext(contextFilename)
+        """ Let the user save the context to a specific file. """
+        self.SaveContextAs()
 
     def GetCompilerComboBoxItems(self):
         result = []
+        result.append("")
         result.append("Visual Studio 7 .NET 2003")
         result.append("Visual Studio 8 2005")
         result.append("Visual Studio 8 2005 Win64")
@@ -936,7 +964,10 @@ class CSnakeGUIApp(wx.App):
         return result
         
     def GetBuildTypeComboBoxItems(self):
-        return self.context.GetCompiler().GetAllowedConfigurations()
+        list = []
+        if self.context.GetCompiler()!= None:
+            list = self.context.GetCompiler().GetAllowedConfigurations()
+        return list
     
     def GetCSnakeFileComboBoxItems(self):
         result = list()
@@ -951,7 +982,7 @@ class CSnakeGUIApp(wx.App):
     def UpdateGUI(self):
         """ Refreshes the GUI based on the current context. Also saves the current context to the context filename """
         self.binder.UpdateControls()
-        self.panelKDevelop.Show( self.context.GetCompiler().GetName() in ("KDevelop3") )
+        self.panelKDevelop.Show( self.context.GetCompiler() != None and self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.frame.Layout()
         self.frame.Refresh()
         self.frame.Update()
@@ -961,28 +992,38 @@ class CSnakeGUIApp(wx.App):
         """
         Load configuration context from context filename.
         """
-        # Check if the file exists
-        if not os.path.exists(contextFilename):
-            self.Error("CSnakeGUI could not find context file %s" % contextFilename)
-            return False
+        # Default context
+        context = csnContext.Context()
+        loaded = False
+        # Check if the file name is specified
+        if contextFilename != None and contextFilename != "":
+            # Check if the file exists
+            if os.path.exists(contextFilename):
+                # Check if correct file (if not convert)
+                if self.converter.Convert(contextFilename):
+                    # Load the context
+                    if context.Load(contextFilename):
+                        loaded = True
+                    else:
+                        self.Error("Could not load the context file: '%s'." % contextFilename)
+                else:
+                    self.Error("CSnake tried to open %s, but this file is not a valid context file" % contextFilename)
+            else:
+                self.Error("Could not find context file: '%s'." % contextFilename)
         
-        # Check if correct file (if not convert)
-        if not self.converter.Convert(contextFilename):
-            self.Error("CSnakeGUI tried to open %s, but this file is not a valid context file" % contextFilename)
-        
-        # Load the context
-        self.SetContext(self.handler.LoadContext(contextFilename))
-        
+        # Save the context
+        self.SetContext(context)
         # Save a copy
         self.originalContextData = copy.deepcopy(self.context.GetData())
         
+        if loaded:
+            # set frame title
+            self.frame.SetTitle("CSnake GUI - %s" % contextFilename)
+            # save file name
+            self.__SetContextFilename(contextFilename)
+        
         # Update 
-        self.frame.SetTitle("CSnake GUI - %s" % contextFilename)
         self.UpdateGUI()
-        # save file name
-        self.__SetContextFilename(contextFilename)
-
-        return True
 
     def SetContext(self, context):
         self.context = context
@@ -1045,9 +1086,13 @@ class CSnakeGUIApp(wx.App):
                 dlg = wx.MessageDialog(self.frame, "Save changes before closing?", style = wx.YES_NO | wx.CANCEL)
                 ret = dlg.ShowModal()
                 if ret == wx.ID_YES:
-                    self.SaveContext(self.contextFilename)
+                    if self.contextFilename == None or not os.path.isfile(self.contextFilename):
+                        if self.SaveContextAs():
+                            self.SaveContext(self.contextFilename)
+                            self.destroyed = True
+                            self.frame.Destroy()
+                elif ret == wx.ID_NO:
                     self.destroyed = True
-                if ret != wx.ID_CANCEL:
                     self.frame.Destroy()
             else:
                 self.destroyed = True
@@ -1075,7 +1120,6 @@ class CSnakeGUIApp(wx.App):
         self.context.SetCsnakeFile(context.GetCsnakeFile())
         self.context.SetInstance(context.GetInstance())
         # update frame
-        self.SetContextModified(True)
         self.UpdateGUI()
 
     def OnSetCMakePath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
@@ -1085,21 +1129,18 @@ class CSnakeGUIApp(wx.App):
         dlg = wx.FileDialog(None, "Select path to CMake")
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetCmakePath(dlg.GetPath())
-            self.SetContextModified(True)
             self.UpdateGUI()
 
     def OnSetPythonPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select path to Python")
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetPythonPath(dlg.GetPath())
-            self.SetContextModified(True)
             self.UpdateGUI()
 
     def OnSetVisualStudioPath(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         dlg = wx.FileDialog(None, "Select path to Visual Studio")
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetIdePath(dlg.GetPath())
-            self.SetContextModified(True)
             self.UpdateGUI()
 
     def SelectProjects(self, forceRefresh = False):
@@ -1113,15 +1154,17 @@ class CSnakeGUIApp(wx.App):
             try:
                 categories = self.handler.GetCategories(forceRefresh)
             except:
-                message = "Could not load project dependencies for instance %s from file %s." % (self.context.GetInstance(), self.context.GetCsnakeFile())
+                # restore saved filter
+                self.context.SetFilter(previousFilter)
+                # show error message
+                message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
                 message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
                 wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR).ShowModal()
                 self.SetStatus("")
                 return
+            # restore saved filter
             self.context.SetFilter(previousFilter)
             
-            self.SetContextModified(True)
-        
             # create list of checkboxes for the categories
             self.panelSelectProjects.GetSizer().Clear()
             for category in self.projectCheckBoxes.keys():
@@ -1181,7 +1224,24 @@ class CSnakeGUIApp(wx.App):
                 
     def OnSelectCompiler(self, event):
         self.context.FindCompiler()
-        self.SetContextModified(True)
+        # find visual studio if needed
+        if self.context.GetCompilername().startswith('Visual Studio'):
+            idePath = None
+            try:
+                idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
+            except Exception:
+                self.logger.info("Could not find appropriate Visual Studio.")
+            # mention it to the user
+            if idePath != None and idePath != self.context.GetIdePath():
+                message = "CSnake found the corresponding Visual Studio in the registry. Use it?"
+                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+                if dlg.ShowModal() == wx.ID_YES:
+                    self.context.SetIdePath(idePath)
+            else:
+                message = "CSnake could not find the corresponding Visual Studio in the registry."
+                wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_WARNING).ShowModal()
+            
+        # update the GUI
         self.UpdateGUI()
         
     def RefreshProjects(self, event):
