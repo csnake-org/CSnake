@@ -242,6 +242,7 @@ class Context(object):
         return self.__data.GetFilter()
 
     def SetFilter(self, value):
+        value.sort()
         self.__data.SetFilter(value)
         self.__NotifyListeners(ChangeEvent(self))
 
@@ -552,10 +553,12 @@ class Context(object):
     
     def AddFilter(self, filter):
         self.__data.GetFilter().append(filter)
+        self.__data.GetFilter().sort()
         self.__NotifyListeners(ChangeEvent(self))
         
     def RemoveFilter(self, filter):
         self.__data.GetFilter().remove(filter)
+        self.__data.GetFilter().sort()
         self.__NotifyListeners(ChangeEvent(self))
     
     # ----------------------------
