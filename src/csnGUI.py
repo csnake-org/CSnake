@@ -677,31 +677,66 @@ class CSnakeGUIApp(wx.App):
         
     def OnConfigureALL(self, event):
         # progress bar
-        progressBar = wx.ProgressDialog("Configure All", "Configure All.", parent=self.frame)
+        progressBar = wx.ProgressDialog("Configure All", "Configure All.", parent=self.frame, style=wx.PD_CAN_ABORT|wx.PD_AUTO_HIDE|wx.PD_APP_MODAL)
         progressBar.SetSize((200,100))
+        
+        # progress
+        cont, skip = progressBar.Update(0, "Configuring Third Parties...")
+        if not cont:
+            progressBar.Destroy()
+            return
         # configure thrid parties
-        progressBar.Update(0, "Configuring Third Parties...")
         self.action = self.ActionConfigureThirdPartyFolder
         self.DoAction()
+        
+        #progress
+        cont, skip = progressBar.Update(25, "Compiling Third Parties...")
+        if not cont:
+            progressBar.Destroy()
+            return
+        increment = 25 / self.context.GetNumberOfThirdPartyFolders()
+        progress = 25
         # compile third parties
-        progressBar.Update(25, "Compiling Third Parties...")
         for solutionPath in self.handler.GetThirdPartySolutionPaths():
+            cont, skip = progressBar.Update(progress)
+            if not cont:
+                progressBar.Destroy()
+                return
             if not self.handler.Build(solutionPath, self.context.GetConfigurationName(), True):
+                progressBar.Destroy()
                 self.Error("Failed building %s" % solutionPath)
                 return
+            progress = progress + increment
+        
+        # progress
+        cont, skip = progressBar.Update(50, "Configuring Project...")
+        if not cont:
+            progressBar.Destroy()
+            return
         # configure project
-        progressBar.Update(50, "Configuring Project...")
         self.action = self.ActionCreateCMakeFilesAndRunCMake
         self.DoAction()
+        
+        # progress
+        cont, skip = progressBar.Update(75, "Compiling Project...")
+        if not cont:
+            progressBar.Destroy()
+            return
         # compile project
-        progressBar.Update(75, "Compiling Project...")
         if not self.handler.Build(self.handler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False):
+            progressBar.Destroy()
             self.Error("Failed building %s" % solutionPath)
             return
+        
+        # progress
+        cont, skip = progressBar.Update(95, "Installing Files...")
+        if not cont:
+            progressBar.Destroy()
+            return
         # install files
-        progressBar.Update(95, "Installing Files...")
         self.action = self.ActionInstallFilesToBuildFolder
         self.DoAction()
+        
         # end
         progressBar.Update(100, "Done.")
 
