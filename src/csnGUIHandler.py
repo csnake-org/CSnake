@@ -328,7 +328,8 @@ class Handler:
             argList = [pathIDE, solutionName, "/build", "release" ]
             sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
-        elif self.context.GetCompilername().startswith("Unix"):
+        elif self.context.GetCompilername().startswith("Unix") or \
+             self.context.GetCompilername().startswith("KDevelop3") :
             # for visual studio (not express), use the devenv.com
             (head, tail) = os.path.split(solutionName)
             self.__logger.info("Building '%s' in debug mode [make]." % head)
