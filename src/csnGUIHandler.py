@@ -321,15 +321,13 @@ class Handler:
             # build in debug
             self.__logger.info("Building '%s' in debug mode." % solutionName)
             argList = [pathIDE, solutionName, "/build", "debug" ]
-            sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
-            csnUtility.LogSubprocess(self.__logger, sub)
             # build in release
             self.__logger.info("Building '%s' in release mode." % solutionName)
             argList = [pathIDE, solutionName, "/build", "release" ]
-            sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
-            csnUtility.LogSubprocess(self.__logger, sub)
         
             return result
 
