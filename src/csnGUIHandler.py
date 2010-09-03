@@ -301,7 +301,8 @@ class Handler:
             folder = csnUtility.NormalizePath(os.path.split(folder)[0])
         return result
 
-    def Build(self, solutionName):
+    def Build(self, solutionName, buildMode, isThirdParty):
+        result = True
         # visual studio case
         if self.context.GetCompilername().startswith("Visual Studio"):
             # check solution exists
@@ -317,19 +318,28 @@ class Handler:
             if not os.path.exists(pathIDE):
                 raise Exception( "Please provide a valid Visual Studio path" )
             
-            result = True
             # build in debug
-            self.__logger.info("Building '%s' in debug mode." % solutionName)
+            self.__logger.info("Building '%s' in debug mode [visual studio]." % solutionName)
             argList = [pathIDE, solutionName, "/build", "debug" ]
             sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
             # build in release
-            self.__logger.info("Building '%s' in release mode." % solutionName)
+            self.__logger.info("Building '%s' in release mode [visual studio]." % solutionName)
             argList = [pathIDE, solutionName, "/build", "release" ]
             sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
-        
-            return result
+        elif self.context.GetCompilername().startswith("Unix"):
+            # for visual studio (not express), use the devenv.com
+            (head, tail) = os.path.split(solutionName)
+            self.__logger.info("Building '%s' in debug mode [make]." % head)
+            argList = ["make", "-s"]
+            buildPath = head
+            if isThirdParty:
+                buildPath = "%s/%s" % (buildPath, buildMode)
+            sub = subprocess.Popen(argList, cwd=buildPath)
+            result = result and sub.wait() == 0
+            
+        return result
 
     def SetContextModified(self, modified):
         self.contextModified = modified

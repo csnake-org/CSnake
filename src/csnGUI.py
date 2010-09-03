@@ -348,7 +348,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyBuildFoldersDClick, id=xrc.XRCID("lbThirdPartyBuildFolders"))
         
         if sys.platform != 'win32':
-            xrc.XRCCTRL(self.panelContext, "btnConfigureALL").Disable()
+            #xrc.XRCCTRL(self.panelContext, "btnConfigureALL").Disable()
             xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").Disable()
             xrc.XRCCTRL(self.panelOptions, "btnSetVisualStudioPath").Disable()
             xrc.XRCCTRL(self.panelOptions, "txtVisualStudioPath").Disable()
@@ -676,24 +676,34 @@ class CSnakeGUIApp(wx.App):
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
         
     def OnConfigureALL(self, event):
+        # progress bar
+        progressBar = wx.ProgressDialog("Configure All", "Configure All.", parent=self.frame)
+        progressBar.SetSize((200,100))
         # configure thrid parties
+        progressBar.Update(0, "Configuring Third Parties...")
         self.action = self.ActionConfigureThirdPartyFolder
         self.DoAction()
         # compile third parties
+        progressBar.Update(25, "Compiling Third Parties...")
         for solutionPath in self.handler.GetThirdPartySolutionPaths():
-            if not self.handler.Build(solutionPath):
+            if not self.handler.Build(solutionPath, self.context.GetConfigurationName(), True):
                 self.Error("Failed building %s" % solutionPath)
                 return
         # configure project
+        progressBar.Update(50, "Configuring Project...")
         self.action = self.ActionCreateCMakeFilesAndRunCMake
         self.DoAction()
         # compile project
-        if not self.handler.Build( self.handler.GetTargetSolutionPath()):
+        progressBar.Update(75, "Compiling Project...")
+        if not self.handler.Build(self.handler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False):
             self.Error("Failed building %s" % solutionPath)
             return
         # install files
+        progressBar.Update(95, "Installing Files...")
         self.action = self.ActionInstallFilesToBuildFolder
         self.DoAction()
+        # end
+        progressBar.Update(100, "Done.")
 
     def ActionOnlyCreateCMakeFiles(self):
         self.FindAdditionalRootFolders(True)
