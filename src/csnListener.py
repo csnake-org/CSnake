@@ -1,5 +1,5 @@
 
-class Event():
+class Event:
     """ Generic event class. """
     def __init__(self, code, source):
         self._code = code
@@ -36,7 +36,7 @@ class ChangeEvent(Event):
     def __init__(self, source):
         Event.__init__(self, self.GetChangeCode(), source)
         
-class Listener():
+class Listener:
     """ Generic listener class. """
     def __init__(self, source):
         self._source = source

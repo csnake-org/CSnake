@@ -12,7 +12,7 @@ import os.path
 
 latestFileFormatVersion = 2.1
 
-class ContextData():
+class ContextData:
     def __init__(self):
         # basic fields
         self.__buildFolder = ""    
