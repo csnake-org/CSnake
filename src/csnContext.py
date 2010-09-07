@@ -533,7 +533,7 @@ class Context(object):
         self.__NotifyListeners(ChangeEvent(self))
 
     def RemoveRootFolder(self, folder):
-        self.__data.GetRootFolders().append(folder)
+        self.__data.GetRootFolders().remove(folder)
         self.__NotifyListeners(ChangeEvent(self))
         
     def ExtendRootFolders(self, folders):
