@@ -677,7 +677,7 @@ class CSnakeGUIApp(wx.App):
         
     def OnConfigureALL(self, event):
         # progress bar
-        progressBar = wx.ProgressDialog("Configure All", "Configure All.", parent=self.frame, style=wx.PD_CAN_ABORT|wx.PD_AUTO_HIDE|wx.PD_APP_MODAL)
+        progressBar = wx.ProgressDialog("Configure All", "Configure and Compile All.", parent=self.frame, style=wx.PD_CAN_ABORT|wx.PD_AUTO_HIDE|wx.PD_APP_MODAL)
         
         # progress
         cont, skip = progressBar.Update(0, "Configuring Third Parties...")
