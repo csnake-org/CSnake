@@ -542,22 +542,21 @@ class CSnakeGUIApp(wx.App):
         idePath = self.context.GetIdePath()
         # find cmake if not specified
         if not os.path.isfile(cmakePath):
-            try:
-                cmakePath = csnUtility.GetDefaultCMakePath()
-                if cmakePath:
-                    foundCmake = True
-            except WindowsError:
+            cmakePath = csnUtility.GetDefaultCMakePath()
+            if cmakePath:
+                foundCmake = True
+            else:
                 self.logger.info("Could not find default CMake.")
         # find python if not specified
         if not os.path.isfile(pythonPath):
-            try:
-                pythonPath = csnUtility.GetDefaultPythonPath()
-                if pythonPath:
-                    foundPython = True
-            except WindowsError:
+            pythonPath = csnUtility.GetDefaultPythonPath()
+            if pythonPath:
+                foundPython = True
+            else:
                 self.logger.info("Could not find default Python.")
         # find visual studio if not specified
-        if self.context.GetCompilername().find("Visual Studio") != -1 and \
+        if sys.platform == 'win32' and \
+            self.context.GetCompilername().find("Visual Studio") != -1 and \
             not os.path.isfile(idePath):
             try:
                 idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())

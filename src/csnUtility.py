@@ -7,6 +7,8 @@ import os.path
 import logging.config
 if sys.platform == 'win32':
     import _winreg
+if sys.platform != 'win32':
+    import commands
 
 def CorrectPath(path):
     (first,second) = os.path.split(path)
@@ -213,28 +215,39 @@ def GetDefaultVisualStudioPath( generator ):
 def GetDefaultCMakePath():
     """ Get the path to CMake. """
     # using registry, not available for non windows
-    if sys.platform != 'win32':
-        return ""
-    key_name = r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0'
-    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
-    value,type_id = _winreg.QueryValueEx(key, '')
-    path = value + r'\bin\cmake.exe'
-    if not os.path.exists(path):
-        raise WindowsError("'%s' not found." % path)
-    return path
+    if sys.platform == 'win32':
+        key_name = r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0'
+        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+        value,type_id = _winreg.QueryValueEx(key, '')
+        path = value + r'\bin\cmake.exe'
+        if not os.path.exists(path):
+            return ""
+        return path
+    else:
+        (status, path) = commands.getstatusoutput('which cmake')
+        if status == 0:
+            return path
+        else:
+            return ""
 
 def GetDefaultPythonPath():
     """ Get the path to Python. """
     # using registry, not available for non windows
-    if sys.platform != 'win32':
-        return ""
-    key_name = r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath'
-    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
-    value,type_id = _winreg.QueryValueEx(key, '')
-    path = value + r'python.exe'
-    if not os.path.exists(path):
-        raise WindowsError("'%s' not found." % path)
-    return path
+    if sys.platform == 'win32':
+        key_name = r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath'
+        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+        value,type_id = _winreg.QueryValueEx(key, '')
+        path = value + r'python.exe'
+        if not os.path.exists(path):
+            return ""
+        return path
+    else:
+        (status, path) = commands.getstatusoutput('which python')
+        if status == 0:
+            return path
+        else:
+            return ""
+
 
 def InitialiseLogging():
     # create user folder
