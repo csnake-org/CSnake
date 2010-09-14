@@ -563,7 +563,6 @@ class CSnakeGUIApp(wx.App):
                 foundIde = True
             except WindowsError:
                 self.logger.info("Could not find default Visual Studio.")
-        print "%s=%s %s=%s %s=%s" % (foundCmake, cmakePath, foundPython, pythonPath, foundIde, idePath)
         # mention it to the user
         if foundCmake or foundPython or foundIde:
             message = "CSnake found paths to settings in the registry. Use them?"
