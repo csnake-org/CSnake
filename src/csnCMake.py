@@ -174,6 +174,7 @@ class Writer:
             self.file.write("INCREASE_MSVC_HEAP_LIMIT( 1000 )\n")
             self.file.write("SUPPRESS_VC8_DEPRECATED_WARNINGS( )\n")
             self.file.write("SUPPRESS_LINKER_WARNING_4089( %s )\n" % self.project.name )
+            self.file.write("SUPPRESS_COMPILER_WARNING_DLL_EXPORT( %s )\n" % self.project.name )
             
     
     def __CreateCMakeSection_Link(self):
