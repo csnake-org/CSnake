@@ -62,6 +62,54 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
     return project
 
+def CommandLinePlugin(_name, _holderProject = None):
+    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+
+    project = csnProject.Project(_name, "dll", _sourceRootFolder)
+    project.AddDefinitions(["-Dmain=ModuleEntryPoint"], _private = 1 ) 
+    project.installSubFolder = "commandLinePlugins"
+    project.CMakeInsertBeforeTarget = new.instancemethod(CreateCMakeCLPPre, project)
+    project.CMakeInsertAfterTarget = new.instancemethod(CreateCMakeCLPPost, project)
+    
+    project.applicationsProject = csnBuild.Project(project.name + "Applications", "container", _sourceRootFolder)
+    project.applicationsProject.AddProjects([project])
+    project.AddProjects([project.applicationsProject], _dependency = 0)
+
+    applicationName = "%sApp" % _name
+    projectApp = csnBuild.Project(applicationName, "executable", _sourceRootFolder)
+    thirdParty = csnProject.globalCurrentContext.GetThirdPartyFolder( 0 )
+    wrapperSourceFile = u'%s/SLICER/Slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
+    projectApp.AddSources( [wrapperSourceFile]  )
+    projectApp.AddProjects( [project] )
+    projectApp.installSubFolder = "commandLinePlugins"
+    project.applicationsProject.AddProjects( [projectApp] )
+
+    if not _holderProject is None:
+        _holderProject.AddProjects( [project] )
+    
+    return project
+
+def CreateCMakeCLPPre(self, _file):
+    if len( self.GetSources() ) > 0:
+        _file.write("\n#Adding CMake GenerateCLP Pre\n")
+        _file.write("set( ${CLP}_SOURCE %s )\n" % self.GetSources()[0] )
+        if csnUtility.IsRunningOnWindows():
+            _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/GenerateCLP.exe\")\n" )
+        else:
+            _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/generateCLP\")\n" )
+        _file.write("get_filename_component( TMP_FILENAME ${${CLP}_SOURCE} NAME_WE)\n" )
+        _file.write("set( CLP_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}CLP.h)\n" )
+        self.AddSources( ['${CLP_INCLUDE_FILE}'], _checkExists = 0, _forceAdd = 1 )
+
+def CreateCMakeCLPPost(self, _file):
+    if len( self.GetSources() ) > 0:
+        _file.write("\n#Adding CMake GenerateCLP Post\n")
+        _file.write("INCLUDE( \"%s/cmakeMacros/GenerateCLP.cmake\" )\n" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
+        xmlFile = self.GetSources()[0]
+        xmlFile = xmlFile.replace( "cxx", "xml" )
+        _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
+        _file.write( "ADD_DEPENDENCIES( %s generateCLP )\n" % self.name )
+
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
     Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
@@ -139,14 +187,22 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     project.AddIncludeFolders(["."])
     project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
 
-    # Windows    
+    # Windows debug
     installFolder = "%s/debug" % project.installSubFolder
     project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    
+    # Windows release
     installFolder = "%s/release" % project.installSubFolder
     project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
 
     # Linux
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _releaseOnly = 1, _NOT_WIN32 = 1 )
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _NOT_WIN32 = 1 )
+    installFolder = project.installSubFolder + "/Filters"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
     
     return project
 

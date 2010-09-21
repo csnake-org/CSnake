@@ -212,6 +212,8 @@ class Writer:
     
         self.__CreateCMakeSection_IncludeConfigAndUseFiles()
 
+        self.project.CMakeInsertBeforeTarget( self.file )
+        
         self.__CreateCMakePrecompiledHeaderPre()
         self.__CreateCMakeSection_SourceGroups()
         cmakeMocInputVar = self.__CreateCMakeSection_MocRules()
@@ -225,6 +227,8 @@ class Writer:
         self.__CreateCMakeSection_InstallRules()
         self.__CreateCMakeSection_Rules()
         self.__CreateCMakePrecompiledHeaderPost()
+        
+        self.project.CMakeInsertAfterTarget( self.file )
     
     def __CloseFile(self):
         self.file.close()

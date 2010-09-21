@@ -7,6 +7,7 @@ import csnTests
 import inspect
 import os.path
 import types
+import new
 
 globalCurrentContext = None
 
@@ -108,6 +109,11 @@ class GenericProject(object):
         self.compileManager = csnCompile.Manager(self)
         self.installSubFolder = ""
         self.testsManager = csnTests.Manager(self)
+
+        # Function called before "ADD_LIBARRY"
+        self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
+        # Function called after "ADD_LIBARRY"
+        self.CMakeInsertAfterTarget = new.instancemethod(SetCMakeInsertAfterTarget, self)
         
 
     def AddProjects(self, _projects, _dependency = True): 
@@ -197,3 +203,11 @@ class GenericProject(object):
 
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
+
+def SetCMakeInsertBeforeTarget(self, _file):
+    # Empty function
+    return
+
+def SetCMakeInsertAfterTarget(self, _file):
+    # Empty function
+    return
