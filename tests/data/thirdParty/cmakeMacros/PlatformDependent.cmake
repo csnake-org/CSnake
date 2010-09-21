@@ -61,5 +61,20 @@ IF(WIN32)
 ENDIF(WIN32)
 ENDMACRO(SUPPRESS_LINKER_WARNING_4089)
 
+# Supress warning C4251: 'blTestParams::m_strVectorInputBaseName' : class 'std::vector<_Ty>'
+# needs to have dll-interface to be used by clients of class 'blTestParams'
+# warning C4275: non dll-interface class 'blObject' used as base for
+# dll-interface class 'blSignalAnnotation'
+MACRO(SUPPRESS_COMPILER_WARNING_DLL_EXPORT _target)
+IF(WIN32)
+  GET_TARGET_PROPERTY(oldProps ${_target} COMPILE_FLAGS)
+  if (${oldProps} MATCHES NOTFOUND)
+    SET(oldProps "")
+  endif(${oldProps} MATCHES NOTFOUND)
+  SET(newProperties "${oldProps} /wd4251 /wd4275")
+  SET_TARGET_PROPERTIES(${_target} PROPERTIES COMPILE_FLAGS "${newProperties}" )
+ENDIF(WIN32)
+ENDMACRO(SUPPRESS_COMPILER_WARNING_DLL_EXPORT)
+
 
 
