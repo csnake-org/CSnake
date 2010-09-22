@@ -183,7 +183,7 @@ def GetDirs( startDir, outDirs, excludedFoldersList ):
                 outDirs.append(name)  # It's a directory, store it.
 
 def GetDefaultVisualStudioPath( generator ):
-    path = ""
+    path = None
     key_names = [
         r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7', # typical windows XP
         r'SOFTWARE\Microsoft\VisualStudio\SxS\VS7'] #typical windows vista, 7
@@ -200,13 +200,13 @@ def GetDefaultVisualStudioPath( generator ):
     try:
         path = SearchWindowsProgramPath( key_names, value_names, path_end )
     except OSError:
-        path = ""
+        path = None
         
     return path
 
 def GetDefaultCMakePath():
     """ Get the path to CMake. """
-    path = ""
+    path = None
     if sys.platform == 'win32':
         key_names = [
             r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0', # typical windows XP
@@ -220,18 +220,18 @@ def GetDefaultCMakePath():
         try:
             path = SearchWindowsProgramPath( key_names, value_names, path_end )
         except OSError:
-            path = ""
+            path = None
     else:
         try:
             path = SearchUnixProgramPath("cmake")
         except OSError:
-            path = ""
+            path = None
         
     return path
 
 def GetDefaultPythonPath():
     """ Get the path to Python. """
-    path = ""
+    path = None
     if sys.platform == 'win32':
         key_names = [
             r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath', # typical windows XP
@@ -241,12 +241,12 @@ def GetDefaultPythonPath():
         try:
             path = SearchWindowsProgramPath( key_names, value_names, path_end )
         except OSError:
-            path = ""
+            path = None
     else:
         try:
             path = SearchUnixProgramPath("python")
         except OSError:
-            path = ""
+            path = None
         
     return path
 
