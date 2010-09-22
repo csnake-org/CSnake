@@ -2,6 +2,7 @@
 import unittest
 import csnUtility
 import os
+import sys
 
 class csnUtilityTests(unittest.TestCase):
     
@@ -9,24 +10,24 @@ class csnUtilityTests(unittest.TestCase):
         """ csnUtilityTests: test NormalizePath function. """
         refString = "c:/hallo"
 
-        assert csnUtility.NormalizePath("") == "."
-        assert csnUtility.NormalizePath(".") == "."
+        self.assertEqual( csnUtility.NormalizePath(""), "." )
+        self.assertEqual( csnUtility.NormalizePath("."), "." )
         testString1 = "c:/hallo"
-        assert csnUtility.NormalizePath(testString1) == refString
+        self.assertEqual( csnUtility.NormalizePath(testString1), refString )
         testString2 = "c:\\hallo"
-        assert csnUtility.NormalizePath(testString2) == refString
+        self.assertEqual( csnUtility.NormalizePath(testString2), refString )
 
     def testRemovePrefixFromPath(self):
         """ csnUtilityTests: test RemovePrefixFromPath function. """
         path = "c:/one/two/three"
         prefix = "c:"
         subString = "/one/two/three"
-        assert subString == csnUtility.RemovePrefixFromPath(path, prefix)
+        self.assertEqual( subString, csnUtility.RemovePrefixFromPath(path, prefix) )
 
     def testHasBackSlash(self):
         """ csnUtilityTests: test HasBackSlash function. """
-        assert csnUtility.HasBackSlash("c:\\hallo")
-        assert not csnUtility.HasBackSlash("c://hallo")
+        self.assertTrue( csnUtility.HasBackSlash("c:\\hallo") )
+        self.assertFalse( csnUtility.HasBackSlash("c://hallo") )
         
     def testCorrectPath(self):
         """ csnUtilityTests: test CorrectPath function. """
@@ -34,20 +35,56 @@ class csnUtilityTests(unittest.TestCase):
         refPathRoot = root + "DummyLib"
         refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
-        assert csnUtility.CorrectPath("") == ""        
-        assert csnUtility.CorrectPath(".") == "."        
+        self.assertEqual( csnUtility.CorrectPath(""), "" )
+        self.assertEqual( csnUtility.CorrectPath("."), "." )
         testPath1 = root + "DummyLib/libmodules"
-        assert csnUtility.CorrectPath(testPath1) == refPath        
+        self.assertEqual( csnUtility.CorrectPath(testPath1), refPath )
         testPath2 = root + "DummyLib/liBmoDules"
-        assert csnUtility.CorrectPath(testPath2) == refPath        
+        self.assertEqual( csnUtility.CorrectPath(testPath2), refPath )      
         testPath3 = root + "DuMMyLib/libmodules"
-        assert csnUtility.CorrectPath(testPath3) == refPath        
+        self.assertEqual( csnUtility.CorrectPath(testPath3), refPath )      
         refPath4 = os.path.normpath( root + "DummyLib/doEsnoTexist" )
         testPath4 = root + "DuMMyLib/doEsnoTexist"
-        assert csnUtility.CorrectPath(testPath4) == refPath4        
+        self.assertEqual( csnUtility.CorrectPath(testPath4), refPath4 )        
         refPath5 = os.path.normpath( "doEs/nOt/eXist" )
         testPath5 = "doEs/nOt/eXist"
-        assert csnUtility.CorrectPath(testPath5) == refPath5        
+        self.assertEqual( csnUtility.CorrectPath(testPath5), refPath5 )  
+        
+    def testSearchProgramPath(self):
+        if sys.platform == 'win32':
+            # Hoping there is a cmake on the test machine
+            # Default path for cmake
+            refPath1 = r"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe"
+            path_end1 = r"\bin\cmake.exe"
+            # typical windows XP key names for cmake
+            key_names1 = [r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0", 
+              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.1",
+              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.2"]
+            value_names1 = [r""]
+            resPath1 = csnUtility.SearchWindowsProgramPath(key_names1, value_names1, path_end1)
+            self.assertEqual( resPath1, refPath1 )
+            
+            # Wrong key name: should throw an exception
+            key_names2 = [r"SOFTWARE\Wow6432Node\Kitware\CMake 8.7"]
+            raisedError = False
+            try:
+                csnUtility.SearchWindowsProgramPath(key_names2, value_names1, path_end1)
+            except OSError:
+                raisedError = True
+            self.assertTrue(raisedError)
+            
+            # Wrong path
+            value_names2 = [r"foo"]
+            raisedError = False
+            try:
+                csnUtility.SearchWindowsProgramPath( key_names1, value_names2, path_end1)
+            except OSError:
+                raisedError = True
+            self.assertTrue(raisedError)
+            
+        else:  
+            refPath1 = "/usr/bin/cmake"
+            self.assertEqual( csnUtility.SearchUnixProgramPath("cmake"), refPath1 )
 
 if __name__ == "__main__":
     unittest.main() 

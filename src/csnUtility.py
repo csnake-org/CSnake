@@ -182,72 +182,122 @@ def GetDirs( startDir, outDirs, excludedFoldersList ):
             if os.path.isdir(fullpath) and not (name in excludedFoldersList):
                 outDirs.append(name)  # It's a directory, store it.
 
-def GetRegVisualStudioPath( generator, key_name ):
-
-    if sys.platform != 'win32':
-        return ""
-
-    value = None
-    type_id = None
-    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
-    if generator.startswith('Visual Studio 7'):
-        value,type_id = _winreg.QueryValueEx(key, '7.1')
-    elif generator.startswith('Visual Studio 8'):
-        value,type_id = _winreg.QueryValueEx(key, '8.0')
-    elif generator.startswith('Visual Studio 9'):
-        value,type_id = _winreg.QueryValueEx(key, '9.0')
-    elif generator.startswith('Visual Studio 10'):
-        value,type_id = _winreg.QueryValueEx(key, '10.0')
-    else:
-        raise Exception('Cannot find Visual Studio location for: ' + generator)
-    path = value + r'Common7\IDE\devenv.exe'
-    if not os.path.exists(path):
-        raise Exception("'%s' not found." % path)
-    return path
-
 def GetDefaultVisualStudioPath( generator ):
+    path = ""
+    key_names = [
+        r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
+        r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7']
+    value_names = []
+    if generator.startswith('Visual Studio 7'):
+        value_names = [r"7.1"]
+    elif generator.startswith('Visual Studio 8'):
+        value_names = [r"8.0"]
+    elif generator.startswith('Visual Studio 9'):
+        value_names = [r"9.0"]
+    elif generator.startswith('Visual Studio 10'):
+        value_names = [r"10.0"]
+    path_end = r"Common7\IDE\devenv.exe"
     try:
-        path = GetRegVisualStudioPath( generator, r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7' )
-    except WindowsError:
-        path = GetRegVisualStudioPath( generator, r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7' )
+        path = SearchWindowsProgramPath( key_names, value_names, path_end )
+    except OSError:
+        path = ""
+        
     return path
 
 def GetDefaultCMakePath():
     """ Get the path to CMake. """
-    # using registry, not available for non windows
+    path = ""
     if sys.platform == 'win32':
-        key_name = r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0'
-        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
-        value,type_id = _winreg.QueryValueEx(key, '')
-        path = value + r'\bin\cmake.exe'
-        if not os.path.exists(path):
-            return ""
-        return path
+        key_names = [
+            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0', # typical windows XP
+            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.1', 
+            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.2', 
+            r'SOFTWARE\Kitware\CMake 2.8.0', #typical windows vista, 7
+            r'SOFTWARE\Kitware\CMake 2.8.1',
+            r'SOFTWARE\Kitware\CMake 2.8.2']
+        value_names = [r""]
+        path_end = r"\bin\cmake.exe"
+        try:
+            path = SearchWindowsProgramPath( key_names, value_names, path_end )
+        except OSError:
+            path = ""
     else:
-        (status, path) = commands.getstatusoutput('which cmake')
-        if status == 0:
-            return path
-        else:
-            return ""
+        try:
+            path = SearchUnixProgramPath("cmake")
+        except OSError:
+            path = ""
+        
+    return path
 
 def GetDefaultPythonPath():
     """ Get the path to Python. """
-    # using registry, not available for non windows
+    path = ""
     if sys.platform == 'win32':
-        key_name = r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath'
-        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
-        value,type_id = _winreg.QueryValueEx(key, '')
-        path = value + r'python.exe'
-        if not os.path.exists(path):
-            return ""
+        key_names = [
+            r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath', # typical windows XP
+            r'SOFTWARE\Python\PythonCore\2.6\InstallPath'] #typical windows vista, 7
+        value_names = [r""]
+        path_end = r"python.exe"
+        try:
+            path = SearchWindowsProgramPath( key_names, value_names, path_end )
+        except OSError:
+            path = ""
+    else:
+        try:
+            path = SearchUnixProgramPath("python")
+        except OSError:
+            path = ""
+        
+    return path
+
+def SearchWindowsProgramPath(key_names, value_names, path_end):
+    """ 
+    Search a program path on a Windows machine using the registry.
+    \param path_end Unicode string to append at the end of the registry value.
+    \param key_names List of registry keys to try. Will stop at the first valid one.
+    \param value_names List of registry values. Will stop at the first valid one.
+    \return An existing path or raises OSError if nothing found.
+    """
+    # logging init
+    logger = logging.getLogger("CSnake")
+    logger.debug( "Searching for '%s'." % path_end )
+    for key_name in key_names:
+        try:
+            key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
+        except OSError:
+            logger.debug( "Key '%s' does not exist." % key_name)
+            # If not found, try the next key_name
+            continue
+        for value_name in value_names:
+            try:
+                (value, type_id) = _winreg.QueryValueEx(key, value_name)
+            except OSError:
+                logger.debug( "Value '%s' does not exist." % value_name)
+                # If not found, try the next value_name
+                continue
+            path = "%s%s" % (value, path_end)
+            if os.path.exists(path):
+                logger.debug( "Found '%s'." % path )
+                return path
+            else:
+                logger.debug( "Incorrect path '%s'." % path )
+    #If here, no value was found
+    message = "Could not find a default path for '%s'." % path_end
+    raise OSError(message)
+
+def SearchUnixProgramPath(name):
+    """ 
+    Search a program path on a Unix machine using the 'which' command.
+    \param name The name of the program.
+    \return An existing path or raises OSError if nothing found.
+    """
+    # Using 'which'
+    (status, path) = commands.getstatusoutput('which %s' % name)
+    if status == 0 and os.path.exists(path):
         return path
     else:
-        (status, path) = commands.getstatusoutput('which python')
-        if status == 0:
-            return path
-        else:
-            return ""
-
+        message = "Could not find a default path for '%s'." % name
+        raise OSError(message)
 
 def InitialiseLogging():
     # create user folder
