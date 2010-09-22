@@ -83,8 +83,17 @@ class csnUtilityTests(unittest.TestCase):
             self.assertTrue(raisedError)
             
         else:  
+            # Hoping there is a cmake on the test machine
             refPath1 = "/usr/bin/cmake"
             self.assertEqual( csnUtility.SearchUnixProgramPath("cmake"), refPath1 )
+            
+            # Wrong path
+            raisedError = False
+            try:
+                csnUtility.SearchUnixProgramPath("cmakee")
+            except OSError:
+                raisedError = True
+            self.assertTrue(raisedError)
 
 if __name__ == "__main__":
     unittest.main() 
