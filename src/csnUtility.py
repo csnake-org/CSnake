@@ -185,8 +185,8 @@ def GetDirs( startDir, outDirs, excludedFoldersList ):
 def GetDefaultVisualStudioPath( generator ):
     path = ""
     key_names = [
-        r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
-        r'SOFTWARE\Microsoft\VisualStudio\SxS\VC7']
+        r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7', # typical windows XP
+        r'SOFTWARE\Microsoft\VisualStudio\SxS\VS7'] #typical windows vista, 7
     value_names = []
     if generator.startswith('Visual Studio 7'):
         value_names = [r"7.1"]
