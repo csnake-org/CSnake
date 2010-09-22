@@ -1301,13 +1301,9 @@ class CSnakeGUIApp(wx.App):
         self.context.FindCompiler()
         # find visual studio if needed
         if self.context.GetCompilername().startswith('Visual Studio'):
-            idePath = None
-            try:
-                idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
-            except Exception:
-                self.logger.info("Could not find appropriate Visual Studio.")
+            idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
             # mention it to the user
-            if idePath != None and idePath != self.context.GetIdePath():
+            if idePath and idePath != self.context.GetIdePath():
                 message = "CSnake found the corresponding Visual Studio in the registry. Use it?"
                 dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
                 if dlg.ShowModal() == wx.ID_YES:
