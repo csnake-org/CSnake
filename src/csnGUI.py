@@ -558,10 +558,10 @@ class CSnakeGUIApp(wx.App):
         if sys.platform == 'win32' and \
             self.context.GetCompilername().find("Visual Studio") != -1 and \
             not os.path.isfile(idePath):
-            try:
-                idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
+            idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
+            if idePath:
                 foundIde = True
-            except WindowsError:
+            else:
                 self.logger.info("Could not find default Visual Studio.")
         # mention it to the user
         if foundCmake or foundPython or foundIde:
