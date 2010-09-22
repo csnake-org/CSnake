@@ -1303,14 +1303,16 @@ class CSnakeGUIApp(wx.App):
         if self.context.GetCompilername().startswith('Visual Studio'):
             idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())
             # mention it to the user
-            if idePath and idePath != self.context.GetIdePath():
-                message = "CSnake found the corresponding Visual Studio in the registry. Use it?"
-                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
-                if dlg.ShowModal() == wx.ID_YES:
-                    self.context.SetIdePath(idePath)
+            if idePath:
+                if idePath != self.context.GetIdePath():
+                    message = "CSnake found the corresponding Visual Studio in the registry. Use it?"
+                    dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+                    if dlg.ShowModal() == wx.ID_YES:
+                        self.context.SetIdePath(idePath)
             else:
                 message = "CSnake could not find the corresponding Visual Studio in the registry."
                 wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_WARNING).ShowModal()
+                self.context.SetIdePath("")
             
         # update the GUI
         self.UpdateGUI()
