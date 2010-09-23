@@ -33,7 +33,6 @@ class Walker:
                 # got a filename
                 fullname = os.path.join(self.directory, file)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
-                    #print "Adding %s\n" % file
                     self.stack.append(fullname)
                 for pattern in self.patterns:
                     if fnmatch.fnmatch(file, pattern):

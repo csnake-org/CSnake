@@ -43,14 +43,11 @@ def CopyFolder(fromFolder, toFolder, excludedFolderList = None):
         target = NormalizePath(toFolder + "/" + RemovePrefixFromPath(file, fromFolder))
         if os.path.isdir(file):
             if not os.path.exists(target):
-                #print "makedirs %s\n" % newFolder
                 os.makedirs(target)
         else:
             targetFolder = os.path.dirname(target)
             if not os.path.exists(targetFolder):
-                #print "mkdirs %s\n" % targetFolder
                 os.makedirs(targetFolder)
-            #print "Copy %s to %s\n" % (file, target)
             shutil.copy(file, target)
             
 def IsRunningOnWindows():
