@@ -9,7 +9,6 @@ import csnVisualStudio2005
 import csnVisualStudio2008
 from csnListener import ChangeEvent
 import os.path
-import logging
 
 latestFileFormatVersion = 2.1
 
@@ -186,10 +185,6 @@ class Context(object):
         # listeners
         self.__listeners = []
         
-        # logging init
-        self.__logger = logging.getLogger("CSnake")
-
-        
     # Getter and Setters ================
     
     def GetData(self):
@@ -294,17 +289,22 @@ class Context(object):
         self.__compilermap[compiler.GetName()] = compiler
     
     def LoadCompilerName(self, parser):
+        activateOutput = False
         # temporary workaround to support old versions of the context file
         compilerfieldnames = ["compilername", "compiler"]
         for compilerfieldname in compilerfieldnames:
             try:
-                self.__logger.debug("Trying with \"%s\"" % compilerfieldname)
+                if activateOutput:
+                    print "Try with \"%s\"" % compilerfieldname
                 self.__data._SetCompilername(parser.get("CSnake", compilerfieldname))
-                self.__logger.debug("Worked")
+                if activateOutput:
+                    print "Worked"
                 return
             except:
-                self.__logger.error("Reading field \"%s\" failed!" % compilerfieldname)
-        self.__logger.debug("Stop trying and keep default value")
+                activateOutput = True
+                print "Reading field \"%s\" failed!" % compilerfieldname
+        if activateOutput:
+            print "Stop trying and keep default value"
     
     def Load(self, filename):
         try:
@@ -335,7 +335,7 @@ class Context(object):
             if parser.has_option(section, basicField) and hasattr(self.__data, field):
                 setattr(self.__data, field, parser.get(section, basicField))
             else:
-                self.__logger.error("missing basicField: '%s'" % basicField)
+                print "missing basicField: '%s'" % basicField
 
     def __LoadRootFolders(self, parser):
         section = "RootFolders"
@@ -592,7 +592,7 @@ class Context(object):
     def SetField(self, field, value):
         # Check it the field exists
         if not hasattr(self.__data, field):
-            self.__logger.error("SetField with wrong field.")
+            print "SetField with wrong field."
             return False
         # Set the field value if different from the current one
         if getattr(self.__data, field) != value:
@@ -616,7 +616,7 @@ class Context(object):
         try:
             self.__listeners.remove(listener)
         except ValueError:
-            self.__logger.error("Error removing listener from context.")
+            print "Error removing listener from context."
 
 def Load(filename):
     """ Shortcut method to avoid creation and calling Load. """
