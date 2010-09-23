@@ -466,9 +466,7 @@
               <object class="wxBoxSizer">
                 <orient>wxVERTICAL</orient>
                 <object class="sizeritem">
-                  <option>0</option>
                   <flag>wxEXPAND</flag>
-                  <border>0</border>
                   <object class="wxBoxSizer">
                     <orient>wxVERTICAL</orient>
                     <object class="sizeritem">
@@ -479,41 +477,47 @@
                         <orient>wxHORIZONTAL</orient>
                         <label>Compiler</label>
                         <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <orient>wxHORIZONTAL</orient>
+                            <object class="sizeritem">
+                              <option>1</option>
+                              <flag>wxEXPAND</flag>
+                              <border>0</border>
+                              <object class="wxComboBox" name="cmbCompiler">
+                                <style>wxCB_READONLY</style>
+                                <value></value>
+                                <content/>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <option>0</option>
+                              <flag>wxEXPAND|wxRIGHT|wxTOP|wxLEFT</flag>
+                              <border>5</border>
+                              <object class="wxStaticText" name="lblBuildType">
+                                <label>Build Type</label>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <option>1</option>
+                              <flag>wxEXPAND</flag>
+                              <border>0</border>
+                              <object class="wxComboBox" name="cmbBuildType">
+                                <style>wxCB_READONLY</style>
+                                <value></value>
+                                <content/>
+                              </object>
+                            </object>
+                          </object>
                           <option>1</option>
-                          <flag>wxEXPAND</flag>
-                          <border>0</border>
-                          <object class="wxComboBox" name="cmbCompiler">
-                            <style>wxCB_READONLY</style>
-                            <value></value>
-                            <content/>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <option>0</option>
-                          <flag>wxEXPAND|wxRIGHT|wxTOP|wxLEFT</flag>
-                          <border>5</border>
-                          <object class="wxStaticText" name="lblBuildType">
-                            <label>Build Type</label>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <option>1</option>
-                          <flag>wxEXPAND</flag>
-                          <border>0</border>
-                          <object class="wxComboBox" name="cmbBuildType">
-                            <style>wxCB_READONLY</style>
-                            <value></value>
-                            <content/>
-                          </object>
+                          <flag>wxALL|wxEXPAND</flag>
+                          <border>2</border>
                         </object>
                       </object>
                     </object>
                   </object>
                 </object>
                 <object class="sizeritem">
-                  <option>0</option>
                   <flag>wxEXPAND</flag>
-                  <border>0</border>
                   <object class="wxBoxSizer">
                     <orient>wxVERTICAL</orient>
                     <object class="sizeritem">
@@ -524,15 +528,10 @@
                         <orient>wxVERTICAL</orient>
                         <label>Settings</label>
                         <object class="sizeritem">
-                          <option>0</option>
-                          <flag>wxEXPAND</flag>
-                          <border>0</border>
+                          <flag>wxALL|wxEXPAND</flag>
                           <object class="wxBoxSizer">
                             <orient>wxHORIZONTAL</orient>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxStaticText" name="lblPathToCmake">
                                 <size>150,-1</size>
                                 <label>Path to CMake</label>
@@ -540,33 +539,24 @@
                             </object>
                             <object class="sizeritem">
                               <option>1</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxTextCtrl" name="txtCMakePath">
                                 <value></value>
                               </object>
                             </object>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxButton" name="btnSetCMakePath">
                                 <label>...</label>
                                 <default>0</default>
                               </object>
                             </object>
                           </object>
+                          <border>2</border>
                         </object>
                         <object class="sizeritem">
-                          <option>0</option>
-                          <flag>wxEXPAND</flag>
-                          <border>0</border>
+                          <flag>wxALL|wxEXPAND</flag>
                           <object class="wxBoxSizer">
                             <orient>wxHORIZONTAL</orient>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxStaticText" name="lblPathToPython">
                                 <label>Path to Python</label>
                                 <size>150,-1</size>
@@ -574,33 +564,24 @@
                             </object>
                             <object class="sizeritem">
                               <option>1</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxTextCtrl" name="txtPythonPath">
                                 <value></value>
                               </object>
                             </object>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxButton" name="btnSetPythonPath">
                                 <label>...</label>
                                 <default>0</default>
                               </object>
                             </object>
                           </object>
+                          <border>2</border>
                         </object>
                         <object class="sizeritem">
-                          <option>0</option>
-                          <flag>wxEXPAND</flag>
-                          <border>0</border>
+                          <flag>wxALL|wxEXPAND</flag>
                           <object class="wxBoxSizer">
                             <orient>wxHORIZONTAL</orient>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxStaticText" name="lblPathToPython">
                                 <label>Path to Visual Studio</label>
                                 <size>150,-1</size>
@@ -608,31 +589,31 @@
                             </object>
                             <object class="sizeritem">
                               <option>1</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxTextCtrl" name="txtVisualStudioPath">
                                 <value></value>
                               </object>
                             </object>
                             <object class="sizeritem">
-                              <option>0</option>
-                              <flag></flag>
-                              <border>0</border>
                               <object class="wxButton" name="btnSetVisualStudioPath">
                                 <label>...</label>
                                 <default>0</default>
                               </object>
                             </object>
                           </object>
+                          <border>2</border>
                         </object>
                         <object class="sizeritem">
-                          <option>0</option>
-                          <flag></flag>
-                          <border>0</border>
-                          <object class="wxCheckBox" name="chkAskToLaunchVisualStudio">
-                            <label>Ask to launch VisualStudio</label>
-                            <checked>0</checked>
+                          <object class="wxBoxSizer">
+                            <orient>wxHORIZONTAL</orient>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="chkAskToLaunchVisualStudio">
+                                <label>Ask to launch VisualStudio</label>
+                                <checked>0</checked>
+                              </object>
+                            </object>
                           </object>
+                          <flag>wxALL|wxEXPAND</flag>
+                          <border>2</border>
                         </object>
                       </object>
                     </object>
