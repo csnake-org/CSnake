@@ -11,6 +11,7 @@ from csnUtilityTests import csnUtilityTests
 from csnContextConverterTests import csnContextConverterTests
 from aboutTests import AboutTests
 from csnInstallTests import csnInstallTests
+from csnCilabTests import csnCilabTests
 
 class AllTests:
     def __init__(self, outputFileName):
@@ -26,11 +27,12 @@ class AllTests:
         csnContextConverterSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextConverterTests)
         aboutSuite = unittest.TestLoader().loadTestsFromTestCase(AboutTests)
         installSuite = unittest.TestLoader().loadTestsFromTestCase(csnInstallTests)
+        cilabSuite = unittest.TestLoader().loadTestsFromTestCase(csnCilabTests)
         # main suite
         self.__suite = unittest.TestSuite([
              buildSuite, uiSuite, csnProjectSuite, 
              csnUtilitySuite, csnContextConverterSuite,
-             aboutSuite, installSuite])
+             aboutSuite, installSuite, cilabSuite])
         # output file name
         self.__outputFileName = outputFileName
         
