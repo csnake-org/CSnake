@@ -5,7 +5,7 @@
     <size>760,450</size>
     <title>CSnake GUI</title>
     <object class="wxMenuBar" name="frmCSnakeGUI_menubar">
-      <object class="wxMenu" name="m_menu1">
+      <object class="wxMenu" name="m_menuFile">
         <label>File</label>
         <object class="wxMenuItem" name="mnuContextOpen">
           <label>Open...\tCTRL-O</label>
@@ -60,7 +60,7 @@
                       <option>0</option>
                       <flag>wxRIGHT|wxEXPAND</flag>
                       <border>5</border>
-                      <object class="wxStaticText" name="lbCSnakeFile">
+                      <object class="wxStaticText" name="lblCSnakeFile">
                         <size>120,15</size>
                         <label>CSnake File\n</label>
                       </object>
@@ -95,7 +95,7 @@
                       <option>0</option>
                       <flag>wxRIGHT|wxEXPAND</flag>
                       <border>5</border>
-                      <object class="wxStaticText" name="labelInstance">
+                      <object class="wxStaticText" name="lblInstance">
                         <size>120,-1</size>
                         <label>Instance</label>
                       </object>
@@ -130,7 +130,7 @@
                       <option>0</option>
                       <flag>wxRIGHT|wxEXPAND</flag>
                       <border>5</border>
-                      <object class="wxStaticText" name="label_1_copy">
+                      <object class="wxStaticText" name="lblBuildFolder">
                         <size>120,15</size>
                         <label>Build Folder\n</label>
                       </object>
@@ -165,7 +165,7 @@
                       <option>0</option>
                       <flag>wxRIGHT|wxEXPAND</flag>
                       <border>5</border>
-                      <object class="wxStaticText" name="label_1">
+                      <object class="wxStaticText" name="lblRootFolder">
                         <size>120,-1</size>
                         <label>Root Folders </label>
                       </object>
@@ -174,7 +174,7 @@
                       <option>1</option>
                       <flag>wxFIXED_MINSIZE|wxEXPAND</flag>
                       <border>0</border>
-                      <object class="wxListBox" name="lbRootFolders">
+                      <object class="wxListBox" name="lbxRootFolders">
                         <style>wxLB_SINGLE</style>
                         <content/>
                       </object>
@@ -235,7 +235,7 @@
                             <option>0</option>
                             <flag>wxRIGHT|wxEXPAND</flag>
                             <border>5</border>
-                            <object class="wxStaticText" name="label_1_copy_copy">
+                            <object class="wxStaticText" name="lblThirdPartySrcAndBuildFolders">
                               <size>120, 15</size>
                               <label>Third Party Folders</label>
                             </object>
@@ -244,7 +244,7 @@
                             <option>1</option>
                             <flag>wxEXPAND|wxFIXED_MINSIZE</flag>
                             <border>5</border>
-                            <object class="wxGrid" name="lbThirdPartySrcAndBuildFolders">
+                            <object class="wxGrid" name="gridThirdPartySrcAndBuildFolders">
                               <content/>
                             </object>
                           </object>
@@ -315,7 +315,7 @@
                               <option>0</option>
                               <flag>wxRIGHT|wxEXPAND</flag>
                               <border>5</border>
-                              <object class="wxStaticText" name="label_2_copy">
+                              <object class="wxStaticText" name="lblKDevelopProjectFolder">
                                 <size>120, 15</size>
                                 <label>KDevelop Project Folder\n\n</label>
                               </object>
@@ -367,9 +367,9 @@
                       <option>0</option>
                       <flag>wxRIGHT|wxEXPAND</flag>
                       <border>5</border>
-                      <object class="wxStaticText" name="label_2">
+                      <object class="wxStaticText" name="lblInstallFolder">
                         <size>120,15</size>
-                        <label>Install Folder\n</label>
+                        <label>Install Folder</label>
                       </object>
                     </object>
                     <object class="sizeritem">

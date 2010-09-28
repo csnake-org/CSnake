@@ -296,10 +296,10 @@ class CSnakeGUIApp(wx.App):
         self.binder.AddComboBox("cmbInstance", valueListFunctor = self.GetInstanceComboBoxItems, buddyClass = "context", buddyField = "_ContextData__instance")
         self.binder.AddDropDownList("cmbCompiler", valueListFunctor = self.GetCompilerComboBoxItems, buddyClass = "context", buddyField = "_ContextData__compilername")
         self.binder.AddDropDownList("cmbBuildType", valueListFunctor = self.GetBuildTypeComboBoxItems, buddyClass = "context", buddyField = "_ContextData__configurationName")
-        self.binder.AddListBox("lbRootFolders", buddyClass = "context", buddyField = "_ContextData__rootFolders", isFilename = True)
+        self.binder.AddListBox("lbxRootFolders", buddyClass = "context", buddyField = "_ContextData__rootFolders", isFilename = True)
         self.binder.AddCheckBox("chkAskToLaunchVisualStudio", buddyClass = "options", buddyField = "_Options__askToLaunchIDE")
         
-        self.binder.AddGrid("lbThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_ContextData__thirdPartySrcAndBuildFolders", isFilename = True)
+        self.binder.AddGrid("gridThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_ContextData__thirdPartySrcAndBuildFolders", isFilename = True)
 
         self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
@@ -343,9 +343,9 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnNoteBookPageChanged, id=xrc.XRCID("noteBook"))
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelectCompiler, id=xrc.XRCID("cmbCompiler"))
         
-        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnRootFoldersDClick, id=xrc.XRCID("lbRootFolders"))
-        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyFoldersDClick, id=xrc.XRCID("lbThirdPartyFolders"))
-        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyBuildFoldersDClick, id=xrc.XRCID("lbThirdPartyBuildFolders"))
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnRootFoldersDClick, id=xrc.XRCID("lbxRootFolders"))
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyFoldersDClick, id=xrc.XRCID("lbxThirdPartyFolders"))
+        self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyBuildFoldersDClick, id=xrc.XRCID("lbxThirdPartyBuildFolders"))
         
         if sys.platform != 'win32':
             #xrc.XRCCTRL(self.panelContext, "btnConfigureALL").Disable()
@@ -354,35 +354,35 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelOptions, "txtVisualStudioPath").Disable()
             xrc.XRCCTRL(self.panelOptions, "chkAskToLaunchVisualStudio").Disable()
         
-        self.lbThirdPartySrcAndBuildFolders.CreateGrid(0,2)
-        self.lbThirdPartySrcAndBuildFolders.SetColLabelValue(0, "Source folder")
-        self.lbThirdPartySrcAndBuildFolders.SetColLabelValue(1, "Build folder")
-        self.lbThirdPartySrcAndBuildFolders.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.OnThirdPartySrcAndBuildFolderSelectCell)
+        self.gridThirdPartySrcAndBuildFolders.CreateGrid(0,2)
+        self.gridThirdPartySrcAndBuildFolders.SetColLabelValue(0, "Source folder")
+        self.gridThirdPartySrcAndBuildFolders.SetColLabelValue(1, "Build folder")
+        self.gridThirdPartySrcAndBuildFolders.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.OnThirdPartySrcAndBuildFolderSelectCell)
         
         attrThirdPartySrc = wx.grid.GridCellAttr()
         attrThirdPartySrc.SetEditor(PathPickerEditor(folderName = "Third Party Source Folder"))
         attrThirdPartyBin = wx.grid.GridCellAttr()
         attrThirdPartyBin.SetEditor(PathPickerEditor(folderName = "Third Party Build Folder"))
-        self.lbThirdPartySrcAndBuildFolders.SetColAttr(0, attrThirdPartySrc)
-        self.lbThirdPartySrcAndBuildFolders.SetColAttr(1, attrThirdPartyBin)
-        self.lbThirdPartySrcAndBuildFolders.ForceRefresh()
+        self.gridThirdPartySrcAndBuildFolders.SetColAttr(0, attrThirdPartySrc)
+        self.gridThirdPartySrcAndBuildFolders.SetColAttr(1, attrThirdPartyBin)
+        self.gridThirdPartySrcAndBuildFolders.ForceRefresh()
 
     def OnRootFoldersDClick(self, event):
-        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbxRootFolders"""
         if csnUtility.IsRunningOnWindows():
-            folder_path = csnUtility.UnNormalizePath( self.lbRootFolders.GetStringSelection() )
+            folder_path = csnUtility.UnNormalizePath( self.lbxRootFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
 
     def OnThirdPartyFoldersDClick(self, event):
-        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbxThirdPartyFolders"""
         if csnUtility.IsRunningOnWindows():
-            folder_path = csnUtility.UnNormalizePath( self.lbThirdPartyFolders.GetStringSelection() )
+            folder_path = csnUtility.UnNormalizePath( self.lbxThirdPartyFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
 
     def OnThirdPartyBuildFoldersDClick(self, event):
-        """Handles the wx.EVT_LISTBOX_DCLICK event for lbRootFolders"""
+        """Handles the wx.EVT_LISTBOX_DCLICK event for lbxThirdPartyBuildFolders"""
         if csnUtility.IsRunningOnWindows():
-            folder_path = csnUtility.UnNormalizePath( self.lbThirdPartyBuildFolders.GetStringSelection() )
+            folder_path = csnUtility.UnNormalizePath( self.lbxThirdPartyBuildFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
         
     def OnNoteBookPageChanged(self, event):
@@ -879,7 +879,7 @@ class CSnakeGUIApp(wx.App):
         """
         Remove folder where CSnake files must be searched from context rootFolders.
         """
-        folder = self.lbRootFolders.GetStringSelection()
+        folder = self.lbxRootFolders.GetStringSelection()
         # check if correct selection
         if folder == None or folder == "":
             message = "Please select at least one folder."
@@ -902,21 +902,21 @@ class CSnakeGUIApp(wx.App):
             self.context.AddThirdPartySrcAndBuildFolder(folder, "")
 
     def OnThirdPartySrcAndBuildFolderSelectCell(self, event):
-        self.lbThirdPartySrcAndBuildFolders.SelectRow(event.GetRow())
+        self.gridThirdPartySrcAndBuildFolders.SelectRow(event.GetRow())
         event.Skip()
     
     def ThirdPartySrcAndBuildFolderGetSelectedRows(self):
-        selection = self.lbThirdPartySrcAndBuildFolders.GetSelectedRows()
+        selection = self.gridThirdPartySrcAndBuildFolders.GetSelectedRows()
         return selection
 
     def OnAddThirdPartySrcAndBuildFolder(self, event):
         self.context.AddThirdPartySrcAndBuildFolder("", "")
         self.UpdateGUI()
-        self.lbThirdPartySrcAndBuildFolders.ClearSelection()
-        newRow = self.lbThirdPartySrcAndBuildFolders.GetTable().GetNumberRows()-1
-        self.lbThirdPartySrcAndBuildFolders.SelectRow(newRow, True)
-        self.lbThirdPartySrcAndBuildFolders.SetGridCursor(newRow, 0)
-        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        self.gridThirdPartySrcAndBuildFolders.ClearSelection()
+        newRow = self.gridThirdPartySrcAndBuildFolders.GetTable().GetNumberRows()-1
+        self.gridThirdPartySrcAndBuildFolders.SelectRow(newRow, True)
+        self.gridThirdPartySrcAndBuildFolders.SetGridCursor(newRow, 0)
+        self.gridThirdPartySrcAndBuildFolders.SetFocus()
 
     def OnRemoveThirdPartySrcAndBuildFolder(self, event):
         selection = self.ThirdPartySrcAndBuildFolderGetSelectedRows()
@@ -930,18 +930,18 @@ class CSnakeGUIApp(wx.App):
                     if selection[j] > selection[i]:
                         selection[j] = selection[j] - 1
             self.UpdateGUI()
-            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+            self.gridThirdPartySrcAndBuildFolders.ClearSelection()
             
-        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        self.gridThirdPartySrcAndBuildFolders.SetFocus()
         
     def OnConfigureThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
             message = "Please select at least one row. You can click on the row index to select a row."
             wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
-            self.lbThirdPartySrcAndBuildFolders.SetFocus()
+            self.gridThirdPartySrcAndBuildFolders.SetFocus()
         else:
-            self.lbThirdPartySrcAndBuildFolders.SetFocus()
+            self.gridThirdPartySrcAndBuildFolders.SetFocus()
             for row in selection:
                 source = self.context.GetThirdPartyFolder(row)
                 build = self.context.GetThirdPartyBuildFolderByIndex(row)
@@ -963,15 +963,15 @@ class CSnakeGUIApp(wx.App):
                     boundaryIndex = index + 1
                     newSelection.append(index)
             self.UpdateGUI()
-            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+            self.gridThirdPartySrcAndBuildFolders.ClearSelection()
             first = True
             for row in newSelection:
-                self.lbThirdPartySrcAndBuildFolders.SelectRow(row, True)
+                self.gridThirdPartySrcAndBuildFolders.SelectRow(row, True)
                 if first:
-                    self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
+                    self.gridThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
                     first = False
                     
-        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        self.gridThirdPartySrcAndBuildFolders.SetFocus()
         
     def OnMoveDownThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows(), reverse = True)
@@ -989,15 +989,15 @@ class CSnakeGUIApp(wx.App):
                     boundaryIndex = index - 1
                     newSelection.append(index)
             self.UpdateGUI()
-            self.lbThirdPartySrcAndBuildFolders.ClearSelection()
+            self.gridThirdPartySrcAndBuildFolders.ClearSelection()
             first = True
             for row in newSelection:
-                self.lbThirdPartySrcAndBuildFolders.SelectRow(row, True)
+                self.gridThirdPartySrcAndBuildFolders.SelectRow(row, True)
                 if first:
-                    self.lbThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
+                    self.gridThirdPartySrcAndBuildFolders.SetGridCursor(row, 0)
                     first = False
             
-        self.lbThirdPartySrcAndBuildFolders.SetFocus()
+        self.gridThirdPartySrcAndBuildFolders.SetFocus()
         
     def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
