@@ -1216,6 +1216,10 @@ class CSnakeGUIApp(wx.App):
             self.UpdateGUI()
 
     def SelectProjects(self, forceRefresh = False):
+        # do not go further if there is no csnake file or instance
+        if not self.context.GetCsnakeFile() or not self.context.GetInstance():
+            return
+        
         # get list of ALL the categories on which the user can filter
         self.SetStatus("Retrieving projects...")
         
