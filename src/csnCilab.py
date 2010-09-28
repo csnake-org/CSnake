@@ -231,3 +231,36 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
             self.AddIncludeFolders([includeFolder])
             for extension in csnUtility.GetIncludeFileExtensions():
                 self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
+
+def CreateDefaultHeader(project):
+    CreateHeader(project, "CISTIBToolkit.h", None)
+
+def CreateHeader(project, filename, variables):
+    """ 
+    Creates a header file with input vars for the given project.
+    @param project The calling project.
+    @param filename The header file name (will be created in the projects' build folder)
+    @param variables Dictionary of variable/value pairs.  
+     """
+    path = "%s/%s" % (project.GetBuildFolder(), filename)
+    headerFile = open(path, 'w')
+    headerFile.write("#ifndef %s\n" % filename.upper())
+    headerFile.write("#define %s\n" % filename.upper())
+    headerFile.write("\n")
+    headerFile.write("// Automatically generated file, do not edit.\n")
+    headerFile.write("\n")
+    
+    # default variables
+    headerFile.write("#define CISTIB_TOOLKIT_FOLDER \"%s/..\"\n" % project.GetSourceRootFolder())
+    headerFile.write("#define CISTIB_TOOLKIT_BUILD_FOLDER \"%s\"\n" % project.GetBuildFolder())
+    
+    # input variables
+    if variables:
+        headerFile.write("\n")
+        for (key, value) in variables:
+            headerFile.write("#define %s \"%s\"\n" % (key, value))
+    
+    headerFile.write("\n")
+    headerFile.write("#endif // %s\n" % filename.upper())
+    headerFile.close()
+
