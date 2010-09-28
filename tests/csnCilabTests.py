@@ -32,17 +32,17 @@ class csnCilabTests(unittest.TestCase):
 
         # check that the headerFile is there
         path = "%s/%s" % (project.GetBuildFolder(), "CISTIBToolkit.h")
+        headerFile = open(path, 'r')
         foundSrcPath = False
         foundBuildPath = False
-        with open(path, 'r') as headerFile:
-            for line in headerFile:
-                if not foundSrcPath:
-                    if line.find("CISTIB_TOOLKIT_FOLDER") != -1:
-                        foundSrcPath = True 
-                if not foundBuildPath:
-                    if line.find("CISTIB_TOOLKIT_BUILD_FOLDER") != -1:
-                        foundBuildPath = True
-        
+        for line in headerFile:
+            if not foundSrcPath:
+                if line.find("CISTIB_TOOLKIT_FOLDER") != -1:
+                    foundSrcPath = True 
+            if not foundBuildPath:
+                if line.find("CISTIB_TOOLKIT_BUILD_FOLDER") != -1:
+                    foundBuildPath = True
+        headerFile.close()
         # test
         self.assertTrue(foundSrcPath)
         self.assertTrue(foundBuildPath)
