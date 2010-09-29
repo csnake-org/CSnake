@@ -193,8 +193,9 @@ class Handler:
         """
         # determine list of folders to search for pyc files
         folderList = []
-        folderList.extend(self.context.GetThirdPartyFolders())
-        folderList.extend(self.context.GetRootFolders())
+        if self.context:
+            folderList.extend(self.context.GetThirdPartyFolders())
+            folderList.extend(self.context.GetRootFolders())
 
         # remove pyc files
         while len(folderList) > 0:
