@@ -64,11 +64,14 @@ class Handler:
     
     def LoadContext(self, filename):
         self.contextFilename = filename
-        self.context = csnContext.Load(filename)
-        self.context.AddListener(self.changeListener)
-        csnProject.globalCurrentContext = self.context
+        self.SetContext(csnContext.Load(filename))
         return self.context
         
+    def SetContext(self, context):
+        self.context = context
+        self.context.AddListener(self.changeListener)
+        csnProject.globalCurrentContext = self.context
+   
     def __GetProjectInstance(self):
         """ Instantiates and returns the _instance in _projectPath. """
         self.DeletePycFiles()

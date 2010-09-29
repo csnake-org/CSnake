@@ -1064,6 +1064,7 @@ class CSnakeGUIApp(wx.App):
         """
         # Default context
         context = csnContext.Context()
+        self.handler.SetContext(context)
         loaded = False
         # Check if the file name is specified
         if contextFilename != None and contextFilename != "":
