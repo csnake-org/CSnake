@@ -205,30 +205,6 @@ class PathPickerEditor(wx.grid.PyGridCellEditor):
     def Clone(self):
         return PathPickerEditor(folderName = self.folderName)
 
-class RedirectText:
-    """
-    Used to redirect messages to stdout to the text control in CSnakeGUIFrame.
-    """
-    def __init__(self,aWxTextCtrl):
-        self.out=aWxTextCtrl
-        # logging init
-        self.logger = logging.getLogger("CSnake")
-
-    def write(self,string):
-        self.out.WriteText(string)
-        self.out.Update()
-        # also write it to the log file
-        log = True
-        # remove spurious end-of-line
-        if (len(string) == 1 and string[len(string)-1:] == '\n'):
-            log = False
-        # remove possible end-of-line
-        if (len(string) > 0 and string[len(string)-1] == '\n'):
-            string = string[0:len(string)-1]
-        # print
-        if log:
-            self.logger.info(string)
-
 class SelectFolderCallback:
     """ 
     Lets the user choose a path, then calls 'callback' to set the path value in the domain layer, 
@@ -422,8 +398,6 @@ class CSnakeGUIApp(wx.App):
         """
         self.LoadIcon()
         self.ParseCommandLine()
-        if not self.commandLineOptions.console:
-            self.RedirectStdOut()
         self.PrintWelcomeMessages()
         self.CreateHandler()
         self.InitializeOptions()
@@ -443,18 +417,18 @@ class CSnakeGUIApp(wx.App):
         """ Shows a warning message to the user. ToDo: do some more fancy than print."""
         if message is None:
             return
-        print message + "\n"
+        self.textLog.WriteText(message + "\n")
         
     def Error(self, message):
         """ Shows an error message to the user. ToDo: do some more fancy than print."""
         if message is None:
             return
-        print message + "\n"
+        self.textLog.WriteText(message + "\n")
 
     def Report(self, message):
         if message is None:
             return
-        print message + "\n"
+        self.textLog.WriteText(message + "\n")
 
     def SetStatus(self, message):
         self.statusBar.SetFields([message])
@@ -518,12 +492,6 @@ class CSnakeGUIApp(wx.App):
         if not os.path.isdir(self.csnakeFolder):
             self.csnakeFolder = self.thisFolder
     
-    def RedirectStdOut(self):
-        # redirect std out
-        self.redir=RedirectText(self.textLog)
-        sys.stdout=self.redir
-        sys.stderr=self.redir
-
     def PrintWelcomeMessages(self):
         self.Report("CSnake version = %s" % csnBuild.version)
 
