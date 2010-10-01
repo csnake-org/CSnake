@@ -85,19 +85,22 @@ class Manager:
         
         # progress
         progress = 0
-        # increment = 100 / 2 modes + n1 projects + n2 locations + n3 files
-        increment = 100
+        # increment = 100 / (n1 modes * n2 projects * n3 locations * n4 files)
+        # n are taken from the first valid array values
+        increment = 100.0
         
         for mode in ("Debug", "Release"):
-            increment /= 2
+            n1 = 2
             outputFolder = self.project.context.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
             for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
-                increment /= len(self.project.GetProjects(_recursive = 1, _includeSelf = True))
+                n2 = len(self.project.GetProjects(_recursive = 1, _includeSelf = True))
                 for location in project.installManager.filesToInstall[mode].keys():
-                    increment /= len(project.installManager.filesToInstall[mode].keys())
+                    n3 = len(project.installManager.filesToInstall[mode].keys())
                     for file in project.installManager.filesToInstall[mode][location]:
-                        increment /= len(project.installManager.filesToInstall[mode][location])
+                        n4 = len(project.installManager.filesToInstall[mode][location])
+                        if increment == 100:
+                            increment /= n1*n2*n3*n4
                         absLocation = "%s/%s" % (outputFolder, location)
                         assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
