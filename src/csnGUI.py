@@ -811,7 +811,7 @@ class CSnakeGUIApp(wx.App):
         
         if dlg.ShowModal() == wx.ID_OK:
             self.context.SetCsnakeFile(dlg.GetPath())
-            self.UpdateListOfTargets()
+            self.OnUpdateListOfTargets(event)
             self.UpdateGUI()
 
     def SetBuildFolder(self, folder):
