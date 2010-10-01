@@ -4,6 +4,7 @@ import glob
 import shutil
 import GlobDirectoryWalker
 import logging
+from csnListener import ProgressEvent
 
 class Manager:
     def __init__(self, _project):
@@ -11,6 +12,10 @@ class Manager:
         self.filesToInstall = dict()
         self.filesToInstall["Debug"] = dict()
         self.filesToInstall["Release"] = dict()
+        # listeners
+        self.__listeners = []
+        # logger
+        self.__logger = logging.getLogger("CSnake")
 
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         if not self.project.context.GetCompiler().IsForPlatform(_WIN32, _NOT_WIN32):
@@ -78,23 +83,50 @@ class Manager:
         logger = logging.getLogger("CSnake")
         logger.info( "Install Binaries To Build Folder." )
         
+        # progress
+        progress = 0
+        # increment = 100 / 2 modes + n1 projects + n2 locations + n3 files
+        increment = 100
+        
         for mode in ("Debug", "Release"):
+            increment /= 2
             outputFolder = self.project.context.GetOutputFolder(mode)
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
             for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
+                increment /= len(self.project.GetProjects(_recursive = 1, _includeSelf = True))
                 for location in project.installManager.filesToInstall[mode].keys():
+                    increment /= len(project.installManager.filesToInstall[mode].keys())
                     for file in project.installManager.filesToInstall[mode][location]:
+                        increment /= len(project.installManager.filesToInstall[mode][location])
                         absLocation = "%s/%s" % (outputFolder, location)
                         assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
                         os.path.exists(absLocation) or os.makedirs(absLocation)
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
                         fileResult = (0 != shutil.copy(file, absLocation))
                         result = fileResult and result
+                        self.__NotifyListeners(ProgressEvent(self,progress))
+                        progress += increment
                         if not fileResult:
                             message = "Failed to copy %s to %s\n" % (file, absLocation)
                             logger.error( message )
-                            print message
                         else:
                             logger.debug( "copied %s to %s" % (file, absLocation) )
                             
         return result
+
+    def __NotifyListeners(self, event):
+        """ Notify the attached listeners about the event. """
+        for listener in self.__listeners:
+            listener.Update(event)
+        
+    def AddListener(self, listener):
+        """ Attach a listener to this class. """
+        if not listener in self.__listeners:
+            self.__listeners.append(listener)
+
+    def RemoveListener(self, listener):
+        """ Remove a listener from this class. """
+        try:
+            self.__listeners.remove(listener)
+        except ValueError:
+            print "Error removing listener from context."

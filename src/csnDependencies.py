@@ -59,10 +59,10 @@ class Manager:
                 namelist = []
                 foundStart = False
                 for project in _stack:
-                     if project == self.project:
-                         foundStart = True
-                     if foundStart:
-                         namelist.append(project.name)
+                    if project == self.project:
+                        foundStart = True
+                    if foundStart:
+                        namelist.append(project.name)
                 namelist.append(self.project.name)
                 print "Cyclic dependency: %s" % namelist
             return OrderedSet.OrderedSet()

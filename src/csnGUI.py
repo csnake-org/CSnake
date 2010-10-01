@@ -7,7 +7,7 @@ import csnGUIHandler
 import csnGUIOptions
 import csnContext
 import csnContextConverter
-from csnListener import ChangeListener
+from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
 import os.path
@@ -26,6 +26,7 @@ import csnCilab #@UnusedImport
 import webbrowser
 import logging
 import copy
+import re
 
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
@@ -228,7 +229,7 @@ class SelectFolderCallback:
 class CSnakeGUIApp(wx.App):
     def OnInit(self):
         # logging init
-        self.logger = logging.getLogger("CSnake")
+        self.__logger = logging.getLogger("CSnake")
 
         self.destroyed = False
         self.listOfPossibleTargets = []
@@ -239,7 +240,9 @@ class CSnakeGUIApp(wx.App):
         self.contextFilename = None
         self.contextModified = False
         self.changeListener = ChangeListener(self)
-        
+        self.progressListener = ProgressListener(self)
+        self.__cancelAction = False
+       
         self.projectNeedUpdate = False
         
         wx.InitAllImageHandlers()
@@ -392,6 +395,12 @@ class CSnakeGUIApp(wx.App):
         #self.frame.GetSizer().Remove(xrc.XRCID(self.frame, "boxInstallFolder"))
         self.frame.Show()
         
+        # progress bar
+        self.__progressBar = None
+        # progress start and range (in case of multiple actions)
+        self.__progressStart = 0
+        self.__progressRange = 100
+        
     def Initialize(self):
         """
         Initializes the application.
@@ -497,6 +506,7 @@ class CSnakeGUIApp(wx.App):
 
     def CreateHandler(self):
         self.handler = csnGUIHandler.Handler()
+        self.handler.AddListener(self.progressListener)
         self.context = None
     
     def InitializePaths(self):
@@ -514,14 +524,14 @@ class CSnakeGUIApp(wx.App):
             if cmakePath:
                 foundCmake = True
             else:
-                self.logger.info("Could not find default CMake.")
+                self.__logger.info("Could not find default CMake.")
         # find python if not specified
         if not os.path.isfile(pythonPath):
             pythonPath = csnUtility.GetDefaultPythonPath()
             if pythonPath:
                 foundPython = True
             else:
-                self.logger.info("Could not find default Python.")
+                self.__logger.info("Could not find default Python.")
         # find visual studio if not specified
         if sys.platform == 'win32' and \
             self.context.GetCompilername().find("Visual Studio") != -1 and \
@@ -530,7 +540,7 @@ class CSnakeGUIApp(wx.App):
             if idePath:
                 foundIde = True
             else:
-                self.logger.info("Could not find default Visual Studio.")
+                self.__logger.info("Could not find default Visual Studio.")
         # mention it to the user
         if foundCmake or foundPython or foundIde:
             message = "CSnake found paths to settings in the registry. Use them?"
@@ -606,10 +616,6 @@ class CSnakeGUIApp(wx.App):
         except:
             self.Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
     
-    def OnCreateCMakeFilesAndRunCMake(self, event):
-        self.action = self.ActionCreateCMakeFilesAndRunCMake
-        self.DoAction()
-        
     def OnDetectRootFolders(self, event):
         if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
             additionalRootFolders = self.handler.FindAdditionalRootFolders()
@@ -636,135 +642,149 @@ class CSnakeGUIApp(wx.App):
                 self.context.ExtendRootFolders(additionalRootFolders)
                 self.UpdateGUI()
             
+    def OnConfigureALL(self, event):
+        actions = [
+           self.ActionConfigureThirdPartyFolder,
+           self.ActionBuildThirdParty,
+           self.ActionCreateCMakeFilesAndRunCMake,
+           self.ActionBuildProject,
+           self.ActionInstallFilesToBuildFolder]
+        self.DoActions(actions)
+        
+    def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+        # check situation
+        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            return
+        # run the action
+        if self.DoActions([self.ActionUpdateListOfTargets]):
+            self.UpdateGUI()
+            self.EnableConfigBar(True)
+
+    def OnCreateCMakeFilesAndRunCMake(self, event):
+        # check situation
+        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            return
+        # run the action
+        if self.DoActions([self.ActionCreateCMakeFilesAndRunCMake]):
+            xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").SetFocus()
+            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
+        
+    def OnConfigureThirdPartyFolder(self, event):
+        # check situation
+        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            return
+        # run the action
+        if self.DoActions([self.ActionConfigureThirdPartyFolder]):
+            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
+            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
+        
+    def OnInstallFilesToBuildFolder(self, event):
+        # check situation
+        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
+            message = "Please provide a valid CSnake file."
+            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            return
+        # run the action
+        if self.DoActions([self.ActionInstallFilesToBuildFolder]):
+            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").SetFocus()
+            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
+
+    def ActionUpdateListOfTargets(self):
+        self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
+        if len(self.listOfPossibleTargets):
+            self.context.SetInstance(self.listOfPossibleTargets[0])
+            return True
+        return False
+
     def ActionCreateCMakeFilesAndRunCMake(self):
         self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _callback = self):
-            xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
             if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+            return True
+        return False
         
-    def OnConfigureALL(self, event):
-        # progress bar
-        progressBar = wx.ProgressDialog("Configure All", "Configure and Compile All.", parent=self.frame, style=wx.PD_CAN_ABORT|wx.PD_AUTO_HIDE|wx.PD_APP_MODAL)
-        
-        # progress
-        cont, skip = progressBar.Update(0, "Configuring Third Parties...")
-        if not cont:
-            progressBar.Destroy()
-            return
-        # configure thrid parties
-        self.action = self.ActionConfigureThirdPartyFolder
-        self.DoAction()
-        
-        #progress
-        cont, skip = progressBar.Update(25, "Compiling Third Parties...")
-        if not cont:
-            progressBar.Destroy()
-            return
-        increment = 25 / self.context.GetNumberOfThirdPartyFolders()
-        progress = 25
-        # compile third parties
-        for solutionPath in self.handler.GetThirdPartySolutionPaths():
-            cont, skip = progressBar.Update(progress)
-            if not cont:
-                progressBar.Destroy()
-                return
-            if not self.handler.Build(solutionPath, self.context.GetConfigurationName(), True):
-                progressBar.Destroy()
-                self.Error("Failed building %s" % solutionPath)
-                return
-            progress = progress + increment
-        
-        # progress
-        cont, skip = progressBar.Update(50, "Configuring Project...")
-        if not cont:
-            progressBar.Destroy()
-            return
-        # configure project
-        self.action = self.ActionCreateCMakeFilesAndRunCMake
-        self.DoAction()
-        
-        # progress
-        cont, skip = progressBar.Update(75, "Compiling Project...")
-        if not cont:
-            progressBar.Destroy()
-            return
-        # compile project
-        if not self.handler.Build(self.handler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False):
-            progressBar.Destroy()
-            self.Error("Failed building %s" % solutionPath)
-            return
-        
-        # progress
-        cont, skip = progressBar.Update(95, "Installing Files...")
-        if not cont:
-            progressBar.Destroy()
-            return
-        # install files
-        self.action = self.ActionInstallFilesToBuildFolder
-        self.DoAction()
-        
-        # end
-        progressBar.Update(100, "Done.")
-
     def ActionOnlyCreateCMakeFiles(self):
         self.FindAdditionalRootFolders(True)
         if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
             if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
-        
-    def OnConfigureThirdPartyFolder(self, event):
-        self.action = self.ActionConfigureThirdPartyFolder
-        self.DoAction()
+            return True
+        return False
         
     def ActionConfigureThirdPartyFolder(self):
-        try:
-            if self.handler.ConfigureThirdPartyFolders():
-                xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
-                xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
-
-                if self.options.GetAskToLaunchIDE():
-                    self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
-                
-        except Exception, message:
-            dlg = wx.MessageDialog(self.frame, "%s" % message, 'Error', style = wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
+        if self.handler.ConfigureThirdPartyFolders():
+            if self.options.GetAskToLaunchIDE():
+                self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
+            return True
+        return False
         
-    def OnInstallFilesToBuildFolder(self, event):
-        self.action = self.ActionInstallFilesToBuildFolder
-        self.DoAction()
-
+    def ActionBuildThirdParty(self):
+        return self.handler.BuildMultiple(self.handler.GetThirdPartySolutionPaths(), self.context.GetConfigurationName(), True)
+        
+    def ActionBuildProject(self):
+        return self.handler.Build(self.handler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False)
         
     def ActionInstallFilesToBuildFolder(self):
         self.FindAdditionalRootFolders(True)
-        if not self.handler.InstallBinariesToBuildFolder():
-            self.Error("Error while installing files.")
-        else:
-            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
-
+        return self.handler.InstallBinariesToBuildFolder()
             
-    def DoAction(self):
+    def DoActions(self, actions):
         self.SetStatus("Processing...")
-        self.textLog.Clear()
         self.textLog.Refresh()
         self.textLog.Update()
         
         self.Report("--- Working, patience please... ---")
         startTime = time.time()
         
-        try:
-            self.action()
-        except AssertionError, e:
-            self.Error(str(e))
+        # progress bar
+        # The initial message seems to fix the window size...
+        self.__progressBar = wx.ProgressDialog("Running...", "Running actions from a list of actions.", parent=self.frame, style=wx.PD_CAN_ABORT|wx.PD_AUTO_HIDE|wx.PD_APP_MODAL)
+
+        res = True
+        nActions = len(actions)
+        count = 0
+        range = 100 / nActions
+        for action in actions:
+            # progress
+            start = count*range
+            self.SetProgressStartAndRange(start, range)
+            # remove the first 'Action'
+            actionStr = action.__name__[6:]
+            # split at upper case
+            actionStr = re.sub(r'([a-z]*)([A-Z])',r'\1 \2',actionStr)
+            self.ProgressChanged(ProgressEvent(self,start,actionStr))
+            try:
+                res = res and action()
+                count += 1
+            except StandardError, message:
+                self.Error(str(message))
+                dlg = wx.MessageDialog(self.frame, "%s" % message, 'Error', style = wx.OK | wx.ICON_ERROR)
+                dlg.ShowModal()
+            # check cancel
+            self.ProgressChanged(ProgressEvent(self, range))
+            if self.__HasUserCanceled():
+                self.__ResetUserCancel()
+                self.Report("--- Canceled. ---")
+                break
+            if not res:
+                self.Error("--- Error. ---")
+                break
             
         elapsedTime = time.time() - startTime
         self.Report("--- Done (%d seconds) ---" % elapsedTime)
         self.UpdateGUI()
         self.SetStatus("")
         
-        #self.Restart()
+        self.ProgressChanged(ProgressEvent(self,100,"Done"))
+        
+        return res
         
     def Restart(self):
         """ Restart the application """
@@ -1054,7 +1074,8 @@ class CSnakeGUIApp(wx.App):
         # Save the context
         self.SetContext(context)
         # Save a copy
-        self.originalContextData = copy.deepcopy(self.context.GetData())
+        data = self.context.GetData()
+        self.originalContextData = copy.deepcopy( data )
         
         if loaded:
             # set frame title
@@ -1071,22 +1092,6 @@ class CSnakeGUIApp(wx.App):
         self.context.AddListener(self.changeListener)
         self.binder.SetBuddyClass("context", self.context)
         
-    def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
-        self.UpdateListOfTargets()
-
-    def UpdateListOfTargets(self):
-        if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
-            self.SetStatus("Retrieving list of targets")
-            self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
-            if len(self.listOfPossibleTargets):
-                self.context.SetInstance(self.listOfPossibleTargets[0])
-            self.UpdateGUI()
-            self.EnableConfigBar(True)
-            self.SetStatus("")
-        else:
-            message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
-    
     def GetInstanceComboBoxItems(self):
         return self.listOfPossibleTargets
             
@@ -1159,6 +1164,9 @@ class CSnakeGUIApp(wx.App):
         context = self.context.GetRecentlyUsed()[event.GetSelection()]
         # update context properties
         self.context.SetCsnakeFile(context.GetCsnakeFile())
+        # do an update of the targets
+        self.OnUpdateListOfTargets(event)
+        # force the instance
         self.context.SetInstance(context.GetInstance())
         # update frame
         self.UpdateGUI()
@@ -1299,6 +1307,25 @@ class CSnakeGUIApp(wx.App):
     def StateChanged(self, event):
         """ Called by the ChangeListener. """
         self.SetContextModified(True)
+        
+    def SetProgressStartAndRange(self, start, range):
+        self.__progressRange = range
+        self.__progressStart = start
+
+    def ProgressChanged(self, event):
+        """ Called by the ProgressListener. """
+        if self.__progressBar and self.__progressBar.IsShown():
+            progress = self.__progressStart + event.GetProgress()*self.__progressRange/100
+            cont, skip = self.__progressBar.Update(progress, event.GetMessage())
+            if not cont:
+                self.__progressBar.Destroy()
+                self.__cancelAction = True
+        
+    def __HasUserCanceled(self):
+        return self.__cancelAction
+    
+    def __ResetUserCancel(self):
+        self.__cancelAction = False 
 
 if __name__ == "__main__":
     csnUtility.InitialiseLogging()

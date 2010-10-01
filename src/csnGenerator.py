@@ -6,6 +6,7 @@ import sys
 import types
 import OrderedSet
 from about import About
+from csnListener import ProgressListener
 
 # General documentation
 #
@@ -105,7 +106,8 @@ class Generator:
     """
 
     def __init__(self):
-        pass
+        # listeners
+        self.__listeners = []
         
     def Generate(self, _targetProject, _generatedList = None):
         """
@@ -191,6 +193,8 @@ class Generator:
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
         """
+        progressListener = ProgressListener(self)
+        _targetProject.installManager.AddListener(progressListener)
         return _targetProject.installManager.InstallBinariesToBuildFolder()
                         
     def PostProcess(self, _targetProject):
@@ -202,3 +206,25 @@ class Generator:
             if not (postprocessor is None):
                 _targetProject.context.GetCompiler().GetPostProcessor().Do(project)
 
+    def ProgressChanged(self, event):
+        """ Called by the ProgressListener. """
+        if event.IsProgress():
+            # propagate...
+            self.__NotifyListeners(event)
+
+    def __NotifyListeners(self, event):
+        """ Notify the attached listeners about the event. """
+        for listener in self.__listeners:
+            listener.Update(event)
+        
+    def AddListener(self, listener):
+        """ Attach a listener to this class. """
+        if not listener in self.__listeners:
+            self.__listeners.append(listener)
+
+    def RemoveListener(self, listener):
+        """ Remove a listener from this class. """
+        try:
+            self.__listeners.remove(listener)
+        except ValueError:
+            print "Error removing listener from context."

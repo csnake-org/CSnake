@@ -10,7 +10,7 @@ import string
 import os
 import subprocess
 import sys
-from csnListener import ChangeListener
+from csnListener import ChangeListener, ProgressEvent, ProgressListener
 import logging
 
 class RootNotFound(IOError):
@@ -54,6 +54,8 @@ class Handler:
         self.context = None
         self.contextFilename = None
         self.generator = csnGenerator.Generator()
+        self.progressListener = ProgressListener(self)
+        self.generator.AddListener(self.progressListener)
         # contains the last result of calling __GetProjectInstance
         self.cachedProjectInstance = None
         # logger
@@ -61,6 +63,11 @@ class Handler:
         # change flags
         self.contextModified = False
         self.changeListener = ChangeListener(self)
+        # listeners
+        self.__listeners = []
+        # progress start and range (in case of multiple actions)
+        self.__progressStart = 0
+        self.__progressRange = 100
     
     def LoadContext(self, filename):
         self.contextFilename = filename
@@ -144,15 +151,18 @@ class Handler:
         some problems with incomplete configurations.
         """
         result = True
-
-        for index in range(0, self.context.GetNumberOfThirdPartyFolders( ) ):
+        nTP = self.context.GetNumberOfThirdPartyFolders()
+        
+        # set the progress range
+        self.__progressRange = 100 / nTP
+        # Configure third parties
+        for index in range(0, nTP ):
             result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), _nrOfTimes = _nrOfTimes, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
-            if not result:
-                print "Configuration failed.\n"   
-                if not self.CMakeIsFound():
-                    print "Please specify correct path to CMake (current is %s)" % self.context.GetCmakePath() 
-                    return False
-            
+            self.__progressStart += self.__progressRange
+        # reset the progress range
+        self.__progressStart = 0
+        self.__progressRange = 100
+        
         return result
 
     def ConfigureThirdPartyFolder(self, source, build, allBuildFolders, _nrOfTimes = 2):
@@ -181,11 +191,10 @@ class Handler:
         for _ in range(0, _nrOfTimes):
             result = result and 0 == subprocess.Popen(argList, cwd = build).wait() 
 
-        if not result:
-            print "Configuration failed.\n"   
-            if not self.CMakeIsFound():
-                print "Please specify correct path to CMake (current is %s)" % self.context.GetCmakePath() 
-                return False
+        #proc = subprocess.Popen(argList, cwd = build, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #for line in proc.stdout.readlines():
+        #    progress
+        #    self.__NotifyListeners(ProgressEvent(self,progress))
 
         return result
 
@@ -305,8 +314,29 @@ class Handler:
             folder = csnUtility.NormalizePath(os.path.split(folder)[0])
         return result
 
-    def Build(self, solutionName, buildMode, isThirdParty):
+    def BuildMultiple(self, solutionNames, buildMode, isThirdParty):
+        # result flag
         result = True
+        # set the progress range
+        self.__progressRange = 100 / len(solutionNames)
+        # build the solutions
+        for solutionName in solutionNames:
+            result = result and self.Build(solutionName, buildMode, isThirdParty)
+            self.__progressStart += self.__progressRange
+        # reset the progress start and range
+        self.__progressStart = 0
+        self.__progressRange = 100
+        
+        return result
+
+    def Build(self, solutionName, buildMode, isThirdParty):
+        # result flag
+        result = True
+
+        # first progress
+        progress = self.__progressStart
+        self.__NotifyListeners(ProgressEvent(self,progress))
+
         # visual studio case
         if self.context.GetCompilername().startswith("Visual Studio"):
             # check solution exists
@@ -341,15 +371,58 @@ class Handler:
             buildPath = head
             if isThirdParty:
                 buildPath = "%s/%s" % (buildPath, buildMode)
-            sub = subprocess.Popen(argList, cwd=buildPath)
+            # compile process
+            sub = subprocess.Popen(argList, cwd=buildPath, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # catch lines to indicate progress
+            errline = sub.stderr.readline()
+            if errline:
+                sys.stderr.write(errline)
+            while True:
+                line = sub.stdout.readline()
+                sys.stdout.write(line)
+                str = line[1:4].strip()
+                if str.isdigit():
+                    progress = self.__progressStart + int(str)*self.__progressRange/100
+                    self.__NotifyListeners(ProgressEvent(self, progress))
+                    if int(str) >= 100: 
+                        break
+            # final result
             result = result and sub.wait() == 0
             
+        # last progress
+        self.__NotifyListeners(ProgressEvent(self,self.__progressRange))
+
         return result
 
     def SetContextModified(self, modified):
         self.contextModified = modified
 
     def StateChanged(self, event):
+        """ Called by the ChangeListener. """
         if event.IsChange():
             self.SetContextModified(True)
+            
+    def ProgressChanged(self, event):
+        """ Called by the ProgressListener. """
+        if event.IsProgress():
+            # propagate...
+            self.__NotifyListeners(event)
+
+    def __NotifyListeners(self, event):
+        """ Notify the attached listeners about the event. """
+        for listener in self.__listeners:
+            listener.Update(event)
+        
+    def AddListener(self, listener):
+        """ Attach a listener to this class. """
+        if not listener in self.__listeners:
+            self.__listeners.append(listener)
+
+    def RemoveListener(self, listener):
+        """ Remove a listener from this class. """
+        try:
+            self.__listeners.remove(listener)
+        except ValueError:
+            print "Error removing listener from context."
+
     
