@@ -170,8 +170,8 @@ class GenericProject(object):
         for command in self.customCommands:
             command(self)
             
-    def AddTests(self, _listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
-        self.testsManager.AddTests(_listOfTests, _cxxTestProject, _enableWxWidgets, _dependencies)
+    def AddTests(self, _listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None, _pch = ""):
+        self.testsManager.AddTests(_listOfTests, _cxxTestProject, _enableWxWidgets, _dependencies, _pch)
 
     def GetTestProject(self):
         return self.testsManager.testProject
@@ -203,6 +203,16 @@ class GenericProject(object):
 
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
+
+def SetCMakeInsertBeforeTarget(self, _file):
+    # Empty function
+    return
+
+def SetCMakeInsertAfterTarget(self, _file):
+    # Empty function
+    return
+
+
 
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function

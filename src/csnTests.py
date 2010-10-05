@@ -32,7 +32,7 @@ class Manager:
         self.testRunnerSourceFile = "%s/%s.cpp" % (self.testProject.GetBuildFolder(), self.testProject.name)
         self.testProject.AddSources([self.testRunnerSourceFile], _checkExists = 0, _forceAdd = 1)
         
-    def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None):
+    def AddTests(self, listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None, _pch = ""):
         """
         _cxxTestProject -- May be the cxxTest project instance, or a function returning a cxxTest project instance.
         listOfTests -- List of source files containing cxx test classes.
@@ -69,3 +69,6 @@ class Manager:
         
         if not _dependencies is None:
             self.testProject.AddProjects(_dependencies)
+
+        if( _pch != "" ):
+            self.testProject.SetPrecompiledHeader(_pch)
