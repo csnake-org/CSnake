@@ -236,7 +236,11 @@ class Handler:
         (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
         (name, _) = os.path.splitext(name)
         projectModule = csnUtility.LoadModule(projectFolder, name)   
+        nMembers = len(inspect.getmembers(projectModule))
+        count = 0
         for member in inspect.getmembers(projectModule):
+            self.__NotifyListeners(ProgressEvent(self, count*100/nMembers))
+            count += 1
             (targetName, target) = (member[0], member[1])
             if isinstance(target, csnProject.GenericProject):
                 result.append(targetName)
