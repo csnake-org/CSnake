@@ -308,7 +308,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_BUTTON, self.OnSelectCSnakeFile, id=xrc.XRCID("btnSelectCSnakeFile"))
         self.frame.Bind(wx.EVT_BUTTON, self.OnSetVisualStudioPath, id=xrc.XRCID("btnSetVisualStudioPath"))
 
-        self.frame.Bind(wx.EVT_BUTTON, self.RefreshProjects, id=xrc.XRCID("btnForceRefreshProjects"))
+        self.frame.Bind(wx.EVT_BUTTON, self.OnRefreshProjects, id=xrc.XRCID("btnForceRefreshProjects"))
         self.btnForceRefreshProjects = xrc.XRCCTRL(self.frame, "btnForceRefreshProjects")
         
         self.frame.Bind(wx.EVT_BUTTON, self.OnRemoveRootFolder, id=xrc.XRCID("btnRemoveRootFolder"))
@@ -366,7 +366,7 @@ class CSnakeGUIApp(wx.App):
         
     def OnNoteBookPageChanged(self, event):
         if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
-            self.SelectProjects(self.DoProjectNeedUpdate())
+            self.DoActions([self.ActionSelectProjects])
         
     def EnableConfigBar(self, enable):
         if enable:
@@ -1193,13 +1193,15 @@ class CSnakeGUIApp(wx.App):
             self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUI()
 
-    def SelectProjects(self, forceRefresh = False):
+    def ActionSelectProjects(self):
         # do not go further if there is no csnake file or instance
         if not self.context.GetCsnakeFile() or not self.context.GetInstance():
             return
         
         # get list of ALL the categories on which the user can filter
         self.SetStatus("Retrieving projects...")
+        
+        forceRefresh = self.DoProjectNeedUpdate()
         
         if len(self.projectCheckBoxes.keys()) == 0 or forceRefresh:
             # empty the filter to get the full list
@@ -1215,7 +1217,7 @@ class CSnakeGUIApp(wx.App):
                 message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
                 wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR).ShowModal()
                 self.SetStatus("")
-                return
+                return False
             # restore saved filter
             self.context.SetFilter(previousFilter)
             
@@ -1250,6 +1252,7 @@ class CSnakeGUIApp(wx.App):
             self.projectNeedUpdate = False
             
         self.SetStatus("")
+        return True
         
     def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
         """ 
@@ -1299,8 +1302,9 @@ class CSnakeGUIApp(wx.App):
         # update the GUI
         self.UpdateGUI()
         
-    def RefreshProjects(self, event):
-        self.SelectProjects(True)
+    def OnRefreshProjects(self, event):
+        self.projectNeedUpdate = True
+        self.DoActions([self.ActionSelectProjects])
 
     def GetLastThirdPartyFolder(self):
         return self.context.GetLastThirdPartyFolder( )
