@@ -740,7 +740,7 @@ class CSnakeGUIApp(wx.App):
         self.textLog.Refresh()
         self.textLog.Update()
         
-        self.Report("--- Working, patience please... ---")
+        self.Report("Working, patience please...")
         startTime = time.time()
         
         # progress bar
@@ -758,7 +758,8 @@ class CSnakeGUIApp(wx.App):
             # remove the first 'Action'
             actionStr = action.__name__[6:]
             # split at upper case
-            actionStr = re.sub(r'([a-z]*)([A-Z])',r'\1 \2',actionStr)
+            actionStr = re.sub(r'([a-z]*)([A-Z])',r'\1 \2',actionStr).strip()
+            self.Report("Action: %s." % actionStr)
             self.ProgressChanged(ProgressEvent(self,start,actionStr))
             try:
                 res = res and action()
@@ -771,14 +772,14 @@ class CSnakeGUIApp(wx.App):
             self.ProgressChanged(ProgressEvent(self, range))
             if self.__HasUserCanceled():
                 self.__ResetUserCancel()
-                self.Report("--- Canceled. ---")
+                self.Report("Stopped: user canceled.")
                 break
             if not res:
-                self.Error("--- Error. ---")
+                self.Error("Stopped: Error in process.")
                 break
             
         elapsedTime = time.time() - startTime
-        self.Report("--- Done (%d seconds) ---" % elapsedTime)
+        self.Report("Done (%d seconds)." % elapsedTime)
         self.UpdateGUI()
         self.SetStatus("")
         
