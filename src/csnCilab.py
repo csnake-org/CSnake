@@ -65,7 +65,7 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
 
 def CommandLinePlugin(_name, _holderProject = None):
     _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
-
+    
     project = csnProject.Project(_name, "dll", _sourceRootFolder)
     project.AddDefinitions(["-Dmain=ModuleEntryPoint"], _private = 1 ) 
     project.installSubFolder = "commandLinePlugins"
@@ -75,16 +75,22 @@ def CommandLinePlugin(_name, _holderProject = None):
     project.applicationsProject = csnBuild.Project(project.name + "Applications", "container", _sourceRootFolder)
     project.applicationsProject.AddProjects([project])
     project.AddProjects([project.applicationsProject], _dependency = 0)
-
+    
     applicationName = "%sApp" % _name
     projectApp = csnBuild.Project(applicationName, "executable", _sourceRootFolder)
-    thirdParty = csnProject.globalCurrentContext.GetThirdPartyFolder( 0 )
-    wrapperSourceFile = u'%s/SLICER/Slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
+    wrapperSourceFile = None
+    for thirdParty in csnProject.globalCurrentContext.GetThirdPartyFolders():
+        currentWrapperSourceFile = u'%s/SLICER/Slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
+        if os.path.isfile(currentWrapperSourceFile):
+            wrapperSourceFile = currentWrapperSourceFile
+    if wrapperSourceFile is None:
+        raise Exception("Could not find Slicer in your thirdParty folders!")
+    
     projectApp.AddSources( [wrapperSourceFile]  )
     projectApp.AddProjects( [project] )
     projectApp.installSubFolder = "commandLinePlugins"
     project.applicationsProject.AddProjects( [projectApp] )
-
+    
     if not _holderProject is None:
         _holderProject.AddProjects( [project] )
     
