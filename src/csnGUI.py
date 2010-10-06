@@ -704,7 +704,7 @@ class CSnakeGUIApp(wx.App):
 
     def ActionCreateCMakeFilesAndRunCMake(self):
         self.FindAdditionalRootFolders(True)
-        if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _callback = self):
+        if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
             if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
             return True

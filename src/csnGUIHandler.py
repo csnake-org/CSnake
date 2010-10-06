@@ -103,7 +103,7 @@ class Handler:
         
         return self.cachedProjectInstance
     
-    def ConfigureProjectToBuildFolder(self, _alsoRunCMake, _callback = None):
+    def ConfigureProjectToBuildFolder(self, _alsoRunCMake):
         """ 
         Configures the project to the build folder.
         """
@@ -112,24 +112,35 @@ class Handler:
         instance.installManager.ResolvePathsOfFilesToInstall()
         self.generator.Generate(instance)
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
-            
+        
         if _alsoRunCMake:
+            nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True))
+            count = 0
+            
             argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
-            process = subprocess.Popen(argList, cwd = instance.GetBuildFolder()) # , stdout=subProcess.PIPE, stderr=subProcess.PIPE
-            while process.poll() is None:
-                (outdata, errdata) = process.communicate()
-                if _callback:
-                    _callback.Report(outdata)
-                    _callback.Error(errdata)
-            if process.poll() == 0:
+            process = subprocess.Popen(argList, cwd = instance.GetBuildFolder(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            errline = process.stderr.readline()
+            if errline:
+                sys.stderr.write(errline)
+            while True:
+                line = process.stdout.readline()
+                if not line:
+                    break
+                sys.stdout.write(line)
+                count += 1
+                if line.find("-- Processing") != -1:
+                    progress = count*100/nProjects
+                    count += 1
+                    self.__NotifyListeners(ProgressEvent(self,progress))
+
+            if process.wait() == 0:
                 self.generator.PostProcess(instance)
                 return True
             else:
-                if _callback:
-                    _callback.Warn("Configuration failed.")
-                    if not self.CMakeIsFound():
-                        _callback.Warn("CMake not found at %s" % self.context.GetCmakePath())
                 return False
+        
+        return True
             
     def InstallBinariesToBuildFolder(self):
         return self.generator.InstallBinariesToBuildFolder(self.__GetProjectInstance())
@@ -236,9 +247,10 @@ class Handler:
         (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
         (name, _) = os.path.splitext(name)
         projectModule = csnUtility.LoadModule(projectFolder, name)   
-        nMembers = len(inspect.getmembers(projectModule))
+        members = inspect.getmembers(projectModule)
+        nMembers = len(members)
         count = 0
-        for member in inspect.getmembers(projectModule):
+        for member in members:
             self.__NotifyListeners(ProgressEvent(self, count*100/nMembers))
             count += 1
             (targetName, target) = (member[0], member[1])
