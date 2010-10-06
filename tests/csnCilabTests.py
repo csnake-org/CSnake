@@ -24,7 +24,7 @@ class csnCilabTests(unittest.TestCase):
     def testCreateHeader(self):
         """ testCreateHeader: test the CreateHeader method. """
         project = csnProject.Project("Project", "library")
-        project.AddCustomCommand( csnCilab.CreateDefaultHeader )
+        project.AddCustomCommand( csnCilab.CreateDefaultToolkitHeader )
         
         # generate
         generator = csnBuild.Generator()
