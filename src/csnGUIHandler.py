@@ -131,6 +131,7 @@ class Handler:
                 count += 1
                 if line.find("-- Processing") != -1:
                     progress = count*100/nProjects
+                    if progress > 100: progress = 100
                     count += 1
                     self.__NotifyListeners(ProgressEvent(self,progress))
 
@@ -401,6 +402,7 @@ class Handler:
                 str = line[1:4].strip()
                 if str.isdigit():
                     progress = self.__progressStart + int(str)*self.__progressRange/100
+                    if progress > 100: progress = 100
                     self.__NotifyListeners(ProgressEvent(self, progress))
             # final result
             result = result and sub.wait() == 0
