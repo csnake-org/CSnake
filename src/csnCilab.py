@@ -4,6 +4,7 @@ import csnProject
 import os.path
 import new
 import inspect
+import string
 
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
@@ -232,20 +233,20 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
             for extension in csnUtility.GetIncludeFileExtensions():
                 self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
 
-def CreateDefaultToolkitHeader(project):
-    CreateHeader(project, "CISTIBToolkit.h", None)
-
-def CreateHeader(project, filename, variables):
+def CreateToolkitHeader(project, filename = None, variables = None):
     """ 
     Creates a header file with input vars for the given project.
     @param project The calling project.
-    @param filename The header file name (will be created in the projects' build folder)
+    @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
     @param variables Dictionary of variable/value pairs.  
      """
+    if not filename: 
+        filename = "CISTIBToolkit.h"
     path = "%s/%s" % (project.GetBuildFolder(), filename)
     headerFile = open(path, 'w')
-    headerFile.write("#ifndef %s\n" % filename.upper())
-    headerFile.write("#define %s\n" % filename.upper())
+    guard = string.replace(filename, '.', '_').upper()
+    headerFile.write("#ifndef %s\n" % guard)
+    headerFile.write("#define %s\n" % guard)
     headerFile.write("\n")
     headerFile.write("// Automatically generated file, do not edit.\n")
     headerFile.write("\n")
@@ -261,6 +262,6 @@ def CreateHeader(project, filename, variables):
             headerFile.write("#define %s \"%s\"\n" % (key, value))
     
     headerFile.write("\n")
-    headerFile.write("#endif // %s\n" % filename.upper())
+    headerFile.write("#endif // %s\n" % guard)
     headerFile.close()
 
