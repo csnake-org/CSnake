@@ -383,13 +383,13 @@ class Handler:
                 sys.stderr.write(errline)
             while True:
                 line = sub.stdout.readline()
+                if not line: 
+                    break
                 sys.stdout.write(line)
                 str = line[1:4].strip()
                 if str.isdigit():
                     progress = self.__progressStart + int(str)*self.__progressRange/100
                     self.__NotifyListeners(ProgressEvent(self, progress))
-                    if int(str) >= 100: 
-                        break
             # final result
             result = result and sub.wait() == 0
             
