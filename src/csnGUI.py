@@ -740,7 +740,7 @@ class CSnakeGUIApp(wx.App):
         self.textLog.Refresh()
         self.textLog.Update()
         
-        self.Report("Working, patience please...")
+        self.Report("\nWorking, patience please...")
         startTime = time.time()
         
         # progress bar
