@@ -4,7 +4,6 @@ import csnProject
 import os.path
 import new
 import inspect
-import string
 
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
@@ -250,7 +249,10 @@ def CreateToolkitHeader(project, filename = None, variables = None):
         filename = "CISTIBToolkit.h"
     path = "%s/%s" % (project.GetBuildFolder(), filename)
     headerFile = open(path, 'w')
-    guard = string.replace(filename, '.', '_').upper()
+    # simple '.' to '_' replace, if the method is passed we cannot use the string package.
+    len = len(filename)
+    # should be a header...
+    guard = "%s_H" % filename[0:len-2].upper()
     headerFile.write("#ifndef %s\n" % guard)
     headerFile.write("#define %s\n" % guard)
     headerFile.write("\n")
