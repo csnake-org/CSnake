@@ -232,7 +232,7 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
             for extension in csnUtility.GetIncludeFileExtensions():
                 self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
 
-def CreateDefaultHeader(project):
+def CreateDefaultToolkitHeader(project):
     CreateHeader(project, "CISTIBToolkit.h", None)
 
 def CreateHeader(project, filename, variables):
