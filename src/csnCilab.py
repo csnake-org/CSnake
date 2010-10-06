@@ -250,9 +250,9 @@ def CreateToolkitHeader(project, filename = None, variables = None):
     path = "%s/%s" % (project.GetBuildFolder(), filename)
     headerFile = open(path, 'w')
     # simple '.' to '_' replace, if the method is passed we cannot use the string package.
-    len = len(filename)
+    size = len(filename)
     # should be a header...
-    guard = "%s_H" % filename[0:len-2].upper()
+    guard = "%s_H" % filename[0:size-2].upper()
     headerFile.write("#ifndef %s\n" % guard)
     headerFile.write("#define %s\n" % guard)
     headerFile.write("\n")
