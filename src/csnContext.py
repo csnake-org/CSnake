@@ -611,13 +611,6 @@ class Context(object):
         if not listener in self.__listeners:
             self.__listeners.append(listener)
 
-    def RemoveListener(self, listener):
-        """ Remove a listener from this class. """
-        try:
-            self.__listeners.remove(listener)
-        except ValueError:
-            print "Error removing listener from context."
-
 def Load(filename):
     """ Shortcut method to avoid creation and calling Load. """
     context = None
