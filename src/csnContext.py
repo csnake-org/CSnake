@@ -289,22 +289,17 @@ class Context(object):
         self.__compilermap[compiler.GetName()] = compiler
     
     def LoadCompilerName(self, parser):
-        activateOutput = False
         # temporary workaround to support old versions of the context file
         compilerfieldnames = ["compilername", "compiler"]
         for compilerfieldname in compilerfieldnames:
             try:
-                if activateOutput:
-                    print "Try with \"%s\"" % compilerfieldname
                 self.__data._SetCompilername(parser.get("CSnake", compilerfieldname))
-                if activateOutput:
-                    print "Worked"
-                return
+                return True
             except:
-                activateOutput = True
-                print "Reading field \"%s\" failed!" % compilerfieldname
-        if activateOutput:
-            print "Stop trying and keep default value"
+                # try the next one
+                continue
+        # nothing was found
+        return False
     
     def Load(self, filename):
         try:
@@ -316,15 +311,17 @@ class Context(object):
             self.__LoadThirdPartySrcAndBuildFolders(parser)
             self.__LoadRecentlyUsedCSnakeFiles(parser)
             
+            res = True
+            
             # Temporary workaround to support old versions of the context file;
             # later this line as well as the function "LoadCompilerName" can be removed
-            self.LoadCompilerName(parser)
+            res = res & self.LoadCompilerName(parser)
             
-            self.FindCompiler()
+            res = res & self.FindCompiler()
             
             return 1
         except:
-            return 0
+            return False
         
     def __LoadBasicFields(self, parser):
         section = "CSnake"
@@ -335,7 +332,7 @@ class Context(object):
             if parser.has_option(section, basicField) and hasattr(self.__data, field):
                 setattr(self.__data, field, parser.get(section, basicField))
             else:
-                print "missing basicField: '%s'" % basicField
+                raise AttributeError("Missing basicField: '%s'" % basicField)
 
     def __LoadRootFolders(self, parser):
         section = "RootFolders"
@@ -570,6 +567,8 @@ class Context(object):
                 self.__compiler = self.__compilermap[self.GetCompilername()]
                 self.__compiler.SetConfigurationName(self.GetConfigurationName())
                 self.__data._SetCompilername(self.GetCompiler().GetName())
+                return True
+        return False
     
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
@@ -592,7 +591,6 @@ class Context(object):
     def SetField(self, field, value):
         # Check it the field exists
         if not hasattr(self.__data, field):
-            print "SetField with wrong field."
             return False
         # Set the field value if different from the current one
         if getattr(self.__data, field) != value:
@@ -610,13 +608,6 @@ class Context(object):
         """ Attach a listener to this class. """
         if not listener in self.__listeners:
             self.__listeners.append(listener)
-
-    def RemoveListener(self, listener):
-        """ Remove a listener from this class. """
-        try:
-            self.__listeners.remove(listener)
-        except ValueError:
-            print "Error removing listener from context."
 
 def Load(filename):
     """ Shortcut method to avoid creation and calling Load. """

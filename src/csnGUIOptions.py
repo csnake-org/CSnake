@@ -70,10 +70,3 @@ class Options:
     def AddListener(self, listener):
         if not listener in self.__listeners:
             self.__listeners.append(listener)
-
-    def RemoveListener(self, listener):
-        try:
-            self.__listeners.remove(listener)
-        except ValueError:
-            self.__logger.warn("Error removing listener from options.")
-
