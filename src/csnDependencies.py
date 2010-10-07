@@ -64,7 +64,7 @@ class Manager:
                     if foundStart:
                         namelist.append(project.name)
                 namelist.append(self.project.name)
-                raise DependencyError, "Cyclic use-before relation between %s and %s" % (self.project.name, namelist)
+                print "Cyclic dependency: %s" % namelist
             return OrderedSet.OrderedSet()
         _stack = _stack + [self.project]
             
