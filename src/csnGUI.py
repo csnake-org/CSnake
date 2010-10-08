@@ -1335,7 +1335,7 @@ if __name__ == "__main__":
     csnUtility.InitialiseLogging()
     
     logger = logging.getLogger("CSnake")
-    logger.info("Starting program.")
+    logger.info("\n\nStarting program.")
 
     app = CSnakeGUIApp(0)
     app.MainLoop()
