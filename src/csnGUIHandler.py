@@ -128,12 +128,12 @@ class Handler:
                 if not line:
                     break
                 sys.stdout.write(line)
-                count += 1
-                if line.find("-- Processing") != -1:
+                str = line[0:13].strip()
+                if str == "-- Processing":
                     progress = count*100/nProjects
                     if progress > 100: progress = 100
-                    count += 1
                     self.__NotifyListeners(ProgressEvent(self,progress))
+                    count += 1
 
             if process.wait() == 0:
                 self.generator.PostProcess(instance)
