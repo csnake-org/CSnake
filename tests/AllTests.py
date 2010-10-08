@@ -8,7 +8,8 @@ from csnBuildTests import csnBuildTests
 from csnGUIHandlerTests import csnGUIHandlerTests
 from csnProjectTests import csnProjectTests
 from csnUtilityTests import csnUtilityTests
-from csnContextConverterTests import csnContextConverterTests
+from csnContextTests import csnContextTests
+from csnGUIOptionsTests import csnGUIOptionsTests
 from aboutTests import AboutTests
 from csnInstallTests import csnInstallTests
 from csnCilabTests import csnCilabTests
@@ -24,14 +25,15 @@ class AllTests:
         uiSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIHandlerTests)
         csnProjectSuite = unittest.TestLoader().loadTestsFromTestCase(csnProjectTests)
         csnUtilitySuite = unittest.TestLoader().loadTestsFromTestCase(csnUtilityTests)
-        csnContextConverterSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextConverterTests)
+        csnContextSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextTests)
+        csnGUIOptionsSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIOptionsTests)
         aboutSuite = unittest.TestLoader().loadTestsFromTestCase(AboutTests)
         installSuite = unittest.TestLoader().loadTestsFromTestCase(csnInstallTests)
         cilabSuite = unittest.TestLoader().loadTestsFromTestCase(csnCilabTests)
         # main suite
         self.__suite = unittest.TestSuite([
              buildSuite, uiSuite, csnProjectSuite, 
-             csnUtilitySuite, csnContextConverterSuite,
+             csnUtilitySuite, csnContextSuite, csnGUIOptionsSuite,
              aboutSuite, installSuite, cilabSuite])
         # output file name
         self.__outputFileName = outputFileName

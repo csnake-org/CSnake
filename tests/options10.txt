@@ -1,0 +1,5 @@
+[CSnake]
+version = 1.0
+contextfilename = E:\devel\src\toolkit\module_clean.CSnakeGUI
+asktolaunchide = True
+

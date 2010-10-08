@@ -1,0 +1,19 @@
+[RecentlyUsedCSnakeFiles0]
+instance0 = dcmAPI
+csnakefile0 = E:/devel/src/toolkit/clean/src/cilabModules/DcmAPI/csnDcmAPI.py
+
+[CSnake]
+installfolder = E:/devel/bin/toolkit/clean/install
+filter = BaseLibVTKTests;CILabMacrosTests;RegLibTests
+testrunnertemplate = normalRunner.tpl
+csnakefile = E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py
+prebuiltbinariesfolder = 
+instance = baseLib
+thirdpartyrootfolder = E:/devel/src/toolkit/clean/thirdParty
+thirdpartybinfolder = E:/devel/bin/toolkit/clean/thirdParty
+binfolder = E:/devel/bin/toolkit/clean
+kdevelopprojectfolder = 
+
+[RootFolders]
+rootfolder0 = E:/devel/src/toolkit/clean/src
+

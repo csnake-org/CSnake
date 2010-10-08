@@ -1,0 +1,9 @@
+[CSnake]
+asktolaunchvisualstudio = True
+cmakebuildtype = DebugAndRelease
+pythonpath = C:/Program Files (x86)/Python 2.6/python.exe
+visualstudiopath = D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe
+cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
+currentguisettingsfilename = E:\devel\src\toolkit\module_clean.CSnakeGUI
+compiler = Visual Studio 9 2008 Win64
+
