@@ -2976,7 +2976,7 @@ Windows,ProgramReadme
 <%InstallDir%>/resources/readme.txt
 
 Windows,RequireAdministrator
-Yes
+No
 
 Windows,UseUncompressedBinaries
 No
