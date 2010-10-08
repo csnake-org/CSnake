@@ -1,5 +1,6 @@
 import csnProject
 import OrderedSet
+import logging
 
 class DependencyError(StandardError):
     """ Used when there is a cyclic dependency between CSnake projects. """
@@ -12,6 +13,8 @@ class Manager:
         self.projectsNonRequired = OrderedSet.OrderedSet()
         self.useBefore = []
         self.isTopLevel = False
+        # logger
+        self.__logger = logging.getLogger("CSnake")
         
     def AddProjects(self, _projects, _dependency = True):
         for project in _projects:
@@ -64,7 +67,7 @@ class Manager:
                     if foundStart:
                         namelist.append(project.name)
                 namelist.append(self.project.name)
-                print "Cyclic dependency: %s" % namelist
+                self.__logger.Warn("Cyclic dependency: %s" % namelist)
             return OrderedSet.OrderedSet()
         _stack = _stack + [self.project]
             

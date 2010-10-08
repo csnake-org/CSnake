@@ -21,11 +21,10 @@ class ProjectRelocator:
             prebuiltProjectFolder = "%s/%s" % (_prebuiltProjectsFolder, project.name)
             if os.path.exists(prebuiltProjectFolder):
                 self.__Relocate(project, prebuiltProjectFolder)
-            elif False:
-                print "Not relocating project %s (no folder %s)\n" % (project.name, prebuiltProjectFolder)
+            else:
+                raise IOError("Not relocating project %s (no folder %s)\n" % (project.name, prebuiltProjectFolder))
                 
     def __Relocate(self, _project, _prebuiltProjectFolder):
-        print "Relocating project %s\n" % _project.name
         name = _project.name.replace(".", "_")
         module = csnUtility.LoadModule(_prebuiltProjectFolder, "csnRelocate" + name)
         self.prebuiltProjectFolder = _prebuiltProjectFolder

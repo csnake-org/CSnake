@@ -308,13 +308,3 @@ def InitialiseLogging():
     # logging initialization (should create the log file)
     logging.config.fileConfig(GetRootOfCSnake() + "/resources/logging.conf")
     
-def LogSubprocess(logger, process):
-    """ Add the stdout of a subprocess to the log file. """
-    while 1:
-        line = process.stdout.readline()
-        exitcode = process.poll()
-        if (not line) and (exitcode is not None):
-            break
-        line = line[:-2]
-        logger.info("%s", line)
-    

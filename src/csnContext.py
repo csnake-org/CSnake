@@ -761,8 +761,7 @@ class Context(object):
     def SetField(self, field, value):
         # Check it the field exists
         if not hasattr(self.__data, field):
-            print "SetField with wrong field."
-            return False
+            raise AttributeError("SetField with wrong field.")
         # Set the field value if different from the current one
         if getattr(self.__data, field) != value:
             setattr(self.__data, field, value)
