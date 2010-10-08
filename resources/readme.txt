@@ -2,13 +2,24 @@
 CSnake readme
 --------------
 
-Version: 2.4beta
+Version: 2.4
 
 Change log
 ----------
 
-v2.4beta
- * ...
+v2.4.0
+ * Bug: Visual studio express error
+ * Bug: Combo box not working
+ * Bug: Csnake configuration gives error
+ * Gimias command line plugin
+ * Pch for tests
+ * Add tests for context and option file reading
+ * Automatic options search
+ * Instance list update
+ * Context file name extension
+ * File save behaviour
+ * Application file location
+ * Remove direct calls to print
 
 v2.3.3
  * Fix install files after configure third parties 
