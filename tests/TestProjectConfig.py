@@ -6,8 +6,7 @@ class TestProjectConfig():
     def __init__(self, name, pType, buildMode, 
             rootDirs, binDir, 
             tpSrcDirs, tpBinDirs, 
-            csnakeFile,
-            newSyntax = False):
+            csnakeFile):
         """ Constructor.
         Warning: all paths should be relative to the CSnake/tests/data folder.
         name: the name of the project.
@@ -17,8 +16,6 @@ class TestProjectConfig():
         binDir: the binary dir.
         tpSrcDirs: the third party source dirs (array).
         tpBinDirs: the third party binary dirs (array).
-        newSyntax: use old syntax for source folders (in this case only the first value of the input
-          arrays will be used).
         """
         # set at input
         self.__name = name
@@ -29,7 +26,6 @@ class TestProjectConfig():
         self.__tpSrcDirs = tpSrcDirs
         self.__tpBinDirs = tpBinDirs
         self.__csnakeFile = csnakeFile
-        self.__newSyntax = newSyntax
         # internals
         self.__isVisualStudioConfig = None
 
@@ -58,9 +54,6 @@ class TestProjectConfig():
     
     def getCsnakeFile(self):
         return self.__csnakeFile
-    
-    def isNewSyntax(self):
-        return self.__newSyntax
     
     # Methods
     
@@ -128,16 +121,12 @@ class TestProjectConfig():
         
         # modify: root folder
         oldValue = cf.get(rootFoldersSectionName, "rootfolder0")
-        if self.__newSyntax:
-            count = 0
-            for srcDir in self.__rootDirs:
-                newValue = oldValue + "/" + srcDir
-                option = "rootfolder%s" % count
-                cf.set(rootFoldersSectionName, option, newValue )
-                count += 1
-        else:
-            newValue = oldValue + "/" + self.__rootDirs[0]
-            cf.set(rootFoldersSectionName, "rootfolder0", newValue )
+        count = 0
+        for srcDir in self.__rootDirs:
+            newValue = oldValue + "/" + srcDir
+            option = "rootfolder%s" % count
+            cf.set(rootFoldersSectionName, option, newValue )
+            count += 1
         
         # modify: bin folder
         oldValue = cf.get(csnakeSectionName, "buildfolder")
@@ -145,38 +134,22 @@ class TestProjectConfig():
         cf.set(csnakeSectionName, "buildfolder", newValue )
         
         # modify: third party src folder
-        oldValue = cf.get(csnakeSectionName, "thirdpartyrootfolder")
-        if self.__newSyntax:
-            # remove old option (TODO: not yet working)
-            #cf.remove_option(csnakeSectionName, "thirdpartyrootfolder")
-            # add new one
-            cf.add_section(tpSourceSectionName)
-            count = 0
-            for srcDir in self.__tpSrcDirs:
-                newValue = oldValue + "/" + srcDir
-                option = "thirdpartyfolder%s" % count
-                cf.set(tpSourceSectionName, option, newValue )
-                count += 1
-        else:
-            newValue = oldValue + "/" + self.__tpSrcDirs[0]
-            cf.set(csnakeSectionName, "thirdpartyrootfolder", newValue )
+        oldValue = cf.get(tpSourceSectionName, "thirdpartyrootfolder0")
+        count = 0
+        for srcDir in self.__tpSrcDirs:
+            newValue = oldValue + "/" + srcDir
+            option = "thirdpartyfolder%s" % count
+            cf.set(tpSourceSectionName, option, newValue )
+            count += 1
         
         # modify: third party bin folder
-        oldValue = cf.get(csnakeSectionName, "thirdpartybuildfolder")
-        if self.__newSyntax:
-            # remove old syntax (TODO: not yet working)
-            #cf.remove_option(csnakeSectionName, "thirdpartybuildfolder")
-            # add new one
-            cf.add_section(tpBinSectionName)
-            count = 0
-            for srcDir in self.__tpBinDirs:
-                newValue = oldValue + "/" + srcDir
-                option = "thirdpartybuildfolder%s" % count
-                cf.set(tpBinSectionName, option, newValue )
-                count += 1
-        else:
-            newValue = oldValue + "/" + self.__tpBinDirs[0]
-            cf.set(csnakeSectionName, "thirdpartybuildfolder", newValue )
+        oldValue = cf.get(tpBinSectionName, "thirdpartybuildfolder0")
+        count = 0
+        for srcDir in self.__tpBinDirs:
+            newValue = oldValue + "/" + srcDir
+            option = "thirdpartybuildfolder%s" % count
+            cf.set(tpBinSectionName, option, newValue )
+            count += 1
         
         # save the new context file
         contextNewFile = open(self.getContextFileName(), 'w')

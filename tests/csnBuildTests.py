@@ -54,22 +54,13 @@ class csnBuildTests(unittest.TestCase):
         if( config.isVisualStudioConfig() == True ):
             self.build( config )
         
-    def testDummyExeBuildNewSyntax(self):
-        """ testDummyExeBuild: test configuring and building the DummyExe project
-        with new syntax. """
-        config = TestProjectConfig("DummyExe", "exe", "Release", 
-                                   ["src"], "build",
-                                   ["thirdParty"], ["build/thirdParty"],
-                                   "src/DummyExe/csnDummyExe.py", True)
-        self.build( config )
-        
     def testDummyExeBuildMultiple(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with new syntax. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
                                    ["src", "src2"], "build",
                                    ["thirdParty"], ["build/thirdParty"],
-                                   "src/DummyExe/csnDummyExe.py", True)
+                                   "src/DummyExe/csnDummyExe.py")
         self.build( config )
         
     def testDummyLibBuild(self):
@@ -85,7 +76,7 @@ class csnBuildTests(unittest.TestCase):
         config = TestProjectConfig("DummyLib2", "lib", "Release", 
                                    ["src", "src2"], "build",
                                    ["thirdParty", "thirdParty2"], ["build/thirdParty", "build/thirdParty2"],
-                                   "src2/DummyLib2/csnDummyLib2.py", True)
+                                   "src2/DummyLib2/csnDummyLib2.py")
         self.build( config )
 
 
@@ -98,15 +89,6 @@ class csnBuildTests(unittest.TestCase):
         # Only for visual studio
         if( config.isVisualStudioConfig() == True ):
             self.build( config )
-
-    def testDummyLibBuildNewSyntax(self):
-        """ testDummyLibBuildNewSyntax: test configuring and building the DummyLib project with new syntax.
-        """
-        config = TestProjectConfig("DummyLib", "lib", "Release", 
-                                   ["src"], "build",
-                                   ["thirdParty"], ["build/thirdParty"],
-                                   "src/DummyLib/csnDummyLib.py", True)
-        self.build( config )
 
     def build(self, testConfig):
         """ test configuring and building the input project. """
