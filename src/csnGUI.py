@@ -1065,6 +1065,7 @@ class CSnakeGUIApp(wx.App):
                 # Load the context (has to be done through the handler)
                 try:
                     context = self.handler.LoadContext(contextFilename)
+                    loaded = True
                 except IOError, error:
                     self.Error("Could not load the context file: '%s'." % error)
             else:
