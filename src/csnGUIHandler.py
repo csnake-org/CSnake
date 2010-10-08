@@ -374,11 +374,13 @@ class Handler:
             argList = [pathIDE, solutionName, "/build", "debug" ]
             sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
+            if not result: return False
             # build in release
             self.__logger.info("Building '%s' in release mode [visual studio]." % solutionName)
             argList = [pathIDE, solutionName, "/build", "release" ]
             sub = subprocess.Popen(argList)
             result = result and sub.wait() == 0
+            if not result: return False
         elif self.context.GetCompilername().startswith("Unix") or \
              self.context.GetCompilername().startswith("KDevelop3") :
             # for visual studio (not express), use the devenv.com
