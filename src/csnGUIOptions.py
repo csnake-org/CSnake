@@ -1,6 +1,9 @@
 import ConfigParser
 from csnListener import ChangeEvent
 import logging
+import shutil
+
+latestFileFormatVersion = 1.0
 
 class Options:
     def __init__(self):
@@ -22,22 +25,56 @@ class Options:
 
     def GetAskToLaunchIDE(self):
         return self.__askToLaunchIDE
-    
+
     def Load(self, filename):
+        """ Load an option file. """
+        # parser
         parser = ConfigParser.ConfigParser()
         parser.read([filename])
-        section = "CSnake"
-        self.__contextFilename = parser.get(section, "contextFilename")
-        if parser.has_option(section, "askToLaunchIDE"):
-            self.__askToLaunchIDE = parser.get(section, "askToLaunchIDE") == str(True)
+        # check main section
+        mainSection = "CSnake"
+        if not parser.has_section(mainSection):
+            raise IOError("Cannot read options, no 'CSnake' section.")
+        # check version number
+        version = 0.0
+        if parser.has_option(mainSection, "version"):
+            version = float(parser.get(mainSection, "version"))
+        # read with proper reader
+        if version == 0.0:
+            self.__Read00( parser )
+        elif version == 1.0:
+            self.__Read10( parser )
+        else:
+            raise IOError("Cannot read options, unknown 'version':%s." % version)
+        # backup and save in new format for old ones
+        if version < latestFileFormatVersion:
+            newFileName = "%s.bk" % filename
+            shutil.copy(filename, newFileName)
+            self.Save(filename)
         
+    def __Read10(self, parser):
+        """ Read options file version 1.0. """ 
+        mainSection = "CSnake"
+        # last open context
+        self.__contextFilename = parser.get(mainSection, "contextFilename")
+        # ask to launch ide
+        self.__askToLaunchIDE = parser.get(mainSection, "askToLaunchIDE") == str(True)
+
+    def __Read00(self, parser):
+        """ Read options file version 0.0. """ 
+        mainSection = "CSnake"
+        # last open context
+        self.__contextFilename = parser.get(mainSection, "currentguisettingsfilename")
+        # ask to launch ide
+        self.__askToLaunchIDE = parser.get(mainSection, "asktolaunchvisualstudio") == str(True)
+    
     def Save(self, filename):
         parser = ConfigParser.ConfigParser()
         section = "CSnake"
         parser.add_section(section)
         parser.set(section, "contextFilename", self.__contextFilename)
         parser.set(section, "askToLaunchIDE", self.__askToLaunchIDE)
-        parser.set(section, "version", "1.0")
+        parser.set(section, "version", latestFileFormatVersion)
         f = open(filename, 'w')
         parser.write(f)
         f.close()

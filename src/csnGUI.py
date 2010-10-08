@@ -6,7 +6,6 @@ from wx import xrc
 import csnGUIHandler
 import csnGUIOptions
 import csnContext
-import csnContextConverter
 from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
@@ -552,23 +551,27 @@ class CSnakeGUIApp(wx.App):
                     self.context.SetIdePath(idePath)
     
     def InitializeOptions(self):
+        """ Initialize GUI options. """
+        # create object
         self.options = csnGUIOptions.Options()
         self.binder.SetBuddyClass("options", self.options)
         
+        # find the file
         optionsInCSnake = "%s/options" % self.csnakeFolder
         optionsInThis = "%s/options" % self.thisFolder
+        # options are in the thisFolder, copy them to the csnakeFolder
         if not os.path.isfile(optionsInCSnake) and os.path.isfile(optionsInThis):
             shutil.copy(optionsInThis, optionsInCSnake)
-        self.optionsFilename = optionsInCSnake
-        self.converter = csnContextConverter.Converter(self.optionsFilename)
         
-        # convert possible old options
-        converted = False
-        if os.path.exists(self.optionsFilename):
-            converted = self.converter.ConvertOptions()
-            
-        if converted:
-            self.options.Load(self.optionsFilename)
+        # save the file name
+        self.optionsFilename = optionsInCSnake
+        
+        # load it if present
+        if os.path.isfile(optionsInCSnake):
+            try:
+                self.options.Load(self.optionsFilename)
+            except IOError, error:
+                self.Error("%s" % error)
             
     def CopyGUIToContextAndOptions(self):
         """ Copy all GUI fields to the current context """
@@ -1059,16 +1062,11 @@ class CSnakeGUIApp(wx.App):
         if contextFilename != None and contextFilename != "":
             # Check if the file exists
             if os.path.exists(contextFilename):
-                # Check if correct file (if not convert)
-                if self.converter.Convert(contextFilename):
-                    # Load the context
+                # Load the context (has to be done through the handler)
+                try:
                     context = self.handler.LoadContext(contextFilename)
-                    if context != None:
-                        loaded = True
-                    else:
-                        self.Error("Could not load the context file: '%s'." % contextFilename)
-                else:
-                    self.Error("CSnake tried to open %s, but this file is not a valid context file" % contextFilename)
+                except IOError, error:
+                    self.Error("Could not load the context file: '%s'." % error)
             else:
                 self.Error("Could not find context file: '%s'." % contextFilename)
         

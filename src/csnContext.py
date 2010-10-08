@@ -9,21 +9,22 @@ import csnVisualStudio2005
 import csnVisualStudio2008
 from csnListener import ChangeEvent
 import os.path
+import shutil
 
 latestFileFormatVersion = 2.1
 
 class ContextData:
     def __init__(self):
         # basic fields
-        self.__buildFolder = ""    
-        self.__installFolder = ""    
-        self.__prebuiltBinariesFolder = ""    
+        self.__buildFolder = ""
+        self.__installFolder = ""
+        self.__prebuiltBinariesFolder = ""
         self.__csnakeFile = ""
         self.__instance = ""
         self.__testRunnerTemplate = "normalRunner.tpl"
         self.__configurationName = ""
         self.__compilername = ""
-        self.__cmakePath = ""    
+        self.__cmakePath = ""
         # used for creating the CMake rule to create tests with CxxTests
         self.__pythonPath = ""
         self.__idePath = ""
@@ -162,11 +163,21 @@ class Context(object):
         # context data
         self.__data = ContextData()  
          
-        self.__basicFields = [
-            "buildFolder", "installFolder", "prebuiltBinariesFolder", "csnakeFile",
-            "instance", "testRunnerTemplate", "configurationName", "compilername",
-            "cmakePath", "pythonPath", "idePath", "kdevelopProjectFolder"
-        ]
+        # basic fields: the key is the class member, the value its option in the parser
+        self.__basicFields = {
+            "buildFolder": "buildFolder", 
+            "installFolder": "installFolder", 
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "csnakeFile": "csnakeFile",
+            "instance": "instance", 
+            "testRunnerTemplate": "testRunnerTemplate", 
+            "configurationName": "configurationName", 
+            "compilername": "compilername",
+            "cmakePath": "cmakePath", 
+            "pythonPath": "pythonPath", 
+            "idePath": "idePath", 
+            "kdevelopProjectFolder": "kdevelopProjectFolder"
+        }
         
         self.__compiler = None
 
@@ -288,98 +299,243 @@ class Context(object):
     def RegisterCompiler(self, compiler):
         self.__compilermap[compiler.GetName()] = compiler
     
-    def LoadCompilerName(self, parser):
-        activateOutput = False
-        # temporary workaround to support old versions of the context file
-        compilerfieldnames = ["compilername", "compiler"]
-        for compilerfieldname in compilerfieldnames:
-            try:
-                if activateOutput:
-                    print "Try with \"%s\"" % compilerfieldname
-                self.__data._SetCompilername(parser.get("CSnake", compilerfieldname))
-                if activateOutput:
-                    print "Worked"
-                return
-            except:
-                activateOutput = True
-                print "Reading field \"%s\" failed!" % compilerfieldname
-        if activateOutput:
-            print "Stop trying and keep default value"
-    
     def Load(self, filename):
-        try:
-            parser = ConfigParser.ConfigParser()
-            parser.read([filename])
-            # TODO check version number
-            self.__LoadBasicFields(parser)
-            self.__LoadRootFolders(parser)
-            self.__LoadThirdPartySrcAndBuildFolders(parser)
-            self.__LoadRecentlyUsedCSnakeFiles(parser)
-            
-            # Temporary workaround to support old versions of the context file;
-            # later this line as well as the function "LoadCompilerName" can be removed
-            self.LoadCompilerName(parser)
-            
-            self.FindCompiler()
-            
-            return 1
-        except:
-            return 0
+        """ Load a context file. """
+        # parser
+        parser = ConfigParser.ConfigParser()
+        parser.read([filename])
+        # check main section
+        mainSection = "CSnake"
+        if not parser.has_section(mainSection):
+            raise IOError("Cannot read context, no 'CSnake' section.")
+        # check version number
+        version = 0.0
+        if parser.has_option(mainSection, "version"):
+            version = float(parser.get(mainSection, "version"))
+        # read with proper reader
+        if version == 0.0:
+            self.__Read00( parser )
+        elif version == 1.0:
+            self.__Read10( parser )
+        elif version == 2.0:
+            self.__Read20( parser )
+        elif version == 2.1:
+            self.__Read21( parser )
+        else:
+            raise IOError("Cannot read context, unknown 'version':%s." % version)
+        # backup and save in new format for old ones
+        if version < latestFileFormatVersion:
+            newFileName = "%s.bk" % filename
+            shutil.copy(filename, newFileName)
+            self.Save(filename)
+
+    def __Read00(self, parser):
+        """ Read options file version 1.0. """ 
+        # basic fields
+        basicFields = {
+            "buildFolder": "binfolder", 
+            "installFolder": "installFolder", 
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "csnakeFile": "csnakeFile",
+            "instance": "instance", 
+            "testRunnerTemplate": "testRunnerTemplate", 
+        }
+        self.__LoadBasicFields(parser, basicFields)
+        # this version stores fields in the options file
+        basicOptionsFields = {
+            "configurationName": "cmakebuildtype", 
+            "compilername": "compiler",
+            "cmakePath": "cmakepath", 
+            "pythonPath": "pythonpath", 
+            "idePath": "visualstudiopath"
+        }
+        optionsFilename = "options"
+        optionsParser = ConfigParser.ConfigParser()
+        optionsParser.read([optionsFilename])
+        self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
+        # root folders
+        self.__LoadRootFolders(parser)
+        # third parties
+        self.__LoadThirdPartySrcAndBinFolders(parser)
+        # recent files
+        self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
+        # find the compiler from the compiler name
+        self.FindCompiler()
+
+    def __Read10(self, parser):
+        """ Read options file version 1.0. """ 
+        # basic fields
+        basicFields = {
+            "buildFolder": "binfolder", 
+            "installFolder": "installFolder", 
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "csnakeFile": "csnakeFile",
+            "instance": "instance", 
+            "testRunnerTemplate": "testRunnerTemplate", 
+        }
+        self.__LoadBasicFields(parser, basicFields)
+        # this version stores fields in the options file
+        basicOptionsFields = {
+            "configurationName": "cmakebuildtype", 
+            "compilername": "compiler",
+            "cmakePath": "cmakepath", 
+            "pythonPath": "pythonpath", 
+            "idePath": "visualstudiopath"
+        }
+        optionsFilename = "options"
+        optionsParser = ConfigParser.ConfigParser()
+        optionsParser.read([optionsFilename])
+        self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
+        # root folders
+        self.__LoadRootFolders(parser)
+        # third parties
+        self.__LoadThirdPartySrcAndBuildFoldersSingle(parser)
+        # recent files
+        self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
+        # find the compiler from the compiler name
+        self.FindCompiler()
         
-    def __LoadBasicFields(self, parser):
+    def __Read20(self, parser):
+        """ Read options file version 2.0. """ 
+        # basic fields
+        # diff to 2.1: compiler, no kdevelop
+        basicFields = {
+            "buildFolder": "buildFolder", 
+            "installFolder": "installFolder", 
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "csnakeFile": "csnakeFile",
+            "instance": "instance", 
+            "testRunnerTemplate": "testRunnerTemplate", 
+            "configurationName": "configurationName", 
+            "compilername": "compiler",
+            "cmakePath": "cmakePath", 
+            "pythonPath": "pythonPath", 
+            "idePath": "idePath"
+        }
+        self.__LoadBasicFields(parser, basicFields)
+        self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
+        # root folders
+        self.__LoadRootFolders(parser)
+        # third parties
+        self.__LoadThirdPartySrcAndBuildFoldersSingle(parser)
+        # recent files
+        self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
+        # find the compiler from the compiler name
+        self.FindCompiler()
+        
+    def __Read21(self, parser):
+        """ Read options file version 2.1. """ 
+        # basic fields
+        self.__LoadBasicFields(parser, self.__basicFields)
+        self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
+        # root folders
+        self.__LoadRootFolders(parser)
+        # third parties: now multiple
+        self.__LoadThirdPartySrcAndBuildFoldersMultiple(parser)
+        # recent files
+        self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
+        # find the compiler from the compiler name
+        self.FindCompiler()
+        
+    def __LoadBasicFields(self, parser, fields):
+        """ Load a list of fields. """
+        # section
         section = "CSnake"
-        self.SetFilter(re.split(";", parser.get(section, "filter")))
-        for basicField in self.__basicFields:
+        # read
+        for key in fields.keys():
             # special name for private variables
-            field = "_ContextData__" + basicField
-            if parser.has_option(section, basicField) and hasattr(self.__data, field):
-                setattr(self.__data, field, parser.get(section, basicField))
-            else:
-                print "missing basicField: '%s'" % basicField
+            attribute = "_ContextData__" + key
+            if not hasattr(self.__data, attribute):
+                raise IOError("Missing attribute: '%s'" % attribute)
+            # field
+            field = fields[key]
+            if not parser.has_option(section, field):
+                raise IOError("Missing field: '%s'" % field)
+            # set
+            setattr(self.__data, attribute, parser.get(section, field))
 
     def __LoadRootFolders(self, parser):
+        """ Load root folders. Used in from v0.0. """
+        # section
         section = "RootFolders"
-        count = 0
+        # clear array
         self.__data._SetRootFolders([])
+        # read
+        count = 0
         while parser.has_option(section, "RootFolder%s" % count):
             self.GetRootFolders().append( parser.get(section, "RootFolder%s" % count) )
             count += 1
         
-    def __LoadThirdPartySrcAndBuildFolders(self, parser):
+    def __LoadThirdPartySrcAndBuildFoldersMultiple(self, parser):
+        """ Load third party src and build folders. Used from v2.1. """
+        # sections
         sectionSrc = "ThirdPartyFolders"
         sectionBuild = "ThirdPartyBuildFolders"
-        count = 0
+        # clear array
         self.__data._SetThirdPartySrcAndBuildFolders([])
+        # read 
+        count = 0
         # new style: multiple folders
         while parser.has_option(sectionSrc, "ThirdPartyFolder%s" % count) and parser.has_option(sectionBuild, "ThirdPartyBuildFolder%s" % count):
             self.AddThirdPartySrcAndBuildFolder( \
                 parser.get(sectionSrc, "ThirdPartyFolder%s" % count), parser.get(sectionBuild, "ThirdPartyBuildFolder%s" % count))
             count += 1
-        # old style: only one folder 
-        if count == 0:
-            if parser.has_option("CSnake", "thirdpartyrootfolder") and parser.has_option("CSnake", "thirdpartybuildfolder"):
-                self.AddThirdPartySrcAndBuildFolder( \
-                    parser.get("CSnake", "thirdpartyrootfolder"), parser.get("CSnake", "thirdpartybuildfolder"))
 
-    def __LoadRecentlyUsedCSnakeFiles(self, parser):
+    def __LoadThirdPartySrcAndBuildFoldersSingle(self, parser):
+        """ Load third party src and build folders. Used in v1.0. """
+        # sections
+        section = "CSnake"
+        # clear array
+        self.__data._SetThirdPartySrcAndBuildFolders([])
+        # read 
+        self.AddThirdPartySrcAndBuildFolder(
+            parser.get(section, "thirdpartyrootfolder"), 
+            parser.get(section, "thirdpartybuildfolder") )
+
+    def __LoadThirdPartySrcAndBinFolders(self, parser):
+        """ Load third party src and build folders. Used in v0.0. """
+        # sections
+        section = "CSnake"
+        # clear array
+        self.__data._SetThirdPartySrcAndBuildFolders([])
+        # read 
+        self.AddThirdPartySrcAndBuildFolder(
+            parser.get(section, "thirdpartyrootfolder"), 
+            parser.get(section, "thirdpartybinfolder") )
+
+    def __LoadRecentlyUsedCSnakeFilesMulitpleSection(self, parser):
+        """ Load recently used files. Used in v <= 1.0. """
+        # section
+        sectionRoot = "RecentlyUsedCSnakeFiles"
+        # clear array
         self.__data._SetRecentlyUsed([])
+        # read
         count = 0
+        section = "%s%s" % (sectionRoot, count)
+        while parser.has_section(section):
+            self.AddRecentlyUsed(
+                parser.get(section, "instance%s" % count), 
+                parser.get(section, "csnakeFile%s" % count) )
+            count += 1
+            section = "%s%s" % (sectionRoot, count)
+
+
+    def __LoadRecentlyUsedCSnakeFilesOneSection(self, parser):
+        """ Load recently used files. Used from v2.0. """
+        # section
         section = "RecentlyUsedCSnakeFiles"
+        # clear array
+        self.__data._SetRecentlyUsed([])
+        # read
+        count = 0
         while parser.has_option(section, "instance%s" % count):
             self.AddRecentlyUsed(
-                parser.get(section, "instance%s" % count),
-                parser.get(section, "csnakeFile%s" % count)
-            )
+                parser.get(section, "instance%s" % count), 
+                parser.get(section, "csnakeFile%s" % count) )
             count += 1
     
-    def __SaveRecentlyUsedCSnakeFiles(self, parser):
-        section = "RecentlyUsedCSnakeFiles"
-        if not parser.has_section(section):
-            parser.add_section(section)
-        for index in range(len(self.GetRecentlyUsed())):
-            parser.set(section, "instance%s" % index, self.GetRecentlyUsed()[index].GetInstance()) 
-            parser.set(section, "csnakeFile%s" % index, self.GetRecentlyUsed()[index].GetCsnakeFile()) 
-
     def AddRecentlyUsed(self, instance, csnakeFile):
         for item in range( len(self.GetRecentlyUsed()) ):
             x = self.GetRecentlyUsed()[item]
@@ -403,37 +559,50 @@ class Context(object):
         return result
     
     def Save(self, filename):
+        """ Save a context file. """
+        # file parser
         parser = ConfigParser.ConfigParser()
-        section = "CSnake"
-        parser.add_section(section)
-        parser.set(section, "version", str(latestFileFormatVersion))
-        rootFolderSection = "RootFolders"
-        parser.add_section(rootFolderSection)
-        thirdPartyFolderSection = "ThirdPartyFolders"
-        parser.add_section(thirdPartyFolderSection)
-        thirdPartyBuildFolderSection = "ThirdPartyBuildFolders"
-        parser.add_section(thirdPartyBuildFolderSection)
-
+        
+        # main section 
+        mainSection = "CSnake"
+        parser.add_section(mainSection)
+        # set the version
+        parser.set(mainSection, "version", latestFileFormatVersion)
+        # set the basic fields
         for basicField in self.__basicFields:
             # special name for private variables
             field = "_ContextData__" + basicField
-            parser.set(section, basicField, getattr(self.__data, field))
+            parser.set(mainSection, basicField, getattr(self.__data, field))
+        # set the filter
+        parser.set(mainSection, "filter", ";".join(self.GetFilter()))
         
-        parser.set(section, "filter", ";".join(self.GetFilter()))
-        
+        # root folders
+        rootFolderSection = "RootFolders"
+        parser.add_section(rootFolderSection)
         count = 0
         while count < len(self.GetRootFolders()):
             parser.set(rootFolderSection, "RootFolder%s" % count, self.GetRootFolders()[count] )
             count += 1
-
+        
+        # third parties src and build folders    
+        thirdPartyFolderSection = "ThirdPartyFolders"
+        parser.add_section(thirdPartyFolderSection)
+        thirdPartyBuildFolderSection = "ThirdPartyBuildFolders"
+        parser.add_section(thirdPartyBuildFolderSection)
         count = 0
         while count < len(self._GetThirdPartySrcAndBuildFolders()):
             parser.set(thirdPartyFolderSection, "ThirdPartyFolder%s" % count, self._GetThirdPartySrcAndBuildFolders()[count][0] )
             parser.set(thirdPartyBuildFolderSection, "ThirdPartyBuildFolder%s" % count, self._GetThirdPartySrcAndBuildFolders()[count][1] )
             count += 1
-
-        self.__SaveRecentlyUsedCSnakeFiles(parser)
         
+        # recent files
+        recentSection = "RecentlyUsedCSnakeFiles"
+        parser.add_section(recentSection)
+        for index in range(len(self.GetRecentlyUsed())):
+            parser.set(recentSection, "instance%s" % index, self.GetRecentlyUsed()[index].GetInstance()) 
+            parser.set(recentSection, "csnakeFile%s" % index, self.GetRecentlyUsed()[index].GetCsnakeFile()) 
+        
+        # write the file
         f = open(filename, 'w')
         parser.write(f)
         f.close()
@@ -619,6 +788,5 @@ def Load(filename):
         # Check if the file exists
         if os.path.exists(filename):
             context = Context()
-            okay = context.Load(filename)
-    assert okay, "Error loading from %s\n" % filename
+            context.Load(filename)
     return context
