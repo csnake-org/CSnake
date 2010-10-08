@@ -27,7 +27,7 @@ version = @version@
 rootfolder0 = @rootfolder0@
 
 [ThirdPartyFolders]
-thirdpartyrootfolder0 = @thirdpartyrootfolder@
+thirdpartyfolder0 = @thirdpartyrootfolder@
 
 [ThirdPartyBuildFolders]
 thirdpartybuildfolder0 = @thirdpartybuildfolder@

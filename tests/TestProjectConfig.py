@@ -134,7 +134,7 @@ class TestProjectConfig():
         cf.set(csnakeSectionName, "buildfolder", newValue )
         
         # modify: third party src folder
-        oldValue = cf.get(tpSourceSectionName, "thirdpartyrootfolder0")
+        oldValue = cf.get(tpSourceSectionName, "thirdpartyfolder0")
         count = 0
         for srcDir in self.__tpSrcDirs:
             newValue = oldValue + "/" + srcDir
