@@ -68,8 +68,12 @@ class csnContextTests(unittest.TestCase):
             self.assertTrue( len(recents), 1 )
             self.assertTrue( recentContext.GetData().Equal(recents[0]) )
     
-    def ReadContextTest(self, version, filename):
+    def ReadContextTest(self, version, inputFilename):
         ''' csnContextTests: test read context. '''
+        # create a copy of the input file
+        filename = "test_%s" % inputFilename
+        shutil.copy(inputFilename, filename)
+        
         # try to read the new one
         context = Context()
         context.Load(filename)
@@ -89,7 +93,11 @@ class csnContextTests(unittest.TestCase):
         self.ValuesTest(csnContext.latestFileFormatVersion, newContext)
 
         # clean up
+        os.remove(filename)
         os.remove(newFilename)
+        backupFilename = "%s.bk" % filename
+        if os.path.isfile(backupFilename):
+            os.remove(backupFilename)
        
 if __name__ == "__main__":
     unittest.main() 
