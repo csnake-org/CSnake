@@ -226,7 +226,7 @@ def GetDefaultCMakePath():
             path = SearchWindowsProgramPath( key_names, value_names, path_end )
         except OSError:
             path = None
-    else:
+    elif IsLinuxPlatform() or IsMacPlatform():
         try:
             path = SearchUnixProgramPath("cmake")
         except OSError:
@@ -247,7 +247,7 @@ def GetDefaultPythonPath():
             path = SearchWindowsProgramPath( key_names, value_names, path_end )
         except OSError:
             path = None
-    else:
+    elif IsLinuxPlatform() or IsMacPlatform():
         try:
             path = SearchUnixProgramPath("python")
         except OSError:
