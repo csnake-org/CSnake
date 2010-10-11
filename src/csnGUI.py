@@ -229,7 +229,8 @@ class CSnakeGUIApp(wx.App):
     def OnInit(self):
         # logging init
         self.__logger = logging.getLogger("CSnake")
-
+        self.__logger.debug("method: OnInit")
+        
         self.destroyed = False
         self.listOfPossibleTargets = []
         self.projectCheckBoxes = dict()
@@ -259,6 +260,9 @@ class CSnakeGUIApp(wx.App):
         return 1
 
     def InitFrame(self):
+        # debug log
+        self.__logger.debug("method: InitFrame")
+        
         self.frame = self.res.LoadFrame(None, "frmCSnakeGUI")
         self.binder = xrcbinder.Binder(self, self.frame)
         
@@ -378,6 +382,9 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
             
     def InitMenu(self):
+        # debug log
+        self.__logger.debug("method: InitMenu")
+
         # File
         self.frame.Bind(wx.EVT_MENU, self.OnContextOpen, id=xrc.XRCID("mnuContextOpen"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextSave, id=xrc.XRCID("mnuContextSave"))
@@ -388,6 +395,12 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_MENU, self.OnAbout, id=xrc.XRCID("mnuAbout"))
         
     def InitOtherGUIStuff(self):
+        # debug log
+        self.__logger.debug("method: InitOtherGUIStuff")
+
+        self.LoadIcon()
+        self.panelSelectProjects.SetScrollRate(25, 25)
+
         # connect close event
         self.frame.Bind(wx.EVT_CLOSE, self.OnExit, self.frame)
         
@@ -401,43 +414,43 @@ class CSnakeGUIApp(wx.App):
         self.__progressRange = 100
         
     def Initialize(self):
-        """
-        Initializes the application.
-        """
-        self.LoadIcon()
+        """ Initializes the application. """
+        # debug log
+        self.__logger.debug("method: Initialize")
+        
         self.ParseCommandLine()
         self.PrintWelcomeMessages()
         self.CreateHandler()
-        self.InitializeOptions()
         
-        self.panelSelectProjects.SetScrollRate(25, 25)
-
-        # load previously saved context
-        contextToLoad = self.options.GetContextFilename()
-        if len(self.commandLineArgs) >= 1:
-            contextToLoad = self.commandLineArgs[0]
-        self.LoadContext(contextToLoad)
-
+        # initialize options
+        self.InitializeOptions()
+        # initialize context
+        self.InitialiseContext()
+        
         self.InitializePaths()
+        
         self.UpdateGUI()
         
     def Warn(self, message):
         """ Shows a warning message to the user. ToDo: do some more fancy than print."""
-        if message is None:
-            return
+        self.__logger.warn("csnGUI.warn: %s" % message)
+        if message is None: return
         self.textLog.WriteText(message + "\n")
         
     def Error(self, message):
         """ Shows an error message to the user. ToDo: do some more fancy than print."""
-        if message is None:
-            return
+        self.__logger.error("csnGUI.error: %s" % message)
+        if message is None: return
         self.textLog.WriteText(message + "\n")
 
     def Report(self, message):
-        if message is None:
-            return
+        self.__logger.info("csnGUI.report: %s" % message)
+        if message is None: return
         self.textLog.WriteText(message + "\n")
 
+    def AddLogSeparator(self):
+        self.textLog.WriteText("\n")
+    
     def SetStatus(self, message):
         self.statusBar.SetFields([message])
         
@@ -504,11 +517,17 @@ class CSnakeGUIApp(wx.App):
         self.Report("CSnake version = %s" % csnBuild.version)
 
     def CreateHandler(self):
+        # debug log
+        self.__logger.debug("method: CreateHandler")
         self.handler = csnGUIHandler.Handler()
         self.handler.AddListener(self.progressListener)
         self.context = None
     
     def InitializePaths(self):
+        """ Initialize the options paths. """
+        # debug log
+        self.__logger.debug("method: InitializePaths")
+        
         # found flags
         foundCmake = False
         foundPython = False
@@ -552,6 +571,8 @@ class CSnakeGUIApp(wx.App):
     
     def InitializeOptions(self):
         """ Initialize GUI options. """
+        # debug log
+        self.__logger.debug("method: InitializeOptions")
         # create object
         self.options = csnGUIOptions.Options()
         self.binder.SetBuddyClass("options", self.options)
@@ -561,18 +582,48 @@ class CSnakeGUIApp(wx.App):
         optionsInThis = "%s/options" % self.thisFolder
         # options are in the thisFolder, copy them to the csnakeFolder
         if not os.path.isfile(optionsInCSnake) and os.path.isfile(optionsInThis):
+            self.__logger.debug("Found options in CSnake folder, copying it to .csnake.")
             shutil.copy(optionsInThis, optionsInCSnake)
         
         # save the file name
         self.optionsFilename = optionsInCSnake
+        self.__logger.debug("options file: %s" % self.optionsFilename)
         
         # load it if present
         if os.path.isfile(optionsInCSnake):
             try:
+                self.__logger.debug("Loading options.")
                 self.options.Load(self.optionsFilename)
             except IOError, error:
                 self.Error("%s" % error)
+        else:
+            self.__logger.debug("No options found, using default.")
+            self.SaveOptions()
             
+    def InitialiseContext(self):
+        """ Initialise the context. """
+        # debug log
+        self.__logger.debug("method: InitialiseContext")
+
+        # find the context file name
+        filename = None
+        # previously used context
+        fname = self.options.GetContextFilename()
+        if fname and fname != "":
+            filename = fname
+        # if on command line, override option file
+        if len(self.commandLineArgs) >= 1:
+            filename = self.commandLineArgs[0]
+
+        # load the file
+        if filename:
+            self.LoadContext(filename)
+        
+        # if not loaded, use a default one
+        if not self.context:
+            self.__logger.debug("Using default context.")
+            self.__SetContext(csnContext.Context())
+        
     def CopyGUIToContextAndOptions(self):
         """ Copy all GUI fields to the current context """
         self.binder.UpdateBuddies()
@@ -596,22 +647,28 @@ class CSnakeGUIApp(wx.App):
     
     def SaveContext(self, contextFilename):
         """ Save the current context. """
+        # debug log
+        self.__logger.debug("method: SaveContext: %s" % contextFilename)
+
         # Get content from frame
         self.CopyGUIToContextAndOptions()
-        # save the file name in the options
-        self.options.SetContextFilename(contextFilename)
+        
         # Try to save
+        saved = False
         try:
-            self.context.Save(self.options.GetContextFilename())
-            self.frame.SetTitle("CSnake GUI - %s" % self.options.GetContextFilename())
+            self.__logger.debug("Saving context.")
+            self.context.Save(contextFilename)
+            saved = True
         except:
-            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % self.options.GetContextFilename())
-        # Update name and flag    
-        self.__SetContextFilename(contextFilename)
-        # Save a copy
-        self.originalContextData = copy.deepcopy(self.context.GetData())
-        # reset modified flag
-        self.SetContextModified(False)
+            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % contextFilename)
+        
+        if saved:
+            # Update name and flag    
+            self.__SetContextFilename(contextFilename)
+            # reset data for check changes
+            self.originalContextData = copy.deepcopy(self.context.GetData())
+            # reset modified flag
+            self.SetContextModified(False)
     
     def SaveOptions(self):
         try:
@@ -740,10 +797,10 @@ class CSnakeGUIApp(wx.App):
             
     def DoActions(self, actions):
         self.SetStatus("Processing...")
-        self.textLog.Refresh()
-        self.textLog.Update()
         
-        self.Report("\nWorking, patience please...")
+        self.AddLogSeparator()
+        self.Report("Working, patience please...")
+        
         startTime = time.time()
         
         # progress bar
@@ -1051,45 +1108,43 @@ class CSnakeGUIApp(wx.App):
         wx.CallAfter(self.frame.Update)
     
     def LoadContext(self, contextFilename):
-        """
-        Load configuration context from context filename.
-        """
+        """ Load configuration context from context filename.  """
+        # debug log
+        self.__logger.debug("method: LoadContext: %s" % contextFilename)
+        
         # Default context
-        context = csnContext.Context()
-        self.handler.SetContext(context)
-        loaded = False
+        context = None
         # Check if the file name is specified
         if contextFilename != None and contextFilename != "":
             # Check if the file exists
             if os.path.exists(contextFilename):
                 # Load the context (has to be done through the handler)
                 try:
+                    self.__logger.debug("Loading context.")
                     context = self.handler.LoadContext(contextFilename)
-                    loaded = True
                 except IOError, error:
                     self.Error("Could not load the context file: '%s'." % error)
             else:
                 self.Error("Could not find context file: '%s'." % contextFilename)
         
-        # Save the context
-        self.SetContext(context)
-        # Save a copy
-        data = self.context.GetData()
-        self.originalContextData = copy.deepcopy( data )
-        
-        if loaded:
-            # set frame title
-            self.frame.SetTitle("CSnake GUI - %s" % contextFilename)
+        if context:
+            # Save the context
+            self.__SetContext(context)
             # save file name
             self.__SetContextFilename(contextFilename)
-        
-        # Update 
-        self.UpdateGUI()
+            # report success
+            self.Report("Loaded context file: %s" % contextFilename)
+            # Update 
+            self.UpdateGUI()
 
-    def SetContext(self, context):
+    def __SetContext(self, context):
         self.context = context
-        
+        # Save a copy to check changes
+        data = self.context.GetData()
+        self.originalContextData = copy.deepcopy( data )
+        # Add a change listener
         self.context.AddListener(self.changeListener)
+        # Set as buddy class for GUI
         self.binder.SetBuddyClass("context", self.context)
         
     def GetInstanceComboBoxItems(self):
@@ -1335,7 +1390,8 @@ if __name__ == "__main__":
     csnUtility.InitialiseLogging()
     
     logger = logging.getLogger("CSnake")
-    logger.info("\n\nStarting program.")
+    logger.info("###########################################")
+    logger.info("Starting program.")
 
     app = CSnakeGUIApp(0)
     app.MainLoop()
