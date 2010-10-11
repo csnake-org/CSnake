@@ -1083,7 +1083,7 @@ class CSnakeGUIApp(wx.App):
         return result
         
     def GetBuildTypeComboBoxItems(self):
-        list = []
+        list = [""]
         if self.context.GetCompiler()!= None:
             list = self.context.GetCompiler().GetAllowedConfigurations()
         return list

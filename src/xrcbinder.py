@@ -105,8 +105,7 @@ class DropDownListControl(BoundControl):
             self.control.SetValue(items[0])
             self.UpdateBuddy()
         else:
-            self.control.SetValue("")
-            self.UpdateBuddy()
+            raise ValueError("Non existing value for drop down list.")
         wx.CallAfter(self.control.SetValue, self.GetBuddyValue())
         
     def OnSelectItem(self, event):
