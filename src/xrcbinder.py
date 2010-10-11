@@ -21,14 +21,16 @@ class BoundControl:
     def GetBuddyClass(self):
         return self.binder.GetBuddyClass(self)
         
-    def HasBuddyValue(self):
+    def HasBuddyField(self):
+        """ Check that the field exists using the HasField method of the buddy class. """
         return self.GetBuddyClass().HasField(self.buddyField)
         
     def SetBuddyValue(self, value):
-        if self.HasBuddyValue():
-            self.GetBuddyClass().SetField(self.buddyField, value)
+        """ Set the buddy value using the SetField method of the buddy class. """
+        self.GetBuddyClass().SetField(self.buddyField, value)
         
     def GetBuddyValue(self):
+        """ Get the buddy value using the GetField method of the buddy class. """
         return self.GetBuddyClass().GetField(self.buddyField)
         
     def OnKillFocus(self, event):
@@ -53,8 +55,7 @@ class TextControl(ControlWithField):
         self.SetBuddyValue(self.GetControlValue())
 
     def UpdateControl(self):
-        if self.HasBuddyValue():
-            self.control.SetValue(self.GetBuddyValue())
+        self.control.SetValue(self.GetBuddyValue())
     
 class ComboBoxControl(ControlWithField):
     def __init__(self, binder, control, valueListFunctor, labels = None, buddyClass = None, buddyField = None):
