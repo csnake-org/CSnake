@@ -16,6 +16,12 @@ class csnContextTests(unittest.TestCase):
         self.ReadContextTest(0.0, "context00a.txt")
         # clean up
         os.remove(newFilename)
+        
+        # this one should throw without the options file
+        filename = "context00a.txt"
+        self.assertRaises(IOError, self.ReadContextTest, 0.0, filename)
+        # clean up
+        os.remove("test_%s" % filename)
 
     def testReadContext10(self):
         ''' csnContextTests: test read from context v1.0. '''
@@ -27,10 +33,21 @@ class csnContextTests(unittest.TestCase):
         # clean up
         os.remove(newFilename)
 
+        # this one should throw without the options file
+        filename = "context10a.txt"
+        self.assertRaises(IOError, self.ReadContextTest, 1.0, filename)
+        # clean up
+        os.remove("test_%s" % filename)
+
     def testReadContext20(self):
         ''' csnContextTests: test read from context v2.0. '''
         # test the context conversion
+        # with field compiler
         self.ReadContextTest(2.0, "context20a.txt")
+        # with field compilername
+        self.ReadContextTest(2.0, "context20b.txt")
+        # with multiple third parties
+        self.ReadContextTest(2.0, "context20c.txt")
         
     def testReadContext21(self):
         ''' csnContextTests: test read from context v2.1. '''

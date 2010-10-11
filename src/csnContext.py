@@ -342,17 +342,20 @@ class Context(object):
         }
         self.__LoadBasicFields(parser, basicFields)
         # this version stores fields in the options file
-        basicOptionsFields = {
-            "configurationName": "cmakebuildtype", 
-            "compilername": "compiler",
-            "cmakePath": "cmakepath", 
-            "pythonPath": "pythonpath", 
-            "idePath": "visualstudiopath"
-        }
         optionsFilename = "options"
-        optionsParser = ConfigParser.ConfigParser()
-        optionsParser.read([optionsFilename])
-        self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        if os.path.isfile(optionsFilename): 
+            basicOptionsFields = {
+                "configurationName": "cmakebuildtype", 
+                "compilername": "compiler",
+                "cmakePath": "cmakepath", 
+                "pythonPath": "pythonpath", 
+                "idePath": "visualstudiopath"
+            }
+            optionsParser = ConfigParser.ConfigParser()
+            optionsParser.read([optionsFilename])
+            self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        else:
+            raise IOError("Could not retrieve the option file.")   
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
@@ -376,17 +379,20 @@ class Context(object):
         }
         self.__LoadBasicFields(parser, basicFields)
         # this version stores fields in the options file
-        basicOptionsFields = {
-            "configurationName": "cmakebuildtype", 
-            "compilername": "compiler",
-            "cmakePath": "cmakepath", 
-            "pythonPath": "pythonpath", 
-            "idePath": "visualstudiopath"
-        }
         optionsFilename = "options"
-        optionsParser = ConfigParser.ConfigParser()
-        optionsParser.read([optionsFilename])
-        self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        if os.path.isfile(optionsFilename): 
+            basicOptionsFields = {
+                "configurationName": "cmakebuildtype", 
+                "compilername": "compiler",
+                "cmakePath": "cmakepath", 
+                "pythonPath": "pythonpath", 
+                "idePath": "visualstudiopath"
+            }
+            optionsParser = ConfigParser.ConfigParser()
+            optionsParser.read([optionsFilename])
+            self.__LoadBasicFields(optionsParser, basicOptionsFields)
+        else:
+            raise IOError("Could not retrieve the option file.")   
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
@@ -409,17 +415,22 @@ class Context(object):
             "instance": "instance", 
             "testRunnerTemplate": "testRunnerTemplate", 
             "configurationName": "configurationName", 
-            "compilername": "compiler",
             "cmakePath": "cmakePath", 
             "pythonPath": "pythonPath", 
             "idePath": "idePath"
         }
         self.__LoadBasicFields(parser, basicFields)
+        self.__LoadCompiler(parser)
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
-        # third parties
-        self.__LoadThirdPartySrcAndBuildFoldersSingle(parser)
+        # third parties: mix between multiple and single folders...
+        if parser.has_section("ThirdPartyFolders") and parser.has_section("ThirdPartyBuildFolders"):
+            self.__LoadThirdPartySrcAndBuildFoldersMultiple(parser)
+        elif parser.has_option("CSnake", "thirdpartyrootfolder") and parser.has_option("CSnake", "thirdpartybuildfolder"):
+            self.__LoadThirdPartySrcAndBuildFoldersSingle(parser)
+        else:
+            raise IOError("Missing third parties (single or multiple).")            
         # recent files
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
@@ -456,6 +467,22 @@ class Context(object):
             # set
             setattr(self.__data, attribute, parser.get(section, field))
 
+    def __LoadCompiler(self, parser):
+        """ Load the compiler either from 'compiler' or 'compilername'. """
+        # section
+        section = "CSnake"
+        # read
+        field = None
+        if parser.has_option(section, "compilername"):
+            field = "compilername"
+        elif parser.has_option(section, "compiler"):
+            field = "compiler"
+        # error
+        if not field:
+            raise IOError("Missing field: compiler or compilername")
+        # set    
+        self.__data._SetCompilername(parser.get(section, field))
+        
     def __LoadRootFolders(self, parser):
         """ Load root folders. Used in from v0.0. """
         # section
