@@ -329,7 +329,7 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyFoldersDClick, id=xrc.XRCID("lbxThirdPartyFolders"))
         self.frame.Bind(wx.EVT_LISTBOX_DCLICK, self.OnThirdPartyBuildFoldersDClick, id=xrc.XRCID("lbxThirdPartyBuildFolders"))
         
-        if sys.platform != 'win32':
+        if not csnUtility.IsWindowsPlatform():
             #xrc.XRCCTRL(self.panelContext, "btnConfigureALL").Disable()
             xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").Disable()
             xrc.XRCCTRL(self.panelOptions, "btnSetVisualStudioPath").Disable()
@@ -351,19 +351,19 @@ class CSnakeGUIApp(wx.App):
 
     def OnRootFoldersDClick(self, event):
         """Handles the wx.EVT_LISTBOX_DCLICK event for lbxRootFolders"""
-        if csnUtility.IsRunningOnWindows():
+        if csnUtility.IsWindowsPlatform():
             folder_path = csnUtility.UnNormalizePath( self.lbxRootFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
 
     def OnThirdPartyFoldersDClick(self, event):
         """Handles the wx.EVT_LISTBOX_DCLICK event for lbxThirdPartyFolders"""
-        if csnUtility.IsRunningOnWindows():
+        if csnUtility.IsWindowsPlatform():
             folder_path = csnUtility.UnNormalizePath( self.lbxThirdPartyFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
 
     def OnThirdPartyBuildFoldersDClick(self, event):
         """Handles the wx.EVT_LISTBOX_DCLICK event for lbxThirdPartyBuildFolders"""
-        if csnUtility.IsRunningOnWindows():
+        if csnUtility.IsWindowsPlatform():
             folder_path = csnUtility.UnNormalizePath( self.lbxThirdPartyBuildFolders.GetStringSelection() )
             os.system("explorer " + folder_path)
         
@@ -551,7 +551,7 @@ class CSnakeGUIApp(wx.App):
             else:
                 self.__logger.info("Could not find default Python.")
         # find visual studio if not specified
-        if sys.platform == 'win32' and \
+        if csnUtility.IsWindowsPlatform() and \
             self.context.GetCompilername().find("Visual Studio") != -1 and \
             not os.path.isfile(idePath):
             idePath = csnUtility.GetDefaultVisualStudioPath(self.context.GetCompilername())

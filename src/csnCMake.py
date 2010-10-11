@@ -1,7 +1,6 @@
 import csnUtility
 import os
 import csnProject
-import sys
 
 class Writer:
     def __init__(self, _project):
@@ -46,7 +45,7 @@ class Writer:
         for dependencyProject in dependencyProjects:
             staticLibUsingAnotherLib = self.project.type == "library" and dependencyProject.type != "executable" 
             noSources = len(dependencyProject.GetSources()) == 0 
-            if (csnUtility.IsRunningOnWindows() and staticLibUsingAnotherLib) or noSources: 
+            if (csnUtility.IsWindowsPlatform() and staticLibUsingAnotherLib) or noSources: 
                 continue
             else:
                 self.file.write( "ADD_DEPENDENCIES(%s %s)\n" % (self.project.name, dependencyProject.name) )
@@ -70,7 +69,7 @@ class Writer:
         the dependency projects are already included).
         """
         for project in self.project.dependenciesManager.ProjectsToUse():
-            public = (self.project.name != project.name and not csnUtility.IsRunningOnWindows())
+            public = (self.project.name != project.name and not csnUtility.IsWindowsPlatform())
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
     
@@ -168,7 +167,7 @@ class Writer:
             self.file.write(command)
 
         # Adding specific windows macros
-        if sys.platform == 'win32':
+        if csnUtility.IsWindowsPlatform():
             self.file.write("\n#Adding specific windows macros\n")
             self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PlatformDependent.cmake\"" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
             self.file.write("INCREASE_MSVC_HEAP_LIMIT( 1000 )\n")

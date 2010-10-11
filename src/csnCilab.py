@@ -99,7 +99,7 @@ def CreateCMakeCLPPre(self, _file):
     if len( self.GetSources() ) > 0:
         _file.write("\n#Adding CMake GenerateCLP Pre\n")
         _file.write("set( ${CLP}_SOURCE %s )\n" % self.GetSources()[0] )
-        if csnUtility.IsRunningOnWindows():
+        if csnUtility.IsWindowsPlatform():
             _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/GenerateCLP.exe\")\n" )
         else:
             _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/generateCLP\")\n" )

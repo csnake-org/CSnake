@@ -50,9 +50,17 @@ def CopyFolder(fromFolder, toFolder, excludedFolderList = None):
                 os.makedirs(targetFolder)
             shutil.copy(file, target)
             
-def IsRunningOnWindows():
-    """ Returns true if the python script is not running on Windows """
-    return sys.platform == "win32"
+def IsWindowsPlatform():
+    """ Returns true if the python script is running on Windows. """
+    return sys.platform == "win32" or sys.platform == "cygwin"
+
+def IsMacPlatform():
+    """ Returns true if the python script is running on Mac. """
+    return sys.platform == "darwin"
+
+def IsLinuxPlatform():
+    """ Returns true if the python script is running on Unix or Unix like. """
+    return sys.platform == "linux2"
 
 # create variable that contains the folder where csnake is located. The use of /../CSnake ensures that 
 # the root folder is set correctly both when running the python interpreter, or when using the binary
@@ -204,7 +212,7 @@ def GetDefaultVisualStudioPath( generator ):
 def GetDefaultCMakePath():
     """ Get the path to CMake. """
     path = None
-    if sys.platform == 'win32':
+    if IsWindowsPlatform():
         key_names = [
             r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0', # typical windows XP
             r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.1', 
@@ -229,7 +237,7 @@ def GetDefaultCMakePath():
 def GetDefaultPythonPath():
     """ Get the path to Python. """
     path = None
-    if sys.platform == 'win32':
+    if IsWindowsPlatform():
         key_names = [
             r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath', # typical windows XP
             r'SOFTWARE\Python\PythonCore\2.6\InstallPath'] #typical windows vista, 7
