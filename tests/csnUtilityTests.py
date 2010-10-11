@@ -2,7 +2,6 @@
 import unittest
 import csnUtility
 import os
-import sys
 
 class csnUtilityTests(unittest.TestCase):
     
@@ -51,7 +50,7 @@ class csnUtilityTests(unittest.TestCase):
         self.assertEqual( csnUtility.CorrectPath(testPath5), refPath5 )  
         
     def testSearchProgramPath(self):
-        if sys.platform == 'win32':
+        if csnUtility.IsWindowsPlatform():
             # Hoping there is a cmake on the test machine
             # Default path for cmake
             refPath1 = r"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe"
