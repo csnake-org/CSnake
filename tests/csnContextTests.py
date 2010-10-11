@@ -11,9 +11,9 @@ class csnContextTests(unittest.TestCase):
         ''' csnContextTests: test read from context v0.0. '''
         # this version needs the options file
         newFilename = "options"
-        shutil.copy("options00.txt", newFilename)
+        shutil.copy("options00a.txt", newFilename)
         # test the context conversion
-        self.ReadContextTest(0.0, "context00.txt")
+        self.ReadContextTest(0.0, "context00a.txt")
         # clean up
         os.remove(newFilename)
 
@@ -21,21 +21,21 @@ class csnContextTests(unittest.TestCase):
         ''' csnContextTests: test read from context v1.0. '''
         # this version needs the options file
         newFilename = "options"
-        shutil.copy("options00.txt", newFilename)
+        shutil.copy("options00a.txt", newFilename)
         # test the context conversion
-        self.ReadContextTest(1.0, "context10.txt")
+        self.ReadContextTest(1.0, "context10a.txt")
         # clean up
         os.remove(newFilename)
 
     def testReadContext20(self):
         ''' csnContextTests: test read from context v2.0. '''
         # test the context conversion
-        self.ReadContextTest(2.0, "context20.txt")
+        self.ReadContextTest(2.0, "context20a.txt")
         
     def testReadContext21(self):
         ''' csnContextTests: test read from context v2.1. '''
         # test the context conversion
-        self.ReadContextTest(2.1, "context21.txt")
+        self.ReadContextTest(2.1, "context21a.txt")
 
     def ValuesTest(self, version, context):
         # [CSnake]

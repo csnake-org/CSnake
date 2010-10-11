@@ -9,12 +9,12 @@ class csnGUIOptionsTests(unittest.TestCase):
     def testReadOptions00(self):
         ''' csnContextTests: test read from options v0.0. '''
         # test the options conversion
-        self.ReadOptionsTest("options00.txt")
+        self.ReadOptionsTest("options00a.txt")
 
     def testReadOptions10(self):
         ''' csnContextTests: test read from options v1.0. '''
         # test the options conversion
-        self.ReadOptionsTest("options10.txt")
+        self.ReadOptionsTest("options10a.txt")
 
     def ValuesTest(self, options):
         self.assertEqual( options.GetAskToLaunchIDE(), True )
