@@ -257,7 +257,7 @@ def SearchWindowsProgramPath(key_names, value_names, path_end):
     """
     # logging init
     logger = logging.getLogger("CSnake")
-    logger.debug( "Searching for '%s'." % path_end )
+    logger.debug( "Windows search for '%s'." % path_end )
     for key_name in key_names:
         try:
             key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key_name)
@@ -278,7 +278,7 @@ def SearchWindowsProgramPath(key_names, value_names, path_end):
                 return path
             else:
                 logger.debug( "Incorrect path '%s'." % path )
-    #If here, no value was found
+    # If here, no value was found
     message = "Could not find a default path for '%s'." % path_end
     raise OSError(message)
 
@@ -288,13 +288,16 @@ def SearchUnixProgramPath(name):
     \param name The name of the program.
     \return An existing path or raises OSError if nothing found.
     """
+    # logging init
+    logger = logging.getLogger("CSnake")
+    logger.debug( "Unix search for '%s'." % name )
     # Using 'which'
     (status, path) = commands.getstatusoutput('which %s' % name)
     if status == 0 and os.path.exists(path):
         return path
-    else:
-        message = "Could not find a default path for '%s'." % name
-        raise OSError(message)
+    # If here, no value was found
+    message = "Could not find a default path for '%s'." % name
+    raise OSError(message)
 
 def InitialiseLogging():
     # create user folder
