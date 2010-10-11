@@ -1072,11 +1072,12 @@ class CSnakeGUIApp(wx.App):
     def GetCompilerComboBoxItems(self):
         result = []
         result.append("")
-        result.append("Visual Studio 7 .NET 2003")
-        result.append("Visual Studio 8 2005")
-        result.append("Visual Studio 8 2005 Win64")
-        result.append("Visual Studio 9 2008")
-        result.append("Visual Studio 9 2008 Win64")
+        if csnUtility.IsWindowsPlatform():
+            result.append("Visual Studio 7 .NET 2003")
+            result.append("Visual Studio 8 2005")
+            result.append("Visual Studio 8 2005 Win64")
+            result.append("Visual Studio 9 2008")
+            result.append("Visual Studio 9 2008 Win64")
         result.append("KDevelop3")
         result.append("Unix Makefiles")
         result.append("Eclipse CDT4 - Unix Makefiles")
