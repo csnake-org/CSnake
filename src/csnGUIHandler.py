@@ -116,6 +116,9 @@ class Handler:
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
         
         if _alsoRunCMake:
+            # check if CMake is present
+            self.CheckCMake()
+        
             nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True))
             argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
             
@@ -131,6 +134,7 @@ class Handler:
         return self.generator.InstallBinariesToBuildFolder(self.__GetProjectInstance())
              
     def CMakeIsFound(self):
+        """ Check if Cmake is present by launching it. """
         found = os.path.exists(self.context.GetCmakePath()) and os.path.isfile(self.context.GetCmakePath())
         if not found:
             try:
@@ -139,6 +143,11 @@ class Handler:
                 retcode = 1
             found = retcode == 0
         return found        
+    
+    def CheckCMake(self):
+        """ Check if Cmake is present. """
+        if not os.path.exists( self.context.GetCmakePath() ):
+            raise Exception( "Please provide a valid CMake path." )
     
     def ConfigureThirdPartyFolders(self, _nrOfTimes = 2):
         """ 
@@ -172,8 +181,8 @@ class Handler:
         # create the build folder if it doesn't exist
         os.path.exists(build) or os.makedirs(build)
         
-        if not os.path.exists( self.context.GetCmakePath() ):
-            raise Exception( "Please provide a valid CMake path" )
+        # check if CMake is present
+        self.CheckCMake()
         
         cmakeModulePath = ""
         for buildFolder in allBuildFolders:
