@@ -1120,7 +1120,6 @@ class CSnakeGUIApp(wx.App):
             if os.path.exists(contextFilename):
                 # Load the context (has to be done through the handler)
                 try:
-                    self.__logger.debug("Loading context.")
                     context = self.handler.LoadContext(contextFilename)
                 except IOError, error:
                     self.__Error("Could not load the context file: '%s'." % error)
@@ -1133,9 +1132,12 @@ class CSnakeGUIApp(wx.App):
             # save file name
             self.__SetContextFilename(contextFilename)
             # log success
-            self.__logger.debug("Loaded context file: %s" % contextFilename)
+            self.__logger.debug("Loaded context.")
             # Update 
             self.UpdateGUI()
+        else:
+            # log warning
+            self.__logger.debug("Could not load context.")
 
     def __SetContext(self, context):
         self.context = context
