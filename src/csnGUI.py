@@ -1181,7 +1181,8 @@ class CSnakeGUIApp(wx.App):
         if not self.destroyed:
             self.CopyGUIToContextAndOptions()
             if self.IsContextModified():
-                dlg = wx.MessageDialog(self.frame, "Save changes before closing?", style = wx.YES_NO | wx.CANCEL)
+                message = "Save changes before closing?"
+                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.CANCEL)
                 ret = dlg.ShowModal()
                 if ret == wx.ID_YES:
                     if self.contextFilename == None or not os.path.isfile(self.contextFilename):
