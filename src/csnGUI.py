@@ -257,6 +257,9 @@ class CSnakeGUIApp(wx.App):
         self.InitOtherGUIStuff()
         self.Initialize()
         self.SetTopWindow(self.frame)
+
+        self.__logger.debug("end method: OnInit")
+
         return 1
 
     def InitFrame(self):
@@ -430,6 +433,9 @@ class CSnakeGUIApp(wx.App):
         self.InitializePaths()
         
         self.UpdateGUI()
+
+        # debug log
+        self.__logger.debug("end method: Initialize")
         
     def __Warn(self, message):
         """ Shows a warning message to the user. """
@@ -833,10 +839,17 @@ class CSnakeGUIApp(wx.App):
             self.ProgressChanged(ProgressEvent(self, range))
             if self.__HasUserCanceled():
                 self.__ResetUserCancel()
-                self.__Report("Stopped: user canceled.")
+                self.__Report("Stopped, user canceled.")
                 break
             if not res:
-                self.__Error("Stopped: Error in process.")
+                message = "Stopped, error in process." 
+                error = self.handler.GetErrorMessage()
+                if error and error != "":
+                    message = "%s\n%s" % (message, error)
+                # to keep the message alive after the error windows is closed.
+                self.__Report(message)
+                # show as error
+                self.__Error(message)
                 break
             
         elapsedTime = time.time() - startTime
@@ -844,6 +857,8 @@ class CSnakeGUIApp(wx.App):
         self.UpdateGUI()
         self.SetStatus("")
         
+        # reset start and range and send 100% (closes the progress bar)
+        self.SetProgressStartAndRange(0, 100)
         self.ProgressChanged(ProgressEvent(self,100,"Done"))
         
         return res
@@ -1176,8 +1191,10 @@ class CSnakeGUIApp(wx.App):
             subprocess.Popen(argList)
 
     def OnLaunchIDE(self, event = None):
-        argList = [self.context.GetIdePath(), self.handler.GetTargetSolutionPath()]
-        subprocess.Popen(argList)
+        path = self.handler.GetTargetSolutionPath()
+        if path and path != "":
+            argList = [self.context.GetIdePath(), path]
+            subprocess.Popen(argList)
     
     def OnExit(self, event = None):
         if not self.destroyed:
