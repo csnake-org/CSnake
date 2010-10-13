@@ -420,20 +420,21 @@ class CSnakeGUIApp(wx.App):
         """ Initializes the application. """
         # debug log
         self.__logger.debug("method: Initialize")
-        
+        # possible command line options
         self.ParseCommandLine()
-        self.PrintWelcomeMessages()
-        self.CreateHandler()
-        
+        # CSnake version
+        self.__Report("CSnake version = %s" % csnBuild.version)
+        # create the GUI handler 
+        self.CreateGuiHandler()
         # initialize options
         self.InitializeOptions()
         # initialize context
         self.InitialiseContext()
-        
+        # initialize default option paths
         self.InitializePaths()
-        
-        self.UpdateGUI()
 
+        # Update GUI (last one to call)
+        self.UpdateGUI()
         # debug log
         self.__logger.debug("end method: Initialize")
         
@@ -522,12 +523,9 @@ class CSnakeGUIApp(wx.App):
         if not os.path.isdir(self.csnakeFolder):
             self.csnakeFolder = self.thisFolder
     
-    def PrintWelcomeMessages(self):
-        self.__Report("CSnake version = %s" % csnBuild.version)
-
-    def CreateHandler(self):
+    def CreateGuiHandler(self):
         # debug log
-        self.__logger.debug("method: CreateHandler")
+        self.__logger.debug("method: CreateGuiHandler")
         self.__guiHandler = csnGUIHandler.Handler()
         self.__guiHandler.AddListener(self.progressListener)
         self.context = None
