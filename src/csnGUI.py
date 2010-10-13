@@ -631,7 +631,8 @@ class CSnakeGUIApp(wx.App):
         # if not loaded, use a default one
         if not self.context:
             self.__logger.debug("Using default context.")
-            self.__SetContext(csnContext.Context())
+            self.context = csnContext.Context()
+            self.__SetContext(self.context)
         
     def CopyGUIToContextAndOptions(self):
         """ Copy all GUI fields to the current context """
