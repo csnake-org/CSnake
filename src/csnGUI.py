@@ -431,19 +431,22 @@ class CSnakeGUIApp(wx.App):
         
         self.UpdateGUI()
         
-    def Warn(self, message):
-        """ Shows a warning message to the user. ToDo: do some more fancy than print."""
+    def __Warn(self, message):
+        """ Shows a warning message to the user. """
         self.__logger.warn("csnGUI.warn: %s" % message)
         if message is None: return
-        self.textLog.WriteText(message + "\n")
+        dlg = wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION)
+        dlg.ShowModal()
         
-    def Error(self, message):
-        """ Shows an error message to the user. ToDo: do some more fancy than print."""
+    def __Error(self, message):
+        """ Shows an error message to the user. """
         self.__logger.error("csnGUI.error: %s" % message)
         if message is None: return
-        self.textLog.WriteText(message + "\n")
+        dlg = wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR)
+        dlg.ShowModal()
 
-    def Report(self, message):
+    def __Report(self, message):
+        """ Shows an report message to the user. """
         self.__logger.info("csnGUI.report: %s" % message)
         if message is None: return
         self.textLog.WriteText(message + "\n")
@@ -514,7 +517,7 @@ class CSnakeGUIApp(wx.App):
             self.csnakeFolder = self.thisFolder
     
     def PrintWelcomeMessages(self):
-        self.Report("CSnake version = %s" % csnBuild.version)
+        self.__Report("CSnake version = %s" % csnBuild.version)
 
     def CreateHandler(self):
         # debug log
@@ -595,7 +598,7 @@ class CSnakeGUIApp(wx.App):
                 self.__logger.debug("Loading options.")
                 self.options.Load(self.optionsFilename)
             except IOError, error:
-                self.Error("%s" % error)
+                self.__Error("%s" % error)
         else:
             self.__logger.debug("No options found, using default.")
             self.SaveOptions()
@@ -660,7 +663,7 @@ class CSnakeGUIApp(wx.App):
             self.context.Save(contextFilename)
             saved = True
         except:
-            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % contextFilename)
+            self.__Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % contextFilename)
         
         if saved:
             # Update name and flag    
@@ -674,7 +677,7 @@ class CSnakeGUIApp(wx.App):
         try:
             self.options.Save(self.optionsFilename)
         except:
-            self.Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
+            self.__Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
     
     def OnDetectRootFolders(self, event):
         if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
@@ -683,7 +686,7 @@ class CSnakeGUIApp(wx.App):
             self.UpdateGUI()
         else:
             message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
     
     def FindAdditionalRootFolders(self, onlyForNewInstance=False):
         if onlyForNewInstance and self.context.IsCSnakeFileInRecentlyUsed():
@@ -715,7 +718,7 @@ class CSnakeGUIApp(wx.App):
         # check situation
         if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
             message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
             return
         # run the action
         if self.DoActions([self.ActionUpdateListOfTargets]):
@@ -726,7 +729,7 @@ class CSnakeGUIApp(wx.App):
         # check situation
         if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
             message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
             return
         # run the action
         if self.DoActions([self.ActionCreateCMakeFilesAndRunCMake]):
@@ -737,7 +740,7 @@ class CSnakeGUIApp(wx.App):
         # check situation
         if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
             message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
             return
         # run the action
         if self.DoActions([self.ActionConfigureThirdPartyFolder]):
@@ -748,7 +751,7 @@ class CSnakeGUIApp(wx.App):
         # check situation
         if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
             message = "Please provide a valid CSnake file."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
             return
         # run the action
         if self.DoActions([self.ActionInstallFilesToBuildFolder]):
@@ -799,7 +802,7 @@ class CSnakeGUIApp(wx.App):
         self.SetStatus("Processing...")
         
         self.AddLogSeparator()
-        self.Report("Working, patience please...")
+        self.__Report("Working, patience please...")
         
         startTime = time.time()
         
@@ -819,27 +822,25 @@ class CSnakeGUIApp(wx.App):
             actionStr = action.__name__[6:]
             # split at upper case
             actionStr = re.sub(r'([a-z]*)([A-Z])',r'\1 \2',actionStr).strip()
-            self.Report("Action: %s." % actionStr)
+            self.__Report("Action: %s." % actionStr)
             self.ProgressChanged(ProgressEvent(self,start,actionStr))
             try:
                 res = res and action()
                 count += 1
             except StandardError, message:
-                self.Error(str(message))
-                dlg = wx.MessageDialog(self.frame, "%s" % message, 'Error', style = wx.OK | wx.ICON_ERROR)
-                dlg.ShowModal()
+                self.__Error(str(message))
             # check cancel
             self.ProgressChanged(ProgressEvent(self, range))
             if self.__HasUserCanceled():
                 self.__ResetUserCancel()
-                self.Report("Stopped: user canceled.")
+                self.__Report("Stopped: user canceled.")
                 break
             if not res:
-                self.Error("Stopped: Error in process.")
+                self.__Error("Stopped: Error in process.")
                 break
             
         elapsedTime = time.time() - startTime
-        self.Report("Done (%d seconds)." % elapsedTime)
+        self.__Report("Done (%d seconds)." % elapsedTime)
         self.UpdateGUI()
         self.SetStatus("")
         
@@ -914,9 +915,7 @@ class CSnakeGUIApp(wx.App):
                     self.AddThirdPartyFolder( defaultThirdPartyFolder )
         except Exception, message:
             mes = "%s" % message
-            dlg = wx.MessageDialog(self.frame, mes, 'Error', style = wx.OK | wx.ICON_ERROR)
-            dlg.ShowModal()
-    
+            self.__Error(message)
     
     def GetLastRootFolder(self):
         if self.context.GetNumberOfRootFolders() > 0:
@@ -932,7 +931,7 @@ class CSnakeGUIApp(wx.App):
         # check if correct selection
         if folder == None or folder == "":
             message = "Please select at least one folder."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
         else:
             # remove
             self.context.RemoveRootFolder(folder)
@@ -971,7 +970,7 @@ class CSnakeGUIApp(wx.App):
         selection = self.ThirdPartySrcAndBuildFolderGetSelectedRows()
         if (len(selection) == 0):
             message = "Please select at least one row. You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
         else:
             for i in range(len(selection)):
                 self.context.RemoveThirdPartySrcAndBuildFolderByIndex(selection[i])
@@ -987,7 +986,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
             message = "Please select at least one row. You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
             self.gridThirdPartySrcAndBuildFolders.SetFocus()
         else:
             self.gridThirdPartySrcAndBuildFolders.SetFocus()
@@ -1000,7 +999,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
         if (len(selection) == 0):
             message = "Please select at least one row. You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
         else:
             newSelection = []
             boundaryIndex = 0
@@ -1026,7 +1025,7 @@ class CSnakeGUIApp(wx.App):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows(), reverse = True)
         if (len(selection) == 0):
             message = "Please select at least one row. You can click on the row index to select a row."
-            wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION).ShowModal()
+            self.__Warn(message)
         else:
             newSelection = []
             boundaryIndex = self.context.GetNumberOfThirdPartyFolders() - 1
@@ -1124,17 +1123,17 @@ class CSnakeGUIApp(wx.App):
                     self.__logger.debug("Loading context.")
                     context = self.handler.LoadContext(contextFilename)
                 except IOError, error:
-                    self.Error("Could not load the context file: '%s'." % error)
+                    self.__Error("Could not load the context file: '%s'." % error)
             else:
-                self.Error("Could not find context file: '%s'." % contextFilename)
+                self.__Error("Could not find context file: '%s'." % contextFilename)
         
         if context:
             # Save the context
             self.__SetContext(context)
             # save file name
             self.__SetContextFilename(contextFilename)
-            # report success
-            self.Report("Loaded context file: %s" % contextFilename)
+            # log success
+            self.__logger.debug("Loaded context file: %s" % contextFilename)
             # Update 
             self.UpdateGUI()
 
@@ -1206,8 +1205,7 @@ class CSnakeGUIApp(wx.App):
         if os.path.exists(indexFilename):
             webbrowser.open(indexFilename)
         else:
-            dialog = wx.MessageDialog(self.frame, "Missing documentation.", 'Error', style = wx.OK | wx.ICON_ERROR)
-            dialog.ShowModal()
+            self.__Error("Missing documentation.")
                                         
     def OnAbout(self, event = None):
         ''' Text displayed in the About box.'''
@@ -1270,7 +1268,7 @@ class CSnakeGUIApp(wx.App):
                 # show error message
                 message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
                 message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
-                wx.MessageDialog(self.frame, message, 'Error', style = wx.OK | wx.ICON_ERROR).ShowModal()
+                self.__Error(message)
                 self.SetStatus("")
                 return False
             # restore saved filter
@@ -1351,7 +1349,7 @@ class CSnakeGUIApp(wx.App):
                         self.context.SetIdePath(idePath)
             else:
                 message = "CSnake could not find the corresponding Visual Studio in the registry."
-                wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_WARNING).ShowModal()
+                self.__Warn(message)
                 self.context.SetIdePath("")
             
         # update the GUI
