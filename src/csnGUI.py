@@ -528,8 +528,8 @@ class CSnakeGUIApp(wx.App):
     def CreateHandler(self):
         # debug log
         self.__logger.debug("method: CreateHandler")
-        self.handler = csnGUIHandler.Handler()
-        self.handler.AddListener(self.progressListener)
+        self.__guiHandler = csnGUIHandler.Handler()
+        self.__guiHandler.AddListener(self.progressListener)
         self.context = None
     
     def InitializePaths(self):
@@ -635,7 +635,7 @@ class CSnakeGUIApp(wx.App):
         if not self.context:
             self.__logger.debug("Using default context.")
             context = csnContext.Context()
-            self.handler.SetContext(context)
+            self.__guiHandler.SetContext(context)
             self.__SetContext(context)
         
     def CopyGUIToContextAndOptions(self):
@@ -692,7 +692,7 @@ class CSnakeGUIApp(wx.App):
     
     def OnDetectRootFolders(self, event):
         if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
-            additionalRootFolders = self.handler.FindAdditionalRootFolders()
+            additionalRootFolders = self.__guiHandler.FindAdditionalRootFolders()
             self.context.ExtendRootFolders(additionalRootFolders)
             self.UpdateGUI()
         else:
@@ -703,7 +703,7 @@ class CSnakeGUIApp(wx.App):
         if onlyForNewInstance and self.context.IsCSnakeFileInRecentlyUsed():
             return
         
-        additionalRootFolders = self.handler.FindAdditionalRootFolders()
+        additionalRootFolders = self.__guiHandler.FindAdditionalRootFolders()
         if len(additionalRootFolders):
             message =  "CSnakeGUI found additional root folders which are likely to be necessary for target %s.\n" % self.context.GetInstance()
             message += "Should CSnakeGUI add the following root folders?\n\n"
@@ -770,7 +770,7 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
 
     def ActionUpdateListOfTargets(self):
-        self.listOfPossibleTargets = self.handler.GetListOfPossibleTargets()
+        self.listOfPossibleTargets = self.__guiHandler.GetListOfPossibleTargets()
         if len(self.listOfPossibleTargets):
             self.context.SetInstance(self.listOfPossibleTargets[0])
             return True
@@ -778,36 +778,36 @@ class CSnakeGUIApp(wx.App):
 
     def ActionCreateCMakeFilesAndRunCMake(self):
         self.FindAdditionalRootFolders(True)
-        if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
+        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
             if self.context.GetInstance().lower() == "gimias":
-                self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+                self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
             return True
         return False
         
     def ActionOnlyCreateCMakeFiles(self):
         self.FindAdditionalRootFolders(True)
-        if self.handler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
+        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
             if self.context.GetInstance().lower() == "gimias":
-                self.ProposeToDeletePluginDlls(self.handler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+                self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
             return True
         return False
         
     def ActionConfigureThirdPartyFolder(self):
-        if self.handler.ConfigureThirdPartyFolders():
+        if self.__guiHandler.ConfigureThirdPartyFolders():
             if self.options.GetAskToLaunchIDE():
-                self.AskToLaunchIDE(self.handler.GetThirdPartySolutionPaths()[0])
+                self.AskToLaunchIDE(self.__guiHandler.GetThirdPartySolutionPaths()[0])
             return True
         return False
         
     def ActionBuildThirdParty(self):
-        return self.handler.BuildMultiple(self.handler.GetThirdPartySolutionPaths(), self.context.GetConfigurationName(), True)
+        return self.__guiHandler.BuildMultiple(self.__guiHandler.GetThirdPartySolutionPaths(), self.context.GetConfigurationName(), True)
         
     def ActionBuildProject(self):
-        return self.handler.Build(self.handler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False)
+        return self.__guiHandler.Build(self.__guiHandler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False)
         
     def ActionInstallFilesToBuildFolder(self):
         self.FindAdditionalRootFolders(True)
-        return self.handler.InstallBinariesToBuildFolder()
+        return self.__guiHandler.InstallBinariesToBuildFolder()
             
     def DoActions(self, actions):
         self.SetStatus("Processing...")
@@ -848,7 +848,7 @@ class CSnakeGUIApp(wx.App):
                 break
             if not res:
                 message = "Stopped, error in process." 
-                error = self.handler.GetErrorMessage()
+                error = self.__guiHandler.GetErrorMessage()
                 if error and error != "":
                     message = "%s\n%s" % (message, error)
                 # to keep the message alive after the error windows is closed.
@@ -934,7 +934,6 @@ class CSnakeGUIApp(wx.App):
                 if dlg.ShowModal() == wx.ID_YES:
                     self.AddThirdPartyFolder( defaultThirdPartyFolder )
         except Exception, message:
-            mes = "%s" % message
             self.__Error(message)
     
     def GetLastRootFolder(self):
@@ -1013,7 +1012,7 @@ class CSnakeGUIApp(wx.App):
             for row in selection:
                 source = self.context.GetThirdPartyFolder(row)
                 build = self.context.GetThirdPartyBuildFolderByIndex(row)
-                self.handler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
+                self.__guiHandler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
         
     def OnMoveUpThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
@@ -1138,9 +1137,9 @@ class CSnakeGUIApp(wx.App):
         if contextFilename != None and contextFilename != "":
             # Check if the file exists
             if os.path.exists(contextFilename):
-                # Load the context (has to be done through the handler)
+                # Load the context (has to be done through the __guiHandler)
                 try:
-                    context = self.handler.LoadContext(contextFilename)
+                    context = self.__guiHandler.LoadContext(contextFilename)
                 except IOError, error:
                     self.__Error("Could not load the context file: '%s'." % error)
             else:
@@ -1196,7 +1195,7 @@ class CSnakeGUIApp(wx.App):
             subprocess.Popen(argList)
 
     def OnLaunchIDE(self, event = None):
-        path = self.handler.GetTargetSolutionPath()
+        path = self.__guiHandler.GetTargetSolutionPath()
         if path and path != "":
             argList = [self.context.GetIdePath(), path]
             subprocess.Popen(argList)
@@ -1286,7 +1285,7 @@ class CSnakeGUIApp(wx.App):
             previousFilter = self.context.GetFilter()
             self.context.SetFilter(list())
             try:
-                categories = self.handler.GetCategories(forceRefresh)
+                categories = self.__guiHandler.GetCategories(forceRefresh)
             except:
                 # restore saved filter
                 self.context.SetFilter(previousFilter)
