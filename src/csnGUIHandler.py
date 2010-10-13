@@ -495,13 +495,6 @@ class Handler:
             message += line.rstrip('\n')
         sys.stderr.write(message)
         self.__SetErrorMessage(message)
-        # vs outputs everything to stdout
-        if message == "":
-            for line in sub.stdout.readlines():
-                if line.find("error") != -1:
-                    message = line.rstrip('\n')
-                    break
-            self.__SetErrorMessage(message)
         # return result
         return res
     
