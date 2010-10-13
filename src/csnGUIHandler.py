@@ -68,6 +68,8 @@ class Handler:
         # progress start and range (in case of multiple actions)
         self.__progressStart = 0
         self.__progressRange = 100
+        # error message
+        self.__errorMessage = ""
     
     def LoadContext(self, filename):
         self.contextFilename = filename
@@ -115,27 +117,9 @@ class Handler:
         
         if _alsoRunCMake:
             nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True))
-            count = 0
-            
             argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
-            process = subprocess.Popen(argList, cwd = instance.GetBuildFolder(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
-            errline = process.stderr.readline()
-            if errline:
-                sys.stderr.write(errline)
-            while True:
-                line = process.stdout.readline()
-                if not line:
-                    break
-                sys.stdout.write(line)
-                str = line[0:13].strip()
-                if str == "-- Processing":
-                    progress = count*100/nProjects
-                    if progress > 100: progress = 100
-                    self.__NotifyListeners(ProgressEvent(self,progress))
-                    count += 1
-
-            if process.wait() == 0:
+            if self.__ConfigureProject(argList, instance.GetBuildFolder(), nProjects):
                 self.generator.PostProcess(instance)
                 return True
             else:
@@ -200,13 +184,9 @@ class Handler:
                   "-D", "THIRDPARTY_BUILD_FOLDERS:STRING='%s'" % cmakeModulePath] + \
                   self.context.GetCompiler().GetThirdPartyCMakeParameters() + \
                   [source]
+        
         for _ in range(0, _nrOfTimes):
-            result = result and 0 == subprocess.Popen(argList, cwd = build).wait() 
-
-        #proc = subprocess.Popen(argList, cwd = build, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #for line in proc.stdout.readlines():
-        #    progress
-        #    self.__NotifyListeners(ProgressEvent(self,progress))
+            result = result and self.__ConfigureThirdParty(argList, build) 
 
         return result
 
@@ -295,9 +275,12 @@ class Handler:
         
     def GetTargetSolutionPath(self):
         instance = self.cachedProjectInstance
-        if self.IsContextModified():
+        if not instance or self.IsContextModified():
             instance = self.__GetProjectInstance()
-        return "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
+        path = ""
+        if instance:
+            path = "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
+        return path
 
     def GetThirdPartySolutionPaths(self):
         result = []
@@ -369,45 +352,29 @@ class Handler:
             if not os.path.exists(pathIDE):
                 raise Exception( "Please provide a valid Visual Studio path" )
             
+            instance = self.__GetProjectInstance()
+            nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True))
+            
             # build in debug
             self.__logger.info("Building '%s' in debug mode [visual studio]." % solutionName)
-            argList = [pathIDE, solutionName, "/build", "debug" ]
-            sub = subprocess.Popen(argList)
-            result = result and sub.wait() == 0
+            result = result and self.__BuildVisualStudio(pathIDE, solutionName, "debug", nProjects)
             if not result: return False
             # build in release
             self.__logger.info("Building '%s' in release mode [visual studio]." % solutionName)
-            argList = [pathIDE, solutionName, "/build", "release" ]
-            sub = subprocess.Popen(argList)
-            result = result and sub.wait() == 0
+            result = result and self.__BuildVisualStudio(pathIDE, solutionName, "release", nProjects)
             if not result: return False
+        
         elif self.context.GetCompilername().startswith("Unix") or \
              self.context.GetCompilername().startswith("KDevelop3") :
-            # for visual studio (not express), use the devenv.com
+            # get the build path
             (head, tail) = os.path.split(solutionName)
-            self.__logger.info("Building '%s' in debug mode [make]." % head)
-            argList = ["make", "-s"]
             buildPath = head
+            # special case for third parties
             if isThirdParty:
                 buildPath = "%s/%s" % (buildPath, buildMode)
-            # compile process
-            sub = subprocess.Popen(argList, cwd=buildPath, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # catch lines to indicate progress
-            errline = sub.stderr.readline()
-            if errline:
-                sys.stderr.write(errline)
-            while True:
-                line = sub.stdout.readline()
-                if not line: 
-                    break
-                sys.stdout.write(line)
-                str = line[1:4].strip()
-                if str.isdigit():
-                    progress = self.__progressStart + int(str)*self.__progressRange/100
-                    if progress > 100: progress = 100
-                    self.__NotifyListeners(ProgressEvent(self, progress))
-            # final result
-            result = result and sub.wait() == 0
+            # build
+            self.__logger.info("Building '%s' [make]." % buildPath)
+            result = result and self.__BuildMake(buildPath)
             
         # last progress
         self.__NotifyListeners(ProgressEvent(self,self.__progressRange))
@@ -438,3 +405,133 @@ class Handler:
         if not listener in self.__listeners:
             self.__listeners.append(listener)
     
+    def __SetErrorMessage(self, message):
+        self.__errorMessage = message
+        
+    def GetErrorMessage(self):
+        return self.__errorMessage
+    
+    def __ConfigureThirdParty(self, argList, workingDir):
+        """ Run cmake on a third party. Returns True is success. """
+        # reset errors
+        self.__SetErrorMessage("")
+        # run process
+        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # catch lines to indicate progress (has to be bellow Popen)
+        while True:
+            line = sub.stdout.readline()
+            if not line: 
+                break
+            sys.stdout.write(line)
+        # wait till the process finishes
+        res = (sub.wait() == 0)
+        # catch error lines
+        message = ""
+        for line in sub.stderr.readlines():
+            message += line.rstrip('\n')
+        sys.stderr.write(message)
+        self.__SetErrorMessage(message)
+        # return result
+        return res
+    
+    def __ConfigureProject(self, argList, workingDir, nProjects):
+        """ Run cmake on a project. Returns True is success. """
+        # reset errors
+        self.__SetErrorMessage("")
+        # run process
+        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # catch lines to indicate progress (has to be bellow Popen)
+        count = 0
+        while True:
+            line = sub.stdout.readline()
+            if not line:
+                break
+            sys.stdout.write(line)
+            # progress: looks like '-- Processing ...'
+            str = line[0:13].strip()
+            if str == "-- Processing":
+                progress = count*100/nProjects
+                if progress > 100: progress = 100
+                self.__NotifyListeners(ProgressEvent(self,progress))
+                count += 1
+        # wait till the process finishes
+        res = (sub.wait() == 0)
+        # catch error lines
+        message = ""
+        for line in sub.stderr.readlines():
+            message += line.rstrip('\n')
+        sys.stderr.write(message)
+        self.__SetErrorMessage(message)
+        # return result
+        return res
+    
+    def __BuildVisualStudio(self, pathIDE, solution, buildMode, nProjects):
+        """ Build using the Visual Studio Compiler. Returns True is success. """
+        # reset errors
+        self.__SetErrorMessage("")
+        # arguments
+        argList = [pathIDE, solution, "/build", buildMode ]
+        # run process
+        sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # catch lines to indicate progress (has to be bellow Popen)
+        count = 0
+        while True:
+            line = sub.stdout.readline()
+            if not line:
+                break
+            sys.stdout.write(line)
+            # progress: looks like '#>Build log was saved'
+            str = line[1:11].strip()
+            if str == ">Build log":
+                progress = count*100/nProjects
+                if progress > 100: progress = 100
+                self.__NotifyListeners(ProgressEvent(self,progress))
+                count += 1
+        # wait till the process finishes
+        res = (sub.wait() == 0)
+        # catch error lines
+        message = ""
+        for line in sub.stderr.readlines():
+            message += line.rstrip('\n')
+        sys.stderr.write(message)
+        self.__SetErrorMessage(message)
+        # vs outputs everything to stdout
+        if message == "":
+            for line in sub.stdout.readlines():
+                if line.find("error") != -1:
+                    message = line.rstrip('\n')
+                    break
+            self.__SetErrorMessage(message)
+        # return result
+        return res
+    
+    def __BuildMake(self, buildPath):
+        """ Build using Make. Returns True is success. """
+        # reset errors
+        self.__SetErrorMessage("")
+        # arguments
+        argList = ["make", "-s"]
+        # run process
+        sub = subprocess.Popen(argList, cwd=buildPath, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # catch lines to indicate progress (has to be bellow Popen)
+        while True:
+            line = sub.stdout.readline()
+            if not line: 
+                break
+            sys.stdout.write(line)
+            # progress: looks like '[ 10%] ...'
+            str = line[1:4].strip()
+            if str.isdigit():
+                progress = self.__progressStart + int(str)*self.__progressRange/100
+                if progress > 100: progress = 100
+                self.__NotifyListeners(ProgressEvent(self, progress))
+        # wait till the process finishes
+        res = (sub.wait() == 0)
+        # catch error lines
+        message = ""
+        for line in sub.stderr.readlines():
+            message += line.rstrip('\n')
+        sys.stderr.write(message)
+        self.__SetErrorMessage(message)
+        # return result
+        return res
