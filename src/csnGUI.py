@@ -836,7 +836,7 @@ class CSnakeGUIApp(wx.App):
             try:
                 res = res and action()
                 count += 1
-            except StandardError, message:
+            except Exception, message:
                 self.__Error(str(message))
             # check cancel
             self.ProgressChanged(ProgressEvent(self, range))
