@@ -573,10 +573,13 @@ class CSnakeGUIApp(wx.App):
             message = "CSnake found paths to settings in the registry. Use them?"
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
+                self.__logger.info("Using found paths.")
                 self.context.SetCmakePath(cmakePath)
                 self.context.SetPythonPath(pythonPath)
                 if( foundIde ):
                     self.context.SetIdePath(idePath)
+            else:
+                self.__logger.info("Not using found paths.")
     
     def InitializeOptions(self):
         """ Initialize GUI options. """
