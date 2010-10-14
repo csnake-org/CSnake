@@ -271,7 +271,6 @@ class CSnakeGUIApp(wx.App):
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
         self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "_ContextData__buildFolder", isFilename = True)
-        self.binder.AddTextControl("txtInstallFolder", buddyClass = "context", buddyField = "_ContextData__installFolder", isFilename = True)
         self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "_ContextData__kdevelopProjectFolder", isFilename = True)
         self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "_ContextData__cmakePath", isFilename = True)
         self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "_ContextData__pythonPath", isFilename = True)
@@ -297,7 +296,6 @@ class CSnakeGUIApp(wx.App):
         self.panelOptions = xrc.XRCCTRL(self.frame, "panelOptions")
 
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Install Folder", self.GetInstallFolder, self.SetInstallFolder, self), id=xrc.XRCID("btnSelectInstallFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
 
@@ -899,12 +897,6 @@ class CSnakeGUIApp(wx.App):
         
     def GetBuildFolder(self):
         return self.context.GetBuildFolder()
-        
-    def SetInstallFolder(self, folder):
-        self.context.SetInstallFolder(folder)
-
-    def GetInstallFolder(self):
-        return self.context.GetInstallFolder()
         
     def SetKDevelopProjectFolder(self, folder):
         self.context.SetKdevelopProjectFolder(folder)
