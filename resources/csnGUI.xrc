@@ -52,66 +52,6 @@
                 <orient>wxVERTICAL</orient>
                 <object class="sizeritem">
                   <object class="wxStaticBoxSizer">
-                    <label>Project Configuration</label>
-                    <orient>wxVERTICAL</orient>
-                    <object class="sizeritem">
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>1</border>
-                      <object class="wxBoxSizer">
-                        <orient>wxHORIZONTAL</orient>
-                        <object class="sizeritem">
-                          <object class="wxStaticText" name="lblCSnakeFile">
-                            <size>120,-1</size>
-                            <label>CSnake File</label>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <option>1</option>
-                          <object class="wxComboBox" name="cmbCSnakeFile">
-                            <value></value>
-                            <content/>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <flag>wxEXPAND</flag>
-                          <object class="wxButton" name="btnSelectCSnakeFile">
-                            <label>...</label>
-                          </object>
-                        </object>
-                      </object>
-                    </object>
-                    <object class="sizeritem">
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>1</border>
-                      <object class="wxBoxSizer">
-                        <orient>wxHORIZONTAL</orient>
-                        <object class="sizeritem">
-                          <object class="wxStaticText" name="lblInstance">
-                            <size>120,-1</size>
-                            <label>Instance</label>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <option>1</option>
-                          <object class="wxComboBox" name="cmbInstance">
-                            <value></value>
-                            <content/>
-                          </object>
-                        </object>
-                        <object class="sizeritem">
-                          <flag>wxEXPAND</flag>
-                          <object class="wxButton" name="btnUpdateListOfTargets">
-                            <label>Update</label>
-                          </object>
-                        </object>
-                      </object>
-                    </object>
-                  </object>
-                  <flag>wxTOP|wxEXPAND</flag>
-                  <border>10</border>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxStaticBoxSizer">
                     <label>Project Folders</label>
                     <orient>wxVERTICAL</orient>
                     <object class="sizeritem">
@@ -281,6 +221,66 @@
                       </object>
                       <flag>wxALL|wxEXPAND</flag>
                       <border>1</border>
+                    </object>
+                  </object>
+                  <flag>wxTOP|wxEXPAND</flag>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticBoxSizer">
+                    <label>Project Configuration</label>
+                    <orient>wxVERTICAL</orient>
+                    <object class="sizeritem">
+                      <flag>wxALL|wxEXPAND</flag>
+                      <border>1</border>
+                      <object class="wxBoxSizer">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxStaticText" name="lblCSnakeFile">
+                            <size>120,-1</size>
+                            <label>CSnake File</label>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <option>1</option>
+                          <object class="wxComboBox" name="cmbCSnakeFile">
+                            <value></value>
+                            <content/>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <flag>wxEXPAND</flag>
+                          <object class="wxButton" name="btnSelectCSnakeFile">
+                            <label>...</label>
+                          </object>
+                        </object>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALL|wxEXPAND</flag>
+                      <border>1</border>
+                      <object class="wxBoxSizer">
+                        <orient>wxHORIZONTAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxStaticText" name="lblInstance">
+                            <size>120,-1</size>
+                            <label>Instance</label>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <option>1</option>
+                          <object class="wxComboBox" name="cmbInstance">
+                            <value></value>
+                            <content/>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
+                          <flag>wxEXPAND</flag>
+                          <object class="wxButton" name="btnUpdateListOfTargets">
+                            <label>Update</label>
+                          </object>
+                        </object>
+                      </object>
                     </object>
                   </object>
                   <flag>wxTOP|wxEXPAND</flag>
