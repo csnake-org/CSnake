@@ -2,14 +2,14 @@
 class Event:
     """ Generic event class. """
     def __init__(self, code, source):
-        self._code = code
-        self._source = source
+        self.__code = code
+        self.__source = source
 
     def GetCode(self):
-        return self._code
+        return self.__code
     
     def GetSource(self):
-        return self._source
+        return self.__source
     
     def ToString(self):
         if self.IsNull():
@@ -31,13 +31,13 @@ class Event:
         return 2
     
     def IsNull(self):
-        return self._code == self.GetNullCode()
+        return self.__code == self.GetNullCode()
     
     def IsChange(self):
-        return self._code == self.GetChangeCode()
+        return self.__code == self.GetChangeCode()
 
     def IsProgress(self):
-        return self._code == self.GetProgressCode()
+        return self.__code == self.GetProgressCode()
     
 class ChangeEvent(Event):
     """ Change event class. """
@@ -62,18 +62,22 @@ class Listener:
     def __init__(self, source):
         self._source = source
         
+    def GetSource(self):
+        """ Get the listener source. """
+        return self._source
+    
     def Update(self):
         """ Abstract. """
 
 class ChangeListener(Listener):
-    """ Listener for ChangeEvent. """   
+    """ Listener for ChangeEvent. The listener source needs to implement StateChanged(event). """   
     def Update(self, event):
         """ Call the source to tell it the state has changed. """
         if event.IsChange():
             self._source.StateChanged(event)
 
 class ProgressListener(Listener):
-    """ Listener for ProgressEvent. """   
+    """ Listener for ProgressEvent. The listener source needs to implement ProgressChanged(event). """   
     def Update(self, event):
         """ Call the source to tell it the state has changed. """
         if event.IsProgress():
