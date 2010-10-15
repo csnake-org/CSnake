@@ -241,6 +241,8 @@ class Context(object):
 
     def SetInstance(self, value):
         self.__data.SetInstance(value)
+        # reset the filter
+        self.SetFilter([])
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetTestRunnerTemplate(self):
@@ -794,6 +796,9 @@ class Context(object):
             setattr(self.__data, field, value)
             if field == "_ContextData__configurationName" and self.__compiler != None:
                 self.__compiler.SetConfigurationName(self.GetConfigurationName())
+            elif field == "_ContextData__instance":
+                # reset the filter
+                self.SetFilter([])
             self.__NotifyListeners(ChangeEvent(self))
     
     def __NotifyListeners(self, event):
