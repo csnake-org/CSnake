@@ -119,6 +119,7 @@ class Manager:
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
                         fileResult = (0 != shutil.copy(file, absLocation))
                         result = fileResult and result
+                        if progress > 100: progress = 100
                         self.__NotifyListeners(ProgressEvent(self,progress))
                         if self.IsCanceled(): return False
                         progress += increment
