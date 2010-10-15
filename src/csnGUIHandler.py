@@ -68,6 +68,7 @@ class Handler:
         # progress start and range (in case of multiple actions)
         self.__progressStart = 0
         self.__progressRange = 100
+        self.__userCanceled = False
         # error message
         self.__errorMessage = ""
     
@@ -80,6 +81,17 @@ class Handler:
         self.context = context
         self.context.AddListener(self.changeListener)
         csnProject.globalCurrentContext = self.context
+        
+    def Cancel(self):
+        self.__userCanceled = True
+        if self.__GetProjectInstance():
+            self.__GetProjectInstance().installManager.Cancel()
+        
+    def __ResetCancel(self):
+        self.__userCanceled = False
+        
+    def IsCanceled(self):
+        return self.__userCanceled
    
     def __GetProjectInstance(self):
         """ Instantiates and returns the _instance in _projectPath. """
@@ -226,7 +238,7 @@ class Handler:
         """
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
-
+        self.__ResetCancel()
         self.DeletePycFiles()
                 
         rollbackHandler = RollbackHandler()
@@ -242,6 +254,7 @@ class Handler:
         count = 0
         for member in members:
             self.__NotifyListeners(ProgressEvent(self, count*100/nMembers))
+            if self.IsCanceled(): return result
             count += 1
             (targetName, target) = (member[0], member[1])
             if isinstance(target, csnProject.GenericProject):
@@ -446,6 +459,7 @@ class Handler:
     def __ConfigureProject(self, argList, workingDir, nProjects):
         """ Run cmake on a project. Returns True is success. """
         # reset errors
+        self.__ResetCancel()
         self.__SetErrorMessage("")
         # run process
         sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -462,6 +476,7 @@ class Handler:
                 progress = count*100/nProjects
                 if progress > 100: progress = 100
                 self.__NotifyListeners(ProgressEvent(self,progress))
+                if self.IsCanceled(): return False
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
@@ -477,6 +492,7 @@ class Handler:
     def __BuildVisualStudio(self, pathIDE, solution, buildMode, nProjects):
         """ Build using the Visual Studio Compiler. Returns True is success. """
         # reset errors
+        self.__ResetCancel()
         self.__SetErrorMessage("")
         # arguments
         argList = [pathIDE, solution, "/build", buildMode ]
@@ -495,6 +511,7 @@ class Handler:
                 progress = count*100/nProjects
                 if progress > 100: progress = 100
                 self.__NotifyListeners(ProgressEvent(self,progress))
+                if self.IsCanceled(): return False
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
@@ -510,6 +527,7 @@ class Handler:
     def __BuildMake(self, buildPath):
         """ Build using Make. Returns True is success. """
         # reset errors
+        self.__ResetCancel()
         self.__SetErrorMessage("")
         # arguments
         argList = ["make", "-s"]
@@ -527,6 +545,7 @@ class Handler:
                 progress = self.__progressStart + int(str)*self.__progressRange/100
                 if progress > 100: progress = 100
                 self.__NotifyListeners(ProgressEvent(self, progress))
+                if self.IsCanceled(): return False
         # wait till the process finishes
         res = (sub.wait() == 0)
         # catch error lines

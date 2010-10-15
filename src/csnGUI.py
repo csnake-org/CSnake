@@ -1391,6 +1391,7 @@ class CSnakeGUIApp(wx.App):
             cont, skip = self.__progressBar.Update(progress, event.GetMessage())
             if not cont:
                 self.__progressBar.Destroy()
+                self.__guiHandler.Cancel()
                 self.__cancelAction = True
         
     def __HasUserCanceled(self):

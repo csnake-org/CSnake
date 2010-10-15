@@ -16,7 +16,18 @@ class Manager:
         self.__listeners = []
         # logger
         self.__logger = logging.getLogger("CSnake")
+        # cancel flag
+        self.__userCanceled = False
 
+    def Cancel(self):
+        self.__userCanceled = True
+        
+    def __ResetCancel(self):
+        self.__userCanceled = False
+        
+    def IsCanceled(self):
+        return self.__userCanceled
+   
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         if not self.project.context.GetCompiler().IsForPlatform(_WIN32, _NOT_WIN32):
             return
@@ -77,6 +88,7 @@ class Manager:
         This function copies all third party dlls to the build folder, so that you can run the executables in the
         build folder without having to build the INSTALL target.
         """
+        self.__ResetCancel()
         result = True
         self.ResolvePathsOfFilesToInstall()
 
@@ -108,6 +120,7 @@ class Manager:
                         fileResult = (0 != shutil.copy(file, absLocation))
                         result = fileResult and result
                         self.__NotifyListeners(ProgressEvent(self,progress))
+                        if self.IsCanceled(): return False
                         progress += increment
                         if not fileResult:
                             message = "Failed to copy %s to %s\n" % (file, absLocation)
