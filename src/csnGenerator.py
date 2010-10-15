@@ -121,7 +121,8 @@ class Generator:
             _generatedList = []
 
         # assert that this project is not filtered
-        assert not _targetProject.MatchesFilter(), "\n\nLogical error: the project %s should have been filtered instead of generated." % _targetProject.name
+        if _targetProject.MatchesFilter():
+            _targetProject.RemoveSelfFromFilter()
         
         # Trying to Generate a project twice indicates a logical error in the code        
         assert not _targetProject in _generatedList, "\n\nError: Trying to Generate a project twice. Target project name = %s" % (_targetProject.name)

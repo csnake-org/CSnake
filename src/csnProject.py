@@ -200,19 +200,17 @@ class GenericProject(object):
                 if csnUtility.Matches(string, pattern):
                     return True
         return False
+    
+    def RemoveSelfFromFilter(self):
+        filter = self.context.GetFilter()
+        for pattern in filter:
+            for string in self.categories:
+                if csnUtility.Matches(string, pattern):
+                    filter.remove(pattern)
+        self.context.SetFilter(filter)
 
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
-
-def SetCMakeInsertBeforeTarget(self, _file):
-    # Empty function
-    return
-
-def SetCMakeInsertAfterTarget(self, _file):
-    # Empty function
-    return
-
-
 
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function
