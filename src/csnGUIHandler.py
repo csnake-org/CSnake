@@ -474,7 +474,7 @@ class Handler:
             str = line[0:13].strip()
             if str == "-- Processing":
                 progress = count*100/nProjects
-                if progress > 100: progress = 100
+                if progress >= 100: progress = 99
                 self.__NotifyListeners(ProgressEvent(self,progress))
                 if self.IsCanceled(): return False
                 count += 1
@@ -509,7 +509,7 @@ class Handler:
             str = line[1:11].strip()
             if str == ">Build log":
                 progress = count*100/nProjects
-                if progress > 100: progress = 100
+                if progress >= 100: progress = 99
                 self.__NotifyListeners(ProgressEvent(self,progress))
                 if self.IsCanceled(): return False
                 count += 1
@@ -543,7 +543,7 @@ class Handler:
             str = line[1:4].strip()
             if str.isdigit():
                 progress = self.__progressStart + int(str)*self.__progressRange/100
-                if progress > 100: progress = 100
+                if progress >= 100: progress = 99
                 self.__NotifyListeners(ProgressEvent(self, progress))
                 if self.IsCanceled(): return False
         # wait till the process finishes
