@@ -288,8 +288,8 @@
                 </object>
                 <object class="sizeritem">
                   <option>1</option>
-                  <flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
-                  <border>5</border>
+                  <flag>wxTOP|wxEXPAND</flag>
+                  <border>15</border>
                   <object class="wxTextCtrl" name="textLog">
                     <style>wxTE_MULTILINE|wxTE_READONLY|wxTE_WORDWRAP</style>
                     <size>100,100</size>
@@ -298,7 +298,7 @@
                 </object>
                 <object class="sizeritem">
                   <flag>wxALL|wxEXPAND</flag>
-                  <border>1</border>
+                  <border>5</border>
                   <object class="wxBoxSizer">
                     <orient>wxHORIZONTAL</orient>
                     <object class="sizeritem">
