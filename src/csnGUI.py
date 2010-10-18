@@ -1109,6 +1109,7 @@ class CSnakeGUIApp(wx.App):
     
     def UpdateGUI(self):
         """ Refreshes the GUI based on the current context. Also saves the current context to the context filename """
+        # refresh context
         self.binder.UpdateControls()
         self.panelKDevelop.Show( self.context.GetCompiler() != None and self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.frame.Layout()
@@ -1155,6 +1156,10 @@ class CSnakeGUIApp(wx.App):
         self.originalContextData = copy.deepcopy( data )
         # Add a change listener
         self.context.AddListener(self.changeListener)
+        # Force the refresh of the project list
+        self.projectNeedUpdate = True
+        if self.noteBook.GetPageText(self.noteBook.GetSelection()) == "Select Projects":
+            self.DoActions([self.ActionSelectProjects])
         # Set as buddy class for GUI
         self.binder.SetBuddyClass("context", self.context)
         
