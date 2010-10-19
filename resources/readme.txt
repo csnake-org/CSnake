@@ -2,10 +2,13 @@
 CSnake readme
 --------------
 
-Version: 2.4
+Version: 2.4.1beta
 
 Change log
 ----------
+
+v2.4.1
+ * ...
 
 v2.4.0
  * Bug: Visual studio express error
