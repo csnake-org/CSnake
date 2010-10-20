@@ -834,14 +834,20 @@ class CSnakeGUIApp(wx.App):
             try:
                 res = res and action()
                 count += 1
-            except Exception, message:
-                self.__Error(str(message))
+            except Exception, error:
+                message = "Stopped, exception in process.\n%s" % str(error)
+                # to keep the message alive after the error windows is closed.
+                self.__Report(message)
+                # show as error
+                self.__Error(message)
+                break
             # check cancel
             self.ProgressChanged(ProgressEvent(self, range))
             if self.__HasUserCanceled():
                 self.__ResetUserCancel()
                 self.__Report("Stopped, user canceled.")
                 break
+            # check the process' result
             if not res:
                 message = "Stopped, error in process." 
                 error = self.__guiHandler.GetErrorMessage()
