@@ -26,6 +26,7 @@ import webbrowser
 import logging
 import copy
 import re
+import traceback
 
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
@@ -839,7 +840,7 @@ class CSnakeGUIApp(wx.App):
             except Exception, error:
                 message = "Stopped, exception in process.\n%s" % str(error)
                 # to keep the message alive after the error windows is closed.
-                self.__Report(message)
+                self.__Report(traceback.format_exc())
                 # show as error
                 self.__Error(message)
                 break
