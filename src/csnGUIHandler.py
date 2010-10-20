@@ -447,12 +447,8 @@ class Handler:
             sys.stdout.write(line)
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # catch error lines
-        message = ""
-        for line in sub.stderr.readlines():
-            message += line.rstrip('\n')
-        sys.stderr.write(message)
-        self.__SetErrorMessage(message)
+        # process error stream
+        self.__ProcessErrorStream(sub.stderr)
         # return result
         return res
     
@@ -480,12 +476,8 @@ class Handler:
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # catch error lines
-        message = ""
-        for line in sub.stderr.readlines():
-            message += line.rstrip('\n')
-        sys.stderr.write(message)
-        self.__SetErrorMessage(message)
+        # process error stream
+        self.__ProcessErrorStream(sub.stderr)
         # return result
         return res
     
@@ -515,12 +507,8 @@ class Handler:
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # catch error lines
-        message = ""
-        for line in sub.stderr.readlines():
-            message += line.rstrip('\n')
-        sys.stderr.write(message)
-        self.__SetErrorMessage(message)
+        # process error stream
+        self.__ProcessErrorStream(sub.stderr)
         # return result
         return res
     
@@ -548,11 +536,34 @@ class Handler:
                 if self.IsCanceled(): return False
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # catch error lines
-        message = ""
-        for line in sub.stderr.readlines():
-            message += line.rstrip('\n')
-        sys.stderr.write(message)
-        self.__SetErrorMessage(message)
+        # process error stream
+        self.__ProcessErrorStream(sub.stderr)
         # return result
         return res
+    
+    def __ProcessErrorStream(self, errorStream):
+        """ Process an error stream. """
+        limit = 10
+        # error lines
+        errorLines = errorStream.readlines()
+        nLines = len(errorLines)
+        # output all to console
+        sys.stderr.writelines(errorLines)
+        # error message, limit if too big
+        iMax = nLines
+        if nLines >= limit:
+            iMax = limit
+        message = ""
+        for i in range(0,iMax):
+            message += errorLines[i]
+        # if too long, write to file
+        if nLines >= limit:
+            head, tail = os.path.split(self.contextFilename)
+            filename = "%s/error.txt" % head 
+            message += "\n... and more ..."
+            message += "\nSee error log (%s) for full details." % filename
+            errorFile = open(filename, 'w')
+            errorFile.writelines(errorLines)
+            errorFile.close()
+        # save message    
+        self.__SetErrorMessage(message)
