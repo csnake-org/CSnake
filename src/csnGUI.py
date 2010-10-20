@@ -766,9 +766,11 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
 
     def ActionUpdateListOfTargets(self):
+        oldInstance = self.context.GetInstance()
         self.listOfPossibleTargets = self.__guiHandler.GetListOfPossibleTargets()
         if len(self.listOfPossibleTargets):
-            self.context.SetInstance(self.listOfPossibleTargets[0])
+            if self.listOfPossibleTargets.count(oldInstance) == 0:
+                self.context.SetInstance(self.listOfPossibleTargets[0])
             return True
         return False
 
