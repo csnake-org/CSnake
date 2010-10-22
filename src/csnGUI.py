@@ -567,13 +567,17 @@ class CSnakeGUIApp(wx.App):
                 self.__logger.info("Could not find default Visual Studio.")
         # mention it to the user
         if foundCmake or foundPython or foundIde:
-            message = "CSnake found paths to settings in the registry. Use them?"
+            message = "CSnake found/corrected setting paths. Do you want to use them?"
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
-                self.__logger.info("Using found paths.")
-                self.context.SetCmakePath(cmakePath)
-                self.context.SetPythonPath(pythonPath)
+                if( foundCmake ):
+                    self.__logger.info("Using cmake: %s" % cmakePath)
+                    self.context.SetCmakePath(cmakePath)
+                if( foundPython ):
+                    self.__logger.info("Using python: %s" % pythonPath)
+                    self.context.SetPythonPath(pythonPath)
                 if( foundIde ):
+                    self.__logger.info("Using ide: %s" % idePath)
                     self.context.SetIdePath(idePath)
             else:
                 self.__logger.info("Not using found paths.")
