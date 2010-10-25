@@ -435,7 +435,10 @@ class Handler:
     
     def __ConfigureThirdParty(self, argList, workingDir):
         """ Run cmake on a third party. Returns True is success. """
+        # log
+        self.__logger.info("Running cmake in: %s" % workingDir)
         # reset errors
+        self.__ResetCancel()
         self.__SetErrorMessage("")
         # run process
         sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -454,6 +457,8 @@ class Handler:
     
     def __ConfigureProject(self, argList, workingDir, nProjects):
         """ Run cmake on a project. Returns True is success. """
+        # log
+        self.__logger.info("Running cmake in: %s" % workingDir)
         # reset errors
         self.__ResetCancel()
         self.__SetErrorMessage("")
@@ -483,6 +488,8 @@ class Handler:
     
     def __BuildVisualStudio(self, pathIDE, solution, buildMode, nProjects):
         """ Build using the Visual Studio Compiler. Returns True is success. """
+        # log
+        self.__logger.info("Running vc for: %s" % solution)
         # reset errors
         self.__ResetCancel()
         self.__SetErrorMessage("")
@@ -514,6 +521,8 @@ class Handler:
     
     def __BuildMake(self, buildPath):
         """ Build using Make. Returns True is success. """
+        # log
+        self.__logger.info("Running make in: %s" % buildPath)
         # reset errors
         self.__ResetCancel()
         self.__SetErrorMessage("")
