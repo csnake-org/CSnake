@@ -52,7 +52,6 @@ class RollbackHandler:
 class Handler:
     def __init__(self):
         self.context = None
-        self.contextFilename = None
         self.generator = csnGenerator.Generator()
         self.progressListener = ProgressListener(self)
         self.generator.AddListener(self.progressListener)
@@ -73,7 +72,6 @@ class Handler:
         self.__errorMessage = ""
     
     def LoadContext(self, filename):
-        self.contextFilename = filename
         self.SetContext(csnContext.Load(filename))
         return self.context
         
@@ -567,8 +565,7 @@ class Handler:
             message += errorLines[i]
         # if too long, write to file
         if nLines >= limit:
-            head, tail = os.path.split(self.contextFilename)
-            filename = "%s/error.txt" % head 
+            filename = "%s/error.txt" % csnUtility.GetCSnakeUserFolder() 
             message += "\n... and more ..."
             message += "\nSee error log (%s) for full details." % filename
             errorFile = open(filename, 'w')

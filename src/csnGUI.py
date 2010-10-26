@@ -250,7 +250,7 @@ class CSnakeGUIApp(wx.App):
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
         self.res = xrc.XmlResource(xrcFile)
         
-        self.csnakeFolder = os.path.expanduser("~/.csnake")
+        self.csnakeFolder = csnUtility.GetCSnakeUserFolder()
         self.thisFolder = None
             
         self.InitFrame()

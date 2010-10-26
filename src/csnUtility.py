@@ -307,11 +307,18 @@ def SearchUnixProgramPath(name):
     message = "Could not find a default path for '%s'." % name
     raise OSError(message)
 
-def InitialiseLogging():
-    # create user folder
+def GetCSnakeUserFolder():
+    """ Get the csnake folder. """
+    # csnake user folder
     userFolder = os.path.expanduser("~") + "/.csnake"
+    # create it if it does not exist
     if not os.path.exists(userFolder):
         os.mkdir(userFolder)
+    return userFolder
+
+def InitialiseLogging():
+    # get the user folder
+    userFolder = GetCSnakeUserFolder()
     # log file name
     logfilename = userFolder + "/log.txt"
     # set an environment variable to retrieve it in the log configuration
