@@ -116,7 +116,6 @@ def CreateCMakeCLPPost(self, _file):
         xmlFile = xmlFile.replace( "cxx", "xml" )
         # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
-        _file.write( "ADD_DEPENDENCIES( %s GenerateCLP )\n" % self.name )
 
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
