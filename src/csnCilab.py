@@ -63,58 +63,60 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     return project
 
 def CommandLinePlugin(_name, _holderProject = None):
+    """ Create a command line plugin project. """
     _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
     
-    project = csnProject.Project(_name, "dll", _sourceRootFolder)
-    project.AddDefinitions(["-Dmain=ModuleEntryPoint"], _private = 1 ) 
-    project.installSubFolder = "commandLinePlugins"
-    project.CMakeInsertBeforeTarget = new.instancemethod(CreateCMakeCLPPre, project)
-    project.CMakeInsertAfterTarget = new.instancemethod(CreateCMakeCLPPost, project)
+    # command line lib
+    projectLibName = "%sLib" % _name
+    projectLib = csnProject.Project(projectLibName, "dll", _sourceRootFolder)
+    #project = CilabModuleProject(projectName, "dll", _sourceRootFolder)
+    projectLib.AddDefinitions(["-Dmain=ModuleEntryPoint"], _private = 1 ) 
+    projectLib.installSubFolder = "commandLinePlugins"
+    projectLib.CMakeInsertBeforeTarget = new.instancemethod(CreateCMakeCLPPre, projectLib)
+    projectLib.CMakeInsertAfterTarget = new.instancemethod(CreateCMakeCLPPost, projectLib)
     
-    project.applicationsProject = csnBuild.Project(project.name + "Applications", "container", _sourceRootFolder)
-    project.applicationsProject.AddProjects([project])
-    project.AddProjects([project.applicationsProject], _dependency = 0)
-    
-    applicationName = "%sApp" % _name
-    projectApp = csnBuild.Project(applicationName, "executable", _sourceRootFolder)
+    # command line executable
+    projectAppName = _name
+    projectApp = csnBuild.Project(projectAppName, "executable", _sourceRootFolder)
+    projectApp.AddProjects( [projectLib] )
+    projectApp.installSubFolder = "commandLinePlugins"
+    # wrapper for shared libraries
     wrapperSourceFile = None
     for thirdParty in csnProject.globalCurrentContext.GetThirdPartyFolders():
-        currentWrapperSourceFile = u'%s/SLICER/Slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
+        currentWrapperSourceFile = u'%s/SLICER/slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
         if os.path.isfile(currentWrapperSourceFile):
             wrapperSourceFile = currentWrapperSourceFile
     if wrapperSourceFile is None:
-        raise Exception("Could not find Slicer in your thirdParty folders!")
-    
+        raise Exception("Could not find Slicer template in your thirdParty folders.")
     projectApp.AddSources( [wrapperSourceFile]  )
-    projectApp.AddProjects( [project] )
-    projectApp.installSubFolder = "commandLinePlugins"
-    project.applicationsProject.AddProjects( [projectApp] )
+
+    # force the creation of the application project
+    projectLib.AddProjects([projectApp], _dependency = 0)
     
-    if not _holderProject is None:
-        _holderProject.AddProjects( [project] )
+    if not (_holderProject is None):
+        _holderProject.AddProjects( [projectLib] )
     
-    return project
+    return projectLib
 
 def CreateCMakeCLPPre(self, _file):
+    """ CLP Cmake specific, prefix to main cmake section. """
     if len( self.GetSources() ) > 0:
         _file.write("\n#Adding CMake GenerateCLP Pre\n")
-        _file.write("set( ${CLP}_SOURCE %s )\n" % self.GetSources()[0] )
-        if csnUtility.IsWindowsPlatform():
-            _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/GenerateCLP.exe\")\n" )
-        else:
-            _file.write("set( GENERATECLP_EXE \"${BINARY_DIR}/$(OutDir)/generateCLP\")\n" )
-        _file.write("get_filename_component( TMP_FILENAME ${${CLP}_SOURCE} NAME_WE)\n" )
-        _file.write("set( CLP_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}CLP.h)\n" )
+        _file.write("SET( ${CLP}_SOURCE %s )\n" % self.GetSources()[0] )
+        _file.write("GET_FILENAME_COMPONENT( TMP_FILENAME ${${CLP}_SOURCE} NAME_WE )\n" )
+        _file.write("SET( CLP_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}CLP.h )\n" )
         self.AddSources( ['${CLP_INCLUDE_FILE}'], _checkExists = 0, _forceAdd = 1 )
 
 def CreateCMakeCLPPost(self, _file):
+    """ CLP Cmake specific, postfix to main cmake section. """
     if len( self.GetSources() ) > 0:
         _file.write("\n#Adding CMake GenerateCLP Post\n")
         _file.write("INCLUDE( \"%s/cmakeMacros/GenerateCLP.cmake\" )\n" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
         xmlFile = self.GetSources()[0]
         xmlFile = xmlFile.replace( "cxx", "xml" )
+        # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
-        _file.write( "ADD_DEPENDENCIES( %s generateCLP )\n" % self.name )
+        _file.write( "ADD_DEPENDENCIES( %s GenerateCLP )\n" % self.name )
 
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
