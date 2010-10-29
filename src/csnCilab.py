@@ -101,21 +101,26 @@ def CommandLinePlugin(_name, _holderProject = None):
 def CreateCMakeCLPPre(self, _file):
     """ CLP Cmake specific, prefix to main cmake section. """
     if len( self.GetSources() ) > 0:
-        _file.write("\n#Adding CMake GenerateCLP Pre\n")
-        _file.write("SET( ${CLP}_SOURCE %s )\n" % self.GetSources()[0] )
+        _file.write("\n# Adding CMake GenerateCLP Pre\n")
+        _file.write("SET( CLP ${PROJECT_NAME}CLP )\n" )
+        _file.write("SET( ${CLP}_SOURCE \"%s\" )\n" % self.GetSources()[0] )
         _file.write("GET_FILENAME_COMPONENT( TMP_FILENAME ${${CLP}_SOURCE} NAME_WE )\n" )
-        _file.write("SET( CLP_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}CLP.h )\n" )
-        self.AddSources( ['${CLP_INCLUDE_FILE}'], _checkExists = 0, _forceAdd = 1 )
+        _file.write("SET( ${CLP}_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}CLP.h )\n" )
+        self.AddSources( ['${${CLP}_INCLUDE_FILE}'], _checkExists = 0, _forceAdd = 1 )
 
 def CreateCMakeCLPPost(self, _file):
     """ CLP Cmake specific, postfix to main cmake section. """
     if len( self.GetSources() ) > 0:
-        _file.write("\n#Adding CMake GenerateCLP Post\n")
-        _file.write("INCLUDE( \"%s/cmakeMacros/GenerateCLP.cmake\" )\n" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
-        xmlFile = self.GetSources()[0]
-        xmlFile = xmlFile.replace( "cxx", "xml" )
+        _file.write("\n# Adding CMake GenerateCLP Post\n")
+        sourceFile = self.GetSources()[0]
+        if sourceFile.endswith("cxx"):
+            xmlFile = sourceFile.replace( "cxx", "xml" )
+        elif sourceFile.endswith("cpp"):
+            xmlFile = sourceFile.replace( "cpp", "xml" )
+        else:
+            raise Exception("Unsupported file extension: %s." % sourceFile)
         # GenerateCLP should be a dependency of the project, no need to find package
-        _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
+        _file.write( "GENERATECLP( ${${CLP}_SOURCE} \"%s\" )\n" % xmlFile )
 
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
