@@ -83,7 +83,7 @@ def CommandLinePlugin(_name, _holderProject = None):
     # wrapper for shared libraries
     wrapperSourceFile = None
     for thirdParty in csnProject.globalCurrentContext.GetThirdPartyFolders():
-        currentWrapperSourceFile = u'%s/SLICER/slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
+        currentWrapperSourceFile = u'%s/SLICER/Slicer3/Applications/CLI/Templates/CommandLineSharedLibraryWrapper.cxx' % thirdParty
         if os.path.isfile(currentWrapperSourceFile):
             wrapperSourceFile = currentWrapperSourceFile
     if wrapperSourceFile is None:
