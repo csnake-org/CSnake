@@ -434,6 +434,7 @@ class CSnakeGUIApp(wx.App):
 
         # Update GUI (last one to call)
         self.UpdateGUI()
+        self.frame.Fit()
         # debug log
         self.__logger.debug("end method: Initialize")
         
@@ -1126,7 +1127,6 @@ class CSnakeGUIApp(wx.App):
         self.binder.UpdateControls()
         self.panelKDevelop.Show( self.context.GetCompiler() != None and self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.frame.Layout()
-        self.frame.Fit()
         self.frame.Update()
         wx.CallAfter(self.frame.Update)
     
