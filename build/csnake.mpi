@@ -3053,7 +3053,7 @@ Windows,ProgramReadme
 <%InstallDir%>/resources/readme.txt
 
 Windows,RequireAdministrator
-No
+Yes
 
 Windows,UseUncompressedBinaries
 No
