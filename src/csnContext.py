@@ -7,6 +7,7 @@ import csnKDevelop
 import csnVisualStudio2003
 import csnVisualStudio2005
 import csnVisualStudio2008
+import csnVisualStudio2010
 from csnListener import ChangeEvent
 import os.path
 import shutil
@@ -190,6 +191,8 @@ class Context(object):
         self.RegisterCompiler(csnVisualStudio2005.Compiler64())
         self.RegisterCompiler(csnVisualStudio2008.Compiler32())
         self.RegisterCompiler(csnVisualStudio2008.Compiler64())
+        self.RegisterCompiler(csnVisualStudio2010.Compiler32())
+        self.RegisterCompiler(csnVisualStudio2010.Compiler64())
         
         self.__subCategoriesOf = dict()
 
@@ -763,12 +766,15 @@ class Context(object):
     # Other
     # ----------------------------
     def FindCompiler(self):
-        if self.GetCompilername() != None and self.GetCompilername() != "":
+        compilerName = self.GetCompilername()
+        if compilerName != None and compilerName != "" and compilerName in self.__compilermap:
             if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
                 self.__compiler = self.__compilermap[self.GetCompilername()]
                 self.__compiler.SetConfigurationName(self.GetConfigurationName())
                 self.__data._SetCompilername(self.GetCompiler().GetName())
-    
+        else:
+            raise IOError("Unknown compiler: %s" % compilerName)
+        
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
         for flag in self.GetCompiler().GetCompileFlags():
