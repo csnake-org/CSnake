@@ -70,6 +70,7 @@ class Handler:
         self.__userCanceled = False
         # error message
         self.__errorMessage = ""
+        self.__errorFilename = "%s/errors.txt" % csnUtility.GetCSnakeUserFolder() 
     
     def LoadContext(self, filename):
         self.SetContext(csnContext.Load(filename))
@@ -436,7 +437,8 @@ class Handler:
         self.__ResetCancel()
         self.__SetErrorMessage("")
         # run process
-        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        errorFile = open(self.__errorFilename, 'w')
+        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=errorFile)
         # catch lines to indicate progress (has to be bellow Popen)
         while True:
             line = sub.stdout.readline()
@@ -445,8 +447,10 @@ class Handler:
             sys.stdout.write(line)
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # process error stream
-        self.__ProcessErrorStream(sub.stderr)
+        errorFile.close()
+        # process error file
+        if( os.path.getsize(self.__errorFilename) != 0 ):
+            self.__ProcessErrorFile()
         # return result
         return res
     
@@ -458,11 +462,13 @@ class Handler:
         self.__ResetCancel()
         self.__SetErrorMessage("")
         # run process
-        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        errorFile = open(self.__errorFilename, 'w')
+        sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=errorFile)
         # catch lines to indicate progress (has to be bellow Popen)
         count = 0
         while True:
             line = sub.stdout.readline()
+            sub.stdout.flush()
             if not line:
                 break
             sys.stdout.write(line)
@@ -476,8 +482,10 @@ class Handler:
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # process error stream
-        self.__ProcessErrorStream(sub.stderr)
+        errorFile.close()
+        # process error file
+        if( os.path.getsize(self.__errorFilename) != 0 ):
+            self.__ProcessErrorFile()
         # return result
         return res
     
@@ -491,7 +499,8 @@ class Handler:
         # arguments
         argList = [pathIDE, solution, "/build", buildMode ]
         # run process
-        sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        errorFile = open(self.__errorFilename, 'w')
+        sub = subprocess.Popen(argList, stdout=subprocess.PIPE, stderr=errorFile)
         # catch lines to indicate progress (has to be bellow Popen)
         count = 0
         while True:
@@ -509,8 +518,10 @@ class Handler:
                 count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # process error stream
-        self.__ProcessErrorStream(sub.stderr)
+        errorFile.close()
+        # process error file
+        if( os.path.getsize(self.__errorFilename) != 0 ):
+            self.__ProcessErrorFile()
         # return result
         return res
     
@@ -524,7 +535,8 @@ class Handler:
         # arguments
         argList = ["make", "-s"]
         # run process
-        sub = subprocess.Popen(argList, cwd=buildPath, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        errorFile = open(self.__errorFilename, 'w')
+        sub = subprocess.Popen(argList, cwd=buildPath, stdout=subprocess.PIPE, stderr=errorFile)
         # catch lines to indicate progress (has to be bellow Popen)
         while True:
             line = sub.stdout.readline()
@@ -540,16 +552,19 @@ class Handler:
                 if self.IsCanceled(): return False
         # wait till the process finishes
         res = (sub.wait() == 0)
-        # process error stream
-        self.__ProcessErrorStream(sub.stderr)
+        errorFile.close()
+        # process error file
+        if( os.path.getsize(self.__errorFilename) != 0 ):
+            self.__ProcessErrorFile()
         # return result
         return res
     
-    def __ProcessErrorStream(self, errorStream):
+    def __ProcessErrorFile(self):
         """ Process an error stream. """
         limit = 10
         # error lines
-        errorLines = errorStream.readlines()
+        errorFile = open(self.__errorFilename, 'r')
+        errorLines = errorFile.readlines()
         nLines = len(errorLines)
         # output all to console
         sys.stderr.writelines(errorLines)
@@ -560,13 +575,7 @@ class Handler:
         message = ""
         for i in range(0,iMax):
             message += errorLines[i]
-        # if too long, write to file
-        if nLines >= limit:
-            filename = "%s/error.txt" % csnUtility.GetCSnakeUserFolder() 
-            message += "\n... and more ..."
-            message += "\nSee error log (%s) for full details." % filename
-            errorFile = open(filename, 'w')
-            errorFile.writelines(errorLines)
-            errorFile.close()
         # save message    
         self.__SetErrorMessage(message)
+        # close
+        errorFile.close()
