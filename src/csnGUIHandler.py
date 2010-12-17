@@ -159,7 +159,7 @@ class Handler:
         if not os.path.exists( self.context.GetCmakePath() ):
             raise Exception( "Please provide a valid CMake path." )
     
-    def ConfigureThirdPartyFolders(self, _nrOfTimes = 2):
+    def ConfigureThirdPartyFolders(self):
         """ 
         Runs cmake to install the libraries in the third party folder.
         By default, the third party folder is configured twice because this works around
@@ -172,7 +172,7 @@ class Handler:
         self.__progressRange = 100 / nTP
         # Configure third parties
         for index in range(0, nTP ):
-            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), _nrOfTimes = _nrOfTimes, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
+            result = self.ConfigureThirdPartyFolder( self.context.GetThirdPartyFolder( index ), self.context.GetThirdPartyBuildFolderByIndex( index ), allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
             self.__progressStart += self.__progressRange
         # reset the progress range
         self.__progressStart = 0
@@ -180,7 +180,7 @@ class Handler:
         
         return result
 
-    def ConfigureThirdPartyFolder(self, source, build, allBuildFolders, _nrOfTimes = 2):
+    def ConfigureThirdPartyFolder(self, source, build, allBuildFolders):
         """ 
         Runs cmake to install the libraries in the third party folder.
         By default, the third party folder is configured twice because this works around
@@ -204,10 +204,7 @@ class Handler:
                   self.context.GetCompiler().GetThirdPartyCMakeParameters() + \
                   [source]
         
-        for _ in range(0, _nrOfTimes):
-            result = result and self.__ConfigureThirdParty(argList, build) 
-
-        return result
+        return self.__ConfigureThirdParty(argList, build) 
 
     def DeletePycFiles(self):
         """
