@@ -569,6 +569,12 @@ class CSnakeGUIApp(wx.App):
         # mention it to the user
         if foundCmake or foundPython or foundIde:
             message = "CSnake found/corrected setting paths. Do you want to use them?"
+            if( foundCmake ):
+                message += "\n- CMake: %s" % cmakePath
+            if( foundPython ):
+                message += "\n- Python: %s" % pythonPath
+            if( foundIde ):
+                message += "\n- Ide: %s" % idePath
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
                 if( foundCmake ):
