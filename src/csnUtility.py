@@ -193,13 +193,13 @@ def GetDefaultVisualStudioPath( generator ):
         r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7', # typical windows XP
         r'SOFTWARE\Microsoft\VisualStudio\SxS\VS7'] #typical windows vista, 7
     value_names = []
-    if generator.startswith('Visual Studio 7'):
+    if generator.startswith('Visual Studio 7'): #2003
         value_names = [r"7.1"]
-    elif generator.startswith('Visual Studio 8'):
+    elif generator.startswith('Visual Studio 8'): #2005
         value_names = [r"8.0"]
-    elif generator.startswith('Visual Studio 9'):
+    elif generator.startswith('Visual Studio 9'): #2008
         value_names = [r"9.0"]
-    elif generator.startswith('Visual Studio 10'):
+    elif generator.startswith('Visual Studio 10'): #2010
         value_names = [r"10.0"]
     path_end = r"Common7\IDE\devenv.exe"
     try:
@@ -213,13 +213,11 @@ def GetDefaultCMakePath():
     """ Get the path to CMake. """
     path = None
     if IsWindowsPlatform():
-        key_names = [
-            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0', # typical windows XP
-            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.1', 
-            r'SOFTWARE\Wow6432Node\Kitware\CMake 2.8.2', 
-            r'SOFTWARE\Kitware\CMake 2.8.0', #typical windows vista, 7
-            r'SOFTWARE\Kitware\CMake 2.8.1',
-            r'SOFTWARE\Kitware\CMake 2.8.2']
+        versions = [ r"2.8.3", r"2.8.2", r"2.8.1", r"2.8.0" ]
+        key_names = []
+        for version in versions:
+            key_names.append(r"SOFTWARE\Wow6432Node\Kitware\CMake %s" % version) # typical windows XP
+            key_names.append(r"SOFTWARE\Kitware\CMake %s" % version) #typical windows vista, 7
         value_names = [r""]
         path_end = r"\bin\cmake.exe"
         try:
@@ -238,9 +236,11 @@ def GetDefaultPythonPath():
     """ Get the path to Python. """
     path = None
     if IsWindowsPlatform():
-        key_names = [
-            r'SOFTWARE\Wow6432Node\Python\PythonCore\2.6\InstallPath', # typical windows XP
-            r'SOFTWARE\Python\PythonCore\2.6\InstallPath'] #typical windows vista, 7
+        versions = [ r"2.7", r"2.6" ]
+        key_names = []
+        for version in versions:
+            key_names.append(r"SOFTWARE\Wow6432Node\Python\PythonCore\%s\InstallPath" % version) # typical windows XP
+            key_names.append(r"SOFTWARE\Python\PythonCore\%s\InstallPath" % version) #typical windows vista, 7
         value_names = [r""]
         path_end = r"python.exe"
         try:
