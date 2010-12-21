@@ -575,6 +575,10 @@ class Handler:
         message = ""
         for i in range(0,iMax):
             message += errorLines[i]
+        # if too long, tell the user
+        if nLines >= limit:
+            message += "\n... and more ..."
+            message += "\nSee error log (%s) for full details." % self.__errorFilename
         # save message    
         self.__SetErrorMessage(message)
         # close
