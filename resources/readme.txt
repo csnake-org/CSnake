@@ -2,13 +2,19 @@
 CSnake readme
 --------------
 
-Version: 2.4.1beta
+Version: 2.4.1
 
 Change log
 ----------
 
 v2.4.1
- * ...
+ * Bug: Windows7 compatibility mode
+ * Bug: CSnake sleeps forever, if thirdParties have not been configured
+ * Bug: Exceptions does not stop process pipeline
+ * Mac error when using found paths
+ * Add Visual Studio 10 compiler
+ * Remove third party double configuration
+ * Instance update with same csn file
 
 v2.4.0
  * Bug: Visual studio express error
