@@ -2,13 +2,13 @@
 CSnake readme
 --------------
 
-Version: 2.4.2beta
+Version: 2.4.2
 
 Change log
 ----------
 
 v2.4.2
- * ...
+ * Bug: Generate CLP warning
  
 v2.4.1
  * Bug: Windows7 compatibility mode
