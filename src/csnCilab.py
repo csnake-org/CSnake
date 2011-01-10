@@ -120,7 +120,7 @@ def CreateCMakeCLPPost(self, _file):
         else:
             raise Exception("Unsupported file extension: %s." % sourceFile)
         # GenerateCLP should be a dependency of the project, no need to find package
-        _file.write( "GENERATECLP( ${${CLP}_SOURCE} \"%s\" )\n" % xmlFile )
+        _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
 
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
