@@ -1165,6 +1165,7 @@ class CSnakeGUIApp(wx.App):
             # log success
             self.__logger.debug("Loaded context.")
             # Update 
+            self.EnableConfigBar(True)
             self.UpdateGUI()
         else:
             # log warning
