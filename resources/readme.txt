@@ -2,10 +2,13 @@
 CSnake readme
 --------------
 
-Version: 2.4.2
+Version: 2.4.3beta
 
 Change log
 ----------
+
+v2.4.3
+ * ...
 
 v2.4.2
  * Bug: Generate CLP warning
