@@ -1371,7 +1371,7 @@ class CSnakeGUIApp(wx.App):
             self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUI()
 
-    def ActionSelectProjects(self):
+    def ActionSelectProjects(self, args):
         # do not go further if there is no csnake file or instance
         if not self.context.GetCsnakeFile() or not self.context.GetInstance():
             return
