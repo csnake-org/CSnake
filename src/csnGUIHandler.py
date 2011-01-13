@@ -440,11 +440,23 @@ class Handler:
         errorFile = open(self.__errorFilename, 'w')
         sub = subprocess.Popen(argList, cwd=workingDir, stdout=subprocess.PIPE, stderr=errorFile)
         # catch lines to indicate progress (has to be bellow Popen)
+        count = 0
+        tpFolder = argList[len(argList)-1]
+        dirs = [d for d in os.listdir(tpFolder) if os.path.isdir(os.path.join(tpFolder, d))]
+        nProjects = len(dirs)
         while True:
             line = sub.stdout.readline()
             if not line: 
                 break
             sys.stdout.write(line)
+            # progress: looks like '-- Processing ...'
+            str = line[0:11].strip()
+            if str == "-- Parsing":
+                progress = count*100/nProjects
+                if progress >= 100: progress = 99
+                self.__NotifyListeners(ProgressEvent(self,progress))
+                if self.IsCanceled(): return False
+                count += 1
         # wait till the process finishes
         res = (sub.wait() == 0)
         errorFile.close()
