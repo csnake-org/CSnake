@@ -226,6 +226,14 @@ class SelectFolderCallback:
         if dlg.ShowModal() == wx.ID_OK:
             self.callbackSet(dlg.GetPath().replace("\\", "/"))
         self.app.UpdateGUI()
+
+class FileDrop(wx.FileDropTarget):
+    def __init__(self, app):
+        wx.FileDropTarget.__init__(self)
+        self.__app = app
+
+    def OnDropFiles(self, x, y, filenames):
+        self.__app.LoadContext(filenames[0])
         
 class CSnakeGUIApp(wx.App):
     def OnInit(self):
@@ -271,6 +279,10 @@ class CSnakeGUIApp(wx.App):
         self.__logger.debug("method: InitFrame")
         
         self.frame = self.res.LoadFrame(None, "frmCSnakeGUI")
+        
+        dt = FileDrop(self)
+        self.frame.SetDropTarget(dt)
+        
         self.binder = xrcbinder.Binder(self, self.frame)
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
