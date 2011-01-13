@@ -885,7 +885,6 @@ class CSnakeGUIApp(wx.App):
         source = args[0]
         build = args[1]
         allBuildFolders = args[2]
-        print allBuildFolders
         if self.__guiHandler.ConfigureThirdPartyFolder( source, build, allBuildFolders ):
             return True
         return False
