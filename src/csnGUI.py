@@ -27,6 +27,7 @@ import logging
 import copy
 import re
 import traceback
+from wx._core import EVT_MENU
 
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
@@ -243,6 +244,8 @@ class CSnakeGUIApp(wx.App):
         self.changeListener = ChangeListener(self)
         self.progressListener = ProgressListener(self)
         self.__cancelAction = False
+        # pair of wx.id and recent context path
+        self.__recentContextPaths = []
        
         self.projectNeedUpdate = False
         
@@ -396,6 +399,58 @@ class CSnakeGUIApp(wx.App):
         self.frame.Bind(wx.EVT_MENU, self.OnHelp, id=xrc.XRCID("mnuHelp"))
         self.frame.Bind(wx.EVT_MENU, self.OnAbout, id=xrc.XRCID("mnuAbout"))
         
+    def InitRecentContextPathsDisplay(self):
+        """ Initialise recent context list. """
+        menuBar = self.frame.GetMenuBar()
+        id = menuBar.FindMenu("File")
+        filemenu = menuBar.GetMenu( id )
+        count = filemenu.GetMenuItemCount()
+        assert( count == 4 )
+        # insert separator
+        # items before: open, save and save as
+        filemenu.InsertSeparator(3)
+        filemenu.InsertSeparator(4)
+        # insert paths
+        # items before: open, save, save as, separator
+        pos = 4
+        for index in range(self.options.GetRecentContextPathLength()):
+            # context path
+            path = self.options.GetRecentContextPath(index)
+            head, tail = os.path.split( path )
+            # insert
+            wxid = wx.NewId()
+            filemenu.Insert(pos, wxid, tail, "Open '%s'" % path )
+            self.__recentContextPaths.append( [wxid, path] )
+            EVT_MENU(self, wxid, self.OnOpenRecent)
+            pos = pos + 1
+
+    def __AddRecentContextPath(self, path):
+        """ Add a recent context to the options and GUI. """
+        # Add to the options
+        self.options.PushRecentContextPath(path)
+        # Add to the GUI
+        menuBar = self.frame.GetMenuBar()
+        id = menuBar.FindMenu("File")
+        filemenu = menuBar.GetMenu( id )
+        # maximum 5 items (+4 defaults +2 separators)
+        if filemenu.GetMenuItemCount() > 10:
+            filemenu.RemoveItem( filemenu.FindItemByPosition(8) )
+            self.__recentContextPaths.pop()
+        # insert
+        # items before: open, save, save as, separator
+        head, tail = os.path.split( path )
+        wxid = wx.NewId()
+        filemenu.Insert(4, wxid, tail, "Open '%s'" % path )
+        self.__recentContextPaths.insert( 0, [wxid, path] )
+        EVT_MENU(self, wxid, self.OnOpenRecent)
+    
+    def OnOpenRecent(self, event):
+        """ Open recent context file. """
+        for pair in self.__recentContextPaths:
+            if pair[0] == event.GetId():
+                self.LoadContext( pair[1] )
+                break
+    
     def InitOtherGUIStuff(self):
         # debug log
         self.__logger.debug("method: InitOtherGUIStuff")
@@ -616,6 +671,8 @@ class CSnakeGUIApp(wx.App):
                 self.options.Load(self.optionsFilename)
             except IOError, error:
                 self.__Error("%s" % error)
+            # initialise display of recent paths
+            self.InitRecentContextPathsDisplay()
         else:
             self.__logger.debug("No options found, using default.")
             self.SaveOptions()
@@ -659,6 +716,9 @@ class CSnakeGUIApp(wx.App):
                 contextFilename = dlg.GetPath()
             else:
                 contextFilename = "%s.CSnakeGUI" % root
+            # save old filename
+            if self.contextFilename:
+                self.__AddRecentContextPath(self.contextFilename)
             # Save the context
             self.SaveContext(contextFilename)
             # the context was properly saved
@@ -1160,6 +1220,9 @@ class CSnakeGUIApp(wx.App):
         if context:
             # Save the context
             self.__SetContext(context)
+            # save old filename
+            if self.contextFilename:
+                self.__AddRecentContextPath(self.contextFilename)
             # save file name
             self.__SetContextFilename(contextFilename)
             # log success

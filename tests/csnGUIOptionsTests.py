@@ -9,18 +9,27 @@ class csnGUIOptionsTests(unittest.TestCase):
     def testReadOptions00(self):
         ''' csnContextTests: test read from options v0.0. '''
         # test the options conversion
-        self.ReadOptionsTest("options00a.txt")
+        self.ReadOptionsTest(0.0, "options00a.txt")
 
     def testReadOptions10(self):
         ''' csnContextTests: test read from options v1.0. '''
         # test the options conversion
-        self.ReadOptionsTest("options10a.txt")
+        self.ReadOptionsTest(1.0, "options10a.txt")
 
-    def ValuesTest(self, options):
+    def testReadOptions11(self):
+        ''' csnContextTests: test read from options v1.1. '''
+        # test the options conversion
+        self.ReadOptionsTest(1.1, "options11a.txt")
+
+    def ValuesTest(self, version, options):
         self.assertEqual( options.GetAskToLaunchIDE(), True )
         self.assertEqual( options.GetContextFilename(), "E:\\devel\\src\\toolkit\\module_clean.CSnakeGUI" )
-
-    def ReadOptionsTest(self, inputFilename):
+        if version >= 1.1:
+            self.assertEqual( options.GetRecentContextPath(0), "E:\\devel\\src\\toolkit\\clean.CSnakeGUI" )
+            self.assertEqual( options.GetRecentContextPath(1), "E:\\devel\\src\\toolkit\\devel.CSnakeGUI" )
+            self.assertEqual( options.GetRecentContextPath(2), "E:\\devel\\src\\toolkit\\stable.CSnakeGUI" )
+        
+    def ReadOptionsTest(self, version, inputFilename):
         ''' csnContextTests: test read options. '''
         # create a copy of the input file
         filename = "test_%s" % inputFilename
@@ -31,7 +40,7 @@ class csnGUIOptionsTests(unittest.TestCase):
         options.Load(filename)
         
         # test values 
-        self.ValuesTest(options)
+        self.ValuesTest(version, options)
         
         # save it
         newFilename = "new_%s" % filename
@@ -42,7 +51,7 @@ class csnGUIOptionsTests(unittest.TestCase):
         newOptions.Load(newFilename)
         
         # test values 
-        self.ValuesTest(newOptions)
+        self.ValuesTest(version, newOptions)
 
         # clean up
         os.remove(filename)

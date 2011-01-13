@@ -3,13 +3,14 @@ from csnListener import ChangeEvent
 import logging
 import shutil
 
-latestFileFormatVersion = 1.0
+latestFileFormatVersion = 1.1
 
 class Options:
     def __init__(self):
         # options
         self.__contextFilename = ""
         self.__askToLaunchIDE = False
+        self.__recentContextPaths = []
         # listeners
         self.__listeners = []
         # logger
@@ -25,6 +26,25 @@ class Options:
 
     def GetAskToLaunchIDE(self):
         return self.__askToLaunchIDE
+
+    def GetRecentContextPathLength(self):
+        """ Get the length of the recent context path array. """
+        return len(self.__recentContextPaths)
+
+    def GetRecentContextPath(self, index):
+        """ Get the recent context path at the given index. """
+        return self.__recentContextPaths[index]
+    
+    def PushRecentContextPath(self, path):
+        """ Add a recent context path at the beginning of the array. 
+            If the array has more than 5 items, the last one is removed. """
+        self.__recentContextPaths.insert(0, path)
+        if len(self.__recentContextPaths) > 5:
+            self.__recentContextPaths.pop()
+
+    def PopRecentContextPath(self):
+        """ Remove the last recent context path. """
+        self.__recentContextPaths.pop()
 
     def Load(self, filename):
         """ Load an option file. """
@@ -44,6 +64,8 @@ class Options:
             self.__Read00( parser )
         elif version == 1.0:
             self.__Read10( parser )
+        elif version == 1.1:
+            self.__Read11( parser )
         else:
             raise IOError("Cannot read options, unknown 'version':%s." % version)
         # backup and save in new format for old ones
@@ -52,6 +74,19 @@ class Options:
             shutil.copy(filename, newFileName)
             self.Save(filename)
         
+    def __Read11(self, parser):
+        """ Read options file version 1.0. """ 
+        mainSection = "CSnake"
+        # same as 1.0
+        self.__Read10(parser)
+        # recent context
+        count = 0
+        self.__recentContextPaths = []
+        while parser.has_option(mainSection, "recentcontext%s" % count):
+            path = parser.get(mainSection, "recentcontext%s" % count)
+            self.__recentContextPaths.insert( count, path)
+            count += 1
+
     def __Read10(self, parser):
         """ Read options file version 1.0. """ 
         mainSection = "CSnake"
@@ -75,6 +110,8 @@ class Options:
         parser.set(section, "contextFilename", self.__contextFilename)
         parser.set(section, "askToLaunchIDE", self.__askToLaunchIDE)
         parser.set(section, "version", latestFileFormatVersion)
+        for index in range( len(self.__recentContextPaths) ):
+            parser.set(section, "recentcontext%s" % index, self.__recentContextPaths[index]) 
         f = open(filename, 'w')
         parser.write(f)
         f.close()
