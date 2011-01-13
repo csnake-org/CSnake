@@ -798,7 +798,7 @@ class CSnakeGUIApp(wx.App):
             
     def OnConfigureALL(self, event):
         actions = [
-           self.ActionConfigureThirdPartyFolder,
+           self.ActionConfigureThirdPartyFolders,
            self.ActionBuildThirdParty,
            self.ActionCreateCMakeFilesAndRunCMake,
            self.ActionBuildProject,
@@ -834,7 +834,7 @@ class CSnakeGUIApp(wx.App):
             self.__Warn(message)
             return
         # run the action
-        if self.DoActions([self.ActionConfigureThirdPartyFolder]):
+        if self.DoActions([self.ActionConfigureThirdPartyFolders]):
             xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
             xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
         
@@ -849,7 +849,7 @@ class CSnakeGUIApp(wx.App):
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").SetFocus()
             xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
 
-    def ActionUpdateListOfTargets(self):
+    def ActionUpdateListOfTargets(self, args):
         oldInstance = self.context.GetInstance()
         self.listOfPossibleTargets = self.__guiHandler.GetListOfPossibleTargets()
         if len(self.listOfPossibleTargets):
@@ -858,7 +858,7 @@ class CSnakeGUIApp(wx.App):
             return True
         return False
 
-    def ActionCreateCMakeFilesAndRunCMake(self):
+    def ActionCreateCMakeFilesAndRunCMake(self, args):
         self.FindAdditionalRootFolders(True)
         if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
             if self.context.GetInstance().lower() == "gimias":
@@ -866,7 +866,7 @@ class CSnakeGUIApp(wx.App):
             return True
         return False
         
-    def ActionOnlyCreateCMakeFiles(self):
+    def ActionOnlyCreateCMakeFiles(self, args):
         self.FindAdditionalRootFolders(True)
         if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
             if self.context.GetInstance().lower() == "gimias":
@@ -874,24 +874,33 @@ class CSnakeGUIApp(wx.App):
             return True
         return False
         
-    def ActionConfigureThirdPartyFolder(self):
+    def ActionConfigureThirdPartyFolders(self, args):
         if self.__guiHandler.ConfigureThirdPartyFolders():
             if self.options.GetAskToLaunchIDE():
                 self.AskToLaunchIDE(self.__guiHandler.GetThirdPartySolutionPaths()[0])
             return True
         return False
         
-    def ActionBuildThirdParty(self):
+    def ActionConfigureThirdPartyFolder(self, args):
+        source = args[0]
+        build = args[1]
+        allBuildFolders = args[2]
+        print allBuildFolders
+        if self.__guiHandler.ConfigureThirdPartyFolder( source, build, allBuildFolders ):
+            return True
+        return False
+        
+    def ActionBuildThirdParty(self, args):
         return self.__guiHandler.BuildMultiple(self.__guiHandler.GetThirdPartySolutionPaths(), self.context.GetConfigurationName(), True)
         
-    def ActionBuildProject(self):
+    def ActionBuildProject(self, args):
         return self.__guiHandler.Build(self.__guiHandler.GetTargetSolutionPath(), self.context.GetConfigurationName(), False)
         
-    def ActionInstallFilesToBuildFolder(self):
+    def ActionInstallFilesToBuildFolder(self, args):
         self.FindAdditionalRootFolders(True)
         return self.__guiHandler.InstallBinariesToBuildFolder()
             
-    def DoActions(self, actions):
+    def DoActions(self, actions, *args):
         self.SetStatus("Processing...")
         
         self.AddLogSeparator()
@@ -918,7 +927,7 @@ class CSnakeGUIApp(wx.App):
             self.__Report("Action: %s." % actionStr)
             self.ProgressChanged(ProgressEvent(self,start,actionStr))
             try:
-                res = res and action()
+                res = res and action(args)
                 count += 1
             except Exception, error:
                 message = "Stopped, exception in process.\n%s" % str(error)
@@ -1094,7 +1103,8 @@ class CSnakeGUIApp(wx.App):
             for row in selection:
                 source = self.context.GetThirdPartyFolder(row)
                 build = self.context.GetThirdPartyBuildFolderByIndex(row)
-                self.__guiHandler.ConfigureThirdPartyFolder( source, build, allBuildFolders = self.context.GetThirdPartyBuildFoldersComplete() )
+                # run the action
+                self.DoActions([self.ActionConfigureThirdPartyFolder], source, build, self.context.GetThirdPartyBuildFoldersComplete())
         
     def OnMoveUpThirdPartySrcAndBuildFolder(self, event):
         selection = sorted(self.ThirdPartySrcAndBuildFolderGetSelectedRows())
