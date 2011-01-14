@@ -1310,7 +1310,8 @@ class CSnakeGUIApp(wx.App):
             subprocess.Popen(argList)
     
     def __CheckSaveChanges(self):
-        """ Check if changes need to be saved. Return false if cancelled. """
+        """ Check if changes need to be saved. Return false if canceled. """
+        self.CopyGUIToContextAndOptions()
         if self.IsContextModified():
             message = "Save changes before closing?"
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.CANCEL)
@@ -1329,7 +1330,6 @@ class CSnakeGUIApp(wx.App):
     
     def OnExit(self, event = None):
         if not self.destroyed:
-            self.CopyGUIToContextAndOptions()
             if not self.__CheckSaveChanges(): return
             self.destroyed = True
             self.frame.Destroy()
