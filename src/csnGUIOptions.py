@@ -38,13 +38,10 @@ class Options:
     def PushRecentContextPath(self, path):
         """ Add a recent context path at the beginning of the array. 
             If the array has more than 5 items, the last one is removed. """
-        self.__recentContextPaths.insert(0, path)
-        if len(self.__recentContextPaths) > 5:
-            self.__recentContextPaths.pop()
-
-    def PopRecentContextPath(self):
-        """ Remove the last recent context path. """
-        self.__recentContextPaths.pop()
+        if self.__recentContextPaths[0] != path:
+            self.__recentContextPaths.insert(0, path)
+            if len(self.__recentContextPaths) > 5:
+                self.__recentContextPaths.pop()
 
     def Load(self, filename):
         """ Load an option file. """
