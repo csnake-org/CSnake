@@ -414,7 +414,7 @@ class CSnakeGUIApp(wx.App):
     def InitRecentContextPathsDisplay(self):
         """ Initialise recent context list. """
         # debug log
-        self.__logger.debug("method: InitializeOptions")
+        self.__logger.debug("method: InitRecentContextPathsDisplay")
         # get the menu
         menuBar = self.frame.GetMenuBar()
         id = menuBar.FindMenu("File")
