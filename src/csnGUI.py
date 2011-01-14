@@ -442,7 +442,7 @@ class CSnakeGUIApp(wx.App):
     def __AddRecentContextPath(self, path):
         """ Add a recent context to the options and GUI. """
         # Check if already saved
-        if self.options.GetRecentContextPath(0) == path:
+        if self.options.GetRecentContextPathLength() > 0 and self.options.GetRecentContextPath(0) == path:
             return
         # Add to the options
         self.options.PushRecentContextPath(path)
