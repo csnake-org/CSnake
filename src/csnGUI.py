@@ -413,6 +413,9 @@ class CSnakeGUIApp(wx.App):
         
     def InitRecentContextPathsDisplay(self):
         """ Initialise recent context list. """
+        # debug log
+        self.__logger.debug("method: InitializeOptions")
+        # get the menu
         menuBar = self.frame.GetMenuBar()
         id = menuBar.FindMenu("File")
         filemenu = menuBar.GetMenu( id )
@@ -438,6 +441,9 @@ class CSnakeGUIApp(wx.App):
 
     def __AddRecentContextPath(self, path):
         """ Add a recent context to the options and GUI. """
+        # Check if already saved
+        if self.options.GetRecentContextPath(0) == path:
+            return
         # Add to the options
         self.options.PushRecentContextPath(path)
         # Add to the GUI
@@ -458,6 +464,7 @@ class CSnakeGUIApp(wx.App):
     
     def OnOpenRecent(self, event):
         """ Open recent context file. """
+        if not self.__CheckSaveChanges(): return
         for pair in self.__recentContextPaths:
             if pair[0] == event.GetId():
                 self.LoadContext( pair[1] )
@@ -1161,6 +1168,7 @@ class CSnakeGUIApp(wx.App):
         """
         Let the user load a context.
         """
+        if not self.__CheckSaveChanges(): return
         dlg = wx.FileDialog(None, "Select CSnake context file", defaultDir = os.path.dirname(self.options.GetContextFilename()), wildcard = "Context Files (*.CSnakeGUI;*.csnakecontext)|*.CSnakeGUI;*.csnakecontext|All Files (*.*)|*.*")
         if dlg.ShowModal() == wx.ID_OK:
             self.UpdateGUI()
@@ -1301,28 +1309,30 @@ class CSnakeGUIApp(wx.App):
             argList = [self.context.GetIdePath(), path]
             subprocess.Popen(argList)
     
+    def __CheckSaveChanges(self):
+        """ Check if changes need to be saved. Return false if cancelled. """
+        if self.IsContextModified():
+            message = "Save changes before closing?"
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.CANCEL)
+            ret = dlg.ShowModal()
+            if ret == wx.ID_YES:
+                if self.contextFilename == None or not os.path.isfile(self.contextFilename):
+                    self.SaveContextAs()
+                else:
+                    self.SaveContext(self.contextFilename)
+            elif ret == wx.ID_NO:
+                self.SetContextModified(False)
+            elif ret == wx.ID_CANCEL:
+                return False
+        # default
+        return True
+    
     def OnExit(self, event = None):
         if not self.destroyed:
             self.CopyGUIToContextAndOptions()
-            if self.IsContextModified():
-                message = "Save changes before closing?"
-                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.CANCEL)
-                ret = dlg.ShowModal()
-                if ret == wx.ID_YES:
-                    if self.contextFilename == None or not os.path.isfile(self.contextFilename):
-                        if self.SaveContextAs():
-                            self.destroyed = True
-                            self.frame.Destroy()
-                    else:
-                        self.SaveContext(self.contextFilename)
-                        self.destroyed = True
-                        self.frame.Destroy()
-                elif ret == wx.ID_NO:
-                    self.destroyed = True
-                    self.frame.Destroy()
-            else:
-                self.destroyed = True
-                self.frame.Destroy()
+            if not self.__CheckSaveChanges(): return
+            self.destroyed = True
+            self.frame.Destroy()
 
     def OnHelp(self, event = None):
         ''' Text displayed for help.'''
