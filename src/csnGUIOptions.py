@@ -125,12 +125,17 @@ class Options:
         """ Get the value of the attribute. Used in xrcbinder::BoundControl. """
         return getattr(self, field)
     
-    def SetField(self, field, value):
-        """ Set the value of the attribute. Used in xrcbinder::BoundControl. """
+    def CheckField(self, field, value):
+        """ Check the field before setting it. 
+        Return True if ok or otherwise an error message. """
         # Check it the field exists
         if not hasattr(self, field):
-            self.__logger.warn("SetField with wrong field.")
-            return False
+            raise AttributeError("SetField with wrong field.")
+        # default
+        return True
+
+    def SetField(self, field, value):
+        """ Set the value of the attribute. Used in xrcbinder::BoundControl. """
         # Set the field value if different from the current one
         if getattr(self, field) != value:
             # set the attribute

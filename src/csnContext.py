@@ -704,6 +704,18 @@ class Context(object):
         self.__data._SetThirdPartySrcAndBuildFolders(folders[0:index] + [folders[index+1], folders[index]] + folders[index+2:])
         self.__NotifyListeners(ChangeEvent(self))
         
+    def __CheckThirdPartyArray(self, array):
+        """ Check if the third party array is correct. """
+        for firstPair in array:
+            arrayCopy = array[:]
+            arrayCopy.remove(firstPair)
+            for secondPair in arrayCopy:
+                if( secondPair[0] == firstPair[0] and secondPair[1] == firstPair[1]):
+                    return "Duplicate entry: %s, %s == %s, %s" % (secondPair[0], secondPair[1], firstPair[0], firstPair[1])
+                if( secondPair[1] == firstPair[1] ):
+                    return "Duplicate build folder: %s" % secondPair[1]
+        return True
+        
     # ----------------------------
     # Root folders handling 
     # ----------------------------
@@ -793,18 +805,32 @@ class Context(object):
     def GetField(self, field):
         return getattr(self.__data, field)
     
-    def SetField(self, field, value):
+    def CheckField(self, field, value):
+        """ Check the field before setting it. 
+        Return True if ok or otherwise an error message. """
         # Check it the field exists
         if not hasattr(self.__data, field):
             raise AttributeError("SetField with wrong field.")
+        # Check the field value if different from the current one
+        if getattr(self.__data, field) != value:
+            # third parties
+            if field == "_ContextData__thirdPartySrcAndBuildFolders":
+                return self.__CheckThirdPartyArray(value)
+        # default
+        return True
+
+    def SetField(self, field, value):
         # Set the field value if different from the current one
         if getattr(self.__data, field) != value:
+            # set the attribute
             setattr(self.__data, field, value)
+            # post-process
             if field == "_ContextData__configurationName" and self.__compiler != None:
                 self.__compiler.SetConfigurationName(self.GetConfigurationName())
             elif field == "_ContextData__instance":
                 # reset the filter
                 self.SetFilter([])
+            # notify
             self.__NotifyListeners(ChangeEvent(self))
     
     def __NotifyListeners(self, event):

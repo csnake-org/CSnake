@@ -519,7 +519,7 @@ class CSnakeGUIApp(wx.App):
         dlg = wx.MessageDialog(self.frame, message, 'Warning', style = wx.OK | wx.ICON_EXCLAMATION)
         dlg.ShowModal()
         
-    def __Error(self, message):
+    def Error(self, message):
         """ Shows an error message to the user. """
         self.__logger.error("csnGUI.error: %s" % message)
         if message is None: return
@@ -689,7 +689,7 @@ class CSnakeGUIApp(wx.App):
                 self.__logger.debug("Loading options.")
                 self.options.Load(self.optionsFilename)
             except IOError, error:
-                self.__Error("%s" % error)
+                self.Error("%s" % error)
             # initialise display of recent paths
             self.InitRecentContextPathsDisplay()
         else:
@@ -761,7 +761,7 @@ class CSnakeGUIApp(wx.App):
             self.context.Save(contextFilename)
             saved = True
         except:
-            self.__Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % contextFilename)
+            self.Error("Sorry, CSnakeGUI could not save the context to %s\n. Please check if another program is locking this file.\n" % contextFilename)
         
         if saved:
             # Update name and flag    
@@ -775,7 +775,7 @@ class CSnakeGUIApp(wx.App):
         try:
             self.options.Save(self.optionsFilename)
         except:
-            self.__Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
+            self.Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
     
     def OnDetectRootFolders(self, event):
         if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
@@ -940,7 +940,7 @@ class CSnakeGUIApp(wx.App):
                 # to keep the message alive after the error windows is closed.
                 self.__Report(traceback.format_exc())
                 # show as error
-                self.__Error(message)
+                self.Error(message)
                 break
             # check cancel
             self.ProgressChanged(ProgressEvent(self, range))
@@ -957,7 +957,7 @@ class CSnakeGUIApp(wx.App):
                 # to keep the message alive after the error windows is closed.
                 self.__Report(message)
                 # show as error
-                self.__Error(message)
+                self.Error(message)
                 break
             
         elapsedTime = time.time() - startTime
@@ -1031,7 +1031,7 @@ class CSnakeGUIApp(wx.App):
                 if dlg.ShowModal() == wx.ID_YES:
                     self.AddThirdPartyFolder( defaultThirdPartyFolder )
         except Exception, message:
-            self.__Error(message)
+            self.Error(message)
     
     def GetLastRootFolder(self):
         if self.context.GetNumberOfRootFolders() > 0:
@@ -1242,9 +1242,9 @@ class CSnakeGUIApp(wx.App):
                 try:
                     context = self.__guiHandler.LoadContext(contextFilename)
                 except IOError, error:
-                    self.__Error("Could not load the context file: '%s'." % error)
+                    self.Error("Could not load the context file: '%s'." % error)
             else:
-                self.__Error("Could not find context file: '%s'." % contextFilename)
+                self.Error("Could not find context file: '%s'." % contextFilename)
         
         if context:
             # Save the context
@@ -1340,7 +1340,7 @@ class CSnakeGUIApp(wx.App):
         if os.path.exists(indexFilename):
             webbrowser.open(indexFilename)
         else:
-            self.__Error("Missing documentation.")
+            self.Error("Missing documentation.")
                                         
     def OnAbout(self, event = None):
         ''' Text displayed in the About box.'''
@@ -1403,7 +1403,7 @@ class CSnakeGUIApp(wx.App):
                 # show error message
                 message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
                 message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
-                self.__Error(message)
+                self.Error(message)
                 self.SetStatus("")
                 return False
             # restore saved filter

@@ -27,6 +27,10 @@ class BoundControl:
         
     def SetBuddyValue(self, value):
         """ Set the buddy value using the SetField method of the buddy class. """
+        msg = self.GetBuddyClass().CheckField(self.buddyField, value)
+        if msg != True: 
+            self.binder.target.Error(msg)
+            return
         self.GetBuddyClass().SetField(self.buddyField, value)
         
     def GetBuddyValue(self):
