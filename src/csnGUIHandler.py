@@ -184,8 +184,9 @@ class Handler:
     def ConfigureThirdPartyFolder(self, source, build, allBuildFolders):
         """ 
         Runs cmake to install the libraries in the third party folder.
-        By default, the third party folder is configured twice because this works around
-        some problems with incomplete configurations.
+        @param source: The source folder.
+        @param build: The build folder.
+        @param allBuildFolders: Root of the build folder.
         """
         result = True
         
