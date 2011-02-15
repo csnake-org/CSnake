@@ -1063,11 +1063,11 @@ class CSnakeGUIApp(wx.App):
         index = 0
         while alreadyUsed:
             alreadyUsed = False
-            for folder in self.context.GetThirdPartyBuildFolders():
-                if newBuildFolder == folder:
+            if index > 0: newBuildFolder = rootBuildFolder + ("%d" % index)
+            for listedFolder in self.context.GetThirdPartyBuildFolders():
+                if newBuildFolder == listedFolder:
                     alreadyUsed = True
                     break
-            newBuildFolder = rootBuildFolder + ("%d" % index)
             index = index + 1
         message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (newBuildFolder, folder)
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
