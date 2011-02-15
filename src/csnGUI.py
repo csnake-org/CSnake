@@ -1030,8 +1030,8 @@ class CSnakeGUIApp(wx.App):
                 dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
                 if dlg.ShowModal() == wx.ID_YES:
                     self.AddThirdPartyFolder( defaultThirdPartyFolder )
-        except Exception, message:
-            self.Error(message)
+        except Exception, error:
+            self.Error(str(error))
     
     def GetLastRootFolder(self):
         if self.context.GetNumberOfRootFolders() > 0:
@@ -1057,11 +1057,22 @@ class CSnakeGUIApp(wx.App):
         """
         Add folder where CSnake files must be searched to context.thirdPartyFolders.
         """
-        defaultBuildThirdPartyFolder = self.context.GetBuildFolder() + "/thirdParty"
-        message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (defaultBuildThirdPartyFolder, folder)
+        rootBuildFolder = self.context.GetBuildFolder() + "/thirdParty"
+        newBuildFolder = rootBuildFolder
+        alreadyUsed = True
+        index = 0
+        while alreadyUsed:
+            alreadyUsed = False
+            for folder in self.context.GetThirdPartyBuildFolders():
+                if newBuildFolder == folder:
+                    alreadyUsed = True
+                    break
+            newBuildFolder = rootBuildFolder + ("%d" % index)
+            index = index + 1
+        message = "Do you want to use \"%s\" as Build Folder for Third Party folder \"%s\"?" % (newBuildFolder, folder)
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
-            self.context.AddThirdPartySrcAndBuildFolder(folder, defaultBuildThirdPartyFolder)
+            self.context.AddThirdPartySrcAndBuildFolder(folder, newBuildFolder)
         else:
             self.context.AddThirdPartySrcAndBuildFolder(folder, "")
 
