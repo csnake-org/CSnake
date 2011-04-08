@@ -13,7 +13,10 @@ class exeSetup():
         pathToSrc = "../src/"
         # Resources of the setup script
         self.resources = []
-        # Resource files to add to bin folder.
+        # Files at root level
+        self.__addToResources("../readme.txt", ".")
+        self.__addToResources("../license.txt", ".")
+		# Resource files to add to bin folder.
         self.__addToResources(pathToResources, "resources")
         # Doc files to add to bin folder.
         self.__addToResources("../doc/html/", "doc/html")
@@ -44,12 +47,17 @@ class exeSetup():
             ],
             data_files = self.resources )
         
-    def __addToResources(self, origin, destination):
-        for f1 in os.listdir(origin):
-            f2 = origin + f1
-            if os.path.isfile(f2): # skip directories
-                pair = destination, [f2]
-                self.resources.append(pair)
+    def __addToResources(self, origin, destinationDir):
+        ''' Add files/folder to the self.resources var.'''
+        if os.path.isfile(origin):
+            pair = destinationDir, [origin]
+            self.resources.append(pair)
+        else:
+            for f1 in os.listdir(origin):
+                f2 = origin + f1
+                if os.path.isfile(f2): # skip directories
+                    pair = destinationDir, [f2]
+                    self.resources.append(pair)
 
 if __name__ == "__main__":
     mainSetup = exeSetup()
