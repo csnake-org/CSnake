@@ -261,6 +261,8 @@ File ::EF6D6CD5-6E5A-41C8-95B4-75BDFAEE1633 -name ./dist/wxmsw28uh_adv_vc.dll -p
 File ::1DDB495B-19EA-4F9C-B5BC-D91B854A572E -name ./dist/wxmsw28uh_core_vc.dll -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
 File ::D05F322E-A300-4577-A80C-E11C39267C3F -name ./dist/wxmsw28uh_html_vc.dll -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
 File ::98876A7C-4CF5-495D-8340-5D421675DC45 -name ./dist/wxmsw28uh_xrc_vc.dll -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
+File ::78A8AAA6-76D5-4BC2-9271-4958F2D9BEB2 -name ./dist/license.txt -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
+File ::26AAA3C8-B3E9-48E9-82E3-92F95C06E8BB -name ./dist/readme.txt -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
 File ::BE39938B-F85F-42AC-AA12-D82CD76D1EC5 -type dir -name ./dist/resources -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
 File ::EC865397-3115-4C39-B12C-1E1FA9D6D415 -name about.txt -parent BE39938B-F85F-42AC-AA12-D82CD76D1EC5
 File ::D96C7C24-4B4D-491D-8C0F-FFDA4448C7E7 -name csnake_dummy.cpp -parent BE39938B-F85F-42AC-AA12-D82CD76D1EC5
@@ -1240,8 +1242,6 @@ File ::C40F0211-976B-4200-9CD9-B3310619F067 -name tab_a.png -parent ADAC054C-C03
 File ::C234BC75-53A8-481F-B52E-8A186443B3C7 -name tab_b.png -parent ADAC054C-C03B-47D3-AF0A-012D0EEE1B6F
 File ::4D09C9C3-BEA0-43C2-80C6-49FEE20CC16D -name tab_h.png -parent ADAC054C-C03B-47D3-AF0A-012D0EEE1B6F
 File ::2542C851-6B0C-4261-885C-8A410B0F1DF6 -name tab_s.png -parent ADAC054C-C03B-47D3-AF0A-012D0EEE1B6F
-File ::5DA061F5-797A-440E-BB35-C2E99204470B -name E:/devel/src/csnake/clean/CSnake/license.txt -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
-File ::35ED4A66-A985-4D14-9A1A-4441CCBE9533 -name E:/devel/src/csnake/clean/CSnake/readme.txt -parent 1AD1DBE2-67CD-454A-B465-4966C675D65B
 Component ::431C505F-DC2D-4873-A510-EDD8ADDB4739 -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-5-x86 FreeBSD-6-x86 FreeBSD-7-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Linux-x86_64 Solaris-sparc Solaris-x86 Windows} -name {Default Component} -parent Components
 SetupType ::F0E8C493-9D15-40E1-B64A-A4A94F9C96E6 -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-5-x86 FreeBSD-6-x86 FreeBSD-7-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Linux-x86_64 Solaris-sparc Solaris-x86 Windows} -name Typical -parent SetupTypes
 
