@@ -79,14 +79,17 @@ Bug fix
 
 Installation
 ------------
-Double click on the 'CSnake-*.*.*-Setup.exe' and follow instructions.
+On Windows, double click on the 'CSnake-*.*.*-Setup.exe' and follow instructions.
+For the other platforms, sorry no automatic installation is provided.
 
 Running
 -------
-A 'CSnake' shortcut should be available in the 'start' menu. Otherwise, locate the installation folder and run
-the 'csnGUI.exe' file.
+On Windows, a 'CSnake' shortcut should be available in the 'start' menu. 
+Otherwise, locate the installation folder and run the 'csnGUI.exe' file.
 
 Uninstalling
 ------------
-A 'Uninstall CSnake' shortcut should be available in the 'start' menu. Otherwise, locate the installation folder and run
-the 'uninstall.exe' file.
+On Windows, an 'Uninstall CSnake' shortcut should be available in the 'start' menu. Otherwise, 
+locate the installation folder and run the 'uninstall.exe' file.
+For the other platforms, sorry no automatic uninstall is provided, just delete the folder. 
+Local information is stored in the user's folder under '.csnake'.
