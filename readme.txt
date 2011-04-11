@@ -32,7 +32,7 @@ v2.4.0
  * Automatic options search
  * Instance list update
  * Context file name extension
- * File save behaviour
+ * File save behavior
  * Application file location
  * Remove direct calls to print
 
@@ -50,7 +50,7 @@ Note:
 the {{{project.GetBuildFolder()}}} method, the first one gives you one of the third party folders 
 and the second one gives you the specific one of your third party. This was changed in version 1.1.0 of the 
 toolkit. Project using the first method can be configured only if the toolkit third parties are first in the list.
-- be carefull: all thrid party source folder should have a specific associated bin folder (they cannot use the same one)
+- be careful: all third party source folder should have a specific associated bin folder (they cannot use the same one)
 
 v2.3.1
 
