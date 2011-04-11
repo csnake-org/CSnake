@@ -32,12 +32,12 @@ Cruise Control project configuration file.
 
       <!-- Bootstrappers are run every time the build runs, *before* the modification checks -->
       <bootstrappers>
-         <svnbootstrapper/>
+         <gitbootstrapper localworkingcopy="${project.source_path}"/>
       </bootstrappers>
 
       <!-- Modificationset: triggers for rebuild -->
       <modificationset quietperiod="${main.quietperiod}">
-         <svn/>
+         <git localworkingcopy="${project.source_path}"/>
       </modificationset>
 
       <!-- Schedule: configures the actual build loop, how often and which build file/target -->
@@ -69,8 +69,8 @@ Cruise Control project configuration file.
          </ant>
       </schedule>
 
-      <!-- Use the svn revision in the build number -->
-      <svnlabelincrementer/>
+      <!-- Default label -->
+      <labelincrementer/>
 
       <!-- Log dir and files to merge -->
       <log/>
