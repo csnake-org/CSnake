@@ -1,8 +1,11 @@
 --------------
 CSnake readme
 --------------
-
-Version: 2.4.3beta
+CSnake is a build system based on CMake. It is meant to simplify the configuration 
+process of libraries. It was initially developed by the 
+Center for Computational Imaging & Simulation Technologies In Biomedicine (CISTIB), 
+based in Barcelona, Spain. 
+It is mainly used to configure the building of the GIMIAS (http://www.gimias.org/) software.
 
 Change log
 ----------
