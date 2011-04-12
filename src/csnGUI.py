@@ -42,7 +42,6 @@ class PathPickerCtrl(wx.Control):
         self.handlerConnected = False
         self.folderName = folderName
         self.dontLeaveEditMode = False
-        self.yves = False
         
         self.panel = wx.Panel(self, style = wx.BORDER_NONE)
         self.text = wx.TextCtrl(self.panel, style = wx.TE_PROCESS_TAB | wx.TE_PROCESS_ENTER)
