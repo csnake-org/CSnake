@@ -11,12 +11,13 @@ class Manager:
         self.project = _project
         self.projects = OrderedSet.OrderedSet()
         self.projectsNonRequired = OrderedSet.OrderedSet()
+        self.projectsIncludedInSolution = OrderedSet.OrderedSet()
         self.useBefore = []
         self.isTopLevel = False
         # logger
         self.__logger = logging.getLogger("CSnake")
         
-    def AddProjects(self, _projects, _dependency = True):
+    def AddProjects(self, _projects, _dependency = True, _includeInSolution = True):
         for project in _projects:
             projectToAdd = csnProject.ToProject(project)
             if projectToAdd.MatchesFilter() or projectToAdd in self.GetProjects():
@@ -31,6 +32,8 @@ class Manager:
                 self.projects.add( projectToAdd )
                 if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
+                if _includeInSolution:
+                    self.projectsIncludedInSolution.add( projectToAdd )
                     
     def DependsOn(self, _otherProject, _skipList = None):
         """ 

@@ -37,7 +37,9 @@ class Writer:
     def __WriteCommandsToGenerate(self, projectsToGenerate):
         self.file.write( "\n" )
         for projectToGenerate in projectsToGenerate:
-            self.file.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (projectToGenerate.GetBuildFolder(), projectToGenerate.GetBuildFolder()) )
+            includeInSolution = projectToGenerate in self.project.dependenciesManager.projectsIncludedInSolution
+            if includeInSolution:
+                self.file.write( "ADD_SUBDIRECTORY(\"%s\" \"%s\")\n" % (projectToGenerate.GetBuildFolder(), projectToGenerate.GetBuildFolder()) )
         self.file.write( "\n" )
     
     def __WriteDependencyCommands(self, dependencyProjects):
@@ -69,7 +71,8 @@ class Writer:
         the dependency projects are already included).
         """
         for project in self.project.dependenciesManager.ProjectsToUse():
-            public = (self.project.name != project.name and not csnUtility.IsWindowsPlatform())
+            includeInSolution = project in self.project.dependenciesManager.projectsIncludedInSolution
+            public = (self.project.name != project.name and ( not csnUtility.IsWindowsPlatform() or not includeInSolution ) )
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToConfigFile(public) ))
             self.file.write( "INCLUDE(\"%s\")\n" % (project.pathsManager.GetPathToUseFile()) )
     

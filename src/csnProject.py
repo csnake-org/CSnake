@@ -116,8 +116,8 @@ class GenericProject(object):
         self.CMakeInsertAfterTarget = new.instancemethod(SetCMakeInsertAfterTarget, self)
         
 
-    def AddProjects(self, _projects, _dependency = True): 
-        self.dependenciesManager.AddProjects(_projects, _dependency)
+    def AddProjects(self, _projects, _dependency = True, _includeInSolution = True): 
+        self.dependenciesManager.AddProjects(_projects, _dependency, _includeInSolution)
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         self.compileManager.AddSources(_listOfSourceFiles, _moc, _ui, _sourceGroup, _checkExists, _forceAdd)
