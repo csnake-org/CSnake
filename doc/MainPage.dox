@@ -5,9 +5,9 @@
 
 \section introduction_sec Introduction
 Helper tool for library compilation configuration. Main links:
-\li <a href="https://github.com/csnake-org/CSnake">source</a>
-\li <a href="https://github.com/csnake-org/CSnake/wiki">wiki</a>
-\li <a href="https://github.com/csnake-org/CSnake/issues">issues</a>
+\li <a href="https://github.com/csnake-org/CSnake">source</a>,
+\li <a href="https://github.com/csnake-org/CSnake/wiki">wiki</a>,
+\li <a href="https://github.com/csnake-org/CSnake/issues">issues</a>.
 
 \section details_sec Details
 \li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
