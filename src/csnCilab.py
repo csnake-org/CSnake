@@ -188,16 +188,18 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     """
     if _sourceRootFolder is None:
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    pluginName = "GIMIAS%s" % _name
     project = csnProject.Project(
         _name, 
         _type = "dll", 
         _sourceRootFolder = _sourceRootFolder, 
-        _categories = ["GIMIAS%s" % _name]
+        _categories = [pluginName]
     )
     project.applicationsProject = None
     project.installSubFolder = "plugins/%s/lib" % _name
     project.AddIncludeFolders(["."])
     project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
+    project.context.SetSuperSubCategory("Plugins", pluginName)
 
     # Windows debug
     installFolder = "%s/debug" % project.installSubFolder

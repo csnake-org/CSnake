@@ -32,7 +32,7 @@ class ContextData:
         self.__kdevelopProjectFolder = ""
             
         # List of items to filter out of build
-        self.__filter = ["Demos", "Applications", "Tests"]
+        self.__filter = ["Demos", "Applications", "Tests", "Plugins"]
 
         self.__rootFolders = []
         self.__thirdPartySrcAndBuildFolders = []
