@@ -4,11 +4,14 @@
 \mainpage CSnake
 
 \section introduction_sec Introduction
-Helper tool for library compilation configuration.
+Helper tool for library compilation configuration. Main links:
+\li <a href="https://github.com/csnake-org/CSnake">source</a>
+\li <a href="https://github.com/csnake-org/CSnake/wiki">wiki</a>
+\li <a href="https://github.com/csnake-org/CSnake/issues">issues</a>
 
 \section details_sec Details
 \li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
-\li Library license: Open Source (see \ref license information)
+\li Library license: Open Source, BSD License (see \ref license information)
 
 \section depends_sec Dependencies
 \li Python: version 2.6 (http://www.python.org)
