@@ -58,7 +58,9 @@ class csnUtilityTests(unittest.TestCase):
             # typical windows XP key names for cmake
             key_names1 = [r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.0", 
               r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.1",
-              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.2"]
+              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.2",
+              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.3",
+              r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.4"]
             value_names1 = [r""]
             resPath1 = csnUtility.SearchWindowsProgramPath(key_names1, value_names1, path_end1)
             self.assertEqual( resPath1, refPath1 )
