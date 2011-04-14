@@ -79,13 +79,13 @@ class Manager:
 
 
 def CustomCMakeLines(self, _file):
-    """ CLP Cmake specific, postfix to main cmake section. """
+    """ Line to add tests. """
     if len( self.GetSources() ) > 0:
         _file.write("\n# Adding CMake Test\n")
         _file.write( "ADD_TEST( ${PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/%s )\n" % self.name )
 
 def CustomCMakeLinesHoldingProject(self, _file):
-    """ CLP Cmake specific, postfix to main cmake section. """
+    """ Line to enable testing. """
     _file.write("\n# Enable CMake Testing\n")
     _file.write( "ENABLE_TESTING()\n" )
 

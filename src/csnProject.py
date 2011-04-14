@@ -114,6 +114,8 @@ class GenericProject(object):
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
         # Function called after "ADD_LIBARRY"
         self.CMakeInsertAfterTarget = new.instancemethod(SetCMakeInsertAfterTarget, self)
+        # Function called after "ADD_LIBARRY"
+        self.CMakeInsertBeginning = new.instancemethod(SetCMakeInsertBeginning, self)
         
 
     def AddProjects(self, _projects, _dependency = True, _includeInSolution = True): 
