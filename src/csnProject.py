@@ -114,7 +114,7 @@ class GenericProject(object):
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
         # Function called after "ADD_LIBARRY"
         self.CMakeInsertAfterTarget = new.instancemethod(SetCMakeInsertAfterTarget, self)
-        # Function called after "ADD_LIBARRY"
+        # Function called at the beginning of the CMakeList
         self.CMakeInsertBeginning = new.instancemethod(SetCMakeInsertBeginning, self)
         
 
