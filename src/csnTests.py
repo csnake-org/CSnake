@@ -1,6 +1,7 @@
 import os
 import csnUtility
 import csnProject
+import new
 
 class Manager:
     def __init__(self, _project):
@@ -66,9 +67,25 @@ class Manager:
                 depends.append( depend )
                 command += depend
         self.testProject.AddRule("Create test runner", self.testRunnerSourceFile, command, depends)
+        self.testProject.CMakeInsertAfterTarget = new.instancemethod(CustomCMakeLines, self.testProject)
+        self.holdingProject.CMakeInsertBeginning = new.instancemethod(CustomCMakeLinesHoldingProject, self.holdingProject)
         
         if not _dependencies is None:
             self.testProject.AddProjects(_dependencies)
 
         if( _pch != "" ):
             self.testProject.SetPrecompiledHeader(_pch)
+
+
+
+def CustomCMakeLines(self, _file):
+    """ CLP Cmake specific, postfix to main cmake section. """
+    if len( self.GetSources() ) > 0:
+        _file.write("\n# Adding CMake Test\n")
+        _file.write( "ADD_TEST( ${PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/%s )\n" % self.name )
+
+def CustomCMakeLinesHoldingProject(self, _file):
+    """ CLP Cmake specific, postfix to main cmake section. """
+    _file.write("\n# Enable CMake Testing\n")
+    _file.write( "ENABLE_TESTING()\n" )
+

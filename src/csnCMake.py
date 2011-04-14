@@ -244,6 +244,8 @@ class Writer:
         #        self.file.write( "SET( AlreadyUsing%s FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
         #        self.file.write( "SET( AlreadyUsing%sPrivate FALSE CACHE BOOL \"Internal helper\" FORCE )\n" % (project.name) )
 
+        self.project.CMakeInsertBeginning( self.file )
+        
         # wxMitkApplications is a container project that just have ADD_SUBDIRECTORY for each application
         self.__WriteCommandsToGenerate(_generatedProjects)
         if self.project.type != "container":

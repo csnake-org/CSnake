@@ -211,3 +211,7 @@ def SetCMakeInsertBeforeTarget(self, _file):
 def SetCMakeInsertAfterTarget(self, _file):
     # Empty function
     return
+
+def SetCMakeInsertBeginning(self, _file):
+    # Empty function
+    return
