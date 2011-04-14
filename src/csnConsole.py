@@ -5,6 +5,8 @@ from optparse import OptionParser
 parser = OptionParser(usage="%prog contextFile [options]")
 parser.add_option("-i", "--install", dest="install", action="store_true", default=False, help="install files to build folder")
 parser.add_option("-t", "--thirdParty", dest="thirdParty", action="store_true", default=False, help="configure third party projects")
+parser.add_option("-c", "--configure", action="store_true", default=False, help="configure all")
+parser.add_option("-b", "--build", action="store_true", default=False, help="build all")
 (commandLineOptions, commandLineArgs) = parser.parse_args()
 
 if len(commandLineArgs) != 1:
@@ -13,6 +15,15 @@ if len(commandLineArgs) != 1:
     
 handler = csnGUIHandler.Handler()
 context = handler.LoadContext(commandLineArgs[0])
+
+if commandLineOptions.configure:
+    handler.ConfigureThirdPartyFolders()
+    handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+
+if commandLineOptions.build:
+    handler.BuildMultiple(handler.GetThirdPartySolutionPaths(), context.GetConfigurationName(), True)
+    handler.Build(handler.GetTargetSolutionPath(), context.GetConfigurationName(), False)
+    handler.InstallBinariesToBuildFolder()
 
 if commandLineOptions.thirdParty:
     for count in range( 0, context.GetNumberOfThirdPartyFolders() ):
@@ -32,8 +43,9 @@ if commandLineOptions.install:
     assert result, "\n\nTask failed: InstallBinariesToBuildFolder" 
     print "Finished task: " + taskMsg
 
-taskMsg = "ConfigureProjectToBuildFolder to %s..." % (context.GetBuildFolder())
-print "Starting task: " + taskMsg 
-result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
-assert result, "\n\nTask failed: ConfigureProjectToBuildFolder" 
-print "Finished task: " + taskMsg + "\nPlease build the sources in %s.\n" % handler.GetTargetSolutionPath()
+if not commandLineOptions.configure and not commandLineOptions.build:
+    taskMsg = "ConfigureProjectToBuildFolder to %s..." % (context.GetBuildFolder())
+    print "Starting task: " + taskMsg 
+    result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+    assert result, "\n\nTask failed: ConfigureProjectToBuildFolder" 
+    print "Finished task: " + taskMsg + "\nPlease build the sources in %s.\n" % handler.GetTargetSolutionPath()
