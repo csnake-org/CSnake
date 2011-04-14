@@ -79,6 +79,7 @@ def main():
     # run the tests
     tests = AllTests(outputFileName)
     res = tests.run()
+    print "\nTests results can be found in '%s'." % outputFileName
     if res:
         print "\n== All Tests Successful! =="
     else:
