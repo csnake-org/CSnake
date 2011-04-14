@@ -10,6 +10,42 @@ from TestProjectConfig import TestProjectConfig
 import csnContext
 
 class csnBuildTests(unittest.TestCase):
+    """
+    Build tests: will try to configure, compile and test example project from the tests/data folder.
+    Depends on local machine configuration, please create a tests/config/csnake_context.txt based on the
+    following lines:
+
+# Specific project settings
+csnakefile = PATH_TO_CSNAKE/tests/data
+instance = 
+prebuiltBinariesFolder = 
+kdevelopProjectFolder = 
+
+# Toolkit settings
+filter = *Demos
+testrunnertemplate = xmlRunner.tpl
+installfolder = PATH_TO_CSNAKE/tests
+buildfolder = PATH_TO_CSNAKE/tests
+
+# Compilation settings
+compilername = Visual Studio 10 Win64
+configurationname = DebugAndRelease
+
+# General settings
+pythonpath = C:/Program Files/Python27/python.exe
+cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
+idepath = C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/devenv.exe
+version = 2.1
+
+[RootFolders]
+rootfolder0 = PATH_TO_CSNAKE/tests/data
+
+[ThirdPartyFolders]
+thirdpartyfolder0 = PATH_TO_CSNAKE/tests/data
+
+[ThirdPartyBuildFolders]
+thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
+    """
 
     def setUp(self):
         """ Run before test. """
