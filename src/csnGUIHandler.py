@@ -580,7 +580,8 @@ class Handler:
         errorLines = errorFile.readlines()
         nLines = len(errorLines)
         # output all to console
-        sys.stderr.writelines(errorLines)
+        for line in errorLines:
+            sys.stderr.write(line)
         # error message, limit if too big
         iMax = nLines
         if nLines >= limit:
