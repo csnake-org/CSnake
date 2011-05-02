@@ -7,11 +7,22 @@ Center for Computational Imaging & Simulation Technologies In Biomedicine (CISTI
 based in Barcelona, Spain. 
 It is mainly used to configure the building of the GIMIAS (http://www.gimias.org/) software.
 
+More information can be found on https://github.com/csnake-org/CSnake.
+
 Change log
 ----------
 
 v2.4.3
- * ...
+ * Save recent context files
+ * Add support for drag and drop of context files
+ * Add CTest creation to the projects
+ * Add configure and build option from the command line
+ * Add links to doxygen main page
+ * Automatic bin folder for thirdParty
+ * Add progress bar for single third party configuration
+ * Plugin only solution
+ * Add a plugin category in project list
+ * Switch to Git
 
 v2.4.2
  * Bug: Generate CLP warning
