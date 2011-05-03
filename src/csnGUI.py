@@ -241,11 +241,14 @@ class CSnakeGUIApp(wx.App):
         self.__logger = logging.getLogger("CSnake")
         self.__logger.debug("method: OnInit")
         
+        # initalise main vars 
+        
         self.destroyed = False
         self.listOfPossibleTargets = []
         self.projectCheckBoxes = dict()
         
         self.context = None
+        self.options = None
         self.originalContextData = None
         self.contextFilename = None
         self.contextModified = False
@@ -256,14 +259,17 @@ class CSnakeGUIApp(wx.App):
         self.__recentContextPaths = []
        
         self.projectNeedUpdate = False
+        self.__currentSolutionPath = None
         
         wx.InitAllImageHandlers()
+        
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
         self.res = xrc.XmlResource(xrcFile)
         
         self.csnakeFolder = csnUtility.GetCSnakeUserFolder()
         self.thisFolder = None
             
+        # launch init methods
         self.InitFrame()
         self.InitMenu()
         self.InitOtherGUIStuff()
@@ -870,6 +876,9 @@ class CSnakeGUIApp(wx.App):
         if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
             if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+            self.__currentSolutionPath = self.__guiHandler.GetTargetSolutionPath()
+            if self.options.GetAskToLaunchIDE():
+                self.AskToLaunchIDE(self.__currentSolutionPath)
             return True
         return False
         
@@ -883,8 +892,9 @@ class CSnakeGUIApp(wx.App):
         
     def ActionConfigureThirdPartyFolders(self, args):
         if self.__guiHandler.ConfigureThirdPartyFolders():
+            self.__currentSolutionPath = self.__guiHandler.GetThirdPartySolutionPaths()[0]
             if self.options.GetAskToLaunchIDE():
-                self.AskToLaunchIDE(self.__guiHandler.GetThirdPartySolutionPaths()[0])
+                self.AskToLaunchIDE(self.__currentSolutionPath)
             return True
         return False
         
@@ -1311,14 +1321,17 @@ class CSnakeGUIApp(wx.App):
         message = "Launch Visual Studio with solution %s?" % pathToSolution
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_YES:
-            argList = [self.context.GetIdePath(), pathToSolution]
-            subprocess.Popen(argList)
+            self.__LaunchIDE(pathToSolution)
 
     def OnLaunchIDE(self, event = None):
-        path = self.__guiHandler.GetTargetSolutionPath()
-        if path and path != "":
-            argList = [self.context.GetIdePath(), path]
+        self.__LaunchIDE(self.__currentSolutionPath)
+            
+    def __LaunchIDE(self, pathToSolution):
+        if pathToSolution and os.path.exists(pathToSolution):
+            argList = [self.context.GetIdePath(), pathToSolution]
             subprocess.Popen(argList)
+        else:
+            self.Error("Cannot open IDE, solution does not exist: %s" % pathToSolution)
     
     def __CheckSaveChanges(self):
         """ Check if changes need to be saved. Return false if canceled. """
