@@ -970,8 +970,19 @@ class CSnakeGUIApp(wx.App):
                 self.Error(message)
                 break
             
-        elapsedTime = time.time() - startTime
-        self.__Report("Done (%d seconds)." % elapsedTime)
+        elapsedTime = int( time.time() - startTime )
+        minutes = elapsedTime / 60
+        seconds = elapsedTime - 60*minutes
+        message = "Done ("
+        if minutes != 0:
+            message += "%dmn" % minutes
+        if minutes != 0 and seconds != 0:
+            message += " "
+        if seconds != 0:
+            message += "%ds" % seconds
+        message += ")."
+        self.__Report(message)
+        
         self.UpdateGUI()
         self.SetStatus("")
         
