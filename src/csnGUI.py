@@ -1327,6 +1327,7 @@ class CSnakeGUIApp(wx.App):
         self.__LaunchIDE(self.__currentSolutionPath)
             
     def __LaunchIDE(self, pathToSolution):
+        ''' Launch the IDE with the input path.'''
         if pathToSolution and os.path.exists(pathToSolution):
             argList = [self.context.GetIdePath(), pathToSolution]
             subprocess.Popen(argList)
