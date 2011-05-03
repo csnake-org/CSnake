@@ -22,6 +22,9 @@ v2.4.3
  * Add progress bar for single third party configuration
  * Plugin only solution
  * Add a plugin category in project list
+ * Use minutes for times
+ * Bug: Auto Launch IDE does not work for project
+ * Bug: Ask to launch IDE check box is not saved
  * Switch to Git
 
 v2.4.2
