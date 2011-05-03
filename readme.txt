@@ -11,8 +11,6 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
-v2.4.4
- * ...
 
 v2.4.3
  * Save recent context files
