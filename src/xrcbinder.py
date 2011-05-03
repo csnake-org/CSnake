@@ -178,6 +178,7 @@ class GridControl(BoundControl):
 class CheckBoxControl(BoundControl):
     def __init__(self, binder, control, labels = None, buddyClass = None, buddyField = None):
         BoundControl.__init__(self, binder, control, labels, buddyClass, buddyField)
+        control.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus, control)
         
     def UpdateBuddy(self):
         self.SetBuddyValue(self.control.GetValue())
