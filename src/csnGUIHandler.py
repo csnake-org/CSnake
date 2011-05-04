@@ -188,8 +188,6 @@ class Handler:
         @param build: The build folder.
         @param allBuildFolders: Root of the build folder.
         """
-        result = True
-        
         # create the build folder if it doesn't exist
         os.path.exists(build) or os.makedirs(build)
         
