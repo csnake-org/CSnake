@@ -16,7 +16,7 @@ class exeSetup():
         # Files at root level
         self.__addToResources("../readme.txt", ".")
         self.__addToResources("../license.txt", ".")
-		# Resource files to add to bin folder.
+        # Resource files to add to bin folder.
         self.__addToResources(pathToResources, "resources")
         # Doc files to add to bin folder.
         self.__addToResources("../doc/html/", "doc/html")
