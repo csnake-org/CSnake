@@ -65,7 +65,7 @@ if commandLineOptions.autoconfig:
         assert result, "\n\nTask failed: ConfigureThirdPartyFolders." 
     else:
         print "Starting task: ConfigureProjectToBuildFolder."
-        res = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+        result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
         assert result, "\n\nTask failed: ConfigureProjectToBuildFolder." 
         print "Starting task: InstallBinariesToBuildFolder."
         result = handler.InstallBinariesToBuildFolder()
