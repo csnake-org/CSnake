@@ -1,4 +1,6 @@
-# Unit tests for for the csnBuild class
+## @package csnBuildTests
+# Definition of the csnBuildTests class.
+# \ingroup tests
 import unittest
 import os.path
 import csnBuild

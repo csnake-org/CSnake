@@ -1,3 +1,5 @@
+## @package csnCreate
+# Utility methods to create a CSnake folder and project. 
 import os
 from csnGUIHandler import NotARoot, RootNotFound
 

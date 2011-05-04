@@ -1,4 +1,6 @@
-# Unit tests for for the csnCilab methods
+## @package csnCilabTests
+# Definition of the csnCilabTests class.
+# \ingroup tests
 import unittest
 import csnProject
 import csnCilab
@@ -7,7 +9,8 @@ import csnContext
 import shutil
 
 class csnCilabTests(unittest.TestCase):
-
+    """ Unit tests for for the csnCilab methods. """
+    
     def setUp(self):
         """ Run before test. """
         # load fake context

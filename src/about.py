@@ -1,4 +1,5 @@
-# class to store about information
+## @package about
+# Definition of the About class.
 import wx
 import ConfigParser
 

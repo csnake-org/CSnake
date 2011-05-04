@@ -1,3 +1,5 @@
+## @package csnInstall
+# Definition of install Manager class. 
 import csnUtility
 import os
 import glob
@@ -7,6 +9,7 @@ import logging
 from csnListener import ProgressEvent
 
 class Manager:
+    """ Class responsible for installing files (in the CMake way). """
     def __init__(self, _project):
         self.project = _project
         self.filesToInstall = dict()

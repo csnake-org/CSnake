@@ -1,9 +1,12 @@
-# Tests for the About class
+## @package aboutTests
+# Definition of the AboutTests class.
+# \ingroup tests
 import unittest
 from about import About
 import os
 
 class AboutTests(unittest.TestCase):
+    """ Tests for the About class. """
 
     def setUp(self):
         """ Run before test. """

@@ -1,3 +1,5 @@
+## @package csnConsole
+# Command line interface for CSnake. 
 import csnGUIHandler
 import sys
 from optparse import OptionParser

@@ -1,4 +1,8 @@
+## @package csnCompiler
+# Definition of the Compiler class. 
+
 class Compiler:
+    """ Abstract Compiler. """
     def __init__(self):
         # protected, accessed in sub classes
         self._configurationName = None

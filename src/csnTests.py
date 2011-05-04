@@ -1,3 +1,5 @@
+## @package csnTests
+# Definition of the Project test handling related class. 
 import os
 import csnUtility
 import csnProject

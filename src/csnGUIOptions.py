@@ -1,3 +1,5 @@
+## @package csnGUIOptions
+# Definition of Options class. 
 import ConfigParser
 from csnListener import ChangeEvent
 import logging
@@ -6,6 +8,7 @@ import shutil
 latestFileFormatVersion = 1.1
 
 class Options:
+    """ CSnake GUI options. """
     def __init__(self):
         # options
         self.__contextFilename = ""

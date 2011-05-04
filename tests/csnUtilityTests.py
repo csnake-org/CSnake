@@ -1,9 +1,12 @@
-# Unit tests for the csnUtility methods
+## @package csnUtilityTests
+# Definition of the csnUtilityTests class.
+# \ingroup tests
 import unittest
 import csnUtility
 import os
 
 class csnUtilityTests(unittest.TestCase):
+    """ Unit tests for the csnUtility methods. """
     
     def testNormalizePath(self):
         """ csnUtilityTests: test NormalizePath function. """

@@ -1,3 +1,5 @@
+## @package csnUtility
+# Definition of utility methods. 
 import re
 import sys
 import GlobDirectoryWalker

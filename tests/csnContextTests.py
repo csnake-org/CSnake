@@ -1,4 +1,6 @@
-# Unit tests for the csnContextConverter methods
+## @package csnContextTests
+# Definition of the csnContextTests class.
+# \ingroup tests
 import unittest
 import os
 import csnContext
@@ -6,7 +8,8 @@ from csnContext import Context
 import shutil
 
 class csnContextTests(unittest.TestCase):
-
+    """ Unit tests for the csnContextConverter methods. """
+    
     def testReadContext00(self):
         ''' csnContextTests: test read from context v0.0. '''
         # this version needs the options file

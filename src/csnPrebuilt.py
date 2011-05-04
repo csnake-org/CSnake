@@ -1,3 +1,5 @@
+## @package csnPrebuilt
+# Definition of the ProjectRelocator class. 
 import os
 import csnUtility
 

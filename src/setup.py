@@ -1,3 +1,4 @@
+## @package setup
 # Python script used to generate executables.
 # Depends on py2exe: http://www.py2exe.org
 from distutils.core import setup

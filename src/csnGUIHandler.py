@@ -1,3 +1,5 @@
+## @package csnGUIHandler
+# Definition of GUI handling classes. 
 import csnUtility
 import csnContext
 import csnGenerator

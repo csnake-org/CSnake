@@ -1,8 +1,11 @@
+## @package csnCMake
+# Definition of the Writer class. 
 import csnUtility
 import os
 import csnProject
 
 class Writer:
+    """ Class responsible for writing the CMake related files."""
     def __init__(self, _project):
         self.project = _project
         self.tmpCMakeListsFile = self.project.GetCMakeListsFilename() + ".tmp"
@@ -11,7 +14,8 @@ class Writer:
         self.file = open(self.tmpCMakeListsFile, 'w')
         
     def __WriteHeader(self):
-        # write header and some cmake fields
+        """ Write header and some cmake fields. """
+        
         self.file.write( "# CMakeLists.txt generated automatically by the CSnake generator.\n" )
         self.file.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         self.file.write( "PROJECT(%s)\n" % (self.project.name) )

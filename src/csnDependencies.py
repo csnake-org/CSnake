@@ -1,3 +1,5 @@
+## @package csnDependencies
+# Definition of the dependencies Manager class. 
 import csnProject
 import OrderedSet
 import logging
@@ -7,6 +9,7 @@ class DependencyError(StandardError):
     pass
     
 class Manager:
+    """ Dependency checker class. """
     def __init__(self, _project):
         self.project = _project
         self.projects = OrderedSet.OrderedSet()

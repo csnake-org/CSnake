@@ -1,4 +1,6 @@
-# TestSuite: class to create all test suites to ease running them all at once.
+## @package AllTests
+# Definition of the AllTests class.
+# \ingroup tests
 import unittest
 import xmlrunner
 import sys
@@ -15,6 +17,7 @@ from csnInstallTests import csnInstallTests
 from csnCilabTests import csnCilabTests
 
 class AllTests:
+    """ Class to create all test suites to ease running them all at once. """
     def __init__(self, outputFileName):
         ''' 
         Initialise the class: create test suite.

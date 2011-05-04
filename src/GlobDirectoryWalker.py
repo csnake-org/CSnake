@@ -1,3 +1,5 @@
+## @package GlobDirectoryWalker
+# Definition of the directory Walker class. 
 import os
 import fnmatch
 

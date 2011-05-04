@@ -1,4 +1,6 @@
-# Unit tests for for the csnGUIHandler class
+## @package csnGUIHandlerTests
+# Definition of the csnGUIHandlerTests class.
+# \ingroup tests
 import unittest
 import os.path
 import csnGUIHandler
@@ -6,7 +8,8 @@ import csnCreate
 import shutil
 
 class csnGUIHandlerTests(unittest.TestCase):
-
+    """ Unit tests for for the csnGUIHandler class. """
+    
     def setUp(self):
         """ Run before test. """
         self.handler = csnGUIHandler.Handler()

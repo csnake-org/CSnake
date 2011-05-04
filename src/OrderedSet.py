@@ -1,6 +1,8 @@
+## @package OrderedSet
+# Definition of the OrderedSet class. 
+
 class OrderedSet(list):
-    """
-    """
+    """ Class that stores an ordered set list. """
     def __init__(self):
         pass
 

@@ -1,3 +1,5 @@
+## @package csnCompile
+# General compilation options related classes. 
 import csnUtility
 import os
 
@@ -12,6 +14,7 @@ class CompileAndLinkSettings:
         self.libraryFolders = list()
 
 class Manager:
+    """ Compilation Manager. """
     def __init__(self, _project):
         self.project = _project
         self.sources = []

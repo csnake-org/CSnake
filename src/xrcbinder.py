@@ -1,3 +1,5 @@
+## @package xrcbinder
+# Definition of the GUI Binding class. 
 import wx
 from wx import xrc
 import csnUtility

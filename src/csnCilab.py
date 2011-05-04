@@ -1,4 +1,6 @@
-import csnBuild
+## @package csnCilab
+# Definition of the methods used for project configuration. 
+# This should be the only CSnake import in a project configuration.
 import csnUtility
 import csnProject
 import os.path

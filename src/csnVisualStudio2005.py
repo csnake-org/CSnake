@@ -1,8 +1,10 @@
+## @package csnVisualStudio2005
+# Definition of the csnVisualStudio2005 compilers. 
 import csnCompiler
 import os
 
-
 class Compiler(csnCompiler.Compiler):
+    """ Abstract Visual Studio 2005 compiler. """
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
         self.postProcessor = PostProcessor()
@@ -40,10 +42,12 @@ class Compiler(csnCompiler.Compiler):
         return self.postProcessor
 
 class Compiler32(Compiler):
+    """ Visual Studio 2005 32bits compiler. """
     def GetName(self):
         return "Visual Studio 8 2005"
 
 class Compiler64(Compiler):
+    """ Visual Studio 2005 64bits compiler. """
     def GetName(self):
         return "Visual Studio 8 2005 Win64"
         

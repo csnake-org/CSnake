@@ -1,6 +1,9 @@
+## @package csnLinuxCommon
+# Definition of LinuxCommon csnCompiler.Compiler. 
 import csnCompiler
 
 class LinuxCommon(csnCompiler.Compiler):
+    """ Abstract Linux compiler. """
     def __init__(self):
         csnCompiler.Compiler.__init__(self)   
         #self.basicFields.append("kdevelopProjectFolder")

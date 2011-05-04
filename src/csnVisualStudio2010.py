@@ -1,7 +1,10 @@
+## @package csnVisualStudio2010
+# Definition of the csnVisualStudio2010 compilers. 
 import csnCompiler
 import os
 
 class Compiler(csnCompiler.Compiler):
+    """ Abstract Visual Studio 2010 compiler. """
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
         self.postProcessor = PostProcessor()
@@ -39,10 +42,12 @@ class Compiler(csnCompiler.Compiler):
         return self.postProcessor
 
 class Compiler32(Compiler):
+    """ Visual Studio 2010 32bits compiler. """
     def GetName(self):
         return "Visual Studio 10"
 
 class Compiler64(Compiler):
+    """ Visual Studio 2010 64bits compiler. """
     def GetName(self):
         return "Visual Studio 10 Win64"
         

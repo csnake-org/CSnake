@@ -1,3 +1,6 @@
+## @package TestProjectConfig
+# Definition of the TestProjectConfig class.
+# \ingroup tests
 import ConfigParser
 
 class TestProjectConfig():

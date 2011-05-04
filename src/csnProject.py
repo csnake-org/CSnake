@@ -1,3 +1,5 @@
+## @package csnProject
+# Definition of the Project handling related classes. 
 import csnUtility
 import csnDependencies
 import csnProjectPaths

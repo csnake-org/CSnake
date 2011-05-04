@@ -1,9 +1,11 @@
+## @package csnKDevelop
+# Definition of Linux csnCompiler.Compiler. 
 import os
 import csnUtility
 from csnLinuxCommon import LinuxCommon
 
-
 class Makefile(LinuxCommon):
+    """ Makefile compiler. """
     def __init__(self):
         LinuxCommon.__init__(self)
 
@@ -14,6 +16,7 @@ class Makefile(LinuxCommon):
         return None
 
 class Eclipse(LinuxCommon):
+    """ Eclipse compiler. """
     def __init__(self):
         LinuxCommon.__init__(self)
 
@@ -24,6 +27,7 @@ class Eclipse(LinuxCommon):
         return None
 
 class KDevelop(LinuxCommon):
+    """ KDevelop compiler. """
     def __init__(self):
         LinuxCommon.__init__(self)
         self.postProcessor = KDevelopPostProcessor()

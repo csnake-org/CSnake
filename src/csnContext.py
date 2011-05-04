@@ -1,3 +1,5 @@
+## @package csnContext
+# Definition of the Context and ContextData class. 
 import ConfigParser
 import OrderedSet
 import re

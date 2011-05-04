@@ -1,4 +1,6 @@
-# Unit tests for the csnProject class
+## @package csnProjectTests
+# Definition of the csnProjectTests class.
+# \ingroup tests
 import unittest
 import os
 import csnUtility
@@ -10,6 +12,7 @@ import shutil
 import csnContext
 
 class csnProjectTests(unittest.TestCase):
+    """ Unit tests for the csnProject class. """
     
     def setUp(self):
         """ Run before test. """

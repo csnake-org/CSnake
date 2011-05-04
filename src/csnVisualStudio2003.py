@@ -1,7 +1,10 @@
+## @package csnVisualStudio2003
+# Definition of the csnVisualStudio2003 compiler. 
 import csnCompiler
 import os
 
 class Compiler(csnCompiler.Compiler):
+    """ Visual Studio 2003 compiler. """
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
         self.postProcessor = PostProcessor()

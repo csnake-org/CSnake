@@ -1,3 +1,5 @@
+## @package csnProjectPaths
+# Definition of the Project path handling related class. 
 import glob
 import os
 import csnUtility

@@ -1,3 +1,5 @@
+## @package csnListener
+# Definition of observer pattern related classes. 
 
 class Event:
     """ Generic event class. """

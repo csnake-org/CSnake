@@ -1,11 +1,14 @@
-# Unit tests for the csnContextConverter methods
+## @package csnGUIOptionsTests
+# Definition of the csnGUIOptionsTests class.
+# \ingroup tests
 import unittest
 import os
 from csnGUIOptions import Options
 import shutil
 
 class csnGUIOptionsTests(unittest.TestCase):
-
+    """ Unit tests for the csnContextConverter methods. """
+    
     def testReadOptions00(self):
         ''' csnContextTests: test read from options v0.0. '''
         # test the options conversion

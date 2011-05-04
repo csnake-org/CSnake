@@ -1,4 +1,6 @@
-# Unit tests for the csnInstall class
+## @package csnInstallTests
+# Definition of the csnInstallTests class.
+# \ingroup tests
 import unittest
 import csnContext
 import csnProject
@@ -7,6 +9,7 @@ import os.path
 import csnUtility
 
 class csnInstallTests(unittest.TestCase):
+    """ Unit tests for the csnInstall class. """
     
     def setUp(self):
         """ Run before test. """

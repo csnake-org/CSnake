@@ -1,3 +1,5 @@
+## @package RollbackImporter
+# Definition of the RollbackImporter class. 
 import sys
 
 class RollbackImporter:

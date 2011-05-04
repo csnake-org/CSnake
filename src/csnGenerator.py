@@ -1,3 +1,5 @@
+## @package csnGenerator
+# CMake generation related classes. 
 import csnUtility
 import csnCMake
 import os.path
