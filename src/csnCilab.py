@@ -3,6 +3,7 @@
 # This should be the only CSnake import in a project configuration.
 import csnUtility
 import csnProject
+import csnBuild
 import os.path
 import new
 import inspect
