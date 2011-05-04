@@ -1,4 +1,5 @@
 # Used to configure dummyExe
+import csnBuild
 import csnCilab
 from csnAll import *
 

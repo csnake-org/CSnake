@@ -1,4 +1,5 @@
 # Used to configure dummyLib
+import csnBuild
 import csnCilab
 from csnAll import *
 
