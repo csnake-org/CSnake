@@ -1,8 +1,7 @@
 # Csnake project configuration
-import csnBuild
 import csnCilab
 
-two = csnBuild.Project("Two", "third party")
+two = csnCilab.CilabModuleProject("Two", "third party")
 two.pathsManager.useFilePath = "%s/Two/UseTwo.cmake" % two.GetBuildFolder()
 two.pathsManager.configFilePath = "%s/Two/TwoConfig.cmake" % two.GetBuildFolder()
 
