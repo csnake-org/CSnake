@@ -35,7 +35,7 @@ if commandLineOptions.build:
 if commandLineOptions.thirdParty:
     for count in range( 0, context.GetNumberOfThirdPartyFolders() ):
         sourceFolder = context.GetThirdPartyFolder( count )
-        buildFolder = context.thirdPartyBuildFolders[ count ]
+        buildFolder = context.GetThirdPartyBuildFolders()[ count ]
         taskMsg = "ConfigureThirdPartyFolders from %s to %s..." % (sourceFolder, buildFolder) 
         print "Starting task: " + taskMsg  
     result = handler.ConfigureThirdPartyFolders()
