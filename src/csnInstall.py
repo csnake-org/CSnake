@@ -7,6 +7,7 @@ import shutil
 import GlobDirectoryWalker
 import logging
 from csnListener import ProgressEvent
+import time
 
 class Manager:
     """ Class responsible for installing files (in the CMake way). """
@@ -113,24 +114,46 @@ class Manager:
                 for location in project.installManager.filesToInstall[mode].keys():
                     n3 = len(project.installManager.filesToInstall[mode].keys())
                     for file in project.installManager.filesToInstall[mode][location]:
+                        # progress
                         n4 = len(project.installManager.filesToInstall[mode][location])
                         if increment == 100:
                             increment /= n1*n2*n3*n4
+                        # destination folder
                         absLocation = "%s/%s" % (outputFolder, location)
+                        # check input file is not a fodler
                         assert not os.path.isdir(file), "\n\nError: InstallBinariesToBuildFolder cannot install a folder (%s)" % file
+                        # create destination folder if it does not exist
                         os.path.exists(absLocation) or os.makedirs(absLocation)
+                        # check that the destination folder exists
                         assert os.path.exists(absLocation), "Could not create %s\n" % absLocation
-                        fileResult = (0 != shutil.copy(file, absLocation))
-                        result = fileResult and result
+                        # copy file
+                        destFile = "%s/%s" % (absLocation, os.path.basename(file))
+                        # check if copy is needed
+                        needCopy = True
+                        if os.path.exists(destFile):
+                            # compare modification time
+                            if os.path.getmtime(destFile) >= os.path.getmtime(file):
+                                needCopy = False
+                        # copy if necessary
+                        copyResult = True
+                        if needCopy:
+                            copyResult = (0 != shutil.copy(file, absLocation))
+                        # global result
+                        result = copyResult and result
+                        # progress
                         if progress >= 100: progress = 99
                         self.__NotifyListeners(ProgressEvent(self,progress))
                         if self.IsCanceled(): return False
                         progress += increment
-                        if not fileResult:
-                            message = "Failed to copy %s to %s\n" % (file, absLocation)
-                            logger.error( message )
+                        # check error
+                        if needCopy:
+                            if copyResult:
+                                logger.debug( "Copied %s to %s" % (file, absLocation) )
+                            else:
+                                message = "Failed to copy %s to %s\n" % (file, absLocation)
+                                logger.error( message )
                         else:
-                            logger.debug( "copied %s to %s" % (file, absLocation) )
+                            logger.debug( "No copy needed for %s" % (file) )
                             
         return result
 
