@@ -13,6 +13,15 @@ class CompileAndLinkSettings:
         self.includeFolders = list()
         self.libraryFolders = list()
 
+    def Dump(self):
+        return { \
+            "definitions" : self.definitions, \
+            "libraries" : self.libraries, \
+            "includeFolders" : self.includeFolders, \
+            "libraryFolders" : self.libraryFolders \
+        }
+
+
 class Manager:
     """ Compilation Manager. """
     def __init__(self, _project):
@@ -178,3 +187,15 @@ class Manager:
             f = open(templateOutputFilename, 'w')
             f.write(template)
             f.close()
+
+    def Dump(self):
+        return { \
+            "sources" : self.sources, \
+            "sourceGroups" : self.sourceGroups, \
+            "sourcesToBeMoced" : self.sourcesToBeMoced, \
+            "sourcesToBeUIed" : self.sourcesToBeUIed, \
+            "publicSettings" : self.public.Dump(), \
+            "privateSettings" : self.private.Dump(), \
+            "precompiledHeader" : self.precompiledHeader, \
+            "generateWin32Header" : self.generateWin32Header \
+        }

@@ -166,3 +166,8 @@ class Manager:
         """ Attach a listener to this class. """
         if not listener in self.__listeners:
             self.__listeners.append(listener)
+
+    def Dump(self):
+        return { \
+            "files" : self.filesToInstall
+        }

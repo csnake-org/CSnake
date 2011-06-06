@@ -7,6 +7,7 @@ import csnProject
 import csnPrebuilt
 import RollbackImporter
 import glob
+import json
 import inspect
 import string
 import os
@@ -117,7 +118,17 @@ class Handler:
         self.UpdateRecentlyUsedCSnakeFiles()
         
         return self.cachedProjectInstance
-    
+
+    def WriteDumpFileAndProjectStructureToBuildFolder(self, instance):
+        """
+        Writes a json file with all gathered information for instance to the build folder
+        """
+        dumpFilename = "%s/projectData.json" % instance.GetBuildFolder()
+        dumpFile = open(dumpFilename, 'w')
+        dumpFile.write(json.dumps(instance.Dump(), sort_keys=True, indent=2))
+        dumpFile.close()
+        instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
+
     def ConfigureProjectToBuildFolder(self, _alsoRunCMake):
         """ 
         Configures the project to the build folder.
@@ -126,8 +137,8 @@ class Handler:
         
         instance.installManager.ResolvePathsOfFilesToInstall()
         self.generator.Generate(instance)
-        instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
-        
+        self.WriteDumpFileAndProjectStructureToBuildFolder(instance)
+
         if _alsoRunCMake:
             # check if CMake is present
             self.CheckCMake()
