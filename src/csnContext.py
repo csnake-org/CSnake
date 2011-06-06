@@ -14,177 +14,69 @@ from csnListener import ChangeEvent
 import os.path
 import shutil
 
-latestFileFormatVersion = 2.1
+latestFileFormatVersion = 2.2
 
-class ContextData:
-    def __init__(self):
-        # basic fields
-        self.__buildFolder = ""
-        self.__installFolder = ""
-        self.__prebuiltBinariesFolder = ""
-        self.__csnakeFile = ""
-        self.__instance = ""
-        self.__testRunnerTemplate = "normalRunner.tpl"
-        self.__configurationName = ""
-        self.__compilername = ""
-        self.__cmakePath = ""
-        # used for creating the CMake rule to create tests with CxxTests
-        self.__pythonPath = ""
-        self.__idePath = ""
-        self.__kdevelopProjectFolder = ""
-            
-        # List of items to filter out of build
-        self.__filter = ["Demos", "Applications", "Tests", "Plugins"]
+def WriteHeaderComments(f):
+    """ Helper function that writes some comments into file f """
+    f.write(";CSnake context file.\n")
+    f.write(";Before manually editing this file, close any instance of\n")
+    f.write(";CSnakeGUI using this context, or changes will be lost.\n")
+    f.write("\n")
 
-        self.__rootFolders = []
-        self.__thirdPartySrcAndBuildFolders = []
-
-        self.__recentlyUsed = list()
-        
-    def GetBuildFolder(self):
-        return self.__buildFolder
-
-    def SetBuildFolder(self, value):
-        self.__buildFolder = value
-
-    def GetInstallFolder(self):
-        return self.__installFolder
-
-    def SetInstallFolder(self, value):
-        self.__installFolder = value
-
-    def GetPrebuiltBinariesFolder(self):
-        return self.__prebuiltBinariesFolder
-
-    def GetCsnakeFile(self):
-        return self.__csnakeFile
-
-    def SetCsnakeFile(self, value):
-        self.__csnakeFile = value
-
-    def GetRootFolders(self):
-        return self.__rootFolders
-
-    def _SetRootFolders(self, value):
-        ''' Protected, should only be accessed by the Context. '''
-        self.__rootFolders = value
-
-    def _GetThirdPartySrcAndBuildFolders(self):
-        return self.__thirdPartySrcAndBuildFolders
-
-    def _SetThirdPartySrcAndBuildFolders(self, value):
-        ''' Protected, should only be accessed by the Context. '''
-        self.__thirdPartySrcAndBuildFolders = value
-
-    def GetInstance(self):
-        return self.__instance
-
-    def SetInstance(self, value):
-        self.__instance = value
-
-    def GetTestRunnerTemplate(self):
-        return self.__testRunnerTemplate
-
-    def GetRecentlyUsed(self):
-        return self.__recentlyUsed
-
-    def _SetRecentlyUsed(self, value):
-        ''' Protected, should only be accessed by the Context. '''
-        self.__recentlyUsed = value
-
-    def GetFilter(self):
-        return self.__filter
-
-    def SetFilter(self, value):
-        self.__filter = value
-
-    def GetConfigurationName(self):
-        return self.__configurationName
-
-    def GetCompilername(self):
-        return self.__compilername
-
-    def _SetCompilername(self, value):
-        ''' Protected, should only be accessed by the Context. '''
-        self.__compilername = value
-
-    def GetCmakePath(self):
-        return self.__cmakePath
-
-    def SetCmakePath(self, value):
-        self.__cmakePath = value
-
-    def GetPythonPath(self):
-        return self.__pythonPath
-
-    def SetPythonPath(self, value):
-        self.__pythonPath = value
-
-    def GetIdePath(self):
-        return self.__idePath
-
-    def SetIdePath(self, value):
-        self.__idePath = value
-
-    def GetKdevelopProjectFolder(self):
-        return self.__kdevelopProjectFolder
-
-    def SetKdevelopProjectFolder(self, value):
-        self.__kdevelopProjectFolder = value
-   
-    def Equal(self, other):
-        """ Compare two contexts. """
-        if self.__buildFolder == other.GetBuildFolder() and \
-            self.__installFolder == other.GetInstallFolder() and \
-            self.__prebuiltBinariesFolder == other.GetPrebuiltBinariesFolder() and \
-            self.__csnakeFile == other.GetCsnakeFile() and \
-            self.__rootFolders == other.GetRootFolders() and \
-            self.__thirdPartySrcAndBuildFolders == other._GetThirdPartySrcAndBuildFolders() and \
-            self.__instance == other.GetInstance() and \
-            self.__testRunnerTemplate == other.GetTestRunnerTemplate() and \
-            self.__filter == other.GetFilter() and \
-            self.__configurationName == other.GetConfigurationName() and \
-            self.__compilername == other.GetCompilername() and \
-            self.__cmakePath == other.GetCmakePath() and \
-            self.__pythonPath == other.GetPythonPath() and \
-            self.__idePath == other.GetIdePath() and \
-            self.__kdevelopProjectFolder == other.GetKdevelopProjectFolder():
-            return True
-        # default
-        return False
-    
 class Context(object):
     """
     Contains configuration settings such as source folder/build folder/etc.
-    __kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
-    copied from the build folder to this folder. This is work around for a problem in 
+    kdevelopProjectFolder - If generating a KDevelop project, then the KDevelop project file will be
+    copied from the build folder to this folder. This is work around for a problem in
     KDevelop: it does not show the source tree if the kdevelop project file is in the build folder.
-    __configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
+    configurationName -- If "DebugAndRelease", then a Debug and a Release configuration are generated (works with Visual Studio),
     if "Debug" or "Release", then only a single configuration is generated (works with KDevelop and Unix Makefiles).
     """
     def __init__(self):
-        # context data
-        self.__data = ContextData()  
-         
+        # basic fields
+        self.buildFolder = ""
+        self.installFolder = ""
+        self.prebuiltBinariesFolder = ""
+        self.csnakeFile = ""
+        self.instance = ""
+        self.testRunnerTemplate = "normalRunner.tpl"
+        self.configurationName = ""
+        self.compilername = "Visual Studio 7 .NET 2003"
+        self.cmakePath = ""
+        # used for creating the CMake rule to create tests with CxxTests
+        self.pythonPath = ""
+        self.cmakeVersion = "2.8"
+        self.idePath = ""
+        self.kdevelopProjectFolder = ""
+
+        # List of items to filter out of build
+        self.filter = ["Demos", "Applications", "Tests", "Plugins"]
+
+        self.rootFolders = []
+        self.thirdPartySrcAndBuildFolders = []
+
+        self.recentlyUsed = list()
+
         # basic fields: the key is the class member, the value its option in the parser
-        self.__basicFields = {
-            "buildFolder": "buildFolder", 
-            "installFolder": "installFolder", 
-            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+        self.basicFields = {
+            "buildFolder": "buildFolder",
+            "installFolder": "installFolder",
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder",
             "csnakeFile": "csnakeFile",
-            "instance": "instance", 
-            "testRunnerTemplate": "testRunnerTemplate", 
-            "configurationName": "configurationName", 
+            "instance": "instance",
+            "testRunnerTemplate": "testRunnerTemplate",
+            "configurationName": "configurationName",
             "compilername": "compilername",
-            "cmakePath": "cmakePath", 
-            "pythonPath": "pythonPath", 
-            "idePath": "idePath", 
+            "cmakePath": "cmakePath",
+            "cmakeVersion" : "cmakeVersion",
+            "pythonPath": "pythonPath",
+            "idePath": "idePath",
             "kdevelopProjectFolder": "kdevelopProjectFolder"
         }
-        
-        self.__compiler = None
 
-        self.__compilermap = {}
+        self.compiler = None
+
+        self.compilermap = {}
         self.RegisterCompiler(csnKDevelop.KDevelop())
         self.RegisterCompiler(csnKDevelop.Makefile())
         self.RegisterCompiler(csnKDevelop.Eclipse())
@@ -195,117 +87,130 @@ class Context(object):
         self.RegisterCompiler(csnVisualStudio2008.Compiler64())
         self.RegisterCompiler(csnVisualStudio2010.Compiler32())
         self.RegisterCompiler(csnVisualStudio2010.Compiler64())
-        
-        self.__subCategoriesOf = dict()
+
+        self.subCategoriesOf = dict()
 
         # listeners
-        self.__listeners = []
-        
+        self.listeners = []
+
     # Getter and Setters ================
-    
-    def GetData(self):
-        return self.__data
 
     def GetCompiler(self):
-        return self.__compiler
+        return self.compiler
 
-    # Getter and Setters on __data ================
-    
+    # Getter and Setters on data ================
+
     def GetBuildFolder(self):
-        return self.__data.GetBuildFolder()
+        return self.buildFolder
 
     def SetBuildFolder(self, value):
-        self.__data.SetBuildFolder(value)
+        self.buildFolder = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetInstallFolder(self):
-        return self.__data.GetInstallFolder()
+        return self.installFolder
 
     def SetInstallFolder(self, value):
-        self.__data.SetInstallFolde(value)
+        self.installFolder = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetPrebuiltBinariesFolder(self):
-        return self.__data.GetPrebuiltBinariesFolder()
+        return self.prebuiltBinariesFolder
 
     def GetCsnakeFile(self):
-        return self.__data.GetCsnakeFile()
+        return self.csnakeFile
 
     def SetCsnakeFile(self, value):
-        self.__data.SetCsnakeFile(value)
+        self.csnakeFile = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetRootFolders(self):
-        return self.__data.GetRootFolders()
+        return self.rootFolders
+
+    def SetRootFolders(self, value):
+        self.rootFolders = value
 
     def _GetThirdPartySrcAndBuildFolders(self):
-        return self.__data._GetThirdPartySrcAndBuildFolders()
+        return self.thirdPartySrcAndBuildFolders
 
     def GetInstance(self):
-        return self.__data.GetInstance()
+        return self.instance
 
     def SetInstance(self, value):
-        self.__data.SetInstance(value)
+        self.instance = value
         # reset the filter
         self.SetFilter([])
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetTestRunnerTemplate(self):
-        return self.__data.GetTestRunnerTemplate()
+        return self.testRunnerTemplate
 
     def GetRecentlyUsed(self):
-        return self.__data.GetRecentlyUsed()
+        return self.recentlyUsed
+
+    def SetRecentlyUsed(self, value):
+        recentlyUsed = value
 
     def GetFilter(self):
-        return self.__data.GetFilter()
+        return self.filter
 
     def SetFilter(self, value):
         value.sort()
-        self.__data.SetFilter(value)
+        self.filter = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetConfigurationName(self):
-        return self.__data.GetConfigurationName()
+        return self.configurationName
 
     def GetCompilername(self):
-        return self.__data.GetCompilername()
+        return self.compilername
+
+    def SetCompilername(self, value):
+        self.compilername = value
 
     def GetCmakePath(self):
-        return self.__data.GetCmakePath()
+        return self.cmakePath
 
     def SetCmakePath(self, value):
-        self.__data.SetCmakePath(value)
+        self.cmakePath = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetSubCategoriesOf(self):
-        return self.__subCategoriesOf
+        return self.subCategoriesOf
 
     def GetPythonPath(self):
-        return self.__data.GetPythonPath()
+        return self.pythonPath
 
     def SetPythonPath(self, value):
-        self.__data.SetPythonPath(value)
+        self.pythonPath = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetIdePath(self):
-        return self.__data.GetIdePath()
+        return self.idePath
 
     def SetIdePath(self, value):
-        self.__data.SetIdePath(value)
+        self.idePath = value
         self.__NotifyListeners(ChangeEvent(self))
 
     def GetKdevelopProjectFolder(self):
-        return self.__data.GetKdevelopProjectFolder()
+        return self.kdevelopProjectFolder
 
     def SetKdevelopProjectFolder(self, value):
-        self.__data.SetKdevelopProjectFolder(value)
+        self.kdevelopProjectFolder = value
         self.__NotifyListeners(ChangeEvent(self))
+
+    def GetThirdPartySrcAndBuildFolders(self):
+        return self.thirdPartySrcAndBuildFolders
+
+    def SetThirdPartySrcAndBuildFolders(self, value):
+        ''' Protected, should only be accessed by the Context. '''
+        self.thirdPartySrcAndBuildFolders = value
 
     # Methods ================
 
     def RegisterCompiler(self, compiler):
-        self.__compilermap[compiler.GetName()] = compiler
-    
+        self.compilermap[compiler.GetName()] = compiler
+
     def Load(self, filename):
         """ Load a context file. """
         # parser
@@ -328,6 +233,8 @@ class Context(object):
             self.__Read20( parser )
         elif version == 2.1:
             self.__Read21( parser )
+        elif version == 2.2:
+            self.__Read22( parser )
         else:
             raise IOError("Cannot read context, unknown 'version':%s." % version)
         # backup and save in new format for old ones
@@ -337,32 +244,32 @@ class Context(object):
             self.Save(filename)
 
     def __Read00(self, parser):
-        """ Read options file version 1.0. """ 
+        """ Read options file version 1.0. """
         # basic fields
         basicFields = {
-            "buildFolder": "binfolder", 
-            "installFolder": "installFolder", 
-            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "buildFolder": "binfolder",
+            "installFolder": "installFolder",
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder",
             "csnakeFile": "csnakeFile",
-            "instance": "instance", 
-            "testRunnerTemplate": "testRunnerTemplate", 
+            "instance": "instance",
+            "testRunnerTemplate": "testRunnerTemplate",
         }
         self.__LoadBasicFields(parser, basicFields)
         # this version stores fields in the options file
         optionsFilename = "options"
-        if os.path.isfile(optionsFilename): 
+        if os.path.isfile(optionsFilename):
             basicOptionsFields = {
-                "configurationName": "cmakebuildtype", 
+                "configurationName": "cmakebuildtype",
                 "compilername": "compiler",
-                "cmakePath": "cmakepath", 
-                "pythonPath": "pythonpath", 
+                "cmakePath": "cmakepath",
+                "pythonPath": "pythonpath",
                 "idePath": "visualstudiopath"
             }
             optionsParser = ConfigParser.ConfigParser()
             optionsParser.read([optionsFilename])
             self.__LoadBasicFields(optionsParser, basicOptionsFields)
         else:
-            raise IOError("Could not retrieve the option file.")   
+            raise IOError("Could not retrieve the option file.")
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
@@ -374,32 +281,32 @@ class Context(object):
         self.FindCompiler()
 
     def __Read10(self, parser):
-        """ Read options file version 1.0. """ 
+        """ Read options file version 1.0. """
         # basic fields
         basicFields = {
-            "buildFolder": "binfolder", 
-            "installFolder": "installFolder", 
-            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "buildFolder": "binfolder",
+            "installFolder": "installFolder",
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder",
             "csnakeFile": "csnakeFile",
-            "instance": "instance", 
-            "testRunnerTemplate": "testRunnerTemplate", 
+            "instance": "instance",
+            "testRunnerTemplate": "testRunnerTemplate",
         }
         self.__LoadBasicFields(parser, basicFields)
         # this version stores fields in the options file
         optionsFilename = "options"
-        if os.path.isfile(optionsFilename): 
+        if os.path.isfile(optionsFilename):
             basicOptionsFields = {
-                "configurationName": "cmakebuildtype", 
+                "configurationName": "cmakebuildtype",
                 "compilername": "compiler",
-                "cmakePath": "cmakepath", 
-                "pythonPath": "pythonpath", 
+                "cmakePath": "cmakepath",
+                "pythonPath": "pythonpath",
                 "idePath": "visualstudiopath"
             }
             optionsParser = ConfigParser.ConfigParser()
             optionsParser.read([optionsFilename])
             self.__LoadBasicFields(optionsParser, basicOptionsFields)
         else:
-            raise IOError("Could not retrieve the option file.")   
+            raise IOError("Could not retrieve the option file.")
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
@@ -409,21 +316,21 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
-        
+
     def __Read20(self, parser):
-        """ Read options file version 2.0. """ 
+        """ Read options file version 2.0. """
         # basic fields
         # diff to 2.1: compiler, no kdevelop
         basicFields = {
-            "buildFolder": "buildFolder", 
-            "installFolder": "installFolder", 
-            "prebuiltBinariesFolder": "prebuiltBinariesFolder", 
+            "buildFolder": "buildFolder",
+            "installFolder": "installFolder",
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder",
             "csnakeFile": "csnakeFile",
-            "instance": "instance", 
-            "testRunnerTemplate": "testRunnerTemplate", 
-            "configurationName": "configurationName", 
-            "cmakePath": "cmakePath", 
-            "pythonPath": "pythonPath", 
+            "instance": "instance",
+            "testRunnerTemplate": "testRunnerTemplate",
+            "configurationName": "configurationName",
+            "cmakePath": "cmakePath",
+            "pythonPath": "pythonPath",
             "idePath": "idePath"
         }
         self.__LoadBasicFields(parser, basicFields)
@@ -437,16 +344,30 @@ class Context(object):
         elif parser.has_option("CSnake", "thirdpartyrootfolder") and parser.has_option("CSnake", "thirdpartybuildfolder"):
             self.__LoadThirdPartySrcAndBuildFoldersSingle(parser)
         else:
-            raise IOError("Missing third parties (single or multiple).")            
+            raise IOError("Missing third parties (single or multiple).")
         # recent files
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
-        
+
     def __Read21(self, parser):
-        """ Read options file version 2.1. """ 
+        """ Read options file version 2.1. """
         # basic fields
-        self.__LoadBasicFields(parser, self.__basicFields)
+        basicFields = {
+            "buildFolder": "buildFolder",
+            "installFolder": "installFolder",
+            "prebuiltBinariesFolder": "prebuiltBinariesFolder",
+            "csnakeFile": "csnakeFile",
+            "instance": "instance",
+            "testRunnerTemplate": "testRunnerTemplate",
+            "configurationName": "configurationName",
+            "compilername": "compilername",
+            "cmakePath": "cmakePath",
+            "pythonPath": "pythonPath",
+            "idePath": "idePath",
+            "kdevelopProjectFolder": "kdevelopProjectFolder"
+        }
+        self.__LoadBasicFields(parser, basicFields)
         self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
         # root folders
         self.__LoadRootFolders(parser)
@@ -457,6 +378,20 @@ class Context(object):
         # find the compiler from the compiler name
         self.FindCompiler()
         
+    def __Read22(self, parser):
+        """ Read options file version 2.1. """
+        # basic fields
+        self.__LoadBasicFields(parser, self.basicFields)
+        self.SetFilter(re.split(";", parser.get("CSnake", "filter")))
+        # root folders
+        self.__LoadRootFolders(parser)
+        # third parties: now multiple
+        self.__LoadThirdPartySrcAndBuildFoldersMultiple(parser)
+        # recent files
+        self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
+        # find the compiler from the compiler name
+        self.FindCompiler()
+
     def __LoadBasicFields(self, parser, fields):
         """ Load a list of fields. """
         # section
@@ -464,15 +399,15 @@ class Context(object):
         # read
         for key in fields.keys():
             # special name for private variables
-            attribute = "_ContextData__" + key
-            if not hasattr(self.__data, attribute):
+            attribute = key
+            if not hasattr(self, attribute):
                 raise IOError("Missing attribute: '%s'" % attribute)
             # field
             field = fields[key]
             if not parser.has_option(section, field):
                 raise IOError("Missing field: '%s'" % field)
             # set
-            setattr(self.__data, attribute, parser.get(section, field))
+            setattr(self, attribute, parser.get(section, field))
 
     def __LoadCompiler(self, parser):
         """ Load the compiler either from 'compiler' or 'compilername'. """
@@ -488,14 +423,14 @@ class Context(object):
         if not field:
             raise IOError("Missing field: compiler or compilername")
         # set    
-        self.__data._SetCompilername(parser.get(section, field))
+        self.SetCompilername(parser.get(section, field))
         
     def __LoadRootFolders(self, parser):
         """ Load root folders. Used in from v0.0. """
         # section
         section = "RootFolders"
         # clear array
-        self.__data._SetRootFolders([])
+        self.SetRootFolders([])
         # read
         count = 0
         while parser.has_option(section, "RootFolder%s" % count):
@@ -508,7 +443,7 @@ class Context(object):
         sectionSrc = "ThirdPartyFolders"
         sectionBuild = "ThirdPartyBuildFolders"
         # clear array
-        self.__data._SetThirdPartySrcAndBuildFolders([])
+        self.SetThirdPartySrcAndBuildFolders([])
         # read 
         count = 0
         # new style: multiple folders
@@ -522,7 +457,7 @@ class Context(object):
         # sections
         section = "CSnake"
         # clear array
-        self.__data._SetThirdPartySrcAndBuildFolders([])
+        self.SetThirdPartySrcAndBuildFolders([])
         # read 
         self.AddThirdPartySrcAndBuildFolder(
             parser.get(section, "thirdpartyrootfolder"), 
@@ -533,7 +468,7 @@ class Context(object):
         # sections
         section = "CSnake"
         # clear array
-        self.__data._SetThirdPartySrcAndBuildFolders([])
+        self.SetThirdPartySrcAndBuildFolders([])
         # read 
         self.AddThirdPartySrcAndBuildFolder(
             parser.get(section, "thirdpartyrootfolder"), 
@@ -544,7 +479,7 @@ class Context(object):
         # section
         sectionRoot = "RecentlyUsedCSnakeFiles"
         # clear array
-        self.__data._SetRecentlyUsed([])
+        self.SetRecentlyUsed([])
         # read
         count = 0
         section = "%s%s" % (sectionRoot, count)
@@ -561,7 +496,7 @@ class Context(object):
         # section
         section = "RecentlyUsedCSnakeFiles"
         # clear array
-        self.__data._SetRecentlyUsed([])
+        self.SetRecentlyUsed([])
         # read
         count = 0
         while parser.has_option(section, "instance%s" % count):
@@ -603,10 +538,10 @@ class Context(object):
         # set the version
         parser.set(mainSection, "version", latestFileFormatVersion)
         # set the basic fields
-        for basicField in self.__basicFields:
+        for basicField in self.basicFields:
             # special name for private variables
-            field = "_ContextData__" + basicField
-            parser.set(mainSection, basicField, getattr(self.__data, field))
+            field = basicField
+            parser.set(mainSection, basicField, getattr(self, field))
         # set the filter
         parser.set(mainSection, "filter", ";".join(self.GetFilter()))
         
@@ -640,6 +575,26 @@ class Context(object):
         f = open(filename, 'w')
         parser.write(f)
         f.close()
+
+    def Dump(self):
+		return { \
+			"buildFolder" : self.GetBuildFolder(), \
+            "installFolder" : self.GetInstallFolder(), \
+            "prebuiltBinariesFolder" : self.GetPrebuiltBinariesFolder(), \
+            "csnakeFile" : self.GetCsnakeFile(), \
+            "rootFolders" : self.GetRootFolders(), \
+            "thirdPartySrcAndBuildFolders" : self._GetThirdPartySrcAndBuildFolders(), \
+            "instance" : self.GetInstance(), \
+            "testRunnerTemplate" : self.GetTestRunnerTemplate(), \
+            "filter" : self.GetFilter(), \
+            "configurationName" : self.GetConfigurationName(), \
+            "compilername" : self.GetCompilername(), \
+            "cmakeVersion" : self.cmakeVersion, \
+            "cmakePath" : self.GetCmakePath(), \
+            "pythonPath" : self.GetPythonPath(), \
+            "idePath" : self.GetIdePath(), \
+            "kdevelopProjectFolder" : self.GetKdevelopProjectFolder()
+		}
         
     # ----------------------------
     # Sub categories handling 
@@ -688,22 +643,22 @@ class Context(object):
         return len(self._GetThirdPartySrcAndBuildFolders())
     
     def AddThirdPartySrcAndBuildFolder(self, srcFolder = "", buildFolder = ""):
-        self.__data._GetThirdPartySrcAndBuildFolders().append([srcFolder, buildFolder])
+        self.GetThirdPartySrcAndBuildFolders().append([srcFolder, buildFolder])
         self.__NotifyListeners(ChangeEvent(self))
         
     def RemoveThirdPartySrcAndBuildFolderByIndex(self, index):
-        folders = self.__data._GetThirdPartySrcAndBuildFolders()
-        self.__data._SetThirdPartySrcAndBuildFolders(folders[0:index] + folders[index+1:])
+        folders = self.GetThirdPartySrcAndBuildFolders()
+        self.SetThirdPartySrcAndBuildFolders(folders[0:index] + folders[index+1:])
         self.__NotifyListeners(ChangeEvent(self))
         
     def MoveUpThirdPartySrcAndBuildFolder(self, index):
-        folders = self.__data._GetThirdPartySrcAndBuildFolders()
-        self.__data._SetThirdPartySrcAndBuildFolders(folders[0:index-1] + [folders[index], folders[index-1]] + folders[index+1:])
+        folders = self.GetThirdPartySrcAndBuildFolders()
+        self.SetThirdPartySrcAndBuildFolders(folders[0:index-1] + [folders[index], folders[index-1]] + folders[index+1:])
         self.__NotifyListeners(ChangeEvent(self))
         
     def MoveDownThirdPartySrcAndBuildFolder(self, index):
-        folders = self.__data._GetThirdPartySrcAndBuildFolders()
-        self.__data._SetThirdPartySrcAndBuildFolders(folders[0:index] + [folders[index+1], folders[index]] + folders[index+2:])
+        folders = self.GetThirdPartySrcAndBuildFolders()
+        self.SetThirdPartySrcAndBuildFolders(folders[0:index] + [folders[index+1], folders[index]] + folders[index+2:])
         self.__NotifyListeners(ChangeEvent(self))
         
     def __CheckThirdPartyArray(self, array):
@@ -723,10 +678,10 @@ class Context(object):
     # ----------------------------
     
     def GetNumberOfRootFolders(self):
-        return len(self.__data.GetRootFolders())
+        return len(self.GetRootFolders())
 
     def GetRootFolder(self, index):
-        return self.__data.GetRootFolders()[index]
+        return self.GetRootFolders()[index]
 
     def AddRootFolder(self, newRootFolder ):
         
@@ -734,7 +689,7 @@ class Context(object):
         newRootFolderSubdirs = []
         excludedFolders = ["CVS", ".svn", "data"]
         csnUtility.GetDirs( newRootFolder, newRootFolderSubdirs, excludedFolders )
-        for oldRootFolder in self.__data.GetRootFolders():
+        for oldRootFolder in self.GetRootFolders():
             oldRootFolderSubdirs = []
             csnUtility.GetDirs( oldRootFolder, oldRootFolderSubdirs, excludedFolders )
             for oldSubDir in oldRootFolderSubdirs:
@@ -743,16 +698,16 @@ class Context(object):
                         message = "Error: The new folder (%s) cannot contain similar subfolders than an already set folder (%s)" % (newRootFolder,oldRootFolder)
                         raise Exception( message )
         
-        self.__data.GetRootFolders().append(newRootFolder)
+        self.GetRootFolders().append(newRootFolder)
         
         self.__NotifyListeners(ChangeEvent(self))
 
     def RemoveRootFolder(self, folder):
-        self.__data.GetRootFolders().remove(folder)
+        self.GetRootFolders().remove(folder)
         self.__NotifyListeners(ChangeEvent(self))
         
     def ExtendRootFolders(self, folders):
-        self.__data.GetRootFolders().extend(folders)
+        self.GetRootFolders().extend(folders)
         self.__NotifyListeners(ChangeEvent(self))
 
     # ----------------------------
@@ -760,20 +715,20 @@ class Context(object):
     # ----------------------------
     
     def HasFilter(self, filter):
-        return self.__data.GetFilter().count(filter) != 0
+        return self.GetFilter().count(filter) != 0
     
     def ResetFilter(self):
-        self.__data.SetFilter([])
+        self.SetFilter([])
         self.__NotifyListeners(ChangeEvent(self))
     
     def AddFilter(self, filter):
-        self.__data.GetFilter().append(filter)
-        self.__data.GetFilter().sort()
+        self.GetFilter().append(filter)
+        self.GetFilter().sort()
         self.__NotifyListeners(ChangeEvent(self))
         
     def RemoveFilter(self, filter):
-        self.__data.GetFilter().remove(filter)
-        self.__data.GetFilter().sort()
+        self.GetFilter().remove(filter)
+        self.GetFilter().sort()
         self.__NotifyListeners(ChangeEvent(self))
     
     # ----------------------------
@@ -781,11 +736,11 @@ class Context(object):
     # ----------------------------
     def FindCompiler(self):
         compilerName = self.GetCompilername()
-        if compilerName != None and compilerName != "" and compilerName in self.__compilermap:
+        if compilerName != None and compilerName != "" and compilerName in self.compilermap:
             if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
-                self.__compiler = self.__compilermap[self.GetCompilername()]
-                self.__compiler.SetConfigurationName(self.GetConfigurationName())
-                self.__data._SetCompilername(self.GetCompiler().GetName())
+                self.compiler = self.compilermap[self.GetCompilername()]
+                self.compiler.SetConfigurationName(self.GetConfigurationName())
+                self.SetCompilername(self.GetCompiler().GetName())
         else:
             raise IOError("Unknown compiler: %s" % compilerName)
         
@@ -797,39 +752,39 @@ class Context(object):
     
     def GetOutputFolder(self, mode):
         # "os.path.join" would be better, but doesn't work in Windows because backslashes are not (yet) escaped by csnake
-        return self.GetBuildFolder() + "/" + self.GetCompiler().GetOutputSubFolder(mode)
+        return self.buildFolder + "/" + self.GetCompiler().GetOutputSubFolder(mode)
     
     #thirdPartyBinFolder = property(GetThirdPartyBuildFolder) # for backward compatibility
     
     def HasField(self, field):
-        return hasattr(self.__data, field)
+        return hasattr(self, field)
 
     def GetField(self, field):
-        return getattr(self.__data, field)
+        return getattr(self, field)
     
     def CheckField(self, field, value):
         """ Check the field before setting it. 
         Return True if ok or otherwise an error message. """
         # Check it the field exists
-        if not hasattr(self.__data, field):
+        if not hasattr(self, field):
             raise AttributeError("SetField with wrong field.")
         # Check the field value if different from the current one
-        if getattr(self.__data, field) != value:
+        if getattr(self, field) != value:
             # third parties
-            if field == "_ContextData__thirdPartySrcAndBuildFolders":
+            if field == "thirdPartySrcAndBuildFolders":
                 return self.__CheckThirdPartyArray(value)
         # default
         return True
 
     def SetField(self, field, value):
         # Set the field value if different from the current one
-        if getattr(self.__data, field) != value:
+        if getattr(self, field) != value:
             # set the attribute
-            setattr(self.__data, field, value)
+            setattr(self, field, value)
             # post-process
-            if field == "_ContextData__configurationName" and self.__compiler != None:
-                self.__compiler.SetConfigurationName(self.GetConfigurationName())
-            elif field == "_ContextData__instance":
+            if field == "configurationName" and self.compiler != None:
+                self.compiler.SetConfigurationName(self.GetConfigurationName())
+            elif field == "instance":
                 # reset the filter
                 self.SetFilter([])
             # notify
@@ -837,13 +792,13 @@ class Context(object):
     
     def __NotifyListeners(self, event):
         """ Notify the attached listeners about the event. """
-        for listener in self.__listeners:
+        for listener in self.listeners:
             listener.Update(event)
         
     def AddListener(self, listener):
         """ Attach a listener to this class. """
-        if not listener in self.__listeners:
-            self.__listeners.append(listener)
+        if not listener in self.listeners:
+            self.listeners.append(listener)
 
 def Load(filename):
     """ Shortcut method to avoid creation and calling Load. """
