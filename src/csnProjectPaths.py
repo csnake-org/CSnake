@@ -90,3 +90,12 @@ class Manager:
 
     def GetSourceRootFolder(self):
         return csnUtility.NormalizePath(self.sourceRootFolder)
+
+    def Dump(self):
+        return { \
+            "buildSubFolder" : self.buildSubFolder, \
+            "configFilePath" : self.configFilePath, \
+            "useFilePath" : self.useFilePath, \
+            "cmakeListsSubpath" : self.cmakeListsSubpath, \
+            "sourceRootFolder" : self.sourceRootFolder \
+        }
