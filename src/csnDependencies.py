@@ -202,3 +202,13 @@ class Manager:
         for project in self.project.GetProjects(_onlyRequiredProjects = 1):
             project.dependenciesManager.WriteDependencyStructureToXMLImp(f, indent + 4)
         f.write("</%s>\n" % self.project.name)
+
+    def Dump(self):
+        return { \
+            "topLevel" : self.isTopLevel, \
+            "projects" : sorted([x.name for x in self.projects]), \
+            "projectsNonRequired" : sorted([x.name for x in self.projectsNonRequired]), \
+            "projectsInSolution" : sorted([x.name for x in self.projectsIncludedInSolution]), \
+            "useBefore" : sorted([x.name for x in self.useBefore]) \
+        }
+

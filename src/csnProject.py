@@ -208,6 +208,17 @@ class GenericProject(object):
     testProject = property(GetTestProject)
     sourceRootFolder = property(GetSourceRootFolder)
 
+    def Dump(self):
+        dump = dict()
+        for project in self.dependenciesManager.GetProjects(_recursive=True, _includeSelf=True):
+            dump[project.name] = { \
+                "compiler" : project.compileManager.Dump(), \
+                "dependencies" : project.dependenciesManager.Dump(), \
+                "install" : project.installManager.Dump(), \
+                "paths" : project.pathsManager.Dump() \
+            }
+        return dump
+
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function
     return
