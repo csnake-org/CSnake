@@ -1385,7 +1385,12 @@ class CSnakeGUIApp(wx.App):
         ''' Text displayed in the About box.'''
         about = About()
         about.read(csnUtility.GetRootOfCSnake() + "/resources/about.txt")
-        wx.AboutBox(about.getWxAboutDialogInfo())
+        info = wx.AboutDialogInfo()
+        info.SetName(about.getName())
+        info.SetVersion(about.getVersion())
+        info.SetDescription(about.getDescription())
+        info.SetCopyright(about.getAuthor())
+        wx.AboutBox(info)
         
     def OnSelectRecentlyUsed(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         # get the context from the list

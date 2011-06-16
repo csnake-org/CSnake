@@ -1,6 +1,5 @@
 ## @package about
 # Definition of the About class.
-import wx
 import ConfigParser
 
 class About:
@@ -73,13 +72,4 @@ class About:
         aboutFile = open( filename, 'w' )
         parser.write(aboutFile)
         aboutFile.close()
-        
-    def getWxAboutDialogInfo(self):
-        ''' Get the about information as a wx AboutDialogInfo. '''
-        info = wx.AboutDialogInfo()
-        info.SetName(self.getName())
-        info.SetVersion(self.getVersion())
-        info.SetDescription(self.getDescription())
-        info.SetCopyright(self.getAuthor())
-        return info
         
