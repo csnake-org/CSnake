@@ -1,5 +1,3 @@
-## @package csnTests
-# Definition of the Project test handling related class. 
 import os
 import csnUtility
 import csnProject
@@ -71,6 +69,7 @@ class Manager:
         self.testProject.AddRule("Create test runner", self.testRunnerSourceFile, command, depends)
         self.testProject.CMakeInsertAfterTarget = new.instancemethod(CustomCMakeLines, self.testProject)
         self.holdingProject.CMakeInsertBeginning = new.instancemethod(CustomCMakeLinesHoldingProject, self.holdingProject)
+        self.testProject.AddLibraries(["DelayImp"], _WIN32 = 1)
         
         if not _dependencies is None:
             self.testProject.AddProjects(_dependencies)
@@ -85,6 +84,14 @@ def CustomCMakeLines(self, _file):
     if len( self.GetSources() ) > 0:
         _file.write("\n# Adding CMake Test\n")
         _file.write( "ADD_TEST( ${PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/%s )\n" % self.name )
+        
+        if self.context.GetCompiler().IsForPlatform(_WIN32 = 1, _NOT_WIN32 = 0):
+            # Add delay load
+            requiredProjects = self.GetProjects( _recursive = True )
+            # For each project -> Check the dependent categories
+            for project in requiredProjects:
+                if project.type == "dll":
+                    _file.write( "SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES LINK_FLAGS \"/DELAYLOAD:%s.dll\" )\n" % project.name )
 
 def CustomCMakeLinesHoldingProject(self, _file):
     """ Line to enable testing. """
