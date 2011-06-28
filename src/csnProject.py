@@ -74,6 +74,7 @@ class GenericProject(object):
     self.precompiledHeader -- Name of the precompiled header file. If non-empty, and using Visual Studio (on Windows),
     then precompiled headers are used for this project.
     self.customCommands -- List of extra commands that must be run when configuring this project.
+    self.properties -- Custom properties for the target that will use the command ADD_PROPERTY( TARGET PROPERTY <name> [value1 ... )
     """
     
     def __init__(self, _name, _type, _sourceRootFolder = None, _categories = None, _context = None):
@@ -111,6 +112,7 @@ class GenericProject(object):
         self.compileManager = csnCompile.Manager(self)
         self.installSubFolder = ""
         self.testsManager = csnTests.Manager(self)
+        self.properties = []
 
         # Function called before "ADD_LIBARRY"
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
@@ -218,6 +220,10 @@ class GenericProject(object):
                 "paths" : project.pathsManager.Dump() \
             }
         return dump
+
+    def AddProperties(self, _property):
+        for property in _property:
+            self.properties.append(property)
 
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function

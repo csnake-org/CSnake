@@ -15,7 +15,7 @@ def LoadThirdPartyModule(_subFolder, _name):
         folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
     return csnUtility.LoadModules(folderList, _name)
 
-def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None):
+def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
     project does not depend on these application projects.
@@ -50,6 +50,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             app.AddIncludeFolders([moduleFolder]) 
             app.AddProjects(_applicationDependenciesList)
             app.AddSources([sourceFile])
+            app.AddProperties( _properties )
             # add header files so that they appear in visual studio
             app.AddSources(headerFiles)
             if( _pch != "" ):
@@ -158,7 +159,7 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None):
+def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
     """
     Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
     _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
@@ -182,7 +183,7 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
     _modulesFolder = "%s/applications" % self.GetSourceRootFolder()
     if not os.path.exists(_modulesFolder):
         _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
-    AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName)
+    AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
     
 def GimiasPluginProject(_name, _sourceRootFolder = None):
     """
