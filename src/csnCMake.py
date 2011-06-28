@@ -232,6 +232,7 @@ class Writer:
         self.__CreateCMakeSection_Definitions()
         self.__CreateCMakeSection_InstallRules()
         self.__CreateCMakeSection_Rules()
+        self.__CreateCMakeSection_AddProperties()
         self.__CreateCMakePrecompiledHeaderPost()
         
         self.project.CMakeInsertAfterTarget( self.file )
@@ -312,4 +313,10 @@ class Writer:
         # write definitions     
         if len(self.project.compileManager.public.definitions):
             f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.public.definitions) )
-
+    
+    def __CreateCMakeSection_AddProperties(self):
+        """ Add properties in the CMakeLists.txt """
+        self.file.write("\n#Adding properties\n" )
+        for prop in self.project.properties:
+            command = "SET_PROPERTY( TARGET %s PROPERTY %s )\n" % ( self.project.name, prop )
+            self.file.write( command )
