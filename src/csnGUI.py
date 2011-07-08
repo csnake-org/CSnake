@@ -22,6 +22,7 @@ import xrcbinder
 from optparse import OptionParser
 from about import About
 import wx.grid
+import wx.lib.agw.customtreectrl as ct
 
 # Only there to allow its inclusion when generating executables.
 import csnCilab #@UnusedImport
@@ -248,7 +249,9 @@ class CSnakeGUIApp(wx.App):
         
         self.destroyed = False
         self.listOfPossibleTargets = []
-        self.projectCheckBoxes = dict()
+        
+        self.__projectTreeIsDrawn = False
+        self.__projectTree = None
         
         self.context = None
         self.options = None
@@ -1425,6 +1428,26 @@ class CSnakeGUIApp(wx.App):
             self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUI()
 
+    def __GetCategories(self,forceRefresh):
+        # empty the filter to get the full list
+        previousFilter = self.context.GetFilter()
+        self.context.SetFilter(list())
+        try:
+            categories = self.__guiHandler.GetCategories(forceRefresh)
+        except:
+            # restore saved filter
+            self.context.SetFilter(previousFilter)
+            # show error message
+            message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
+            message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
+            self.Error(message)
+            self.SetStatus("")
+            return False
+        # restore saved filter
+        self.context.SetFilter(previousFilter)
+        # return
+        return categories
+    
     def ActionSelectProjects(self, args):
         # do not go further if there is no csnake file or instance
         if not self.context.GetCsnakeFile() or not self.context.GetInstance():
@@ -1435,80 +1458,84 @@ class CSnakeGUIApp(wx.App):
         
         forceRefresh = self.DoProjectNeedUpdate()
         
-        if len(self.projectCheckBoxes.keys()) == 0 or forceRefresh:
-            # empty the filter to get the full list
-            previousFilter = self.context.GetFilter()
-            self.context.SetFilter(list())
-            try:
-                categories = self.__guiHandler.GetCategories(forceRefresh)
-            except:
-                # restore saved filter
-                self.context.SetFilter(previousFilter)
-                # show error message
-                message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
-                message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
-                self.Error(message)
-                self.SetStatus("")
-                return False
-            # restore saved filter
-            self.context.SetFilter(previousFilter)
-            
-            # create list of checkboxes for the categories
+        if not self.__projectTreeIsDrawn or forceRefresh:
+            # get the categories
+            categories = self.__GetCategories(forceRefresh)
+            # create/clean the panel
             self.panelSelectProjects.GetSizer().Clear()
-            for category in self.projectCheckBoxes.keys():
-                self.projectCheckBoxes[category].Destroy()
-            self.projectCheckBoxes.clear()
+            if self.__projectTree:
+                self.__projectTree.Destroy()
             
-            for category in sorted(categories):
-                self.projectCheckBoxes[category] = wx.CheckBox(self.panelSelectProjects, -1, category)
-                self.projectCheckBoxes[category].SetValue( not category in self.context.GetFilter() )
-                self.panelSelectProjects.GetSizer().Add(self.projectCheckBoxes[category], 0, 0, 3)
-                self.panelSelectProjects.Bind(wx.EVT_CHECKBOX, self.OnCategoryCheckBoxChanged, self.projectCheckBoxes[category])
-    
-            # create list of checkboxes for the 'super categories' (which are groups of normal categories, such as Tests)
+            # create tree
+            self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
+                agwStyle = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
+                    wx.TR_HIDE_ROOT | wx.TR_SINGLE | 
+                    ct.TR_AUTO_CHECK_CHILD | ct.TR_AUTO_CHECK_PARENT)
+            treeRoot = self.__projectTree.AddRoot('TreeRoot')
+            
+            # loop through super categories
             for super in self.context.GetSubCategoriesOf().keys():
-                value = True
+                # tree item
+                superItem = self.__projectTree.AppendItem(treeRoot, super, ct_type=1)
+                checkSuperItem = True
                 for sub in self.context.GetSubCategoriesOf()[super]:
-                    value = value and (not sub in self.context.GetFilter())
-                        
-                self.projectCheckBoxes[super] = wx.CheckBox(self.panelSelectProjects, -1, super)
-                self.projectCheckBoxes[super].SetValue( value )
-                self.panelSelectProjects.GetSizer().Insert(0, self.projectCheckBoxes[super], 0, 0, 3)
-                self.panelSelectProjects.Bind(wx.EVT_CHECKBOX, self.OnSuperCategoryCheckBoxChanged, self.projectCheckBoxes[super])
-                
+                    checkSuperItem = checkSuperItem and (not sub in self.context.GetFilter())
+                superItem.Check(checkSuperItem)
+                # if super, add child's
+                for category in sorted(categories):
+                    if category in self.context.GetSubCategoriesOf()[super]:
+                        item = self.__projectTree.AppendItem(superItem, category, ct_type=1)
+                        item.Check( not category in self.context.GetFilter() )
+            
+            # warn if differences between arrays
+            for super in self.context.GetSubCategoriesOf().keys():
+                for category in self.context.GetSubCategoriesOf()[super]:
+                    if category not in sorted(categories):
+                        self.__logger.warn("%s in context but not in project." % category)
+
+            # warn if differences between arrays
+            for category in sorted(categories):
+                contains = False
+                for super in self.context.GetSubCategoriesOf().keys():
+                    if category in self.context.GetSubCategoriesOf()[super]:
+                        contains = True
+                if not contains:
+                    self.__logger.warn("%s in project but not in context." % category)
+                    item = self.__projectTree.AppendItem(treeRoot, category, ct_type=1)
+                    item.Check( not category in self.context.GetFilter() )
+
+            # react when an item is checked
+            self.panelSelectProjects.Bind(ct.EVT_TREE_ITEM_CHECKED, self.OnProjectChecked)
+            
+            # display
+            self.__projectTree.ExpandAll()
+            self.panelSelectProjects.GetSizer().Add(self.__projectTree, 1, wx.EXPAND|wx.ALL, 3)
             self.panelSelectProjects.GetSizer().Add(self.btnForceRefreshProjects, 0, 0, 3)
             self.panelSelectProjects.Layout()
             self.panelSelectProjects.FitInside()
-            
-            # update flog
+
+            # update flags
+            self.__projectTreeIsDrawn = True
             self.projectNeedUpdate = False
             
         self.SetStatus("")
         return True
         
-    def OnSuperCategoryCheckBoxChanged(self, event): # wxGlade: CSnakeOptionsFrame.<event_handler>
-        """ 
-        Respond to checking a supercategory (such as Tests or Demos). Results in (un)checking all subcategories in that
-        supercategory.
-        """
-        super = event.GetEventObject().GetLabel()
-        value = self.projectCheckBoxes[super].GetValue()
-        self.UpdateContextFilter(super, not event.IsChecked())
+    def OnProjectChecked(self, event):
+        """ Respond to checking a category. """
+        # get input
+        item = event.GetItem()
+        name = item.GetText()
+        isChecked = item.IsChecked()
+        # update filter 
+        self.UpdateContextFilter(name, not isChecked)
+        # check if super category case
+        if name in self.context.GetSubCategoriesOf().keys():
+            for category in self.context.GetSubCategoriesOf()[name]:
+                self.UpdateContextFilter(category, not isChecked)
                 
-        # set the check boxes of sub categories
-        for cbName in self.projectCheckBoxes.keys():
-            if cbName in self.context.GetSubCategoriesOf()[super]:
-                self.projectCheckBoxes[cbName].SetValue(value)
-                self.UpdateContextFilter(cbName, not event.IsChecked())
-                    
-    def OnCategoryCheckBoxChanged(self, event): # wxGlade: Dialog.<event_handler>
-        """ 
-        Updates the category filter, based on the current status of the checkbox for each category.
-        """
-        category = event.GetEventObject().GetLabel()
-        self.UpdateContextFilter(category, not event.IsChecked())
-            
     def UpdateContextFilter(self, category, filterOut):
+        """ Update the context filter. """
         if filterOut and not self.context.HasFilter(category):
             self.context.AddFilter(category)
         elif not filterOut and self.context.HasFilter(category):
