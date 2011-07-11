@@ -13,6 +13,7 @@ import csnVisualStudio2010
 from csnListener import ChangeEvent
 import os.path
 import shutil
+from ConfigParser import ParsingError
 
 latestFileFormatVersion = 2.1
 
@@ -310,7 +311,10 @@ class Context(object):
         """ Load a context file. """
         # parser
         parser = ConfigParser.ConfigParser()
-        parser.read([filename])
+        try:
+            parser.read([filename])
+        except ParsingError:
+            raise IOError("Cannot read context, parsing error.")
         # check main section
         mainSection = "CSnake"
         if not parser.has_section(mainSection):
@@ -337,7 +341,7 @@ class Context(object):
             self.Save(filename)
 
     def __Read00(self, parser):
-        """ Read options file version 1.0. """ 
+        """ Read context file version 1.0. """ 
         # basic fields
         basicFields = {
             "buildFolder": "binfolder", 
@@ -374,7 +378,7 @@ class Context(object):
         self.FindCompiler()
 
     def __Read10(self, parser):
-        """ Read options file version 1.0. """ 
+        """ Read context file version 1.0. """ 
         # basic fields
         basicFields = {
             "buildFolder": "binfolder", 
@@ -411,7 +415,7 @@ class Context(object):
         self.FindCompiler()
         
     def __Read20(self, parser):
-        """ Read options file version 2.0. """ 
+        """ Read context file version 2.0. """ 
         # basic fields
         # diff to 2.1: compiler, no kdevelop
         basicFields = {
@@ -781,13 +785,14 @@ class Context(object):
     # ----------------------------
     def FindCompiler(self):
         compilerName = self.GetCompilername()
-        if compilerName != None and compilerName != "" and compilerName in self.__compilermap:
-            if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
-                self.__compiler = self.__compilermap[self.GetCompilername()]
-                self.__compiler.SetConfigurationName(self.GetConfigurationName())
-                self.__data._SetCompilername(self.GetCompiler().GetName())
-        else:
-            raise IOError("Unknown compiler: %s" % compilerName)
+        if compilerName != None and compilerName != "":
+            if compilerName in self.__compilermap:
+                if self.GetCompiler() is None or self.GetCompiler().GetName() != self.GetCompilername():
+                    self.__compiler = self.__compilermap[self.GetCompilername()]
+                    self.__compiler.SetConfigurationName(self.GetConfigurationName())
+                    self.__data._SetCompilername(self.GetCompiler().GetName())
+            else:
+                raise IOError("Unknown compiler: %s" % compilerName)
         
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
