@@ -704,6 +704,8 @@ class CSnakeGUIApp(wx.App):
                 self.options.Load(self.optionsFilename)
             except IOError, error:
                 self.Error("%s" % error)
+                # save a clean one
+                self.options.Save(self.optionsFilename)
             # initialise display of recent paths
             self.InitRecentContextPathsDisplay()
         else:

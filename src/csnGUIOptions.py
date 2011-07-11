@@ -4,6 +4,7 @@ import ConfigParser
 from csnListener import ChangeEvent
 import logging
 import shutil
+from ConfigParser import ParsingError
 
 latestFileFormatVersion = 1.1
 
@@ -54,7 +55,10 @@ class Options:
         """ Load an option file. """
         # parser
         parser = ConfigParser.ConfigParser()
-        parser.read([filename])
+        try:
+            parser.read([filename])
+        except ParsingError:
+            raise IOError("Cannot read options, parsing error.")    
         # check main section
         mainSection = "CSnake"
         if not parser.has_section(mainSection):
