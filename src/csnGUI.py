@@ -432,9 +432,8 @@ class CSnakeGUIApp(wx.App):
         menuBar = self.frame.GetMenuBar()
         id = menuBar.FindMenu("File")
         filemenu = menuBar.GetMenu( id )
-        count = filemenu.GetMenuItemCount()
         numberOfItems = 5 # New, Open, Save, Save As, Exit
-        assert( count == numberOfItems )
+        assert( filemenu.GetMenuItemCount() == numberOfItems )
         # insert separator
         # items before: new, open, save and save as
         filemenu.InsertSeparator(numberOfItems-1)
@@ -472,7 +471,8 @@ class CSnakeGUIApp(wx.App):
         # items before: open, save, save as, separator
         head, tail = os.path.split( path )
         wxid = wx.NewId()
-        filemenu.Insert(4, wxid, tail, "Open '%s'" % path )
+        postition = 5 # New, Open, Save, Save As, separator
+        filemenu.Insert(postition, wxid, tail, "Open '%s'" % path )
         self.__recentContextPaths.insert( 0, [wxid, path] )
         EVT_MENU(self, wxid, self.OnOpenRecent)
     
