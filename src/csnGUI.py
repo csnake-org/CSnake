@@ -415,6 +415,7 @@ class CSnakeGUIApp(wx.App):
         self.__logger.debug("method: InitMenu")
 
         # File
+        self.frame.Bind(wx.EVT_MENU, self.OnContextNew, id=xrc.XRCID("mnuContextNew"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextOpen, id=xrc.XRCID("mnuContextOpen"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextSave, id=xrc.XRCID("mnuContextSave"))
         self.frame.Bind(wx.EVT_MENU, self.OnContextSaveAs, id=xrc.XRCID("mnuContextSaveAs"))
@@ -432,14 +433,15 @@ class CSnakeGUIApp(wx.App):
         id = menuBar.FindMenu("File")
         filemenu = menuBar.GetMenu( id )
         count = filemenu.GetMenuItemCount()
-        assert( count == 4 )
+        numberOfItems = 5 # New, Open, Save, Save As, Exit
+        assert( count == numberOfItems )
         # insert separator
-        # items before: open, save and save as
-        filemenu.InsertSeparator(3)
-        filemenu.InsertSeparator(4)
+        # items before: new, open, save and save as
+        filemenu.InsertSeparator(numberOfItems-1)
+        filemenu.InsertSeparator(numberOfItems)
         # insert paths
-        # items before: open, save, save as, separator
-        pos = 4
+        # items before: new, open, save, save as, separator
+        pos = numberOfItems
         for index in range(self.options.GetRecentContextPathLength()):
             # context path
             path = self.options.GetRecentContextPath(index)
@@ -1202,7 +1204,23 @@ class CSnakeGUIApp(wx.App):
             
         self.gridThirdPartySrcAndBuildFolders.SetFocus()
         
-    def OnContextOpen(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def OnContextNew(self, event):
+        """ Open a New empty context. """
+        # save context if modified
+        self.__CheckSaveChanges()
+        # create an empty context
+        context = csnContext.Context()
+        # load it
+        self.__guiHandler.SetContext(context)
+        self.__SetContext(context)
+        # update the GUI
+        self.UpdateGUI()
+        # initialise the paths
+        self.InitializePaths()
+        # update the GUI
+        self.UpdateGUI()
+
+    def OnContextOpen(self, event):
         """
         Let the user load a context.
         """
@@ -1220,7 +1238,7 @@ class CSnakeGUIApp(wx.App):
         else:
             self.SaveContext(self.contextFilename)
 
-    def OnContextSaveAs(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
+    def OnContextSaveAs(self, event):
         """ Let the user save the context to a specific file. """
         self.SaveContextAs()
 

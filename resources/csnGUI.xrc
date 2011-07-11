@@ -7,6 +7,10 @@
     <object class="wxMenuBar" name="frmCSnakeGUI_menubar">
       <object class="wxMenu" name="m_menuFile">
         <label>File</label>
+        <object class="wxMenuItem" name="mnuContextNew">
+          <label>New\tCTRL-N</label>
+          <help></help>
+        </object>
         <object class="wxMenuItem" name="mnuContextOpen">
           <label>Open...\tCTRL-O</label>
           <help></help>
