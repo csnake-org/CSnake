@@ -1454,15 +1454,14 @@ class CSnakeGUIApp(wx.App):
         self.context.SetFilter(list())
         try:
             categories = self.__guiHandler.GetCategories(forceRefresh)
-        except:
+        except Exception, error:
             # restore saved filter
             self.context.SetFilter(previousFilter)
             # show error message
-            message = "Could not load project dependencies for instance %s from file '%s'." % (self.context.GetInstance(), self.context.GetCsnakeFile())
-            message = message + "\nPlease check the fields 'CSnake File' and 'Instance'"
-            self.Error(message)
-            self.SetStatus("")
-            return False
+            message = "Could not load project dependencies."
+            message = message + "\nPlease check the fields 'CSnake File' and/or 'Instance'"
+            message = message + ("\nMessage: '%s'" % error)
+            raise RuntimeError(message)
         # restore saved filter
         self.context.SetFilter(previousFilter)
         # return
@@ -1481,6 +1480,9 @@ class CSnakeGUIApp(wx.App):
         if not self.__projectTreeIsDrawn or forceRefresh:
             # get the categories
             categories = self.__GetCategories(forceRefresh)
+            # check if empty list
+            if not categories:
+                return False
             # create/clean the panel
             self.panelSelectProjects.GetSizer().Clear()
             if self.__projectTree:

@@ -7,6 +7,12 @@ import csnUtility
 class Manager:
     def __init__(self, _project, _sourceRootFolder):
         self.project = _project
+        
+        # check compiler
+        if not self.project.context.GetCompiler():
+            raise AssertionError("Missing compiler in project.")
+        
+        # get build sub folder
         if self.project.type == "dll":
             self.buildSubFolder = self.project.context.GetCompiler().GetBuildSubFolder("library", self.project.name)
         else:
