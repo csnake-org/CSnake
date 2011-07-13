@@ -40,7 +40,7 @@ if commandLineOptions.thirdParty:
         print "Starting task: " + taskMsg  
     result = handler.ConfigureThirdPartyFolders()
     assert result, "\n\nTask failed: ConfigureThirdPartyFolders." 
-    print "Finished " + taskMsg + "\nYou can not build the 3rd party sources.\n"
+    print "Finished " + taskMsg + "\nYou can now build the 3rd party sources.\n"
 
 # install files
 if commandLineOptions.install:
@@ -56,7 +56,7 @@ if commandLineOptions.project:
     print "Starting task: " + taskMsg 
     result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
     assert result, "\n\nTask failed: ConfigureProjectToBuildFolder." 
-    print "Finished task: " + taskMsg + "\nYou can now the sources in %s.\n" % handler.GetTargetSolutionPath()
+    print "Finished task: " + taskMsg + "\nYou can now build the sources in %s.\n" % handler.GetTargetSolutionPath()
 
 # guess what to configure (used by cruise control)
 if commandLineOptions.autoconfig:
