@@ -267,6 +267,9 @@ class CSnakeGUIApp(wx.App):
         self.projectNeedUpdate = False
         self.__currentSolutionPath = None
         
+        # flag to know if running a configure all
+        self.__runningConfigureAll = False 
+        
         wx.InitAllImageHandlers()
         
         xrcFile = csnUtility.GetRootOfCSnake() + "/resources/csnGUI.xrc"
@@ -820,6 +823,7 @@ class CSnakeGUIApp(wx.App):
                 self.UpdateGUI()
             
     def OnConfigureALL(self, event):
+        self.__runningConfigureAll = True
         actions = [
            self.ActionConfigureThirdPartyFolders,
            self.ActionBuildThirdParty,
@@ -827,6 +831,7 @@ class CSnakeGUIApp(wx.App):
            self.ActionBuildProject,
            self.ActionInstallFilesToBuildFolder]
         self.DoActions(actions)
+        self.__runningConfigureAll = False
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         # check situation
@@ -887,7 +892,7 @@ class CSnakeGUIApp(wx.App):
             if self.context.GetInstance().lower() == "gimias":
                 self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
             self.__currentSolutionPath = self.__guiHandler.GetTargetSolutionPath()
-            if self.options.GetAskToLaunchIDE():
+            if self.options.GetAskToLaunchIDE() and not self.__runningConfigureAll:
                 self.AskToLaunchIDE(self.__currentSolutionPath)
             return True
         return False
@@ -903,7 +908,7 @@ class CSnakeGUIApp(wx.App):
     def ActionConfigureThirdPartyFolders(self, args):
         if self.__guiHandler.ConfigureThirdPartyFolders():
             self.__currentSolutionPath = self.__guiHandler.GetThirdPartySolutionPaths()[0]
-            if self.options.GetAskToLaunchIDE():
+            if self.options.GetAskToLaunchIDE() and not self.__runningConfigureAll:
                 self.AskToLaunchIDE(self.__currentSolutionPath)
             return True
         return False
