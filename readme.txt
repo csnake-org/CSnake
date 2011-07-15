@@ -11,8 +11,24 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
+
 v2.4.4
- * ...
+ * Add support for cmake 2.8.5
+ * Add a 'New' menu item in the file menu
+ * Install files to check file dates
+ * Select Projects tree
+ * Errors from launching the select project tab could be more explicit
+ * Remove wx dependency for console run
+ * Sort console mode
+ * Fix hanging progress bar (...)
+ * Add package documentation
+ * Bug: Cannot load context with bad compiler
+ * Bug: Catch parsing error when loading option file
+ * Bug: Prevent asking to launch ide when doing a configure all
+ * Bug: Check existence of context file in console mode
+ * Bug: csnConsole --thirdParty does not work
+ * ENH: Allow to create tests for plugins with delay load
+ * ENH: Allow to add properties for a target
 
 v2.4.3
  * Save recent context files
