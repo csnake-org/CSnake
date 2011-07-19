@@ -1494,10 +1494,17 @@ class CSnakeGUIApp(wx.App):
                 self.__projectTree.Destroy()
             
             # create tree
-            self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
-                agwStyle = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
-                    wx.TR_HIDE_ROOT | wx.TR_SINGLE | 
-                    ct.TR_AUTO_CHECK_CHILD | ct.TR_AUTO_CHECK_PARENT)
+            wxVersion = [int(number) for number in wx.__version__.split('.')]
+            if wxVersion < [2, 8, 11]:
+                self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
+                    style = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
+                        wx.TR_SINGLE)
+            else:
+                self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
+                    agwStyle = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
+                        wx.TR_HIDE_ROOT | wx.TR_SINGLE | 
+                        ct.TR_AUTO_CHECK_CHILD | ct.TR_AUTO_CHECK_PARENT)
+                
             treeRoot = self.__projectTree.AddRoot('TreeRoot')
             
             # loop through super categories
