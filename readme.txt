@@ -11,6 +11,8 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
+v2.4.5
+ * ...
 
 v2.4.4
  * Add support for cmake 2.8.5
