@@ -570,12 +570,7 @@ class CSnakeGUIApp(wx.App):
         # check if new context is different from the original one
         if self.originalContextData != None:
             equal = self.context.GetData().Equal(self.originalContextData)
-            if modified and equal:
-                self.contextModified = False
-            elif not modified and not equal:
-                self.contextModified = False
-            else:
-                self.contextModified = modified
+            self.contextModified = modified and not equal
         else:
             self.contextModified = modified
         # update the frame title
