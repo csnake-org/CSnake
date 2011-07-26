@@ -561,7 +561,7 @@ class CSnakeGUIApp(wx.App):
         self.options.SetContextFilename(filename)
         self.SaveOptions()
         # update the frame title
-        self.frame.SetTitle("CSnake GUI - %s" % filename)
+        self.frame.SetTitle("CSnake GUI - %s" % self.contextFilename)
 
     def __GetContextFilename(self):
         return self.contextFilename
@@ -581,11 +581,9 @@ class CSnakeGUIApp(wx.App):
         # update the frame title
         oldTitle = self.frame.GetTitle()
         if self.contextModified:
-            if oldTitle[len(oldTitle)-1] != '*':
-                self.frame.SetTitle("%s*" % oldTitle)
+            self.frame.SetTitle("CSnake GUI - %s *" % self.contextFilename)
         else:
-            if oldTitle[len(oldTitle)-1] == '*':
-                self.frame.SetTitle(oldTitle[0:len(oldTitle)-1])
+            self.frame.SetTitle("CSnake GUI - %s" % self.contextFilename)
         # update project update flag
         if modified:
             self.projectNeedUpdate = True
