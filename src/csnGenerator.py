@@ -9,6 +9,7 @@ import types
 import OrderedSet
 from about import About
 from csnListener import ProgressListener
+import re
 
 # General documentation
 #
@@ -77,13 +78,36 @@ from csnListener import ProgressListener
 # - Replace string labels with class types
 # End: ToDo.
 
+versionModifierValue = { "alpha" : -10000,
+                     "beta" : -5000 }
+
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
 def getVersion():
     about = About()
     about.read(csnUtility.GetRootOfCSnake() + "/resources/about.txt")
     return about.getVersion()
-version = getVersion()
+
+def getVersionArray(versionString):
+    # divide "1.2.3beta", "1.2.3.beta", "1.2.3 beta" etc. in "1.2.3" and "beta"
+    m = re.match('([0-9](\\.[0-9]+)*)[^a-zA-Z0-9]*(.*)', versionString)
+    pureVersionString = m.group(1)
+    versionModifier = m.group(3) # alpha, beta, rc1, etc.
+    
+    # convert version string into an array of ints
+    result = [int(number) for number in pureVersionString.split('.')]
+    
+    # include pre-release modifier in version number
+    if versionModifier in versionModifierValue:
+        result.append(versionModifierValue[versionModifier])
+    print result
+    return result
+
+versionString = getVersion()
+versionArray = getVersionArray(versionString)
+
+# for compatibility still set the old variable (to be removed at some point)
+version = versionString
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler
 
