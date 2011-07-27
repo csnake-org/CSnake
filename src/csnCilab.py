@@ -30,7 +30,7 @@ def StandardModuleProject(_name, _type, _sourceRootFolder = None):
     return project
 
 ################################################
-##                   cilab                    ##
+##          cilab/cistib/insigneo             ##
 ################################################
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
@@ -97,6 +97,47 @@ def CreateCMakeCLPPost(self, _file):
             raise Exception("Unsupported file extension: %s." % sourceFile)
         # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
+
+def GimiasPluginProject(_name, _sourceRootFolder = None):
+    """
+    This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
+    modules to the plugin.
+
+    """
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    pluginName = "GIMIAS%s" % _name
+    project = csnProject.Project(
+        _name, 
+        _type = "dll", 
+        _sourceRootFolder = _sourceRootFolder, 
+        _categories = [pluginName]
+    )
+    project.applicationsProject = None
+    project.installSubFolder = "plugins/%s/lib" % _name
+    project.AddIncludeFolders(["."])
+    project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
+    project.context.SetSuperSubCategory("Plugins", pluginName)
+
+    # Windows debug
+    installFolder = "%s/debug" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    
+    # Windows release
+    installFolder = "%s/release" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
+
+    # Linux
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _NOT_WIN32 = 1 )
+
+    installFolder = project.installSubFolder + "/Filters"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
+    
+    return project
 
 ################################################
 ##                 to check                   ##
@@ -203,45 +244,6 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
     AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
     
-def GimiasPluginProject(_name, _sourceRootFolder = None):
-    """
-    This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
-    modules to the plugin.
-    """
-    if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
-    pluginName = "GIMIAS%s" % _name
-    project = csnProject.Project(
-        _name, 
-        _type = "dll", 
-        _sourceRootFolder = _sourceRootFolder, 
-        _categories = [pluginName]
-    )
-    project.applicationsProject = None
-    project.installSubFolder = "plugins/%s/lib" % _name
-    project.AddIncludeFolders(["."])
-    project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
-    project.context.SetSuperSubCategory("Plugins", pluginName)
-
-    # Windows debug
-    installFolder = "%s/debug" % project.installSubFolder
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
-    installFolder = installFolder + "/Filters/"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
-    
-    # Windows release
-    installFolder = "%s/release" % project.installSubFolder
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
-    installFolder = installFolder + "/Filters/"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
-
-    # Linux
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _NOT_WIN32 = 1 )
-    installFolder = project.installSubFolder + "/Filters"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
-    
-    return project
-
 def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
     """ 
     Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
