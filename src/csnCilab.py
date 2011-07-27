@@ -38,52 +38,6 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
     return StandardModuleProject(_name = _name, _type = _type, _sourceRootFolder = _sourceRootFolder)
 
-################################################
-##                 to check                   ##
-################################################
-
-def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
-    """ 
-    Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
-    project does not depend on these application projects.
-    It is assumed that _modules is a list containing subfolders of _modulesFolder.
-    Each subfolder in _modules should contain source files (.cpp, .cxx or .cc), where each source file corresponds to a single application.
-    Hence, each source file is used to create a new application project. For example, assuming that the _modulesFolder
-    is called 'Applications', the file 'Applications/Small/Tiny.cpp' will be used to build the 'Tiny' application.
-    
-    _applicationDependenciesList - List of projects that each new application project is dependent on.
-    _modulesFolder - Folder containing subfolders with applications.
-    _modules = List of subfolders of _modulesFolder that should be processed.
-    _pch - If not "", this is the C++ include file which is used for building a precompiled header file for each application.
-    """
-    for module in _modules:
-        moduleFolder = "%s/%s" % (_modulesFolder, module)
-        sourceFiles = []
-        headerFiles = []
-        for extension in csnUtility.GetSourceFileExtensions():
-            sourceFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
-
-        for extension in csnUtility.GetIncludeFileExtensions():
-            headerFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
-        
-        for sourceFile in sourceFiles:
-            if os.path.isdir(sourceFile):
-                continue
-            name = os.path.splitext( os.path.basename(sourceFile) )[0]
-            name = name.replace(' ', '_')
-            if _holderName is None:
-                _holderName = _holderProject.name
-            app = csnBuild.Project("%s_%s" % (_holderName, name), "executable", _sourceRootFolder = _holderProject.GetSourceRootFolder())
-            app.AddIncludeFolders([moduleFolder]) 
-            app.AddProjects(_applicationDependenciesList)
-            app.AddSources([sourceFile])
-            app.AddProperties( _properties )
-            # add header files so that they appear in visual studio
-            app.AddSources(headerFiles)
-            if( _pch != "" ):
-                app.SetPrecompiledHeader(_pch)
-            _holderProject.AddProjects([app])
-
 def CommandLinePlugin(_name, _holderProject = None):
     """ Create a command line plugin project. """
     _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
@@ -143,6 +97,52 @@ def CreateCMakeCLPPost(self, _file):
             raise Exception("Unsupported file extension: %s." % sourceFile)
         # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
+
+################################################
+##                 to check                   ##
+################################################
+
+def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
+    """ 
+    Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
+    project does not depend on these application projects.
+    It is assumed that _modules is a list containing subfolders of _modulesFolder.
+    Each subfolder in _modules should contain source files (.cpp, .cxx or .cc), where each source file corresponds to a single application.
+    Hence, each source file is used to create a new application project. For example, assuming that the _modulesFolder
+    is called 'Applications', the file 'Applications/Small/Tiny.cpp' will be used to build the 'Tiny' application.
+    
+    _applicationDependenciesList - List of projects that each new application project is dependent on.
+    _modulesFolder - Folder containing subfolders with applications.
+    _modules = List of subfolders of _modulesFolder that should be processed.
+    _pch - If not "", this is the C++ include file which is used for building a precompiled header file for each application.
+    """
+    for module in _modules:
+        moduleFolder = "%s/%s" % (_modulesFolder, module)
+        sourceFiles = []
+        headerFiles = []
+        for extension in csnUtility.GetSourceFileExtensions():
+            sourceFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
+
+        for extension in csnUtility.GetIncludeFileExtensions():
+            headerFiles.extend(_holderProject.Glob("%s/*.%s" % (moduleFolder, extension)))
+        
+        for sourceFile in sourceFiles:
+            if os.path.isdir(sourceFile):
+                continue
+            name = os.path.splitext( os.path.basename(sourceFile) )[0]
+            name = name.replace(' ', '_')
+            if _holderName is None:
+                _holderName = _holderProject.name
+            app = csnBuild.Project("%s_%s" % (_holderName, name), "executable", _sourceRootFolder = _holderProject.GetSourceRootFolder())
+            app.AddIncludeFolders([moduleFolder]) 
+            app.AddProjects(_applicationDependenciesList)
+            app.AddSources([sourceFile])
+            app.AddProperties( _properties )
+            # add header files so that they appear in visual studio
+            app.AddSources(headerFiles)
+            if( _pch != "" ):
+                app.SetPrecompiledHeader(_pch)
+            _holderProject.AddProjects([app])
 
 def AddLibraryModulesMemberFunction(self, _libModules):
     """ 
