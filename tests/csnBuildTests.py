@@ -243,6 +243,7 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
         
         # clean up
         shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
+        os.remove(testConfig.getContextFileName())
         
 if __name__ == "__main__":
     unittest.main() 
