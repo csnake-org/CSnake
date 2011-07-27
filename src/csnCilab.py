@@ -12,6 +12,13 @@ import inspect
 ##                  generic                   ##
 ################################################
 
+def LoadThirdPartyModule(_subFolder, _name):
+    """ Loads third party module _name from subfolder _subFolder of the third party folder """
+    folderList = []
+    for thirdPartyFolder in csnProject.globalCurrentContext.GetThirdPartyFolders( ):
+        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
+    return csnUtility.LoadModules(folderList, _name)
+
 ################################################
 ##                   cilab                    ##
 ################################################
@@ -19,13 +26,6 @@ import inspect
 ################################################
 ##                 to check                   ##
 ################################################
-
-def LoadThirdPartyModule(_subFolder, _name):
-    """ Loads third party module _name from subfolder _subFolder of the third party folder """
-    folderList = []
-    for thirdPartyFolder in csnProject.globalCurrentContext.GetThirdPartyFolders( ):
-        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
-    return csnUtility.LoadModules(folderList, _name)
 
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
     """ 
