@@ -8,6 +8,18 @@ import os.path
 import new
 import inspect
 
+################################################
+##                  generic                   ##
+################################################
+
+################################################
+##                   cilab                    ##
+################################################
+
+################################################
+##                 to check                   ##
+################################################
+
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
     folderList = []
