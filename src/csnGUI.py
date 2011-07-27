@@ -977,8 +977,8 @@ class CSnakeGUIApp(wx.App):
                 self.Error(message)
                 break
             
-        elapsedTime = int( time.time() - startTime )
-        minutes = elapsedTime / 60
+        elapsedTime = time.time() - startTime
+        minutes = int(elapsedTime) / 60
         seconds = elapsedTime - 60*minutes
         message = "Done ("
         if minutes != 0:
@@ -986,7 +986,7 @@ class CSnakeGUIApp(wx.App):
         if minutes != 0 and seconds != 0:
             message += " "
         if seconds != 0:
-            message += "%ds" % seconds
+            message += "%.2fs" % seconds
         message += ")."
         self.__Report(message)
         
