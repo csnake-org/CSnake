@@ -7,10 +7,15 @@ import csnBuild
 import os.path
 import new
 import inspect
+import re
+import string
 
 ################################################
 ##                  generic                   ##
 ################################################
+
+# to be kept in CSnake (but we need to rename the module)
+
 
 def LoadThirdPartyModule(_subFolder, _name):
     """ Loads third party module _name from subfolder _subFolder of the third party folder """
@@ -29,9 +34,61 @@ def StandardModuleProject(_name, _type, _sourceRootFolder = None):
     project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
     return project
 
+def MakeValidIdentifier(_identifier, _toUpper = False):
+    _identifier = re.sub(r"[^A-Za-z0-9]", "_", _identifier)
+    if len(_identifier) == 0 or _identifier[0] in string.digits:
+        _identifier = "_" + _identifier
+    if _toUpper:
+        _identifier = _identifier.upper()
+    return _identifier
+
+def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix = None):
+    """ 
+    Creates a header file with input vars for the given project.
+
+    @param project The calling project.
+    @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
+    @param variables Dictionary of variable/value pairs.  
+    """
+    projectNameClean = re.sub(r"[^A-Za-z0-9]", "_", _project.name)
+    if not _filename: 
+        _filename = "%s.h" % projectNameClean
+    path = "%s/%s" % (_project.GetBuildFolder(), _filename)
+    headerFile = open(path, 'w')
+    # simple '.' to '_' replace, if the method is passed we cannot use the string package.
+    size = len(_filename)
+    # should be a header...
+
+    guard = MakeValidIdentifier(_identifier = _filename, _toUpper = True)
+    headerFile.write("#ifndef %s\n" % guard)
+    headerFile.write("#define %s\n" % guard)
+    headerFile.write("\n")
+    headerFile.write("// Automatically generated file, do not edit.\n")
+    headerFile.write("\n")
+    
+    # default variables
+    if not _variablePrefix:
+        _variablePrefix = MakeValidIdentifier(_identifier = _project.name, _toUpper = True)
+    headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (_variablePrefix, _project.GetSourceRootFolder()))
+    headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (_variablePrefix, _project.GetBuildFolder()))
+    
+    # input variables
+    if _variables:
+        headerFile.write("\n")
+        for (key, value) in _variables:
+            headerFile.write("#define %s \"%s\"\n" % (key, value))
+    
+    headerFile.write("\n")
+    headerFile.write("#endif // %s\n" % guard)
+    headerFile.close()
+
+
 ################################################
 ##          cilab/cistib/insigneo             ##
 ################################################
+
+# to be moved to Gimias resp. Toolkit repository
+
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
@@ -138,6 +195,19 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
     
     return project
+
+def CreateToolkitHeader(_project, _filename = None, _variables = None):
+    """
+    Creates a header file with input vars for the given project.
+    
+    @param project The calling project.
+    @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
+    @param variables Dictionary of variable/value pairs.  
+    """
+    if not _filename:
+        _filename = "CISTIBToolkit.h"
+    CreateHeader(_project = _project, _filename = _filename, _variables = _variables, _variablePrefix = "CISTIB_TOOLKIT")
+
 
 ################################################
 ##                 to check                   ##
@@ -269,39 +339,4 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
             self.AddIncludeFolders([includeFolder])
             for extension in csnUtility.GetIncludeFileExtensions():
                 self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
-
-def CreateToolkitHeader(project, filename = None, variables = None):
-    """ 
-    Creates a header file with input vars for the given project.
-    @param project The calling project.
-    @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
-    @param variables Dictionary of variable/value pairs.  
-     """
-    if not filename: 
-        filename = "CISTIBToolkit.h"
-    path = "%s/%s" % (project.GetBuildFolder(), filename)
-    headerFile = open(path, 'w')
-    # simple '.' to '_' replace, if the method is passed we cannot use the string package.
-    size = len(filename)
-    # should be a header...
-    guard = "%s_H" % filename[0:size-2].upper()
-    headerFile.write("#ifndef %s\n" % guard)
-    headerFile.write("#define %s\n" % guard)
-    headerFile.write("\n")
-    headerFile.write("// Automatically generated file, do not edit.\n")
-    headerFile.write("\n")
-    
-    # default variables
-    headerFile.write("#define CISTIB_TOOLKIT_FOLDER \"%s/..\"\n" % project.GetSourceRootFolder())
-    headerFile.write("#define CISTIB_TOOLKIT_BUILD_FOLDER \"%s\"\n" % project.GetBuildFolder())
-    
-    # input variables
-    if variables:
-        headerFile.write("\n")
-        for (key, value) in variables:
-            headerFile.write("#define %s \"%s\"\n" % (key, value))
-    
-    headerFile.write("\n")
-    headerFile.write("#endif // %s\n" % guard)
-    headerFile.close()
 
