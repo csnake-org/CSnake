@@ -19,9 +19,24 @@ def LoadThirdPartyModule(_subFolder, _name):
         folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
     return csnUtility.LoadModules(folderList, _name)
 
+def StandardModuleProject(_name, _type, _sourceRootFolder = None):
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+
+    project = csnProject.Project(_name, _type, _sourceRootFolder)
+    project.applicationsProject = None
+    project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
+    project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
+    return project
+
 ################################################
 ##                   cilab                    ##
 ################################################
+
+def CilabModuleProject(_name, _type, _sourceRootFolder = None):
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    return StandardModuleProject(_name = _name, _type = _type, _sourceRootFolder = _sourceRootFolder)
 
 ################################################
 ##                 to check                   ##
@@ -68,15 +83,6 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
             if( _pch != "" ):
                 app.SetPrecompiledHeader(_pch)
             _holderProject.AddProjects([app])
-
-def CilabModuleProject(_name, _type, _sourceRootFolder = None):
-    if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
-    project = csnProject.Project(_name, _type, _sourceRootFolder)
-    project.applicationsProject = None
-    project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
-    project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
-    return project
 
 def CommandLinePlugin(_name, _holderProject = None):
     """ Create a command line plugin project. """
