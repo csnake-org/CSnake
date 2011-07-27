@@ -13,7 +13,10 @@
 #  thirdpartyrootfolder = %rootfolder0%
 # Build and install folders are created and deleted at the end of the tests
 
+cd `dirname $0`
+
 # Add csnake src to the python path
-export PYTHONPATH=$PYTHONPATH:../src
+export PYTHONPATH=$PYTHONPATH:`pwd`/../src
+
 # Run all tests
-python AllTests.py
+python AllTests.py $*
