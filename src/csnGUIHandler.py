@@ -346,11 +346,11 @@ class Handler:
 
     def GetCategories(self, _forceRefresh = False):
         instance = self.__GetProjectInstance(_forceRefresh)
-        categories = list()
+        categories = dict()
         for project in instance.GetProjects(_recursive = True, _filter = False):
             for cat in project.categories:
                 if not cat in categories:
-                    categories.append(cat)
+                    categories[cat] = project
         return categories
                     
     def FindAdditionalRootFolders(self):
