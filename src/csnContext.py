@@ -76,6 +76,12 @@ class ContextData:
     def _SetThirdPartySrcAndBuildFolders(self, value):
         ''' Protected, should only be accessed by the Context. '''
         self.__thirdPartySrcAndBuildFolders = value
+    
+    def GetThirdPartySrcFolders(self):
+        result = []
+        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
+            result.append(srcAndBuildFolder[0])
+        return result
 
     def GetInstance(self):
         return self.__instance
@@ -683,10 +689,7 @@ class Context(object):
         return self._GetThirdPartySrcAndBuildFolders()[index][0]
 
     def GetThirdPartyFolders(self):
-        result = []
-        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
-            result.append(srcAndBuildFolder[0])
-        return result
+        return self.__data.GetThirdPartySrcFolders()
 
     def GetNumberOfThirdPartyFolders( self ):
         return len(self._GetThirdPartySrcAndBuildFolders())

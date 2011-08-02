@@ -1445,23 +1445,15 @@ class CSnakeGUIApp(wx.App):
             self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUI()
 
-    def __GetCategories(self,forceRefresh):
-        # empty the filter to get the full list
-        previousFilter = self.context.GetFilter()
-        self.context.SetFilter(list())
+    def __GetCategories(self,forceRefresh = False):
         try:
             categories = self.__guiHandler.GetCategories(forceRefresh)
         except Exception, error:
-            # restore saved filter
-            self.context.SetFilter(previousFilter)
             # show error message
             message = "Could not load project dependencies."
             message = message + "\nPlease check the fields 'CSnake File' and/or 'Instance'"
             message = message + ("\nMessage: '%s'" % error)
             raise RuntimeError(message)
-        # restore saved filter
-        self.context.SetFilter(previousFilter)
-        # return
         return categories
     
     def ActionSelectProjects(self, args):
@@ -1472,11 +1464,9 @@ class CSnakeGUIApp(wx.App):
         # get list of ALL the categories on which the user can filter
         self.SetStatus("Retrieving projects...")
         
-        forceRefresh = self.DoProjectNeedUpdate()
-        
-        if not self.__projectTreeIsDrawn or forceRefresh:
+        if not self.__projectTreeIsDrawn or self.DoProjectNeedUpdate():
             # get the categories
-            categories = self.__GetCategories(forceRefresh)
+            categories = self.__GetCategories(forceRefresh = False)
             # create/clean the panel
             self.panelSelectProjects.GetSizer().Clear()
             if self.__projectTree:
@@ -1504,7 +1494,7 @@ class CSnakeGUIApp(wx.App):
                 for sub in self.context.GetSubCategoriesOf()[super]:
                     checkSuperItem = checkSuperItem and (not sub in self.context.GetFilter())
                 superItem.Check(checkSuperItem)
-                # if super, add child's
+                # if super, add children
                 for category in sorted(categories):
                     if category in self.context.GetSubCategoriesOf()[super]:
                         item = self.__projectTree.AppendItem(superItem, category, ct_type=1)

@@ -152,8 +152,10 @@ class GenericProject(object):
     def Glob(self, _path):
         return self.pathsManager.Glob(_path)
     
-    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False):
-        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies, _onlyNonRequiredProjects)
+    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False,
+            _onlyNonRequiredProjects = False, _filter = True):
+        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies,
+            _onlyNonRequiredProjects, _filter)
         
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
