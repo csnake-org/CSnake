@@ -143,11 +143,11 @@ class Generator:
         os.path.exists(_targetProject.GetBuildFolder()) or os.makedirs(_targetProject.GetBuildFolder())
     
         # create Win32Header
-        if _targetProject.type != "executable" and _targetProject.compileManager.generateWin32Header:
-            _targetProject.compileManager.GenerateWin32Header()
+        if _targetProject.type != "executable" and _targetProject.GetCompileManager().generateWin32Header:
+            _targetProject.GetCompileManager().GenerateWin32Header()
             # add search path to the generated win32 header
-            if not _targetProject.GetBuildFolder() in _targetProject.compileManager.public.includeFolders:
-                _targetProject.compileManager.public.includeFolders.append(_targetProject.GetBuildFolder())
+            if not _targetProject.GetBuildFolder() in _targetProject.GetCompileManager().public.includeFolders:
+                _targetProject.GetCompileManager().public.includeFolders.append(_targetProject.GetBuildFolder())
         
         _targetProject.RunCustomCommands()
 

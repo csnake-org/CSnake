@@ -800,7 +800,7 @@ class Context(object):
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
         for flag in self.GetCompiler().GetCompileFlags():
-            project.compileManager.private.definitions.append(flag)
+            project.GetCompileManager().private.definitions.append(flag)
         return project
     
     def GetOutputFolder(self, mode):
