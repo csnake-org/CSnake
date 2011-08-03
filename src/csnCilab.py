@@ -59,7 +59,9 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
+        filename = csnProject.FindFilename()
+        dirname = os.path.dirname(filename)
+        _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
     project = csnProject.Project(_name, _type, _sourceRootFolder)
     project.applicationsProject = None
     project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
