@@ -30,8 +30,8 @@ class Manager:
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
             if not projectToAdd in self.projects:
-                if _dependency and projectToAdd.dependenciesManager.DependsOn(self.project):
-                    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.project.name, projectToAdd.name)
+                #if _dependency and projectToAdd.dependenciesManager.DependsOn(self.project):
+                #    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.project.name, projectToAdd.name)
                 self.projects.add( projectToAdd )
                 if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
