@@ -13,24 +13,37 @@ import new
 
 globalCurrentContext = None
 
+def FindFilename():
+    frame = inspect.currentframe(2)
+    try:
+        if frame is None:
+            # inspect.currentframe is not available with all python interpreters, so use inspect.stack as fallback option
+            filename = inspect.stack()[2][1]
+        else:
+            filename = inspect.getframeinfo(frame)[0]
+    finally:
+        # make sure the reference to the frame is deleted in any case (avoid cycles, see http://docs.python.org/library/inspect.html#the-interpreter-stack)
+        del frame
+    return filename
+
 def Project(_name, _type, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return globalCurrentContext.CreateProject(_name, _type, _sourceRootFolder, _categories)
 
 def Dll(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "dll", _sourceRootFolder, _categories)
 
 def Library(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "library", _sourceRootFolder, _categories)
 
 def Executable(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "executable", _sourceRootFolder, _categories)
 
 class Rule:
@@ -89,7 +102,7 @@ class GenericProject(object):
         self.name = _name
         self.type = _type
         if _sourceRootFolder is None:
-            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
         self.pathsManager = csnProjectPaths.Manager(self, _sourceRootFolder)
 
         # Get the thirdPartyBuildFolder index

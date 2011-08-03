@@ -59,7 +59,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
     project = csnProject.Project(_name, _type, _sourceRootFolder)
     project.applicationsProject = None
     project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
@@ -68,7 +68,7 @@ def CilabModuleProject(_name, _type, _sourceRootFolder = None):
 
 def CommandLinePlugin(_name, _holderProject = None):
     """ Create a command line plugin project. """
-    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
     
     # command line lib
     projectLibName = "%sLib" % _name
@@ -194,7 +194,7 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     modules to the plugin.
     """
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
     pluginName = "GIMIAS%s" % _name
     project = csnProject.Project(
         _name, 
