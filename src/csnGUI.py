@@ -1557,14 +1557,23 @@ class CSnakeGUIApp(wx.App):
             for category in self.context.GetSubCategoriesOf()[name]:
                 self.UpdateContextFilter(category, not isChecked)
     
-    def CheckUncheckDependentItems(self, category, _selected):
+    def UpdateContextFilter(self, category, filterOut):
+        """ Update the context filter. """
+        if filterOut and not self.context.HasFilter(category):
+            self.context.AddFilter(category)
+            self.CheckUncheckDependentItems(category, False)
+        elif not filterOut and self.context.HasFilter(category):
+            self.context.RemoveFilter(category)
+            self.CheckUncheckDependentItems(category, True)
+                
+    def CheckUncheckDependentItems(self, _category, _selected):
         categories = self.__GetCategories(forceRefresh = False)
         
         # Check, if it's really about a project; if not (probably it's about a super-category), stop
-        if not category in categories:
+        if not _category in categories:
             return
         
-        catProject = categories[category]
+        catProject = categories[_category]
         if _selected:
             # Project "catProject" recently selected: Select all projects it depends on
             # Go through all projects that "catProjects" depends on
@@ -1586,15 +1595,6 @@ class CSnakeGUIApp(wx.App):
                     item = self.__projectTreeItems[category]
                     self.__projectTree.CheckItem(item, False) #Uncheck it
     
-    def UpdateContextFilter(self, category, filterOut):
-        """ Update the context filter. """
-        if filterOut and not self.context.HasFilter(category):
-            self.context.AddFilter(category)
-            self.CheckUncheckDependentItems(category, False)
-        elif not filterOut and self.context.HasFilter(category):
-            self.context.RemoveFilter(category)
-            self.CheckUncheckDependentItems(category, True)
-                
     def OnSelectCompiler(self, event):
         self.context.FindCompiler()
         # find visual studio if needed
