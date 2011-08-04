@@ -1519,8 +1519,15 @@ class CSnakeGUIApp(wx.App):
                     item = self.__projectTree.AppendItem(treeRoot, category, ct_type=1)
                     item.Check( not category in self.context.GetFilter() )
                     self.__projectTreeItems[category] = item
-
-            # react when an item is checked
+            
+            # make sure all dependencies are met at the beginning
+            for category, project in categories.items():
+                # For all active projects
+                if not category in self.context.GetFilter():
+                    # Activate all dependent projects
+                    self.CheckUncheckDependentItems(category, True)
+            
+            # react when an item is checked (to update the filter and check dependencies)
             self.panelSelectProjects.Bind(ct.EVT_TREE_ITEM_CHECKED, self.OnProjectChecked)
             
             # display
