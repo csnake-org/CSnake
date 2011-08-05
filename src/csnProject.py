@@ -113,6 +113,7 @@ class GenericProject(object):
         self.installSubFolder = ""
         self.testsManager = csnTests.Manager(self)
         self.properties = []
+        self.__postCMakeTasks = []
 
         # Function called before "ADD_LIBARRY"
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
@@ -224,6 +225,13 @@ class GenericProject(object):
     def AddProperties(self, _property):
         for property in _property:
             self.properties.append(property)
+
+    def GetPostCMakeTasks(self):
+        return self.__postCMakeTasks
+    
+    def AddPostCMakeTasks(self, tasks):
+        for task in tasks:
+            self.__postCMakeTasks.append(task)
 
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function

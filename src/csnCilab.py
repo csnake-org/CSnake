@@ -209,6 +209,56 @@ def CreateToolkitHeader(_project, _filename = None, _variables = None):
     CreateHeader(_project = _project, _filename = _filename, _variables = _variables, _variablePrefix = "CISTIB_TOOLKIT")
 
 
+### The following code goes to csnGIMIAS.py:
+
+### <!-- START
+
+def GetListOfSpuriousPluginDlls(project):
+    """
+    Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration.
+    """
+    result = []
+
+    configuredPluginNames = [pluginProject.name.lower() for pluginProject in project.GetProjects(_recursive = True) ]
+    for configuration in ("Debug", "Release"):
+        pluginsFolder = "%s/bin/%s/plugins/*" % (project.context.GetBuildFolder(), configuration)
+
+        for pluginFolder in glob.glob( pluginsFolder ):
+            pluginName = os.path.basename(pluginFolder)
+            if not os.path.isdir(pluginFolder) or pluginName.lower() in configuredPluginNames:
+                continue
+                
+            searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+            if os.path.exists( searchPath ):
+                result.append( searchPath )
+            searchPath = string.Template("$folder/lib/$config/lib$name.so").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+            if os.path.exists( searchPath ):
+                result.append( searchPath )
+                
+    return result
+
+def RemoveSpuriousPluginDlls(project, askUser):
+    spuriousDlls = GetListOfSpuriousPluginDlls(project)
+    
+    if len(spuriousDlls) == 0:
+        return
+        
+    dllMessage = ""
+    for x in spuriousDlls:
+        dllMessage += ("%s\n" % x)
+        
+    message = "In the build results folder, CSnake found GIMIAS plugins that have not been configured.\nThe following plugin dlls may crash GIMIAS:\n%sDelete them?" % dllMessage
+    askUser.SetType(askUser.QuestionYesNo())
+    if askUser.Ask(message, askUser.AnswerYes()) == askUser.AnswerNo():
+        return
+        
+    for dll in spuriousDlls:
+        os.remove(dll)
+
+gimias.AddPostCMakeTasks([RemoveSpuriousPluginDlls])
+
+### END -->
+
 ################################################
 ##                 to check                   ##
 ################################################

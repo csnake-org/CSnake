@@ -33,6 +33,27 @@ import re
 import traceback
 from wx._core import EVT_MENU
 
+class AskUser:
+    def __init__(self, frame):
+        self.__questionType = wx.YES_NO
+        self.__frame = frame
+    
+    def QuestionYesNo():
+        return wx.YES_NO
+    
+    def AnswerYes():
+        return wx.ID_YES
+    
+    def AnswerNo():
+        return wx.ID_NO
+    
+    def SetType(questionType):
+        self.__questionType = questionType
+    
+    def Ask(self, message, defaultAnswer):
+        dlg = wx.MessageDialog(self.__frame, message, 'Question', style = self.__questionType | wx.ICON_QUESTION)
+        return dlg.ShowModal()
+
 class PathPickerCtrl(wx.Control):
     def __init__(self, parent, id=-1, pos=(-1,-1), size=(-1,-1), style=0, validator=wx.DefaultValidator, name="PathPicker", evtHandler=None, folderName="Folder"):
         wx.Control.__init__(self, parent, id=id, pos=pos, size=size, style=style|wx.BORDER_NONE, validator=validator, name=name)
@@ -881,9 +902,7 @@ class CSnakeGUIApp(wx.App):
 
     def ActionCreateCMakeFilesAndRunCMake(self, args):
         self.FindAdditionalRootFolders(True)
-        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True):
-            if self.context.GetInstance().lower() == "gimias":
-                self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
+        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser=AskUser(self.frame):
             self.__currentSolutionPath = self.__guiHandler.GetTargetSolutionPath()
             if self.options.GetAskToLaunchIDE() and not self.__runningConfigureAll:
                 self.AskToLaunchIDE(self.__currentSolutionPath)
@@ -892,11 +911,7 @@ class CSnakeGUIApp(wx.App):
         
     def ActionOnlyCreateCMakeFiles(self, args):
         self.FindAdditionalRootFolders(True)
-        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = False):
-            if self.context.GetInstance().lower() == "gimias":
-                self.ProposeToDeletePluginDlls(self.__guiHandler.GetListOfSpuriousPluginDlls(_reuseInstance = True))
-            return True
-        return False
+        return self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = False, _askUser=AskUser(self.frame))
         
     def ActionConfigureThirdPartyFolders(self, args):
         if self.__guiHandler.ConfigureThirdPartyFolders():
@@ -1336,22 +1351,6 @@ class CSnakeGUIApp(wx.App):
     def GetInstanceComboBoxItems(self):
         return self.listOfPossibleTargets
             
-    def ProposeToDeletePluginDlls(self, spuriousDlls):
-        if len(spuriousDlls) == 0:
-            return
-            
-        dllMessage = ""
-        for x in spuriousDlls:
-            dllMessage += ("%s\n" % x)
-            
-        message = "In the build results folder, CSnake found GIMIAS plugins that have not been configured.\nThe following plugin dlls may crash GIMIAS:\n\n%s\nDelete them?" % dllMessage
-        dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
-        if dlg.ShowModal() != wx.ID_YES:
-            return
-            
-        for dll in spuriousDlls:
-            os.remove(dll)
-
     def AskToLaunchIDE(self, pathToSolution):
         message = "Launch Visual Studio with solution %s?" % pathToSolution
         dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
