@@ -101,7 +101,9 @@ class Version:
                              "rc5"    : -4996,
                              ""       : 0,
                              None     : 0 }
-
+    
+    __hash__ = None
+    
     def __init__(self, versionString):
         self.__GetVersionFromString(versionString)
     
