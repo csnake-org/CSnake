@@ -1,5 +1,6 @@
 ## @package csnVersion
 # Class to parse, compare and show version numbers of CSnake.
+import exceptions
 import re
 
 class Version:
@@ -25,8 +26,36 @@ class Version:
     
     __hash__ = None
     
-    def __init__(self, versionString):
-        self.__GetVersionFromString(versionString)
+    def __init__(self, versionString = None, versionArray = None):
+        if versionString:
+            if versionArray:
+                raise exceptions.Exception("You cannot pass the version number as both a string and an array!")
+            else:
+                self.__GetVersionFromString(versionString)
+        else:
+            if versionArray:
+                self.__GetVersionFromArray(versionArray)
+            else:
+                raise exceptions.Exception("You have to pass the version number in one format!")
+        assert self.__versionModifier in Version.versionModifierValue
+        
+    def __GetVersionFromArray(self, versionArray):
+        # Check for version modifier
+        self.__versionModifier = ""
+        if isinstance(versionArray[-1], str): # is it a string
+            try:
+                int(versionArray[-1])
+            except ValueError: # is the string a real non-number-string (and not just a number in a string)
+                self.__versionModifier = versionArray[-1]
+                versionArray = versionArray[:-1]
+        
+        # convert numeric part of the array in ints (might be an array of string that represent numbers)
+        assert versionArray
+        self.__versionNumber = map(int, versionArray)
+        
+        # normalize it
+        while len(self.__versionNumber) > 0 and self.__versionNumber[-1] == 0:
+            self.__versionNumber.pop()
     
     def __GetVersionFromString(self, versionString):
         # divide "1.2.3beta", "1.2.3.beta", "1.2.3 beta" etc. in "1.2.3" and "beta"
