@@ -1,33 +1,17 @@
-## @package aboutTests
-# Definition of the AboutTests class.
+## @package versionTests
+# Definition of the tests for the Version class.
 # \ingroup tests
 import unittest
-from about import About
-from csnGenerator import Version
-import os
+from csnVersion import Version
 
-class AboutTests(unittest.TestCase):
-    """ Tests for the About class. """
-
+class VersionTests(unittest.TestCase):
+    """ Tests for the Version class. """
+    
     def setUp(self):
         """ Run before test. """
-
+    
     def tearDown(self):
         """ Run after test. """
-
-    def testReadWrite(self):
-        """ AboutTests: testReadWrite. """
-        filename = "about_test.txt"
-        # write the default about
-        about = About()
-        about.write(filename)
-        # read it back
-        about2 = About()
-        about2.read(filename)
-        # compare the 2 objects
-        assert about == about2
-        # clean up
-        os.remove(filename)
     
     def testVersion(self):
         """ AboutTests: testVersion. """
@@ -47,3 +31,4 @@ class AboutTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
