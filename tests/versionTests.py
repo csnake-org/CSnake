@@ -15,15 +15,27 @@ class VersionTests(unittest.TestCase):
     
     def testVersion(self):
         """ AboutTests: testVersion. """
+        
         assert Version("1.2.3") < Version("2.3.4")
         assert Version("2.3.4") > Version("1.2.3")
-        assert Version("43.0.0") <= Version("43")
-        assert Version("43.0.0") >= Version("43")
-        assert Version("43.0.0") == Version("43")
-        assert Version("43.0.0") != Version("43 beta")
-        assert Version("45.1.beta") < Version("45.1.0")
+        
+        sameVersion = [Version(versionString = "43.0.0"), Version(versionString = "43.0"), Version(versionString = "43")]
+        for versionA in sameVersion:
+            for versionB in sameVersion:
+                assert versionA <= versionB, "%s should be <= %s" % (versionA.GetString(), versionB.GetString())
+                assert versionA >= versionB, "%s should be >= %s" % (versionA.GetString(), versionB.GetString())
+                assert versionA == versionB, "%s should be == %s" % (versionA.GetString(), versionB.GetString())
+        
+        lowerVersionList = [Version("43 beta"), Version("43.0.0 beta")]
+        higherVersionList = [Version("43"), Version("43.0.0")]
+        for lowerVersion in lowerVersionList:
+            for higherVersion in higherVersionList:
+                assert lowerVersion < higherVersion, "%s should be < %s" % (lowerVersion.GetString(), higherVersion.GetString())
+                assert lowerVersion != higherVersion, "%s should be != %s" % (lowerVersion.GetString(), higherVersion.GetString())
+        
         for numDecimals in range(0, 3):
             assert Version(Version("1.2.3.4.5.6.7/beta").GetString(numDecimals=numDecimals)) == Version("1.2.3.4.5.6.7/beta")
+        
         assert Version("1.2 alpha").GetString(numDecimals=3) == "1.2.0.0-alpha"
         assert Version("1.2 alpha").GetString(numDecimals=2) == "1.2.0-alpha"
         assert Version("1.2 alpha").GetString(numDecimals=1) == "1.2-alpha"
