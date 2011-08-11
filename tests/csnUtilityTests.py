@@ -4,6 +4,7 @@
 import unittest
 import csnUtility
 import os
+import commands
 
 class csnUtilityTests(unittest.TestCase):
     """ Unit tests for the csnUtility methods. """
@@ -87,14 +88,20 @@ class csnUtilityTests(unittest.TestCase):
             self.assertTrue(raisedError)
             
         else:  
-            # Hoping there is a cmake on the test machine
-            refPath1 = "/usr/bin/cmake"
-            self.assertEqual( csnUtility.SearchUnixProgramPath("cmake"), refPath1 )
+            # Search for "echo" command (is installed on almost every machine and it's easy to check, if it works)
+            echoPath = csnUtility.SearchUnixProgramPath("echo")
+            
+            # check, if it works
+            self.assertTrue(os.path.exists(echoPath))
+            testString = "kjag3hjZaheiVRuhvi6ueahEvehr2avhjaeGjhgfj6aecuy3ge1uyAagfi"
+            (status, echoOutput) = commands.getstatusoutput('%s "%s"' % (echoPath, testString))
+            self.assertEqual(status, 0)
+            self.assertEqual(echoOutput, testString)
             
             # Wrong path
             raisedError = False
             try:
-                csnUtility.SearchUnixProgramPath("cmakee")
+                csnUtility.SearchUnixProgramPath("somethingthatweforsuredontfind")
             except OSError:
                 raisedError = True
             self.assertTrue(raisedError)
