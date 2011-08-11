@@ -347,11 +347,17 @@ class Handler:
     def GetCategories(self, _forceRefresh = False):
         instance = self.__GetProjectInstance(_forceRefresh)
         categories = dict()
-        for project in instance.GetProjects(_recursive = True, _filter = False):
+        for project in instance.GetProjects(_recursive=True, _filter=False, _onlyRequiredProjects=False):
             for cat in project.categories:
                 if not cat in categories:
                     categories[cat] = project
         return categories
+    
+    def GetProjectDependencies(self):
+        return self.__GetProjectInstance().GetProjects(_recursive=True, _onlyRequiredProjects=True)
+    
+    def GetInstanceCategories(self):
+        return self.__GetProjectInstance().categories
                     
     def FindAdditionalRootFolders(self):
         ''' Look for folders with the rootFolder.csnake file. '''

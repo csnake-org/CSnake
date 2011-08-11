@@ -1489,6 +1489,13 @@ class CSnakeGUIApp(wx.App):
                 
             treeRoot = self.__projectTree.AddRoot('TreeRoot')
             
+            dependencies = self.__guiHandler.GetProjectDependencies()
+            mainProjectCategories = self.__guiHandler.GetInstanceCategories()
+            if mainProjectCategories:
+                mainProjectName = mainProjectCategories[0]
+            else:
+                mainProjectName = self.context.GetInstance()
+            
             # loop through super categories
             for super in self.context.GetSubCategoriesOf().keys():
                 # tree item
@@ -1500,9 +1507,7 @@ class CSnakeGUIApp(wx.App):
                 # if super, add children
                 for category, project in categories.items():
                     if category in self.context.GetSubCategoriesOf()[super]:
-                        item = self.__projectTree.AppendItem(superItem, category, ct_type = 1, data = project)
-                        item.Check( not category in self.context.GetFilter() )
-                        self.__projectTreeItems[category] = item
+                        self.__CreateProjectTreeItem(superItem, category, project, dependencies, mainProjectName)
             
             # warn if differences between arrays
             for super in self.context.GetSubCategoriesOf().keys():
@@ -1511,16 +1516,14 @@ class CSnakeGUIApp(wx.App):
                         self.__logger.warn("%s in context but not in project." % category)
 
             # warn if differences between arrays
-            for category in categories:
+            for category, project in categories.items():
                 contains = False
                 for super in self.context.GetSubCategoriesOf().keys():
                     if category in self.context.GetSubCategoriesOf()[super]:
                         contains = True
                 if not contains:
                     self.__logger.warn("%s in project but not in context." % category)
-                    item = self.__projectTree.AppendItem(treeRoot, category, ct_type = 1, data = project)
-                    item.Check( not category in self.context.GetFilter() )
-                    self.__projectTreeItems[category] = item
+                    self.__CreateProjectTreeItem(treeRoot, category, project, dependencies, mainProjectName)
             
             # react when an item is checked (to update the filter and check dependencies)
             # Note: This has to be done *before* the dependency check, it relies on it.
@@ -1546,28 +1549,47 @@ class CSnakeGUIApp(wx.App):
             
         self.SetStatus("")
         return True
+    
+    def __CreateProjectTreeItem(self, superItem, category, project, dependencies, mainProjectName):
+        item = self.__projectTree.AppendItem(superItem, category, ct_type = 1, data = project)
+        if project in dependencies:
+            # select and grey out all dependencies of the main project (deselecting them wouldn't have any effect anyway)
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (dependency of %s)" % (category, mainProjectName))
+        else:
+            item.Check( not category in self.context.GetFilter() )
+        self.__projectTreeItems[category] = item
+
         
     def OnProjectChecked(self, event):
         """ Respond to checking a category. """
-        # get input
-        item = event.GetItem()
-        name = item.GetText()
-        isChecked = item.IsChecked()
-        # update filter 
-        self.UpdateContextFilter(name, not isChecked)
-        # check if super category case
-        if name in self.context.GetSubCategoriesOf().keys():
-            for category in self.context.GetSubCategoriesOf()[name]:
-                self.UpdateContextFilter(category, not isChecked)
+        self.__OnProjectChecked(event.GetItem())
+        
+    def __OnProjectChecked(self, item):
+        """ Respond to checking a category. """
+        project = item.GetData()
+        if project:
+            # if item is enabled, then write the change to the filter
+            if item.IsEnabled():
+                for category in project.categories:
+                    self.UpdateContextFilter(category, not item.IsChecked())
+            # else: if item is disabled, then don't care about the change
+
+        for childItem in item.GetChildren():
+            self.__OnProjectChecked(childItem)
     
-    def UpdateContextFilter(self, category, filterOut):
+    def UpdateContextFilter(self, category, filterOut, checkDependencies=True):
         """ Update the context filter. """
         if filterOut and not self.context.HasFilter(category):
             self.context.AddFilter(category)
-            self.CheckUncheckDependentItems(category, False, self.__projectTreeDependencyCache)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, False, self.__projectTreeDependencyCache)
         elif not filterOut and self.context.HasFilter(category):
             self.context.RemoveFilter(category)
-            self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
                 
     def CheckUncheckDependentItems(self, category, selected, dependenciesCache):
         if category in self.__projectTreeItems:
