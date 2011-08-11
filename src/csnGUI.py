@@ -1507,7 +1507,7 @@ class CSnakeGUIApp(wx.App):
                 # if super, add children
                 for category, project in categories.items():
                     if category in self.context.GetSubCategoriesOf()[super]:
-                        self.__CreateProjectTreeItem(superItem, category, project, dependencies, mainProjectName)
+                        self.__CreateProjectTreeItem(superItem, category, project, dependencies, mainProjectName, mainProjectCategories)
             
             # warn if differences between arrays
             for super in self.context.GetSubCategoriesOf().keys():
@@ -1523,7 +1523,7 @@ class CSnakeGUIApp(wx.App):
                         contains = True
                 if not contains:
                     self.__logger.warn("%s in project but not in context." % category)
-                    self.__CreateProjectTreeItem(treeRoot, category, project, dependencies, mainProjectName)
+                    self.__CreateProjectTreeItem(treeRoot, category, project, dependencies, mainProjectName, mainProjectCategories)
             
             # react when an item is checked (to update the filter and check dependencies)
             # Note: This has to be done *before* the dependency check, it relies on it.
@@ -1550,9 +1550,16 @@ class CSnakeGUIApp(wx.App):
         self.SetStatus("")
         return True
     
-    def __CreateProjectTreeItem(self, superItem, category, project, dependencies, mainProjectName):
+    def __CreateProjectTreeItem(self, superItem, category, project, dependencies, mainProjectName, mainProjectCategories):
         item = self.__projectTree.AppendItem(superItem, category, ct_type = 1, data = project)
-        if project in dependencies:
+        if mainProjectCategories and category in mainProjectCategories:
+            # select and grey out the main project
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (main project)" % category)
+            item.SetBold(True)
+        elif project in dependencies:
             # select and grey out all dependencies of the main project (deselecting them wouldn't have any effect anyway)
             item.Enable(False)
             item.Check(True)

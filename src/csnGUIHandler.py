@@ -347,7 +347,7 @@ class Handler:
     def GetCategories(self, _forceRefresh = False):
         instance = self.__GetProjectInstance(_forceRefresh)
         categories = dict()
-        for project in instance.GetProjects(_recursive=True, _filter=False, _onlyRequiredProjects=False):
+        for project in instance.GetProjects(_recursive=True, _filter=False, _onlyRequiredProjects=False, _includeSelf=True):
             for cat in project.categories:
                 if not cat in categories:
                     categories[cat] = project
