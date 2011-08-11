@@ -30,11 +30,11 @@ def StandardModuleProject(_name, _type, _sourceRootFolder = None):
 
     project = csnProject.Project(_name, _type, _sourceRootFolder)
     project.applicationsProject = None
-    project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
-    project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
+    project.AddLibraryModules = new.instancemethod(_AddLibraryModulesMemberFunction, project)
+    project.AddApplications = new.instancemethod(_AddApplicationsMemberFunction, project)
     return project
 
-def MakeValidIdentifier(_identifier, _toUpper = False):
+def _MakeValidIdentifier(_identifier, _toUpper = False):
     _identifier = re.sub(r"[^A-Za-z0-9]", "_", _identifier)
     if len(_identifier) == 0 or _identifier[0] in string.digits:
         _identifier = "_" + _identifier
@@ -59,7 +59,7 @@ def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix 
     size = len(_filename)
     # should be a header...
 
-    guard = MakeValidIdentifier(_identifier = _filename, _toUpper = True)
+    guard = _MakeValidIdentifier(_identifier = _filename, _toUpper = True)
     headerFile.write("#ifndef %s\n" % guard)
     headerFile.write("#define %s\n" % guard)
     headerFile.write("\n")
@@ -68,7 +68,7 @@ def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix 
     
     # default variables
     if not _variablePrefix:
-        _variablePrefix = MakeValidIdentifier(_identifier = _project.name, _toUpper = True)
+        _variablePrefix = _MakeValidIdentifier(_identifier = _project.name, _toUpper = True)
     headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (_variablePrefix, _project.GetSourceRootFolder()))
     headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (_variablePrefix, _project.GetBuildFolder()))
     
@@ -173,7 +173,7 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
     project.applicationsProject = None
     project.installSubFolder = "plugins/%s/lib" % _name
     project.AddIncludeFolders(["."])
-    project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
+    project.AddWidgetModules = new.instancemethod(_AddWidgetModulesMemberFunction, project)
     project.context.SetSuperSubCategory("Plugins", pluginName)
 
     # Windows debug
@@ -305,7 +305,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
                 app.SetPrecompiledHeader(_pch)
             _holderProject.AddProjects([app])
 
-def AddLibraryModulesMemberFunction(self, _libModules):
+def _AddLibraryModulesMemberFunction(self, _libModules):
     """ 
     Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
     It is assumed that the root folder of self has a subfolder called libmodules. The subfolders of libmodules should
@@ -338,7 +338,7 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in csnUtility.GetIncludeFileExtensions():
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
-def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
+def _AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
     """
     Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
     _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
@@ -364,7 +364,7 @@ def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenc
         _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
     AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
     
-def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
+def _AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
     """ 
     Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
     _useQt - If true, adds build rules for the ui and moc files .
