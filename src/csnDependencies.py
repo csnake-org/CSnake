@@ -86,7 +86,7 @@ class Manager:
                     if foundStart:
                         namelist.append(project.name)
                 namelist.append(self.project.name)
-                self.__logger.Warn("Cyclic dependency: %s" % namelist)
+                raise DependencyError("Cyclic dependency: %s" % namelist)
             return OrderedSet.OrderedSet()
         _stack = _stack + [self.project]
         
