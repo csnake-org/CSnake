@@ -33,7 +33,7 @@ class Manager:
         self.public = CompileAndLinkSettings()
         self.private = CompileAndLinkSettings()
         self.precompiledHeader = ""
-        self.generateWin32Header = 1
+        self.generateWin32Header = True
  
     def GetConfig(self, _isPrivate):
         if _isPrivate:

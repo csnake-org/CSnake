@@ -76,6 +76,12 @@ class ContextData:
     def _SetThirdPartySrcAndBuildFolders(self, value):
         ''' Protected, should only be accessed by the Context. '''
         self.__thirdPartySrcAndBuildFolders = value
+    
+    def GetThirdPartySrcFolders(self):
+        result = []
+        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
+            result.append(srcAndBuildFolder[0])
+        return result
 
     def GetInstance(self):
         return self.__instance
@@ -683,10 +689,7 @@ class Context(object):
         return self._GetThirdPartySrcAndBuildFolders()[index][0]
 
     def GetThirdPartyFolders(self):
-        result = []
-        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
-            result.append(srcAndBuildFolder[0])
-        return result
+        return self.__data.GetThirdPartySrcFolders()
 
     def GetNumberOfThirdPartyFolders( self ):
         return len(self._GetThirdPartySrcAndBuildFolders())
@@ -797,7 +800,7 @@ class Context(object):
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
         for flag in self.GetCompiler().GetCompileFlags():
-            project.compileManager.private.definitions.append(flag)
+            project.GetCompileManager().private.definitions.append(flag)
         return project
     
     def GetOutputFolder(self, mode):

@@ -26,9 +26,12 @@ def CorrectPath(path):
     else:
         return first
 
-def NormalizePath(path):
-    newPath = CorrectPath( os.path.normpath(path) ).replace("\\", "/")
-    return newPath
+def NormalizePath(path, _correctCase = True):
+    path = os.path.normpath(path)
+    if _correctCase:
+        path = CorrectPath(path)
+    path = path.replace("\\", "/")
+    return path
 
 def UnNormalizePath(path):
     return os.path.normpath(path).replace("/", "\\")
@@ -142,7 +145,8 @@ def ReplaceDestinationFileIfDifferentAndSaveBackup(sourceFile, destinationFile):
     if FileToString(sourceFile) != FileToString(destinationFile):
         if os.path.exists(destinationFile):
             result = (0 != shutil.copy(destinationFile, (destinationFile + ".old")))
-            assert result, "\n\nError: Could not copy from %s to %s/n" % (destinationFile, (destinationFile + ".old"))        result = (0 != shutil.copy(sourceFile, destinationFile))
+            assert result, "\n\nError: Could not copy from %s to %s/n" % (destinationFile, (destinationFile + ".old"))
+        result = (0 != shutil.copy(sourceFile, destinationFile))
         assert result, "\n\nError: Could not copy from %s to %s/n" % (sourceFile, destinationFile)
 
 def Matches(string, pattern):
