@@ -63,6 +63,12 @@ class Manager:
         Returns list of all projects associated with this project.
         _recursive -- If true, returns not only child projects but all projects in the tree below this project.
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
+        _includeSelf
+        _onlyPublicDependencies
+        _onlyNonRequiredProjects
+        _filter -- use the filter or not
+        _stack -- do not touch, only used internally in recursive loops
+        _cache -- cache for intermediate results, can be provided as external dictionary to be shared between calls
         """
         if _cache is None:
             _cache = dict()
