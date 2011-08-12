@@ -151,10 +151,6 @@ def AddLibraryModulesMemberFunction(self, _libModules):
                 for extension in includeFileExtensions:
                     self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
     
-    if( len(self.GetSources()) == 0 ):
-        dummySource = csnUtility.GetDummyCppFilename()
-        self.AddSources([dummySource])
-    
     for libModule in _libModules:
         for stub in ("/stub", ""):
             includeFolder = "libmodules/%s/include%s" % (libModule, stub)

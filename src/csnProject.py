@@ -248,10 +248,13 @@ class GenericProject(object):
             for function, parameters in self.__compileManagerUpdates:
                 function(**parameters)
             self.__compileManagerUpdates = list()
+            if( len(self.__compileManager.sources) == 0 ):
+                dummySource = csnUtility.GetDummyCppFilename()
+                self.__compileManager.AddSources([dummySource])
         return self.__compileManager
 
     def GetSources(self):
-        return self.__compileManager.sources
+        return self.GetCompileManager().sources
         
     def GetSourceRootFolder(self):
         return self.pathsManager.GetSourceRootFolder()
