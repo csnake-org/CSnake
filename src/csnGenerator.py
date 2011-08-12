@@ -9,6 +9,7 @@ import types
 import OrderedSet
 from about import About
 from csnListener import ProgressListener
+import csnVersion
 
 # General documentation
 #
@@ -79,10 +80,16 @@ from csnListener import ProgressListener
 
 # add root of csnake to the system path
 sys.path.append(csnUtility.GetRootOfCSnake())
+
 def getVersion():
     about = About()
     about.read(csnUtility.GetRootOfCSnake() + "/resources/about.txt")
     return about.getVersion()
+
+versionString = getVersion()
+versionObject = csnVersion.Version(versionString)
+
+# for compatibility still set the old variable (to be removed when the API is established)
 version = getVersion()
 
 # set default location of python. Note that this path may be overwritten in csnGUIHandler

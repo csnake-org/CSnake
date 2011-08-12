@@ -16,6 +16,7 @@ from csnUtilityTests import csnUtilityTests
 from csnContextTests import csnContextTests
 from csnGUIOptionsTests import csnGUIOptionsTests
 from aboutTests import AboutTests
+from versionTests import VersionTests
 from csnInstallTests import csnInstallTests
 from csnCilabTests import csnCilabTests
 
@@ -80,13 +81,14 @@ class AllTests:
         csnContextSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextTests)
         csnGUIOptionsSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIOptionsTests)
         aboutSuite = unittest.TestLoader().loadTestsFromTestCase(AboutTests)
+        versionSuite = unittest.TestLoader().loadTestsFromTestCase(VersionTests)
         installSuite = unittest.TestLoader().loadTestsFromTestCase(csnInstallTests)
         cilabSuite = unittest.TestLoader().loadTestsFromTestCase(csnCilabTests)
         # main suite
         self.__suite = unittest.TestSuite([
              buildSuite, uiSuite, csnProjectSuite, 
              csnUtilitySuite, csnContextSuite, csnGUIOptionsSuite,
-             aboutSuite, installSuite, cilabSuite])
+             aboutSuite, versionSuite, installSuite, cilabSuite])
         # output file name
         self.__outputFileName = outputFileName
         
