@@ -82,19 +82,19 @@ class Writer:
     
     def __CreateCMakeSection_SourceGroups(self):
         """ Create source groups in the CMakeLists.txt """
-        for groupName in self.project.compileManager.sourceGroups:
+        for groupName in self.project.GetCompileManager().sourceGroups:
             self.file.write( "\n # Create %s group \n" % groupName )
             self.file.write( "IF (WIN32)\n" )
-            self.file.write( "  SOURCE_GROUP(\"%s\" FILES %s)\n" % (groupName, csnUtility.Join(self.project.compileManager.sourceGroups[groupName], _addQuotes = 1)))
+            self.file.write( "  SOURCE_GROUP(\"%s\" FILES %s)\n" % (groupName, csnUtility.Join(self.project.GetCompileManager().sourceGroups[groupName], _addQuotes = 1)))
             self.file.write( "ENDIF(WIN32)\n\n" )
     
     def __CreateCMakeSection_MocRules(self):
         """ Create moc rules in the CMakeLists.txt """
         cmakeMocInputVar = ""
-        if len(self.project.compileManager.sourcesToBeMoced):
+        if len(self.project.GetCompileManager().sourcesToBeMoced):
             cmakeMocInputVarName = "MOC_%s" % (self.project.name)
             cmakeMocInputVar = "${%s}" % (cmakeMocInputVarName)
-            self.file.write("\nQT_WRAP_CPP( %s %s %s )\n" % (self.project.name, cmakeMocInputVarName, csnUtility.Join(self.project.compileManager.sourcesToBeMoced, _addQuotes = 1)) )
+            self.file.write("\nQT_WRAP_CPP( %s %s %s )\n" % (self.project.name, cmakeMocInputVarName, csnUtility.Join(self.project.GetCompileManager().sourcesToBeMoced, _addQuotes = 1)) )
             # write section for sorting moc files in a separate folder in Visual Studio
             self.file.write( "\n # Create MOC group \n" )
             self.file.write( "IF (WIN32)\n" )
@@ -106,12 +106,12 @@ class Writer:
         """ Create uic rules in the CMakeLists.txt """
         cmakeUIHInputVar = ""
         cmakeUICppInputVar = ""
-        if len(self.project.compileManager.sourcesToBeUIed):
+        if len(self.project.GetCompileManager().sourcesToBeUIed):
             cmakeUIHInputVarName = "UI_H_%s" % (self.project.name)
             cmakeUIHInputVar = "${%s}" % (cmakeUIHInputVarName)
             cmakeUICppInputVarName = "UI_CPP_%s" % (self.project.name)
             cmakeUICppInputVar = "${%s}" % (cmakeUICppInputVarName)
-            self.file.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (self.project.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(self.project.compileManager.sourcesToBeUIed, _addQuotes = 1)) )
+            self.file.write("\nQT_WRAP_UI( %s %s %s %s )\n" % (self.project.name, cmakeUIHInputVarName, cmakeUICppInputVarName, csnUtility.Join(self.project.GetCompileManager().sourcesToBeUIed, _addQuotes = 1)) )
             # write section for sorting ui files in a separate folder in Visual Studio
             self.file.write( "\n # Create UI group \n" )
             self.file.write( "IF (WIN32)\n" )
@@ -121,8 +121,8 @@ class Writer:
     
     def __CreateCMakeSection_Definitions(self):
         """ Create definitions in the CMakeLists.txt """
-        if len(self.project.compileManager.private.definitions):
-            self.file.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.private.definitions) )
+        if len(self.project.GetCompileManager().private.definitions):
+            self.file.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.GetCompileManager().private.definitions) )
 
     def __HasCompilableFiles(self):
         extensions = ["." + x for x in csnUtility.GetSourceFileExtensions()]
@@ -196,10 +196,10 @@ class Writer:
             self.file.write( "TARGET_LINK_LIBRARIES(%s %s)\n" % (self.project.name, targetLinkLibraries) )
 
     def __CreateCMakePrecompiledHeaderPre(self):
-        if self.project.compileManager.precompiledHeader != "":
+        if self.project.GetCompileManager().precompiledHeader != "":
             self.file.write("\n#Adding CMake PrecompiledHeader Pre\n")
             self.file.write("INCLUDE( %s )\n" % "\"%s/cmakeMacros/PCHSupport_26.cmake\"" % csnProject.globalCurrentContext.GetThirdPartyFolder( 0 ) )
-            self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+            self.file.write("GET_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.GetCompileManager().precompiledHeader) )
             
             #Add precompiled header to sources. This file is generated for windows only 
             # after executing CMake, so it doens't exists at the begining
@@ -209,9 +209,9 @@ class Writer:
             self.project.AddSources([precompiledHeaderCxx], _sourceGroup = "PCH Files", _checkExists = 0, _forceAdd = 1)
         
     def __CreateCMakePrecompiledHeaderPost(self):
-        if self.project.compileManager.precompiledHeader != "":
+        if self.project.GetCompileManager().precompiledHeader != "":
             self.file.write("\n#Adding CMake PrecompiledHeader Post\n")
-            self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.compileManager.precompiledHeader) )
+            self.file.write("ADD_NATIVE_PRECOMPILED_HEADER(\"%s\" \"%s\")\n" % (self.project.name, self.project.GetCompileManager().precompiledHeader) )
 
     def __CreateCMakeSections(self):
         """ Writes different CMake sections for this project to the file f. """
@@ -270,7 +270,7 @@ class Writer:
         f = open(fileConfig, 'w')
         
         # create list with folder where libraries should be found. Add the folder where all the targets are placed to this list. 
-        publicLibraryFolders = self.project.compileManager.public.libraryFolders
+        publicLibraryFolders = self.project.GetCompileManager().public.libraryFolders
         if _public:
             publicLibraryFolders.append(self.project.GetBuildResultsFolder()) 
 
@@ -279,15 +279,15 @@ class Writer:
         f.write( "# DO NOT EDIT (changes will be lost)\n\n" )
         f.write( "SET( %s_FOUND TRUE )\n" % (self.project.name) )
         f.write( "SET( %s_USE_FILE \"%s\" )\n" % (self.project.name, self.project.pathsManager.GetPathToUseFile() ) )
-        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.project.name, csnUtility.Join(self.project.compileManager.public.includeFolders, _addQuotes = 1)) )
+        f.write( "SET( %s_INCLUDE_DIRS %s )\n" % (self.project.name, csnUtility.Join(self.project.GetCompileManager().public.includeFolders, _addQuotes = 1)) )
         f.write( "SET( %s_LIBRARY_DIRS %s )\n" % (self.project.name, csnUtility.Join(publicLibraryFolders, _addQuotes = 1)) )
-        if len(self.project.compileManager.public.libraries):
+        if len(self.project.GetCompileManager().public.libraries):
             libraries = ""
-            for buildType in self.project.compileManager.public.libraries.keys():
+            for buildType in self.project.GetCompileManager().public.libraries.keys():
                 typeString = ""
                 if buildType != "":
                     typeString = "\"%s\" " % buildType # something like "debug "
-                for library in self.project.compileManager.public.libraries[buildType]:
+                for library in self.project.GetCompileManager().public.libraries[buildType]:
                     libraries += "%s\"%s\"" % (typeString, library)
             f.write( "SET( %s_LIBRARIES ${%s_LIBRARIES} %s )\n" % (self.project.name, self.project.name, libraries) )
 
@@ -311,8 +311,8 @@ class Writer:
         f.write( "LINK_DIRECTORIES(${%s_LIBRARY_DIRS})\n" % (self.project.name) )
         
         # write definitions     
-        if len(self.project.compileManager.public.definitions):
-            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.compileManager.public.definitions) )
+        if len(self.project.GetCompileManager().public.definitions):
+            f.write( "ADD_DEFINITIONS(%s)\n" % csnUtility.Join(self.project.GetCompileManager().public.definitions) )
     
     def __CreateCMakeSection_AddProperties(self):
         """ Add properties in the CMakeLists.txt """
