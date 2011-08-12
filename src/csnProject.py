@@ -174,7 +174,7 @@ class GenericProject(object):
         
     def SetPrecompiledHeader(self, _precompiledHeader):
         self.__compileManagerUpdates.append((self.__compileManager.SetPrecompiledHeader, {
-            "precompiledHeader" : _precompiledHeader
+            "_precompiledHeader" : _precompiledHeader
           }))
         
     def AddLibraryFolders(self, _listOfLibraryFolders, _WIN32 = 0, _NOT_WIN32 = 0):
@@ -270,7 +270,7 @@ class GenericProject(object):
         dump = dict()
         for project in self.dependenciesManager.GetProjects(_recursive=True, _includeSelf=True):
             dump[project.name] = { \
-                "compiler" : project.compileManager.Dump(), \
+                "compiler" : project.__compileManager.Dump(), \
                 "dependencies" : project.dependenciesManager.Dump(), \
                 "install" : project.installManager.Dump(), \
                 "paths" : project.pathsManager.Dump() \
