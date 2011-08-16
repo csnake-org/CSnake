@@ -8,6 +8,7 @@ from wx import xrc
 import csnGUIHandler
 import csnGUIOptions
 import csnContext
+import csnProject
 from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
@@ -1471,6 +1472,8 @@ class CSnakeGUIApp(wx.App):
             self.panelSelectProjects.GetSizer().Clear()
             if self.__projectTree:
                 self.__projectTree.Destroy()
+            self.__projectTreeItems = dict()
+            self.__projectTreeDependencyCache = dict()
             
             # create tree
             wxVersion = [int(number) for number in wx.__version__.split('.')]
@@ -1486,6 +1489,13 @@ class CSnakeGUIApp(wx.App):
                 
             treeRoot = self.__projectTree.AddRoot('TreeRoot')
             
+            dependencies = self.__guiHandler.GetProjectDependencies()
+            mainProjectCategories = self.__guiHandler.GetInstanceCategories()
+            if mainProjectCategories:
+                mainProjectName = mainProjectCategories[0]
+            else:
+                mainProjectName = self.context.GetInstance()
+            
             # loop through super categories
             for super in self.context.GetSubCategoriesOf().keys():
                 # tree item
@@ -1495,30 +1505,36 @@ class CSnakeGUIApp(wx.App):
                     checkSuperItem = checkSuperItem and (not sub in self.context.GetFilter())
                 superItem.Check(checkSuperItem)
                 # if super, add children
-                for category in sorted(categories):
+                for category, project in categories.items():
                     if category in self.context.GetSubCategoriesOf()[super]:
-                        item = self.__projectTree.AppendItem(superItem, category, ct_type=1)
-                        item.Check( not category in self.context.GetFilter() )
+                        self.__CreateProjectTreeItem(superItem, category, project, dependencies, mainProjectName, mainProjectCategories)
             
             # warn if differences between arrays
             for super in self.context.GetSubCategoriesOf().keys():
                 for category in self.context.GetSubCategoriesOf()[super]:
-                    if category not in sorted(categories):
+                    if category not in categories:
                         self.__logger.warn("%s in context but not in project." % category)
 
             # warn if differences between arrays
-            for category in sorted(categories):
+            for category, project in categories.items():
                 contains = False
                 for super in self.context.GetSubCategoriesOf().keys():
                     if category in self.context.GetSubCategoriesOf()[super]:
                         contains = True
                 if not contains:
                     self.__logger.warn("%s in project but not in context." % category)
-                    item = self.__projectTree.AppendItem(treeRoot, category, ct_type=1)
-                    item.Check( not category in self.context.GetFilter() )
-
-            # react when an item is checked
+                    self.__CreateProjectTreeItem(treeRoot, category, project, dependencies, mainProjectName, mainProjectCategories)
+            
+            # react when an item is checked (to update the filter and check dependencies)
+            # Note: This has to be done *before* the dependency check, it relies on it.
             self.panelSelectProjects.Bind(ct.EVT_TREE_ITEM_CHECKED, self.OnProjectChecked)
+            
+            # make sure all dependencies are met at the beginning
+            for category, project in categories.items():
+                # For all active projects
+                if not category in self.context.GetFilter():
+                    # Activate all dependent projects
+                    self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
             
             # display
             self.__projectTree.ExpandAll()
@@ -1533,27 +1549,87 @@ class CSnakeGUIApp(wx.App):
             
         self.SetStatus("")
         return True
+    
+    def __CreateProjectTreeItem(self, superItem, category, project, dependencies, mainProjectName, mainProjectCategories):
+        item = self.__projectTree.AppendItem(superItem, category, ct_type = 1, data = project)
+        if mainProjectCategories and category in mainProjectCategories:
+            # select and grey out the main project
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (main project)" % category)
+            item.SetBold(True)
+        elif project in dependencies:
+            # select and grey out all dependencies of the main project (deselecting them wouldn't have any effect anyway)
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (dependency of %s)" % (category, mainProjectName))
+        else:
+            item.Check( not category in self.context.GetFilter() )
+        self.__projectTreeItems[category] = item
+
         
     def OnProjectChecked(self, event):
         """ Respond to checking a category. """
-        # get input
-        item = event.GetItem()
-        name = item.GetText()
-        isChecked = item.IsChecked()
-        # update filter 
-        self.UpdateContextFilter(name, not isChecked)
-        # check if super category case
-        if name in self.context.GetSubCategoriesOf().keys():
-            for category in self.context.GetSubCategoriesOf()[name]:
-                self.UpdateContextFilter(category, not isChecked)
-                
-    def UpdateContextFilter(self, category, filterOut):
+        self.__OnProjectChecked(event.GetItem())
+        
+    def __OnProjectChecked(self, item):
+        """ Respond to checking a category. """
+        project = item.GetData()
+        if project:
+            # if item is enabled, then write the change to the filter
+            if item.IsEnabled():
+                for category in project.categories:
+                    self.UpdateContextFilter(category, not item.IsChecked())
+            # else: if item is disabled, then don't care about the change
+
+        for childItem in item.GetChildren():
+            self.__OnProjectChecked(childItem)
+    
+    def UpdateContextFilter(self, category, filterOut, checkDependencies=True):
         """ Update the context filter. """
         if filterOut and not self.context.HasFilter(category):
             self.context.AddFilter(category)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, False, self.__projectTreeDependencyCache)
         elif not filterOut and self.context.HasFilter(category):
             self.context.RemoveFilter(category)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
                 
+    def CheckUncheckDependentItems(self, category, selected, dependenciesCache):
+        if category in self.__projectTreeItems:
+            catTreeItem = self.__projectTreeItems[category]
+        else:
+            # Name not registered? Then probably the user clicked on a super-category => stop
+            return
+        catProject = catTreeItem.GetData()
+
+        assert isinstance(catProject, csnProject.GenericProject)
+
+        if selected:
+            # Project "catProject" recently selected: Select all projects it depends on
+            # Go through all projects that "catProjects" depends on
+            for depProject in catProject.dependenciesManager.GetProjects(_recursive=True, _onlyRequiredProjects=True, _cache = dependenciesCache):
+                # Get the category/-ies (~ "name") of depProject (can have several ones)
+                for depProjectCategory in depProject.categories:
+                    # Is there an item in the project-tree for this project?
+                    if depProjectCategory in self.__projectTreeItems:
+                        # Then select it
+                        item = self.__projectTreeItems[depProjectCategory]
+                        self.__projectTree.CheckItem(item, True)
+        else:
+            # Project "catProject" recently deselected: Deselect all projects that depend on it
+            # Check all projects in the project-tree, if they depend on it
+            for otherCategory, otherTreeItem in self.__projectTreeItems.items():
+                otherProject = otherTreeItem.GetData()
+                # Depends?
+                if catProject in otherProject.dependenciesManager.GetProjects(_recursive=True, _onlyRequiredProjects=True, _cache = dependenciesCache):
+                    # "project" depends on "catProject", so deselect it
+                    item = self.__projectTreeItems[otherCategory]
+                    self.__projectTree.CheckItem(item, False) # Uncheck it
+    
     def OnSelectCompiler(self, event):
         self.context.FindCompiler()
         # find visual studio if needed
