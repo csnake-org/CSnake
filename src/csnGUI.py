@@ -1473,8 +1473,9 @@ class CSnakeGUIApp(wx.App):
                         wx.TR_SINGLE)
             else:
                 self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
-                    agwStyle = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
-                        wx.TR_HIDE_ROOT | wx.TR_SINGLE | 
+                    style = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
+                        wx.TR_SINGLE, 
+                    agwStyle = wx.TR_HIDE_ROOT | 
                         ct.TR_AUTO_CHECK_CHILD | ct.TR_AUTO_CHECK_PARENT)
                 
             treeRoot = self.__projectTree.AddRoot('TreeRoot')
