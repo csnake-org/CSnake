@@ -302,7 +302,6 @@ class CSnakeGUIApp(wx.App):
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
         self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "_ContextData__buildFolder", isFilename = True)
-        self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "_ContextData__kdevelopProjectFolder", isFilename = True)
         self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "_ContextData__cmakePath", isFilename = True)
         self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "_ContextData__pythonPath", isFilename = True)
         self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "_ContextData__idePath", isFilename = True)
@@ -316,7 +315,6 @@ class CSnakeGUIApp(wx.App):
         
         self.binder.AddGrid("gridThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_ContextData__thirdPartySrcAndBuildFolders", isFilename = True)
 
-        self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
         self.noteBook.SetSelection(0)
         
@@ -327,7 +325,6 @@ class CSnakeGUIApp(wx.App):
         self.panelOptions = xrc.XRCCTRL(self.frame, "panelOptions")
 
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
@@ -1034,12 +1031,6 @@ class CSnakeGUIApp(wx.App):
     def GetBuildFolder(self):
         return self.context.GetBuildFolder()
         
-    def SetKDevelopProjectFolder(self, folder):
-        self.context.SetKdevelopProjectFolder(folder)
-        
-    def GetKDevelopProjectFolder(self):
-        return self.context.GetKdevelopProjectFolder()
-            
     def AddRootFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Add folder where CSnake files must be searched to context rootFolders.
@@ -1278,7 +1269,6 @@ class CSnakeGUIApp(wx.App):
         """ Refreshes the GUI based on the current context. Also saves the current context to the context filename """
         # refresh context
         self.binder.UpdateControls()
-        self.panelKDevelop.Show( self.context.GetCompiler() != None and self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.frame.Layout()
         self.frame.Update()
         wx.CallAfter(self.frame.Update)

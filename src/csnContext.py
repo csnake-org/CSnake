@@ -382,6 +382,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
 
     def __Read10(self, parser):
         """ Read context file version 1.0. """ 
@@ -419,6 +421,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
     def __Read20(self, parser):
         """ Read context file version 2.0. """ 
@@ -452,6 +456,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
     def __Read21(self, parser):
         """ Read options file version 2.1. """ 
@@ -466,7 +472,15 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
+    def __CheckKDevelopFolder(self):
+        """ Check kdevelop folder. Force default if it does not exist. """
+        if not os.path.exists(self.GetKdevelopProjectFolder()):
+            folder = "%s/%s/%s" % (self.GetBuildFolder(), "kdevelop", self.GetConfigurationName())
+            self.SetKdevelopProjectFolder(folder)
+    
     def __LoadBasicFields(self, parser, fields):
         """ Load a list of fields. """
         # section

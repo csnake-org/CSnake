@@ -66,12 +66,14 @@ class csnContextTests(unittest.TestCase):
         self.assertEqual( context.GetCsnakeFile(), "E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py" )
         self.assertEqual( context.GetIdePath(), "D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe" )
         self.assertEqual( context.GetCompilername(), "Visual Studio 9 2008 Win64" )
-        self.assertEqual( context.GetPrebuiltBinariesFolder(), "" )                  
+        self.assertEqual( context.GetPrebuiltBinariesFolder(), "E:/devel/bin/toolkit/prebuilt" )                  
         self.assertEqual( context.GetInstance(), "baseLib" )                  
         self.assertEqual( context.GetConfigurationName(), "DebugAndRelease" )                  
         self.assertEqual( context.GetCmakePath(), "C:/Program Files (x86)/CMake 2.8/bin/cmake.exe" )                  
         self.assertEqual( context.GetPythonPath(), "C:/Program Files (x86)/Python 2.6/python.exe" )                  
-        self.assertEqual( context.GetKdevelopProjectFolder(), "" )                  
+        # changed if the value of the context file does not correspond to a valid folder
+        self.assertEqual( context.GetKdevelopProjectFolder(), "E:/devel/bin/toolkit/clean/kdevelop/DebugAndRelease" )
+                   
         # [ThirdPartyBuildFolders]
         self.assertEqual( context.GetThirdPartyBuildFolders(), ["E:/devel/bin/toolkit/clean/thirdParty"] )
         # [RootFolders]

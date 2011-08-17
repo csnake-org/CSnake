@@ -196,36 +196,6 @@
                         </object>
                       </object>
                     </object>
-                    <object class="sizeritem">
-                      <object class="wxPanel" name="panelKDevelop">
-                        <style>wxTAB_TRAVERSAL</style>
-                        <object class="wxBoxSizer">
-                          <orient>wxHORIZONTAL</orient>
-                          <object class="sizeritem">
-                            <object class="wxStaticText" name="lblKDevelopProjectFolder">
-                              <size>120, -1</size>
-                              <label>KDevelop Project Folder</label>
-                            </object>
-                          </object>
-                          <object class="sizeritem">
-                            <option>1</option>
-                            <object class="wxTextCtrl" name="txtKDevelopProjectFolder">
-                              <bg>#ffffff</bg>
-                              <tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
-                              <value></value>
-                            </object>
-                          </object>
-                          <object class="sizeritem">
-                            <flag>wxEXPAND</flag>
-                            <object class="wxButton" name="btnSelectKDevelopProjectFolder">
-                              <label>...</label>
-                            </object>
-                          </object>
-                        </object>
-                      </object>
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>1</border>
-                    </object>
                   </object>
                   <flag>wxTOP|wxEXPAND</flag>
                   <border>10</border>
