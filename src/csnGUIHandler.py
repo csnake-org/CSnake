@@ -106,7 +106,7 @@ class Handler:
                                 csnContext.ContextData.GetCompilername,
                                 csnContext.ContextData.GetConfigurationName,
                                 csnContext.ContextData.GetCsnakeFile]
-		
+        
         if contextA is None or contextB is None:
             return True
         for function in functionsToCompare:
