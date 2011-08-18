@@ -11,7 +11,7 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
-v2.4.5
+v2.5.0beta
  * ...
 
 v2.4.4
