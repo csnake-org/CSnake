@@ -1143,6 +1143,11 @@ class CSnakeGUIApp(wx.App):
             for row in selection:
                 source = self.context.GetThirdPartyFolder(row)
                 build = self.context.GetThirdPartyBuildFolderByIndex(row)
+                # check situation
+                if not self.__CheckCSnakeFile() \
+                    or not self.__CheckThirdPartySrcFolder(source) \
+                    or not self.__CheckThirdPartyBuildFolder(build):
+                    return
                 # run the action
                 self.DoActions([self.ActionConfigureThirdPartyFolder], source, build, self.context.GetThirdPartyBuildFoldersComplete())
         
@@ -1705,58 +1710,80 @@ class CSnakeGUIApp(wx.App):
             # message
             message = "The CSnake file '%s' does not exist, please provide a valid one." % file
             self.Error(message)
+            # exit
             return False
         # all good
         return True
     
     def __CheckThirdPartyFolders(self):
-        """ Check that the third parties are valid. Raise exception if not. """
+        """ Check that the third parties are valid. """
         # Source folders: get them from context (or GUI?)
         tpSrcFolders = self.context.GetThirdPartyFolders()
-        # 1. should exist
-        # 2. should contain a CMakeLists.txt file
-        fileName = "CMakeLists.txt"
         index = 0 # order in list follows order in grid, would be safer to use grid elements
         for folder in tpSrcFolders:
-            if folder == None or not os.path.isdir(folder):
+            if not self.__CheckThirdPartySrcFolder(folder):
                 # focus
                 self.gridThirdPartySrcAndBuildFolders.SelectRow(index)
                 self.gridThirdPartySrcAndBuildFolders.SetFocus()
-                # message
-                message = "The third party source folder '%s' does not exist, please provide a valid one." % folder
-                self.Error(message)
-                return False
-            file = "%s/%s" % (folder, fileName)
-            if file == None or not os.path.isfile(file):
-                # focus
-                self.gridThirdPartySrcAndBuildFolders.SelectRow(index)
-                self.gridThirdPartySrcAndBuildFolders.SetFocus()
-                # message
-                message = "The third party source folder '%s' is not a valid one, it should contain a CMakeLists.txt file." % folder
-                self.Error(message)
+                # exit
                 return False
             # increment
             index += 1
         
         # Build folders: get them from context (or GUI?)
         tbBuildFolders = self.context.GetThirdPartyBuildFolders()
-        # 1. should exist
         index = 0 # order in list follows order in grid, would be safer to use grid elements
         for folder in tbBuildFolders:
-            if not os.path.exists(folder):
+            if not self.__CheckThirdPartyBuildFolder(folder):
                 # focus
                 self.gridThirdPartySrcAndBuildFolders.SelectRow(index)
                 self.gridThirdPartySrcAndBuildFolders.SetGridCursor(index, 1)
                 self.gridThirdPartySrcAndBuildFolders.SetFocus()
-                # message
-                message = "The third party build folder '%s' does not exist, do you want to create it?" % folder 
-                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
-                if dlg.ShowModal() == wx.ID_YES:
-                    os.mkdir(folder)
-                else:
-                    return False
+                # exit
+                return False
             # increment
             index += 1
+        
+        # all good
+        return True
+
+    def __CheckThirdPartySrcFolder(self, folder):
+        """ Check that the third party source folder is valid. """
+        # Source folder:
+        # 1. should exist
+        if folder == None or not os.path.isdir(folder):
+            # message
+            message = "The third party source folder '%s' does not exist, please provide a valid one." % folder
+            self.Error(message)
+            # exit
+            return False
+        # 2. should contain a CMakeLists.txt file
+        fileName = "CMakeLists.txt"
+        file = "%s/%s" % (folder, fileName)
+        if file == None or not os.path.isfile(file):
+            # message
+            message = "The third party source folder '%s' is not a valid one, it should contain a CMakeLists.txt file." % folder
+            self.Error(message)
+            # exit
+            return False
+
+        # all good
+        return True
+        
+    def __CheckThirdPartyBuildFolder(self, folder):
+        """ Check that the third party build folder is valid. """
+        # Build folders:
+        # 1. should exist
+        if not os.path.exists(folder):
+            # message
+            message = "The third party build folder '%s' does not exist, do you want to create it?" % folder 
+            # offer to create the folder
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+            if dlg.ShowModal() == wx.ID_YES:
+                os.mkdir(folder)
+            else:
+                # exit
+                return False
         
         # all good
         return True
