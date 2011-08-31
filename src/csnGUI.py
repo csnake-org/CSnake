@@ -1673,7 +1673,8 @@ class CSnakeGUIApp(wx.App):
             message = "The build folder '%s' does not exist, do you want to create it?" % folder
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
-                os.mkdir(folder)
+                # also create intermediary folders
+                os.makedirs(folder)
             else:
                 return False
         # all good
@@ -1780,7 +1781,8 @@ class CSnakeGUIApp(wx.App):
             # offer to create the folder
             dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_YES:
-                os.mkdir(folder)
+                # also create intermediary folders
+                os.makedirs(folder)
             else:
                 # exit
                 return False
