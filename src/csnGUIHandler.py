@@ -129,7 +129,7 @@ class Handler:
         dumpFile.close()
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
 
-    def ConfigureProjectToBuildFolder(self, _alsoRunCMake):
+    def ConfigureProjectToBuildFolder(self, _alsoRunCMake, _askUser = None):
         """ 
         Configures the project to the build folder.
         """
@@ -148,9 +148,12 @@ class Handler:
             
             if self.__ConfigureProject(argList, instance.GetBuildFolder(), nProjects):
                 self.generator.PostProcess(instance)
-                return True
             else:
                 return False
+        
+        for project in instance.dependenciesManager.GetProjects(_recursive = True) + [instance]:
+            for task in project.GetPostCMakeTasks():
+                task(project, _askUser)
         
         return True
             
@@ -271,35 +274,6 @@ class Handler:
         rollbackHandler.TearDown()
         return result
         
-    def GetListOfSpuriousPluginDlls(self, _reuseInstance = False):
-        """
-        Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration.
-        """
-        result = []
-        instance = self.cachedProjectInstance
-        if not _reuseInstance:
-            instance = self.__GetProjectInstance()
-        if not instance.name.lower() == "gimias":
-            return result
-    
-        configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
-        for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (self.context.GetBuildFolder(), configuration)
-
-            for pluginFolder in glob.glob( pluginsFolder ):
-                pluginName = os.path.basename(pluginFolder)
-                if not os.path.isdir(pluginFolder) or pluginName.lower() in configuredPluginNames:
-                    continue
-                    
-                searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
-                if os.path.exists( searchPath ):
-                    result.append( searchPath )
-                searchPath = string.Template("$folder/lib/$config/lib$name.so").substitute(folder = pluginFolder, config = configuration, name = pluginName )
-                if os.path.exists( searchPath ):
-                    result.append( searchPath )
-                    
-        return result
-
     def IsContextModified(self):
         return self.contextModified
         
