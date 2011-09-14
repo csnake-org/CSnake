@@ -10,6 +10,8 @@ import inspect
 import os.path
 import types
 import new
+from csnUtility import MakeValidIdentifier
+import re
 
 globalCurrentContext = None
 
@@ -232,6 +234,45 @@ class GenericProject(object):
     def AddPostCMakeTasks(self, tasks):
         for task in tasks:
             self.__postCMakeTasks.append(task)
+            
+    def CreateHeader(self, _filename = None, _variables = None, _variablePrefix = None):
+        """ 
+        Creates a header file with input vars for the given project.
+    
+        @param project The calling project.
+        @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
+        @param variables Dictionary of variable/value pairs.  
+        """
+        projectNameClean = re.sub(r"[^A-Za-z0-9]", "_", self.name)
+        if not _filename: 
+            _filename = "%s.h" % projectNameClean
+        path = "%s/%s" % (self.GetBuildFolder(), _filename)
+        headerFile = open(path, 'w')
+        
+        # header
+        guard = MakeValidIdentifier(_identifier = _filename, _toUpper = True)
+        headerFile.write("#ifndef %s\n" % guard)
+        headerFile.write("#define %s\n" % guard)
+        headerFile.write("\n")
+        headerFile.write("// Automatically generated file, do not edit.\n")
+        headerFile.write("\n")
+        
+        # default variables
+        if not _variablePrefix:
+            _variablePrefix = MakeValidIdentifier(_identifier = self.name, _toUpper = True)
+        headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (_variablePrefix, self.GetSourceRootFolder()))
+        headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (_variablePrefix, self.GetBuildFolder()))
+        
+        # input variables
+        if _variables:
+            headerFile.write("\n")
+            for (key, value) in _variables:
+                headerFile.write("#define %s \"%s\"\n" % (key, value))
+        
+        headerFile.write("\n")
+        headerFile.write("#endif // %s\n" % guard)
+        headerFile.close()
+
 
 def SetCMakeInsertBeforeTarget(self, _file):
     # Empty function
