@@ -26,17 +26,17 @@ class Version:
     
     __hash__ = None
     
-    def __init__(self, versionString = None, versionArray = None):
-        if versionString:
-            if versionArray:
-                raise exceptions.Exception("You cannot pass the version number as both a string and an array!")
-            else:
-                self.__GetVersionFromString(versionString)
+    def __init__(self, version):
+        """ Input version is either 
+            - a string (ex:"1.22.3"),
+            - an array of strings (ex:["1", "22", "3"]).
+            - an array of ints (ex:[1, 22, 3]). """
+        if isinstance(version, str):
+            self.__GetVersionFromString(version)
+        elif isinstance(version, list):
+            self.__GetVersionFromArray(version)
         else:
-            if versionArray:
-                self.__GetVersionFromArray(versionArray)
-            else:
-                raise exceptions.Exception("You have to pass the version number in one format!")
+            raise AssertionError("The input version is neither a string or an array.")
         assert self.__versionModifier in Version.versionModifierValue
         
     def __GetVersionFromArray(self, versionArray):

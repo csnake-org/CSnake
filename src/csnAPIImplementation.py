@@ -9,6 +9,7 @@ import csnProject
 
 import copy
 import re
+from csnVersion import Version
 
 
 # *********************************************************************************************************************
@@ -149,8 +150,28 @@ class _APIProject_Base:
 
 class _APIProject_2_4_5(_APIProject_Base):
     
-    def __init__(self, versionArray):
-        _APIProject_Base.__init__(self, versionArray)
+    def __init__(self, version):
+        _APIProject_Base.__init__(self, version)
+
+#############
+#  Version  #
+#############
+
+class _APIVersion_Base:
+    
+    def __init__(self, version):
+        self.__version = version
+        
+    def GetString(self, numDecimals):
+        return self.__version.GetString(numDecimals) 
+    
+    def __cmp__(self, other):
+        return self.__version.__cmp__(other.__version)
+
+class _APIVersion_2_4_5(_APIVersion_Base):
+    
+    def __init__(self, version):
+        _APIVersion_Base.__init__(self, version)
 
 #############
 #    API    #
@@ -158,9 +179,10 @@ class _APIProject_2_4_5(_APIProject_Base):
 
 class _API_Base:
     
-    def __init__(self, versionArray):
-        self.__version = versionArray
-        self.__projectConstructor = _FindAPIProjectConstructor(versionArray)
+    def __init__(self, version):
+        self.__version = version
+        self.__projectConstructor = _FindAPIProjectConstructor(version)
+        self.__versionConstructor = _FindAPIVersionConstructor(version)
     
     def CreateProject(self, _name, _type, someMoreParameters):
         project = None
@@ -168,11 +190,14 @@ class _API_Base:
         self.__projectConstructor(project)
         return 
     
+    def CreateVersion(self, version):
+        return self.__versionConstructor(Version(version))
+    
     def GetCSnakeVersion(self):
         return copy.copy(_currentCSnakeVersion)
     
     def GetChosenAPIVersion(self):
-        return copy.copy(__version)
+        return copy.copy(self.__version)
     
     def LoadThirdPartyModule(self):
         # TODO
@@ -185,43 +210,59 @@ class _API_Base:
 
 class _API_2_4_5(_API_Base):
     
-    def __init__(self, versionArray):
-        _API_Base.__init__(self, versionArray)
+    def __init__(self, version):
+        _API_Base.__init__(self, version)
 
 
 #############
 # Versions  #
 #############
 
-_currentCSnakeVersion = map(int, re.match('([0-9\\.]+)(.*)', csnGenerator.version).group(1).split("."))
+_currentCSnakeVersion = Version(csnGenerator.version)
 
 
 # Maintain a cache of APIs, so there's no need to instantiate the class over and over again
 _apiRegister = dict()
 
-def FindAPI(versionArray):
-    if not versionArray in _apiRegister:
-        if versionArray > _currentCSnakeVersion:
+def FindAPI(version):
+    version = Version(version)
+    if not version in _apiRegister:
+        if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif versionArray >= [2, 4, 5]:
-            _apiRegister[versionArray] = _API_2_4_5(versionArray)
+        elif version >= Version([2, 4, 5]):
+            _apiRegister[version] = _API_2_4_5(version)
         else:
             # there was no API before this
             raise APIError("Unknown API version")
-    return _apiRegister[versionArray]
+    return _apiRegister[version]
 
-
-# Maintain a cache of constructors
+# Maintain a cache of project constructors
 _apiProjectConstructorRegister = dict()
 
-def _FindAPIProjectConstructor(versionArray):
-    if not versionArray in _apiProjectConstructorRegister:
-        if versionArray > _currentCSnakeVersion:
+def _FindAPIProjectConstructor(version):
+    version = Version(version)
+    if not version in _apiProjectConstructorRegister:
+        if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif versionArray >= [2, 4, 5]:
-            _apiProjectConstructorRegister[versionArray] = _APIProject_2_4_5
+        elif version >= Version([2, 4, 5]):
+            _apiProjectConstructorRegister[version] = _APIProject_2_4_5
         else:
             # there was no API before this
             raise APIError("Unknown API version")
-    return _apiProjectConstructorRegister[versionArray]
+    return _apiProjectConstructorRegister[version]
+
+# Maintain a cache of version constructors
+_apiVersionConstructorRegister = dict()
+
+def _FindAPIVersionConstructor(version):
+    version = Version(version)
+    if not version in _apiVersionConstructorRegister:
+        if version > _currentCSnakeVersion:
+            raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 4, 5]):
+            _apiVersionConstructorRegister[version] = _APIVersion_2_4_5
+        else:
+            # there was no API before this
+            raise APIError("Unknown API version")
+    return _apiVersionConstructorRegister[version]
 
