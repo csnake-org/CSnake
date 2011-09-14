@@ -6,36 +6,36 @@
     <title>CSnake GUI</title>
     <object class="wxMenuBar" name="frmCSnakeGUI_menubar">
       <object class="wxMenu" name="m_menuFile">
-        <label>File</label>
+        <label>&amp;File</label>
         <object class="wxMenuItem" name="mnuContextNew">
-          <label>New\tCTRL-N</label>
+          <label>&amp;New\tCTRL-N</label>
           <help></help>
         </object>
         <object class="wxMenuItem" name="mnuContextOpen">
-          <label>Open...\tCTRL-O</label>
+          <label>&amp;Open...\tCTRL-O</label>
           <help></help>
         </object>
         <object class="wxMenuItem" name="mnuContextSave">
-          <label>Save\tCTRL-S</label>
+          <label>&amp;Save\tCTRL-S</label>
           <help></help>
         </object>
         <object class="wxMenuItem" name="mnuContextSaveAs">
-          <label>Save As...</label>
+          <label>Save &amp;As...</label>
           <help></help>
         </object>
         <object class="wxMenuItem" name="mnuExit">
-          <label>Exit\tCTRL-Q</label>
+          <label>&amp;Exit\tCTRL-Q</label>
           <help></help>
         </object>
       </object>
       <object class="wxMenu" name="m_menuHelp">
-        <label>Help</label>
+        <label>&amp;Help</label>
         <object class="wxMenuItem" name="mnuHelp">
-          <label>Help</label>
+          <label>&amp;Help</label>
           <help></help>
         </object>
         <object class="wxMenuItem" name="mnuAbout">
-          <label>About</label>
+          <label>&amp;About</label>
           <help></help>
         </object>
       </object>
@@ -195,36 +195,6 @@
                           </object>
                         </object>
                       </object>
-                    </object>
-                    <object class="sizeritem">
-                      <object class="wxPanel" name="panelKDevelop">
-                        <style>wxTAB_TRAVERSAL</style>
-                        <object class="wxBoxSizer">
-                          <orient>wxHORIZONTAL</orient>
-                          <object class="sizeritem">
-                            <object class="wxStaticText" name="lblKDevelopProjectFolder">
-                              <size>120, -1</size>
-                              <label>KDevelop Project Folder</label>
-                            </object>
-                          </object>
-                          <object class="sizeritem">
-                            <option>1</option>
-                            <object class="wxTextCtrl" name="txtKDevelopProjectFolder">
-                              <bg>#ffffff</bg>
-                              <tooltip>This is the location where CSnake will generate the &quot;make files&quot;.</tooltip>
-                              <value></value>
-                            </object>
-                          </object>
-                          <object class="sizeritem">
-                            <flag>wxEXPAND</flag>
-                            <object class="wxButton" name="btnSelectKDevelopProjectFolder">
-                              <label>...</label>
-                            </object>
-                          </object>
-                        </object>
-                      </object>
-                      <flag>wxALL|wxEXPAND</flag>
-                      <border>1</border>
                     </object>
                   </object>
                   <flag>wxTOP|wxEXPAND</flag>

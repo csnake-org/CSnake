@@ -15,6 +15,7 @@ import subprocess
 import sys
 from csnListener import ChangeListener, ProgressEvent, ProgressListener
 import logging
+import copy
 
 class RootNotFound(IOError):
     pass
@@ -59,7 +60,9 @@ class Handler:
         self.progressListener = ProgressListener(self)
         self.generator.AddListener(self.progressListener)
         # contains the last result of calling __GetProjectInstance
-        self.cachedProjectInstance = None
+        self.cachedProjectModule = None
+        self.cachedProjectInstance = dict()
+        self.cachedProjectInstanceContext = None
         # logger
         self.__logger = logging.getLogger("CSnake")
         # change flags
@@ -94,30 +97,59 @@ class Handler:
         
     def IsCanceled(self):
         return self.__userCanceled
-   
-    def __GetProjectInstance(self):
+    
+    def __CheckReloadChanges(self, contextA, contextB):
+        """Have there been done changes to the context that justify reloading the .py files?"""
+        # changes that justify reload: src, TP-src, Compiler, Compile-Mode, csn-file
+        functionsToCompare = [csnContext.ContextData.GetRootFolders,
+                                csnContext.ContextData.GetThirdPartySrcFolders,
+                                csnContext.ContextData.GetCompilername,
+                                csnContext.ContextData.GetConfigurationName,
+                                csnContext.ContextData.GetCsnakeFile]
+        
+        if contextA is None or contextB is None:
+            return True
+        for function in functionsToCompare:
+            if function(contextA) != function(contextB):
+                return True
+        return False
+    
+    def __GetProjectModule(self, _forceReload = True):
+        reloadFiles = _forceReload or self.__CheckReloadChanges(self.cachedProjectInstanceContext, self.context.GetData())
+        
+        if reloadFiles or self.cachedProjectModule is None:
+            # reset cached stuff
+            self.cachedProjectInstanceContext = copy.deepcopy(self.context.GetData())
+            self.cachedProjectInstance = dict()
+            self.DeletePycFiles()
+            
+            # set up roll back of imported modules
+            rollbackHandler = RollbackHandler()
+            rollbackHandler.SetUp(self.context.GetCsnakeFile(), self.context.GetRootFolders(), self.context.GetThirdPartyFolders())
+            (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
+            (name, _) = os.path.splitext(name)
+            
+            try:
+                self.cachedProjectModule = csnUtility.LoadModule(projectFolder, name)
+            finally:
+                # undo additions to the python path
+                rollbackHandler.TearDown()
+            
+            self.UpdateRecentlyUsedCSnakeFiles()
+        return self.cachedProjectModule
+    
+    def __GetProjectInstance(self, _forceReload = False):
         """ Instantiates and returns the _instance in _projectPath. """
-        self.DeletePycFiles()
+        instanceName = self.context.GetInstance()
         
-        # set up roll back of imported modules
-        rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.GetCsnakeFile(), self.context.GetRootFolders(), self.context.GetThirdPartyFolders())
-        (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
-        (name, _) = os.path.splitext(name)
+        if not instanceName in self.cachedProjectInstance:
+            projectModule = self.__GetProjectModule(_forceReload = _forceReload)
+            exec "self.cachedProjectInstance[instanceName] = csnProject.ToProject(projectModule.%s)" % instanceName
+            relocator = csnPrebuilt.ProjectRelocator()
+            relocator.Do(self.cachedProjectInstance[instanceName], self.context.GetPrebuiltBinariesFolder())
+            self.UpdateRecentlyUsedCSnakeFiles()
         
-        try:
-            projectModule = csnUtility.LoadModule(projectFolder, name)
-            projectModule # prevent warning
-            exec "self.cachedProjectInstance = csnProject.ToProject(projectModule.%s)" % self.context.GetInstance()
-        finally:
-            # undo additions to the python path
-            rollbackHandler.TearDown()
-
-        relocator = csnPrebuilt.ProjectRelocator()
-        relocator.Do(self.cachedProjectInstance, self.context.GetPrebuiltBinariesFolder())
-        self.UpdateRecentlyUsedCSnakeFiles()
-        
-        return self.cachedProjectInstance
+        return self.cachedProjectInstance[instanceName]
 
     def WriteDumpFileAndProjectStructureToBuildFolder(self, instance):
         """
@@ -250,19 +282,15 @@ class Handler:
         Returns a list of possible targets which are defined in CSnake file _projectPath.
         """
         self.__ResetCancel()
-        self.DeletePycFiles()
                 
-        rollbackHandler = RollbackHandler()
-        rollbackHandler.SetUp(self.context.GetCsnakeFile(), self.context.GetRootFolders(), self.context.GetThirdPartyFolders())
-        result = []
-
+        # load module - technically _forceReload is not necessary here, it is just set to maintain the current user experience (the
+        # user expect a reload when he clicks on the "update" button - we should give him an extra button to do so in the future)
+        projectModule = self.__GetProjectModule(_forceReload = True)
         # find csnake targets in the loaded module
-        (projectFolder, name) = os.path.split(self.context.GetCsnakeFile())
-        (name, _) = os.path.splitext(name)
-        projectModule = csnUtility.LoadModule(projectFolder, name)   
         members = inspect.getmembers(projectModule)
         nMembers = len(members)
         count = 0
+        result = []
         for member in members:
             self.__NotifyListeners(ProgressEvent(self, count*100/nMembers))
             if self.IsCanceled(): return result
@@ -271,16 +299,13 @@ class Handler:
             if isinstance(target, csnProject.GenericProject):
                 result.append(targetName)
         
-        rollbackHandler.TearDown()
         return result
         
     def IsContextModified(self):
         return self.contextModified
         
     def GetTargetSolutionPath(self):
-        instance = self.cachedProjectInstance
-        if not instance or self.IsContextModified():
-            instance = self.__GetProjectInstance()
+        instance = self.__GetProjectInstance()
         path = ""
         if instance:
             path = "%s/%s.sln" % (instance.GetBuildFolder(), instance.name)
@@ -296,15 +321,19 @@ class Handler:
         self.context.AddRecentlyUsed(self.context.GetInstance(), self.context.GetCsnakeFile())
 
     def GetCategories(self, _forceRefresh = False):
-        instance = self.cachedProjectInstance
-        if _forceRefresh or self.IsContextModified() or instance == None:
-            instance = self.__GetProjectInstance()
-        categories = list()
-        for project in instance.GetProjects(_recursive = True):
+        instance = self.__GetProjectInstance(_forceRefresh)
+        categories = dict()
+        for project in instance.GetProjects(_recursive=True, _filter=False, _onlyRequiredProjects=False, _includeSelf=True):
             for cat in project.categories:
                 if not cat in categories:
-                    categories.append(cat)
+                    categories[cat] = project
         return categories
+    
+    def GetProjectDependencies(self):
+        return self.__GetProjectInstance().GetProjects(_recursive=True, _onlyRequiredProjects=True)
+    
+    def GetInstanceCategories(self):
+        return self.__GetProjectInstance().categories
                     
     def FindAdditionalRootFolders(self):
         ''' Look for folders with the rootFolder.csnake file. '''

@@ -11,8 +11,9 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
-v2.4.5
- * ...
+v2.5.0beta
+ * Instead of '*.compileManager.generateWin32Header = False' use '*.SetGenerateWin32Header(False)'
+
 
 v2.4.4
  * Add support for cmake 2.8.5

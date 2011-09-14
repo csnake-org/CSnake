@@ -7,12 +7,12 @@ installfolder = E:/devel/bin/toolkit/clean/install
 filter = BaseLibVTKTests;CILabMacrosTests;RegLibTests
 testrunnertemplate = normalRunner.tpl
 csnakefile = E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py
-prebuiltbinariesfolder = 
+prebuiltbinariesfolder = E:/devel/bin/toolkit/prebuilt
 instance = baseLib
 thirdpartyrootfolder = E:/devel/src/toolkit/clean/thirdParty
 thirdpartybuildfolder = E:/devel/bin/toolkit/clean/thirdParty
 binfolder = E:/devel/bin/toolkit/clean
-kdevelopprojectfolder = 
+kdevelopprojectfolder = E:/devel/bin/toolkit/kdevelop
 version = 1.0
 
 [RootFolders]

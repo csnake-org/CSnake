@@ -8,6 +8,7 @@ from wx import xrc
 import csnGUIHandler
 import csnGUIOptions
 import csnContext
+import csnProject
 from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
@@ -322,7 +323,6 @@ class CSnakeGUIApp(wx.App):
         
         self.textLog = xrc.XRCCTRL(self.frame, "textLog")
         self.binder.AddTextControl("txtBuildFolder", buddyClass = "context", buddyField = "_ContextData__buildFolder", isFilename = True)
-        self.binder.AddTextControl("txtKDevelopProjectFolder", buddyClass = "context", buddyField = "_ContextData__kdevelopProjectFolder", isFilename = True)
         self.binder.AddTextControl("txtCMakePath", buddyClass = "context", buddyField = "_ContextData__cmakePath", isFilename = True)
         self.binder.AddTextControl("txtPythonPath", buddyClass = "context", buddyField = "_ContextData__pythonPath", isFilename = True)
         self.binder.AddTextControl("txtVisualStudioPath", buddyClass = "context", buddyField = "_ContextData__idePath", isFilename = True)
@@ -336,7 +336,6 @@ class CSnakeGUIApp(wx.App):
         
         self.binder.AddGrid("gridThirdPartySrcAndBuildFolders", buddyClass = "context", buddyField = "_ContextData__thirdPartySrcAndBuildFolders", isFilename = True)
 
-        self.panelKDevelop = xrc.XRCCTRL(self.frame, "panelKDevelop")
         self.noteBook = xrc.XRCCTRL(self.frame, "noteBook")
         self.noteBook.SetSelection(0)
         
@@ -347,7 +346,6 @@ class CSnakeGUIApp(wx.App):
         self.panelOptions = xrc.XRCCTRL(self.frame, "panelOptions")
 
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select Binary Folder", self.GetBuildFolder, self.SetBuildFolder, self), id=xrc.XRCID("btnSelectBuildFolder"))
-        self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Select folder for saving the KDevelop project file", self.GetKDevelopProjectFolder, self.SetKDevelopProjectFolder, self), id=xrc.XRCID("btnSelectKDevelopProjectFolder"))
         self.frame.Bind(wx.EVT_BUTTON, SelectFolderCallback("Add root folder", self.GetLastRootFolder, self.AddRootFolder, self), id=xrc.XRCID("btnAddRootFolder"))
 
         self.frame.Bind(wx.EVT_BUTTON, self.OnDetectRootFolders, id=xrc.XRCID("btnDetectRootFolders"))
@@ -810,13 +808,13 @@ class CSnakeGUIApp(wx.App):
             self.Error("Sorry, CSnakeGUI could not save the options to %s\n. Please check if another program is locking this file.\n" % self.optionsFilename)
     
     def OnDetectRootFolders(self, event):
-        if self.context.GetCsnakeFile() != None and os.path.isfile(self.context.GetCsnakeFile()):
-            additionalRootFolders = self.__guiHandler.FindAdditionalRootFolders()
-            self.context.ExtendRootFolders(additionalRootFolders)
-            self.UpdateGUI()
-        else:
-            message = "Please provide a valid CSnake file."
-            self.__Warn(message)
+        # check situation
+        if not self.__CheckCSnakeFile():
+            return
+        # detect
+        additionalRootFolders = self.__guiHandler.FindAdditionalRootFolders()
+        self.context.ExtendRootFolders(additionalRootFolders)
+        self.UpdateGUI()
     
     def FindAdditionalRootFolders(self, onlyForNewInstance=False):
         if onlyForNewInstance and self.context.IsCSnakeFileInRecentlyUsed():
@@ -836,6 +834,13 @@ class CSnakeGUIApp(wx.App):
                 self.UpdateGUI()
             
     def OnConfigureALL(self, event):
+        # check situation
+        if not self.__CheckCSnakeFile() \
+            or not self.__CheckThirdPartyFolders() \
+            or not self.__CheckRootFolders() \
+            or not self.__CheckBuildFolder():
+            return
+        # run the actions
         self.__runningConfigureAll = True
         actions = [
            self.ActionConfigureThirdPartyFolders,
@@ -848,9 +853,7 @@ class CSnakeGUIApp(wx.App):
         
     def OnUpdateListOfTargets(self, event): # wxGlade: CSnakeGUIFrame.<event_handler>
         # check situation
-        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
-            message = "Please provide a valid CSnake file."
-            self.__Warn(message)
+        if not self.__CheckCSnakeFile():
             return
         # run the action
         if self.DoActions([self.ActionUpdateListOfTargets]):
@@ -859,9 +862,9 @@ class CSnakeGUIApp(wx.App):
 
     def OnCreateCMakeFilesAndRunCMake(self, event):
         # check situation
-        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
-            message = "Please provide a valid CSnake file."
-            self.__Warn(message)
+        if not self.__CheckCSnakeFile() \
+            or not self.__CheckRootFolders() \
+            or not self.__CheckBuildFolder():
             return
         # run the action
         if self.DoActions([self.ActionCreateCMakeFilesAndRunCMake]):
@@ -870,9 +873,7 @@ class CSnakeGUIApp(wx.App):
         
     def OnConfigureThirdPartyFolder(self, event):
         # check situation
-        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
-            message = "Please provide a valid CSnake file."
-            self.__Warn(message)
+        if not self.__CheckCSnakeFile() or not self.__CheckThirdPartyFolders():
             return
         # run the action
         if self.DoActions([self.ActionConfigureThirdPartyFolders]):
@@ -881,9 +882,9 @@ class CSnakeGUIApp(wx.App):
         
     def OnInstallFilesToBuildFolder(self, event):
         # check situation
-        if self.context.GetCsnakeFile() == None or not os.path.isfile(self.context.GetCsnakeFile()):
-            message = "Please provide a valid CSnake file."
-            self.__Warn(message)
+        if not self.__CheckCSnakeFile() \
+            or not self.__CheckRootFolders() \
+            or not self.__CheckBuildFolder():
             return
         # run the action
         if self.DoActions([self.ActionInstallFilesToBuildFolder]):
@@ -1048,12 +1049,6 @@ class CSnakeGUIApp(wx.App):
     def GetBuildFolder(self):
         return self.context.GetBuildFolder()
         
-    def SetKDevelopProjectFolder(self, folder):
-        self.context.SetKdevelopProjectFolder(folder)
-        
-    def GetKDevelopProjectFolder(self):
-        return self.context.GetKdevelopProjectFolder()
-            
     def AddRootFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Add folder where CSnake files must be searched to context rootFolders.
@@ -1163,6 +1158,11 @@ class CSnakeGUIApp(wx.App):
             for row in selection:
                 source = self.context.GetThirdPartyFolder(row)
                 build = self.context.GetThirdPartyBuildFolderByIndex(row)
+                # check situation
+                if not self.__CheckCSnakeFile() \
+                    or not self.__CheckThirdPartySrcFolder(source) \
+                    or not self.__CheckThirdPartyBuildFolder(build):
+                    return
                 # run the action
                 self.DoActions([self.ActionConfigureThirdPartyFolder], source, build, self.context.GetThirdPartyBuildFoldersComplete())
         
@@ -1292,7 +1292,6 @@ class CSnakeGUIApp(wx.App):
         """ Refreshes the GUI based on the current context. Also saves the current context to the context filename """
         # refresh context
         self.binder.UpdateControls()
-        self.panelKDevelop.Show( self.context.GetCompiler() != None and self.context.GetCompiler().GetName() in ("KDevelop3") )
         self.frame.Layout()
         self.frame.Update()
         wx.CallAfter(self.frame.Update)
@@ -1444,42 +1443,34 @@ class CSnakeGUIApp(wx.App):
             self.context.SetIdePath(dlg.GetPath())
             self.UpdateGUI()
 
-    def __GetCategories(self,forceRefresh):
-        # empty the filter to get the full list
-        previousFilter = self.context.GetFilter()
-        self.context.SetFilter(list())
+    def __GetCategories(self,forceRefresh = False):
         try:
             categories = self.__guiHandler.GetCategories(forceRefresh)
         except Exception, error:
-            # restore saved filter
-            self.context.SetFilter(previousFilter)
             # show error message
             message = "Could not load project dependencies."
             message = message + "\nPlease check the fields 'CSnake File' and/or 'Instance'"
             message = message + ("\nMessage: '%s'" % error)
             raise RuntimeError(message)
-        # restore saved filter
-        self.context.SetFilter(previousFilter)
-        # return
         return categories
     
     def ActionSelectProjects(self, args):
         # do not go further if there is no csnake file or instance
-        if not self.context.GetCsnakeFile() or not self.context.GetInstance():
+        if not self.__CheckCSnakeFile() or not self.context.GetInstance():
             return
         
         # get list of ALL the categories on which the user can filter
         self.SetStatus("Retrieving projects...")
         
-        forceRefresh = self.DoProjectNeedUpdate()
-        
-        if not self.__projectTreeIsDrawn or forceRefresh:
+        if not self.__projectTreeIsDrawn or self.DoProjectNeedUpdate():
             # get the categories
-            categories = self.__GetCategories(forceRefresh)
+            categories = self.__GetCategories(forceRefresh = False)
             # create/clean the panel
             self.panelSelectProjects.GetSizer().Clear()
             if self.__projectTree:
                 self.__projectTree.Destroy()
+            self.__projectTreeItems = dict()
+            self.__projectTreeDependencyCache = dict()
             
             # create tree
             wxVersion = [int(number) for number in wx.__version__.split('.')]
@@ -1489,11 +1480,19 @@ class CSnakeGUIApp(wx.App):
                         wx.TR_SINGLE)
             else:
                 self.__projectTree = ct.CustomTreeCtrl(self.panelSelectProjects,
-                    agwStyle = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
-                        wx.TR_HIDE_ROOT | wx.TR_SINGLE | 
+                    style = wx.TR_HAS_BUTTONS | wx.TR_HAS_VARIABLE_ROW_HEIGHT | 
+                        wx.TR_SINGLE, 
+                    agwStyle = wx.TR_HIDE_ROOT | 
                         ct.TR_AUTO_CHECK_CHILD | ct.TR_AUTO_CHECK_PARENT)
                 
             treeRoot = self.__projectTree.AddRoot('TreeRoot')
+            
+            dependencies = self.__guiHandler.GetProjectDependencies()
+            mainProjectCategories = self.__guiHandler.GetInstanceCategories()
+            if mainProjectCategories:
+                mainProjectName = mainProjectCategories[0]
+            else:
+                mainProjectName = self.context.GetInstance()
             
             # loop through super categories
             for super in self.context.GetSubCategoriesOf().keys():
@@ -1503,31 +1502,37 @@ class CSnakeGUIApp(wx.App):
                 for sub in self.context.GetSubCategoriesOf()[super]:
                     checkSuperItem = checkSuperItem and (not sub in self.context.GetFilter())
                 superItem.Check(checkSuperItem)
-                # if super, add child's
-                for category in sorted(categories):
+                # if super, add children
+                for category, project in categories.items():
                     if category in self.context.GetSubCategoriesOf()[super]:
-                        item = self.__projectTree.AppendItem(superItem, category, ct_type=1)
-                        item.Check( not category in self.context.GetFilter() )
+                        self.__CreateProjectTreeItem(superItem, category, project, dependencies, mainProjectName, mainProjectCategories)
             
             # warn if differences between arrays
             for super in self.context.GetSubCategoriesOf().keys():
                 for category in self.context.GetSubCategoriesOf()[super]:
-                    if category not in sorted(categories):
+                    if category not in categories:
                         self.__logger.warn("%s in context but not in project." % category)
 
             # warn if differences between arrays
-            for category in sorted(categories):
+            for category, project in categories.items():
                 contains = False
                 for super in self.context.GetSubCategoriesOf().keys():
                     if category in self.context.GetSubCategoriesOf()[super]:
                         contains = True
                 if not contains:
                     self.__logger.warn("%s in project but not in context." % category)
-                    item = self.__projectTree.AppendItem(treeRoot, category, ct_type=1)
-                    item.Check( not category in self.context.GetFilter() )
-
-            # react when an item is checked
+                    self.__CreateProjectTreeItem(treeRoot, category, project, dependencies, mainProjectName, mainProjectCategories)
+            
+            # react when an item is checked (to update the filter and check dependencies)
+            # Note: This has to be done *before* the dependency check, it relies on it.
             self.panelSelectProjects.Bind(ct.EVT_TREE_ITEM_CHECKED, self.OnProjectChecked)
+            
+            # make sure all dependencies are met at the beginning
+            for category, project in categories.items():
+                # For all active projects
+                if not category in self.context.GetFilter():
+                    # Activate all dependent projects
+                    self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
             
             # display
             self.__projectTree.ExpandAll()
@@ -1542,27 +1547,87 @@ class CSnakeGUIApp(wx.App):
             
         self.SetStatus("")
         return True
+    
+    def __CreateProjectTreeItem(self, superItem, category, project, dependencies, mainProjectName, mainProjectCategories):
+        item = self.__projectTree.AppendItem(superItem, category, ct_type = 1, data = project)
+        if mainProjectCategories and category in mainProjectCategories:
+            # select and grey out the main project
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (main project)" % category)
+            item.SetBold(True)
+        elif project in dependencies:
+            # select and grey out all dependencies of the main project (deselecting them wouldn't have any effect anyway)
+            item.Enable(False)
+            item.Check(True)
+            self.UpdateContextFilter(category=category, filterOut=False, checkDependencies=False)
+            item.SetText("%s (dependency of %s)" % (category, mainProjectName))
+        else:
+            item.Check( not category in self.context.GetFilter() )
+        self.__projectTreeItems[category] = item
+
         
     def OnProjectChecked(self, event):
         """ Respond to checking a category. """
-        # get input
-        item = event.GetItem()
-        name = item.GetText()
-        isChecked = item.IsChecked()
-        # update filter 
-        self.UpdateContextFilter(name, not isChecked)
-        # check if super category case
-        if name in self.context.GetSubCategoriesOf().keys():
-            for category in self.context.GetSubCategoriesOf()[name]:
-                self.UpdateContextFilter(category, not isChecked)
-                
-    def UpdateContextFilter(self, category, filterOut):
+        self.__OnProjectChecked(event.GetItem())
+        
+    def __OnProjectChecked(self, item):
+        """ Respond to checking a category. """
+        project = item.GetData()
+        if project:
+            # if item is enabled, then write the change to the filter
+            if item.IsEnabled():
+                for category in project.categories:
+                    self.UpdateContextFilter(category, not item.IsChecked())
+            # else: if item is disabled, then don't care about the change
+
+        for childItem in item.GetChildren():
+            self.__OnProjectChecked(childItem)
+    
+    def UpdateContextFilter(self, category, filterOut, checkDependencies=True):
         """ Update the context filter. """
         if filterOut and not self.context.HasFilter(category):
             self.context.AddFilter(category)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, False, self.__projectTreeDependencyCache)
         elif not filterOut and self.context.HasFilter(category):
             self.context.RemoveFilter(category)
+            if checkDependencies:
+                self.CheckUncheckDependentItems(category, True, self.__projectTreeDependencyCache)
                 
+    def CheckUncheckDependentItems(self, category, selected, dependenciesCache):
+        if category in self.__projectTreeItems:
+            catTreeItem = self.__projectTreeItems[category]
+        else:
+            # Name not registered? Then probably the user clicked on a super-category => stop
+            return
+        catProject = catTreeItem.GetData()
+
+        assert isinstance(catProject, csnProject.GenericProject)
+
+        if selected:
+            # Project "catProject" recently selected: Select all projects it depends on
+            # Go through all projects that "catProjects" depends on
+            for depProject in catProject.dependenciesManager.GetProjects(_recursive=True, _onlyRequiredProjects=True, _cache = dependenciesCache):
+                # Get the category/-ies (~ "name") of depProject (can have several ones)
+                for depProjectCategory in depProject.categories:
+                    # Is there an item in the project-tree for this project?
+                    if depProjectCategory in self.__projectTreeItems:
+                        # Then select it
+                        item = self.__projectTreeItems[depProjectCategory]
+                        self.__projectTree.CheckItem(item, True)
+        else:
+            # Project "catProject" recently deselected: Deselect all projects that depend on it
+            # Check all projects in the project-tree, if they depend on it
+            for otherCategory, otherTreeItem in self.__projectTreeItems.items():
+                otherProject = otherTreeItem.GetData()
+                # Depends?
+                if catProject in otherProject.dependenciesManager.GetProjects(_recursive=True, _onlyRequiredProjects=True, _cache = dependenciesCache):
+                    # "project" depends on "catProject", so deselect it
+                    item = self.__projectTreeItems[otherCategory]
+                    self.__projectTree.CheckItem(item, False) # Uncheck it
+    
     def OnSelectCompiler(self, event):
         self.context.FindCompiler()
         # find visual studio if needed
@@ -1593,6 +1658,136 @@ class CSnakeGUIApp(wx.App):
     def StateChanged(self, event):
         """ Called by the ChangeListener. """
         self.SetContextModified(True)
+        
+    def __CheckBuildFolder(self):
+        """ Check that the build folder is valid. """
+        # Build folder: get them from context (or GUI?)
+        folder = self.context.GetBuildFolder()
+        # 1. should exist
+        if folder == None or not os.path.isdir(folder):
+            # focus
+            self.txtBuildFolder.SetInsertionPointEnd() # does not seem to work...
+            self.txtBuildFolder.SetFocus()
+            # message
+            message = "The build folder '%s' does not exist, do you want to create it?" % folder
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+            if dlg.ShowModal() == wx.ID_YES:
+                # also create intermediary folders
+                os.makedirs(folder)
+            else:
+                return False
+        # all good
+        return True
+
+    def __CheckRootFolders(self):
+        """ Check that the root folder is valid. """
+        # Root folders: get them from context (or GUI?)
+        folders = self.context.GetRootFolders()
+        # 1. should exist
+        index = 0 # order in list follows order in grid, would be safer to use grid elements
+        for folder in folders:
+            if folder == None or not os.path.isdir(folder):
+                # focus
+                self.lbxRootFolders.SetSelection(index)
+                self.lbxRootFolders.SetFocus()
+                # message
+                message = "The root folder '%s' does not exist, please provide a valid one." % folder
+                self.Error(message)
+                return False
+            # increment
+            index += 1
+        # all good
+        return True
+
+    def __CheckCSnakeFile(self):
+        """ Check that the csnake file is valid. """
+        # CSnake file: get them from context (or GUI?)
+        file = self.context.GetCsnakeFile()
+        # 1. should exist
+        if file == None or not os.path.isfile(file):
+            # focus
+            self.cmbCSnakeFile.SetFocus()
+            # message
+            message = "The CSnake file '%s' does not exist, please provide a valid one." % file
+            self.Error(message)
+            # exit
+            return False
+        # all good
+        return True
+    
+    def __CheckThirdPartyFolders(self):
+        """ Check that the third parties are valid. """
+        # Source folders: get them from context (or GUI?)
+        tpSrcFolders = self.context.GetThirdPartyFolders()
+        index = 0 # order in list follows order in grid, would be safer to use grid elements
+        for folder in tpSrcFolders:
+            if not self.__CheckThirdPartySrcFolder(folder):
+                # focus
+                self.gridThirdPartySrcAndBuildFolders.SelectRow(index)
+                self.gridThirdPartySrcAndBuildFolders.SetFocus()
+                # exit
+                return False
+            # increment
+            index += 1
+        
+        # Build folders: get them from context (or GUI?)
+        tbBuildFolders = self.context.GetThirdPartyBuildFolders()
+        index = 0 # order in list follows order in grid, would be safer to use grid elements
+        for folder in tbBuildFolders:
+            if not self.__CheckThirdPartyBuildFolder(folder):
+                # focus
+                self.gridThirdPartySrcAndBuildFolders.SelectRow(index)
+                self.gridThirdPartySrcAndBuildFolders.SetGridCursor(index, 1)
+                self.gridThirdPartySrcAndBuildFolders.SetFocus()
+                # exit
+                return False
+            # increment
+            index += 1
+        
+        # all good
+        return True
+
+    def __CheckThirdPartySrcFolder(self, folder):
+        """ Check that the third party source folder is valid. """
+        # Source folder:
+        # 1. should exist
+        if folder == None or not os.path.isdir(folder):
+            # message
+            message = "The third party source folder '%s' does not exist, please provide a valid one." % folder
+            self.Error(message)
+            # exit
+            return False
+        # 2. should contain a CMakeLists.txt file
+        fileName = "CMakeLists.txt"
+        file = "%s/%s" % (folder, fileName)
+        if file == None or not os.path.isfile(file):
+            # message
+            message = "The third party source folder '%s' is not a valid one, it should contain a CMakeLists.txt file." % folder
+            self.Error(message)
+            # exit
+            return False
+
+        # all good
+        return True
+        
+    def __CheckThirdPartyBuildFolder(self, folder):
+        """ Check that the third party build folder is valid. """
+        # Build folders:
+        # 1. should exist
+        if not os.path.exists(folder):
+            # message
+            message = "The third party build folder '%s' does not exist, do you want to create it?" % folder 
+            # offer to create the folder
+            dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+            if dlg.ShowModal() == wx.ID_YES:
+                # also create intermediary folders
+                os.makedirs(folder)
+            else:
+                # exit
+                return False
+        
+        # all good
+        return True
         
     def SetProgressStartAndRange(self, start, range):
         self.__progressRange = range

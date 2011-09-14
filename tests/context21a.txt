@@ -13,13 +13,13 @@ buildfolder = E:/devel/bin/toolkit/clean
 csnakefile = E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py
 idepath = D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe
 compilername = Visual Studio 9 2008 Win64
-prebuiltbinariesfolder = 
+prebuiltbinariesfolder = E:/devel/bin/toolkit/prebuilt
 instance = baseLib
 configurationname = DebugAndRelease
 version = 2.1
 cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
 pythonpath = C:/Program Files (x86)/Python 2.6/python.exe
-kdevelopprojectfolder =
+kdevelopprojectfolder = E:/devel/bin/toolkit/kdevelop
 
 [RootFolders]
 rootfolder0 = E:/devel/src/toolkit/clean/src

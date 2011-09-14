@@ -13,7 +13,9 @@ class StandardModuleProject(GenericProject):
 
     def __init__(self, _name, _type, _sourceRootFolder = None):
         if _sourceRootFolder is None:
-            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+            filename = csnProject.FindFilename()
+            dirname = os.path.dirname(filename)
+            _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         GenericProject.__init__(self, _name, _type, _sourceRootFolder)
         self.applicationsProject = None
 
@@ -25,30 +27,29 @@ class StandardModuleProject(GenericProject):
         If the src folder has a subfolder called 'stub', it is also added to the source tree.
         _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
         """
-        # add sources    
+        # add sources
+        sourceRootFolder = self.GetSourceRootFolder()
+        includeFileExtensions = csnUtility.GetIncludeFileExtensions()
+        sourceFileExtensions = csnUtility.GetSourceFileExtensions()
         for libModule in _libModules:
             for stub in ("/stub", ""):
                 srcFolder = "libmodules/%s/src%s" % (libModule, stub)
-                srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
+                srcFolderAbs = "%s/%s" % (sourceRootFolder, srcFolder)
     
                 if( os.path.exists(srcFolderAbs) ):
                     self.AddIncludeFolders([srcFolder])
-                    for extension in csnUtility.GetSourceFileExtensions():
+                    for extension in sourceFileExtensions:
                         self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-                    for extension in csnUtility.GetIncludeFileExtensions():
+                    for extension in includeFileExtensions:
                         self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-    
-        if( len(self.GetSources()) == 0 ):
-            dummySource = csnUtility.GetDummyCppFilename()
-            self.AddSources([dummySource])
-    
+        
         for libModule in _libModules:
             for stub in ("/stub", ""):
                 includeFolder = "libmodules/%s/include%s" % (libModule, stub)
-                includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
+                includeFolderAbs = "%s/%s" % (sourceRootFolder, includeFolder)
                 if( os.path.exists(includeFolderAbs) ):
                     self.AddIncludeFolders([includeFolder])
-                    for extension in csnUtility.GetIncludeFileExtensions():
+                    for extension in includeFileExtensions:
                         self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
     def AddApplications(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):

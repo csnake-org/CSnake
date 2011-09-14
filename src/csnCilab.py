@@ -87,7 +87,7 @@ def _MakeValidIdentifier(_identifier, _toUpper = False):
 
 def StandardModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
 
     project = csnProject.Project(_name, _type, _sourceRootFolder)
     project.applicationsProject = None
@@ -153,30 +153,29 @@ def _AddLibraryModulesMemberFunction(self, _libModules):
     _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
 
     """
-    # add sources    
+    # add sources
+    sourceRootFolder = self.GetSourceRootFolder()
+    includeFileExtensions = csnUtility.GetIncludeFileExtensions()
+    sourceFileExtensions = csnUtility.GetSourceFileExtensions()
     for libModule in _libModules:
         for stub in ("/stub", ""):
             srcFolder = "libmodules/%s/src%s" % (libModule, stub)
-            srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
+            srcFolderAbs = "%s/%s" % (sourceRootFolder, srcFolder)
 
             if( os.path.exists(srcFolderAbs) ):
                 self.AddIncludeFolders([srcFolder])
-                for extension in csnUtility.GetSourceFileExtensions():
+                for extension in sourceFileExtensions:
                     self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-                for extension in csnUtility.GetIncludeFileExtensions():
+                for extension in includeFileExtensions:
                     self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-
-    if( len(self.GetSources()) == 0 ):
-        dummySource = csnUtility.GetDummyCppFilename()
-        self.AddSources([dummySource])
-
+    
     for libModule in _libModules:
         for stub in ("/stub", ""):
             includeFolder = "libmodules/%s/include%s" % (libModule, stub)
-            includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
+            includeFolderAbs = "%s/%s" % (sourceRootFolder, includeFolder)
             if( os.path.exists(includeFolderAbs) ):
                 self.AddIncludeFolders([includeFolder])
-                for extension in csnUtility.GetIncludeFileExtensions():
+                for extension in includeFileExtensions:
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
         
 def _AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
@@ -242,12 +241,14 @@ def _AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None,
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        filename = csnProject.FindFilename()
+        dirname = os.path.dirname(filename)
+        _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
     return StandardModuleProject(_name = _name, _type = _type, _sourceRootFolder = _sourceRootFolder)
 
 def CommandLinePlugin(_name, _holderProject = None):
     """ Create a command line plugin project. """
-    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
     
     # command line lib
     projectLibName = "%sLib" % _name
@@ -312,7 +313,7 @@ def GimiasPluginProject(_name, _sourceRootFolder = None):
 
     """
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
     pluginName = "GIMIAS%s" % _name
     project = csnProject.Project(
         _name, 

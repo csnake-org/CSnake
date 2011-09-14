@@ -15,24 +15,37 @@ import re
 
 globalCurrentContext = None
 
+def FindFilename():
+    frame = inspect.currentframe(2)
+    try:
+        if frame is None:
+            # inspect.currentframe is not available with all python interpreters, so use inspect.stack as fallback option
+            filename = inspect.stack()[2][1]
+        else:
+            filename = inspect.getframeinfo(frame)[0]
+    finally:
+        # make sure the reference to the frame is deleted in any case (avoid cycles, see http://docs.python.org/library/inspect.html#the-interpreter-stack)
+        del frame
+    return filename
+
 def Project(_name, _type, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return globalCurrentContext.CreateProject(_name, _type, _sourceRootFolder, _categories)
 
 def Dll(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "dll", _sourceRootFolder, _categories)
 
 def Library(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "library", _sourceRootFolder, _categories)
 
 def Executable(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "executable", _sourceRootFolder, _categories)
 
 class Rule:
@@ -91,7 +104,7 @@ class GenericProject(object):
         self.name = _name
         self.type = _type
         if _sourceRootFolder is None:
-            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(inspect.stack()[1][1]))
+            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
         self.pathsManager = csnProjectPaths.Manager(self, _sourceRootFolder)
 
         # Get the thirdPartyBuildFolder index
@@ -111,7 +124,8 @@ class GenericProject(object):
         if self.categories is None:
             self.categories = []
         self.dependenciesManager = csnDependencies.Manager(self)
-        self.compileManager = csnCompile.Manager(self)
+        self.__compileManager = csnCompile.Manager(self)
+        self.__compileManagerUpdates = list()
         self.installSubFolder = ""
         self.testsManager = csnTests.Manager(self)
         self.properties = []
@@ -129,34 +143,66 @@ class GenericProject(object):
         self.dependenciesManager.AddProjects(_projects, _dependency, _includeInSolution)
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
-        self.compileManager.AddSources(_listOfSourceFiles, _moc, _ui, _sourceGroup, _checkExists, _forceAdd)
+        self.__compileManagerUpdates.append((self.__compileManager.AddSources, {
+            "_listOfSourceFiles" : _listOfSourceFiles,
+            "_moc"               : _moc,
+            "_ui"                : _ui,
+            "_sourceGroup"       : _sourceGroup,
+            "_checkExists"       : _checkExists,
+            "_forceAdd"          : _forceAdd
+          }))
                    
     def RemoveSources(self, _listOfSourceFiles):
-        self.compileManager.RemoveSources(_listOfSourceFiles)
+        self.__compileManagerUpdates.append((self.__compileManager.RemoveSources, {
+            "_listOfSourceFiles" : _listOfSourceFiles
+          }))
                             
     def AddDefinitions(self, _listOfDefinitions, _private = 0, _WIN32 = 0, _NOT_WIN32 = 0 ):
-        self.compileManager.AddDefinitions(_listOfDefinitions, _private, _WIN32, _NOT_WIN32)
+        self.__compileManagerUpdates.append((self.__compileManager.AddDefinitions, {
+            "_listOfDefinitions" : _listOfDefinitions,
+            "_private"           : _private,
+            "_WIN32"             : _WIN32,
+            "_NOT_WIN32"         : _NOT_WIN32
+          }))
         
     def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
         self.installManager.AddFilesToInstall(_list, _location, _debugOnly, _releaseOnly, _WIN32, _NOT_WIN32)
                 
     def AddIncludeFolders(self, _listOfIncludeFolders, _WIN32 = 0, _NOT_WIN32 = 0):
-        self.compileManager.AddIncludeFolders(_listOfIncludeFolders, _WIN32, _NOT_WIN32)
+        self.__compileManagerUpdates.append((self.__compileManager.AddIncludeFolders, {
+            "_listOfIncludeFolders" : _listOfIncludeFolders,
+            "_WIN32"                : _WIN32,
+            "_NOT_WIN32"            : _NOT_WIN32
+          }))
         
     def SetPrecompiledHeader(self, _precompiledHeader):
-        self.compileManager.SetPrecompiledHeader(_precompiledHeader)
+        self.__compileManagerUpdates.append((self.__compileManager.SetPrecompiledHeader, {
+            "_precompiledHeader" : _precompiledHeader
+          }))
         
     def AddLibraryFolders(self, _listOfLibraryFolders, _WIN32 = 0, _NOT_WIN32 = 0):
-        self.compileManager.AddLibraryFolders(_listOfLibraryFolders, _WIN32, _NOT_WIN32)
+        self.__compileManagerUpdates.append((self.__compileManager.AddLibraryFolders, {
+            "_listOfLibraryFolders" : _listOfLibraryFolders,
+            "_WIN32"                : _WIN32,
+            "_NOT_WIN32"            : _NOT_WIN32
+          }))
         
     def AddLibraries(self, _listOfLibraries, _WIN32 = 0, _NOT_WIN32 = 0, _debugOnly = 0, _releaseOnly = 0):
-        self.compileManager.AddLibraries(_listOfLibraries, _WIN32, _NOT_WIN32, _debugOnly, _releaseOnly)
+        self.__compileManagerUpdates.append((self.__compileManager.AddLibraries, {
+            "_listOfLibraries" : _listOfLibraries,
+            "_WIN32"           : _WIN32,
+            "_NOT_WIN32"       : _NOT_WIN32,
+            "_debugOnly"       : _debugOnly,
+            "_releaseOnly"     : _releaseOnly
+          }))
         
     def Glob(self, _path):
         return self.pathsManager.Glob(_path)
     
-    def GetProjects(self, _recursive = 0, _onlyRequiredProjects = 0, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False):
-        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies, _onlyNonRequiredProjects)
+    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False,
+            _onlyNonRequiredProjects = False, _filter = True):
+        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies,
+            _onlyNonRequiredProjects, _filter)
         
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
@@ -181,6 +227,9 @@ class GenericProject(object):
             
     def AddTests(self, _listOfTests, _cxxTestProject, _enableWxWidgets = 0, _dependencies = None, _pch = ""):
         self.testsManager.AddTests(_listOfTests, _cxxTestProject, _enableWxWidgets, _dependencies, _pch)
+    
+    def SetGenerateWin32Header(self, _setHeader):
+        self.__compileManager.generateWin32Header = _setHeader
 
     def GetTestProject(self):
         return self.testsManager.testProject
@@ -197,8 +246,18 @@ class GenericProject(object):
     def GetCMakeListsFilename(self):
         return "%s/%s" % (self.context.GetBuildFolder(), self.pathsManager.cmakeListsSubpath)
 
+    def GetCompileManager(self):
+        if len(self.__compileManagerUpdates) > 0:
+            for function, parameters in self.__compileManagerUpdates:
+                function(**parameters)
+            self.__compileManagerUpdates = list()
+            if( len(self.__compileManager.sources) == 0 ):
+                dummySource = csnUtility.GetDummyCppFilename()
+                self.__compileManager.AddSources([dummySource])
+        return self.__compileManager
+
     def GetSources(self):
-        return self.compileManager.sources
+        return self.GetCompileManager().sources
         
     def GetSourceRootFolder(self):
         return self.pathsManager.GetSourceRootFolder()
@@ -217,7 +276,7 @@ class GenericProject(object):
         dump = dict()
         for project in self.dependenciesManager.GetProjects(_recursive=True, _includeSelf=True):
             dump[project.name] = { \
-                "compiler" : project.compileManager.Dump(), \
+                "compiler" : project.__compileManager.Dump(), \
                 "dependencies" : project.dependenciesManager.Dump(), \
                 "install" : project.installManager.Dump(), \
                 "paths" : project.pathsManager.Dump() \

@@ -41,7 +41,8 @@ class csnProjectTests(unittest.TestCase):
         dummyLib = csnProject.Project("DummyLib", "library")
 
         # check adding non existing file
-        self.assertRaises(IOError, dummyLib.AddSources, ["main.cpp"])
+        dummyLib.AddSources(["main.cpp"])
+        self.assertRaises(IOError, dummyLib.GetCompileManager)
         
     def testAddProjectsTwice(self):
         """ csnProjectTests: test that adding a project twice has no effect. """
@@ -96,8 +97,10 @@ class csnProjectTests(unittest.TestCase):
         
         # dummyExe depends on dummyLib
         dummyExe.AddProjects([dummyLib])
-        # try making dummyLib depend on dummyExe
-        self.assertRaises(csnDependencies.DependencyError, dummyLib.AddProjects, [dummyExe])
+        # try making dummyLib depend on dummyExe (cyclic dependency)
+        dummyLib.AddProjects([dummyExe])
+        # check dependencies (CSnake should detect the cyclic dependency there)
+        self.assertRaises(csnDependencies.DependencyError, dummyLib.GetProjects, _recursive=True, _onlyRequiredProjects=True)
 
     def testBuildBinFolderSlashes(self):
         """ csnProjectTests: test that build bin folder may not contain any backward slashes. """

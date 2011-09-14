@@ -23,15 +23,13 @@ class Manager:
     def AddProjects(self, _projects, _dependency = True, _includeInSolution = True):
         for project in _projects:
             projectToAdd = csnProject.ToProject(project)
-            if projectToAdd.MatchesFilter() or projectToAdd in self.GetProjects():
+            if projectToAdd in self.GetProjects():
                 continue
                     
             if self.project is projectToAdd:
                 raise DependencyError, "Project %s cannot be added to itself" % (projectToAdd.name)
                 
             if not projectToAdd in self.projects:
-                if _dependency and projectToAdd.dependenciesManager.DependsOn(self.project):
-                    raise DependencyError, "Circular dependency detected during %s.AddProjects(%s)" % (self.project.name, projectToAdd.name)
                 self.projects.add( projectToAdd )
                 if not _dependency:
                     self.projectsNonRequired.add( projectToAdd )
@@ -54,15 +52,30 @@ class Manager:
             if requiredProject in _skipList:
                 continue
             if requiredProject is otherProject or requiredProject.dependenciesManager.DependsOn(otherProject, _skipList ):
-                return 1
-        return 0
+                return True
+        return False
         
-    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False, _onlyNonRequiredProjects = False, _skipList = [], _stack = []):
+    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False,
+            _onlyNonRequiredProjects = False, _filter = True, _skipList = [], _stack = [], _cache = None):
         """
         Returns list of all projects associated with this project.
         _recursive -- If true, returns not only child projects but all projects in the tree below this project.
         _onlyRequiredProjects -- If true, only projects that this project requires are returned.
+        _includeSelf
+        _onlyPublicDependencies
+        _onlyNonRequiredProjects
+        _filter -- use the filter or not
+        _stack -- do not touch, only used internally in recursive loops
+        _cache -- cache for intermediate results, can be provided as external dictionary to be shared between calls
         """
+        if _cache is None:
+            _cache = dict()
+        _recursive = bool(_recursive)
+        _onlyRequiredProjects = bool(_onlyRequiredProjects)
+        _includeSelf = bool(_includeSelf)
+        _onlyPublicDependencies = bool(_onlyPublicDependencies)
+        _onlyNonRequiredProjects = bool(_onlyNonRequiredProjects)
+        _filter = bool(_filter)
         if self.project in _stack:
             if _onlyRequiredProjects:
                 namelist = []
@@ -73,10 +86,16 @@ class Manager:
                     if foundStart:
                         namelist.append(project.name)
                 namelist.append(self.project.name)
-                self.__logger.Warn("Cyclic dependency: %s" % namelist)
+                raise DependencyError("Cyclic dependency: %s" % namelist)
             return OrderedSet.OrderedSet()
         _stack = _stack + [self.project]
-            
+        
+        if self.project in _cache:
+            if _includeSelf:
+                return _cache[self.project] + [self.project]
+            else:
+                return _cache[self.project]
+        
         directDependencies = OrderedSet.OrderedSet()
         toSubtract = OrderedSet.OrderedSet()
         toAdd = OrderedSet.OrderedSet()
@@ -84,32 +103,38 @@ class Manager:
             toAdd.update(self.projectsNonRequired)
         else:
             toAdd.update(self.projects)
-
+        if _filter:
+            toAddFiltered = OrderedSet.OrderedSet()
+            toAddFiltered.update([project for project in toAdd if not (project.MatchesFilter() and project in self.projectsNonRequired)])
+            toAdd = toAddFiltered
+        
         if _onlyRequiredProjects:
             toSubtract.update(self.projectsNonRequired)
         directDependencies.update(toAdd - toSubtract)
-
+        
         if _recursive:
-            fullDependencies = OrderedSet.OrderedSet()
+            _cache[self.project] = OrderedSet.OrderedSet()
             for project in directDependencies:
-                fullDependencies.update(
+                _cache[self.project].update(
                     project.dependenciesManager.GetProjects(
-                        _recursive,
-                        _onlyRequiredProjects,
-                        True,
-                        _onlyPublicDependencies,
-                        _onlyNonRequiredProjects,
-                        _skipList,
-                        _stack
+                        _recursive = _recursive,
+                        _onlyRequiredProjects = _onlyRequiredProjects,
+                        _onlyPublicDependencies = _onlyPublicDependencies,
+                        _includeSelf = True,
+                        _onlyNonRequiredProjects = _onlyNonRequiredProjects,
+                        _filter = _filter,
+                        _skipList = _skipList,
+                        _stack = _stack,
+                        _cache = _cache
                     )
                 )
-            dependencies = fullDependencies
         else:
-            dependencies = directDependencies
-            
+            _cache[self.project] = directDependencies
+        
         if _includeSelf:
-            dependencies.add(self.project)
-        return dependencies
+            return _cache[self.project] + [self.project]
+        else:
+            return _cache[self.project]
         
     def UseBefore(self, _otherProject):
         """ 

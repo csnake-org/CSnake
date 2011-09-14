@@ -49,11 +49,9 @@ class KDevelopPostProcessor:
         return "%s.filelist" % self.__GetKDevelopProjectFilename(_project, _folder)
         
     def Do(self, _project):
+        # create folder if it does not exist
         if not os.path.exists(_project.context.GetKdevelopProjectFolder()):
-            # if _kdevelopProjectFolder does not exist, then it MUST equal "".
-            # otherwise, the user specified an invalid path for __kdevelopProjectFolder.  
-            assert _project.context.GetKdevelopProjectFolder() == "", "\n\nError: Cannot create kdevelop files in %s. Folder does not exist." % _project.context.GetKdevelopProjectFolder()
-            return
+            os.makedirs(_project.context.GetKdevelopProjectFolder())
             
         kdevelopProjectFolder = csnUtility.NormalizePath(_project.context.GetKdevelopProjectFolder())
 

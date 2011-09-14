@@ -76,6 +76,12 @@ class ContextData:
     def _SetThirdPartySrcAndBuildFolders(self, value):
         ''' Protected, should only be accessed by the Context. '''
         self.__thirdPartySrcAndBuildFolders = value
+    
+    def GetThirdPartySrcFolders(self):
+        result = []
+        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
+            result.append(srcAndBuildFolder[0])
+        return result
 
     def GetInstance(self):
         return self.__instance
@@ -376,6 +382,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
 
     def __Read10(self, parser):
         """ Read context file version 1.0. """ 
@@ -413,6 +421,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesMulitpleSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
     def __Read20(self, parser):
         """ Read context file version 2.0. """ 
@@ -446,6 +456,8 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
     def __Read21(self, parser):
         """ Read options file version 2.1. """ 
@@ -460,7 +472,15 @@ class Context(object):
         self.__LoadRecentlyUsedCSnakeFilesOneSection(parser)
         # find the compiler from the compiler name
         self.FindCompiler()
+        # check kdevelop folder
+        self.__CheckKDevelopFolder()
         
+    def __CheckKDevelopFolder(self):
+        """ Check kdevelop folder. Force default if it does not exist. """
+        if not os.path.exists(self.GetKdevelopProjectFolder()):
+            folder = "%s/%s/%s" % (self.GetBuildFolder(), "kdevelop", self.GetConfigurationName())
+            self.SetKdevelopProjectFolder(folder)
+    
     def __LoadBasicFields(self, parser, fields):
         """ Load a list of fields. """
         # section
@@ -683,10 +703,7 @@ class Context(object):
         return self._GetThirdPartySrcAndBuildFolders()[index][0]
 
     def GetThirdPartyFolders(self):
-        result = []
-        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
-            result.append(srcAndBuildFolder[0])
-        return result
+        return self.__data.GetThirdPartySrcFolders()
 
     def GetNumberOfThirdPartyFolders( self ):
         return len(self._GetThirdPartySrcAndBuildFolders())
@@ -797,7 +814,7 @@ class Context(object):
     def CreateProject(self, _name, _type, _sourceRootFolder = None, _categories = None):
         project = csnProject.GenericProject(_name, _type, _sourceRootFolder, _categories, _context = self)
         for flag in self.GetCompiler().GetCompileFlags():
-            project.compileManager.private.definitions.append(flag)
+            project.GetCompileManager().private.definitions.append(flag)
         return project
     
     def GetOutputFolder(self, mode):
