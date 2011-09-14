@@ -3,13 +3,13 @@
 # ATTENTION: DON'T IMPORT THIS DIRECTLY FROM CSNAKE FILES!!!
 
 
-import csnContext
 import csnGenerator
-import csnProject
 
 import copy
 import re
 from csnVersion import Version
+from csnProject import GenericProject
+from csnStandardModuleProject import StandardModuleProject
 
 
 # *********************************************************************************************************************
@@ -90,7 +90,7 @@ from csnVersion import Version
 #  Project  #
 #############
 
-class _APIProject_Base:
+class _APIGenericProject_Base:
     
     def __init__(self, project):
         self.__project = project
@@ -146,12 +146,15 @@ class _APIProject_Base:
     def AddCustomCommand(self):
         # TODO
         pass
+    
+    def CreateHeader(self, filename = None, variables = None, variablePrefix = None):
+        self.__project.CreateHeader(filename, variables, variablePrefix)
 
 
-class _APIProject_2_4_5(_APIProject_Base):
+class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     
     def __init__(self, version):
-        _APIProject_Base.__init__(self, version)
+        _APIGenericProject_Base.__init__(self, version)
 
 #############
 #  Version  #
@@ -181,14 +184,17 @@ class _API_Base:
     
     def __init__(self, version):
         self.__version = version
-        self.__projectConstructor = _FindAPIProjectConstructor(version)
+        self.__genericProjectConstructor = _FindAPIGenericProjectConstructor(version)
+        self.__standardModuleProjectConstructor = _FindAPIStandardModuleProjectConstructor(version)
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
-    def CreateProject(self, _name, _type, someMoreParameters):
-        project = None
-        # TODO: create project
-        self.__projectConstructor(project)
-        return 
+    def CreateGenericProject(self, _name, _type, someMoreParameters):
+        project = GenericProject(_name, _type, someMoreParameters)
+        return self.__genericProjectConstructor(project)
+
+    def CreateStandardModuleProject(self, _name, _type, someMoreParameters):
+        project = StandardModuleProject(_name, _type, someMoreParameters)
+        return self.__standardModuleProjectConstructor(project)
     
     def CreateVersion(self, version):
         return self.__versionConstructor(Version(version))
@@ -199,9 +205,10 @@ class _API_Base:
     def GetChosenAPIVersion(self):
         return copy.copy(self.__version)
     
-    def LoadThirdPartyModule(self):
-        # TODO
-        pass
+    def LoadThirdPartyModule(self, subFolder, name):
+        return csnCilab.LoadThirdPartyModule(subFolder, name)
+    
+    
     
     def LoadModule(self):
         # TODO
@@ -236,20 +243,35 @@ def FindAPI(version):
             raise APIError("Unknown API version")
     return _apiRegister[version]
 
-# Maintain a cache of project constructors
-_apiProjectConstructorRegister = dict()
+# Maintain a cache of GenericProject constructors
+_apiGenericProjectConstructorRegister = dict()
 
-def _FindAPIProjectConstructor(version):
+def _FindAPIGenericProjectConstructor(version):
     version = Version(version)
-    if not version in _apiProjectConstructorRegister:
+    if not version in _apiGenericProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
         elif version >= Version([2, 4, 5]):
-            _apiProjectConstructorRegister[version] = _APIProject_2_4_5
+            _apiGenericProjectConstructorRegister[version] = _APIGenericProject_2_4_5
         else:
             # there was no API before this
             raise APIError("Unknown API version")
-    return _apiProjectConstructorRegister[version]
+    return _apiGenericProjectConstructorRegister[version]
+
+# Maintain a cache of StandardModuleProject constructors
+_apiStandardModuleProjectConstructorRegister = dict()
+
+def _FindAPIStandardModuleProjectConstructor(version):
+    version = Version(version)
+    if not version in _apiStandardModuleProjectConstructorRegister:
+        if version > _currentCSnakeVersion:
+            raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 4, 5]):
+            _apiStandardModuleProjectConstructorRegister[version] = _APIStandardModuleProject_2_4_5
+        else:
+            # there was no API before this
+            raise APIError("Unknown API version")
+    return _apiStandardModuleProjectConstructorRegister[version]
 
 # Maintain a cache of version constructors
 _apiVersionConstructorRegister = dict()
