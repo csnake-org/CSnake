@@ -9,6 +9,7 @@ import new
 import inspect
 import re
 import string
+import glob
 
 ################################################
 ##                  generic                   ##
@@ -404,7 +405,7 @@ def RemoveSpuriousPluginDlls(project, askUser):
     for dll in spuriousDlls:
         os.remove(dll)
 
-gimias.AddPostCMakeTasks([RemoveSpuriousPluginDlls])
+#gimias.AddPostCMakeTasks([RemoveSpuriousPluginDlls])
 
 ### END -->
 
