@@ -156,6 +156,7 @@ class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     def __init__(self, version):
         _APIGenericProject_Base.__init__(self, version)
 
+
 #############
 #  Version  #
 #############
@@ -171,10 +172,15 @@ class _APIVersion_Base:
     def __cmp__(self, other):
         return self.__version.__cmp__(other.__version)
 
+
 class _APIVersion_2_4_5(_APIVersion_Base):
     
     def __init__(self, version):
         _APIVersion_Base.__init__(self, version)
+
+
+_currentCSnakeVersion = Version(csnGenerator.version)
+
 
 #############
 #    API    #
@@ -208,8 +214,6 @@ class _API_Base:
     def LoadThirdPartyModule(self, subFolder, name):
         return csnCilab.LoadThirdPartyModule(subFolder, name)
     
-    
-    
     def LoadModule(self):
         # TODO
         pass
@@ -221,14 +225,14 @@ class _API_2_4_5(_API_Base):
         _API_Base.__init__(self, version)
 
 
-#############
-# Versions  #
-#############
+######################
+# Constructor Caches #
+######################
+# In order to not have to search and/or instantiate the same class over and over agian, we maintain caches
 
-_currentCSnakeVersion = Version(csnGenerator.version)
 
+# API objects
 
-# Maintain a cache of APIs, so there's no need to instantiate the class over and over again
 _apiRegister = dict()
 
 def FindAPI(version):
@@ -243,7 +247,9 @@ def FindAPI(version):
             raise APIError("Unknown API version")
     return _apiRegister[version]
 
-# Maintain a cache of GenericProject constructors
+
+# GenericProject wrapper constructors
+
 _apiGenericProjectConstructorRegister = dict()
 
 def _FindAPIGenericProjectConstructor(version):
@@ -258,7 +264,9 @@ def _FindAPIGenericProjectConstructor(version):
             raise APIError("Unknown API version")
     return _apiGenericProjectConstructorRegister[version]
 
-# Maintain a cache of StandardModuleProject constructors
+
+# StandardModuleProject wrapper constructors
+
 _apiStandardModuleProjectConstructorRegister = dict()
 
 def _FindAPIStandardModuleProjectConstructor(version):
@@ -273,7 +281,9 @@ def _FindAPIStandardModuleProjectConstructor(version):
             raise APIError("Unknown API version")
     return _apiStandardModuleProjectConstructorRegister[version]
 
-# Maintain a cache of version constructors
+
+# Version class constructors
+
 _apiVersionConstructorRegister = dict()
 
 def _FindAPIVersionConstructor(version):
