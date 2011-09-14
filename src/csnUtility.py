@@ -7,6 +7,7 @@ import shutil
 import inspect
 import os.path
 import logging.config
+import string
 if sys.platform == 'win32':
     import _winreg
 if sys.platform != 'win32':
@@ -327,4 +328,13 @@ def InitialiseLogging():
     os.environ["CSNAKELOGFILE"] = logfilename
     # logging initialization (should create the log file)
     logging.config.fileConfig(GetRootOfCSnake() + "/resources/logging.conf")
+    
+def MakeValidIdentifier(_identifier, _toUpper = False):
+    _identifier = re.sub(r"[^A-Za-z0-9]", "_", _identifier)
+    if len(_identifier) == 0 or _identifier[0] in string.digits:
+        _identifier = "_" + _identifier
+    if _toUpper:
+        _identifier = _identifier.upper()
+    return _identifier
+
     
