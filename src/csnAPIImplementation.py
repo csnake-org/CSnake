@@ -253,7 +253,6 @@ def FindAPI(version):
 _apiGenericProjectConstructorRegister = dict()
 
 def _FindAPIGenericProjectConstructor(version):
-    version = Version(version)
     if not version in _apiGenericProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -270,7 +269,6 @@ def _FindAPIGenericProjectConstructor(version):
 _apiStandardModuleProjectConstructorRegister = dict()
 
 def _FindAPIStandardModuleProjectConstructor(version):
-    version = Version(version)
     if not version in _apiStandardModuleProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -287,7 +285,6 @@ def _FindAPIStandardModuleProjectConstructor(version):
 _apiVersionConstructorRegister = dict()
 
 def _FindAPIVersionConstructor(version):
-    version = Version(version)
     if not version in _apiVersionConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
