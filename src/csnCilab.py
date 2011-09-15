@@ -11,6 +11,11 @@ import re
 import string
 import glob
 
+
+# WARNING: Don't use the functions of this module, they are deprecated and still there just for backwards compatibility,
+#          but will be gone in CSnake 3.0.0. So, please, use the API now!
+
+
 ################################################
 ##                  generic                   ##
 ################################################
@@ -25,6 +30,8 @@ def LoadThirdPartyModule(_subFolder, _name):
         folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
     return csnUtility.LoadModules(folderList, _name)
 
+
+# Copied to csnProject.py
 def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix = None):
     """ 
     Creates a header file with input vars for the given project.
@@ -69,6 +76,7 @@ def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix 
 # --- helpers for the functions above ---
 
 
+# Copied to csnUtility.py
 def _MakeValidIdentifier(_identifier, _toUpper = False):
     _identifier = re.sub(r"[^A-Za-z0-9]", "_", _identifier)
     if len(_identifier) == 0 or _identifier[0] in string.digits:
@@ -82,9 +90,8 @@ def _MakeValidIdentifier(_identifier, _toUpper = False):
 ##   generic, but imposing folder structure   ##
 ################################################
 
-# probably to be kept in CSnake (but still to discuss)
 
-
+# Copied to csnStandardModuleProject.py
 def StandardModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
@@ -95,6 +102,8 @@ def StandardModuleProject(_name, _type, _sourceRootFolder = None):
     project.AddApplications = new.instancemethod(_AddApplicationsMemberFunction, project)
     return project
 
+
+# Copied to csnStandardModuleProject.py
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
@@ -143,6 +152,7 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
 # --- helpers for the functions above ---
 
 
+# Copied to csnStandardModuleProject.py
 def _AddLibraryModulesMemberFunction(self, _libModules):
     """ 
 
@@ -177,7 +187,9 @@ def _AddLibraryModulesMemberFunction(self, _libModules):
                 self.AddIncludeFolders([includeFolder])
                 for extension in includeFileExtensions:
                     self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
-        
+
+
+# Copied to csnStandardModuleProject.py
 def _AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
     """
     Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
@@ -205,38 +217,13 @@ def _AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependen
         _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
     AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
     
-def _AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
-    """ 
-    Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
-    _useQt - If true, adds build rules for the ui and moc files .
-    """
-    if _holdingFolder is None:
-        _holdingFolder = "widgets"
-        
-    # add sources    
-    for widgetModule in _widgetModules:
-        srcFolder = "%s/%s" % (_holdingFolder, widgetModule)
-        srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
-        if( os.path.exists(srcFolderAbs) ):
-            self.AddIncludeFolders([srcFolder])
-            for extension in csnUtility.GetSourceFileExtensions():
-                self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Widgets")
-            if _useQt:
-                self.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
-            
-        includeFolder = "%s/%s" % (_holdingFolder, widgetModule)
-        includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
-        if( os.path.exists(includeFolderAbs) ):
-            self.AddIncludeFolders([includeFolder])
-            for extension in csnUtility.GetIncludeFileExtensions():
-                self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
-
 
 ################################################
 ##          cilab/cistib/insigneo             ##
 ################################################
 
-# to be moved to Gimias resp. Toolkit repository
+# to be copied to Gimias resp. Toolkit repository before CSnake 3.0.0
+# and to be removed from here for CSnake 3.0.0
 
 
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
@@ -305,6 +292,32 @@ def CreateCMakeCLPPost(self, _file):
             raise Exception("Unsupported file extension: %s." % sourceFile)
         # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
+
+def _AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
+    """ 
+    Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
+    _useQt - If true, adds build rules for the ui and moc files .
+    """
+    if _holdingFolder is None:
+        _holdingFolder = "widgets"
+        
+    # add sources    
+    for widgetModule in _widgetModules:
+        srcFolder = "%s/%s" % (_holdingFolder, widgetModule)
+        srcFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), srcFolder)
+        if( os.path.exists(srcFolderAbs) ):
+            self.AddIncludeFolders([srcFolder])
+            for extension in csnUtility.GetSourceFileExtensions():
+                self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Widgets")
+            if _useQt:
+                self.AddSources(["%s/*.ui" % srcFolder], _ui = 1, _checkExists = 0, _sourceGroup = "WidgetsUI")
+            
+        includeFolder = "%s/%s" % (_holdingFolder, widgetModule)
+        includeFolderAbs = "%s/%s" % (self.GetSourceRootFolder(), includeFolder)
+        if( os.path.exists(includeFolderAbs) ):
+            self.AddIncludeFolders([includeFolder])
+            for extension in csnUtility.GetIncludeFileExtensions():
+                self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
 
 def GimiasPluginProject(_name, _sourceRootFolder = None):
     """
