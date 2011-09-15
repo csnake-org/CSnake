@@ -94,6 +94,9 @@ from csnStandardModuleProject import StandardModuleProject
 class _APIGenericProject_Base:
     
     def __init__(self, project):
+        # Note: As the class _APIStandardModuleProject_2_4_5 uses multiple inheritance and derives in two ways from this
+        # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
+        # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
     
     def AddSources(self):
@@ -156,6 +159,26 @@ class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     
     def __init__(self, version):
         _APIGenericProject_Base.__init__(self, version)
+
+
+#########################
+# StandardModuleProject #
+#########################
+
+class _APIStandardModuleProject_Base(_APIGenericProject_Base):
+    
+    def __init__(self, project):
+        self.__project = project
+    
+    def AddApplications(self, apps):
+        # TODO
+        pass
+    
+class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGenericProject_2_4_5):
+    
+    def __init__(self, version):
+        _APIGenericProject_Base.__init__(self, version)
+        _APIStandardModuleProject_Base.__init__(self, version)
 
 
 #############
