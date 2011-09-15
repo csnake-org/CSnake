@@ -9,6 +9,7 @@ import copy
 import re
 from csnVersion import Version
 from csnProject import GenericProject
+import csnProject
 from csnStandardModuleProject import StandardModuleProject
 
 
@@ -86,9 +87,9 @@ from csnStandardModuleProject import StandardModuleProject
 # 
 
 
-#############
-#  Project  #
-#############
+##################
+# GenericProject #
+##################
 
 class _APIGenericProject_Base:
     
@@ -99,7 +100,7 @@ class _APIGenericProject_Base:
         # TODO
         pass
         
-    def SetPrecompiledHeader(self):
+    def SetPrecompiledHeader(self, pch):
         # TODO
         pass
     
@@ -119,15 +120,15 @@ class _APIGenericProject_Base:
         # TODO
         pass
     
-    def AddLibraryModules(self):
+    def AddLibraryModules(self, modules):
         # TODO
         pass
     
-    def AddProjects(self):
+    def AddProjects(self, projects):
         # TODO
         pass
     
-    def AddTests(self):
+    def AddTests(self, param1, param2):
         # TODO
         pass
     
@@ -198,8 +199,8 @@ class _API_Base:
         project = GenericProject(_name, _type, someMoreParameters)
         return self.__genericProjectConstructor(project)
 
-    def CreateStandardModuleProject(self, _name, _type, someMoreParameters):
-        project = StandardModuleProject(_name, _type, someMoreParameters)
+    def CreateStandardModuleProject(self, _name, _type, _sourceRootFolder = None):
+        project = StandardModuleProject(_name, _type, _sourceRootFolder = None)
         return self.__standardModuleProjectConstructor(project)
     
     def CreateVersion(self, version):
@@ -228,7 +229,7 @@ class _API_2_4_5(_API_Base):
 ######################
 # Constructor Caches #
 ######################
-# In order to not have to search and/or instantiate the same class over and over agian, we maintain caches
+# In order to not have to search and/or instantiate the same class over and over again, we maintain caches
 
 
 # API objects
