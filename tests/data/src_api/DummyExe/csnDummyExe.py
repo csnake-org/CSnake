@@ -1,8 +1,8 @@
 # Used to configure dummyExe
-import csnBuild
-import csnCilab
 from csnAll import *
+from csnAPIPublic import GetAPI
+api = GetAPI("2.4.5")
 
-dummyExe = csnCilab.CilabModuleProject("DummyExe", "executable")
+dummyExe = api.CreateStandardModuleProject("DummyExe", "executable")
 dummyExe.AddSources(["src/DummyExe.cpp"])
 dummyExe.AddProjects([dummyLib])

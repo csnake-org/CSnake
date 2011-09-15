@@ -1,10 +1,10 @@
 # Used to configure dummyLib
-import csnBuild
-import csnCilab
 from csnAll import *
+from csnAPIPublic import GetAPI
+api = GetAPI("2.4.5")
 
 # define project
-dummyLib = csnCilab.CilabModuleProject("DummyLib", "library")
+dummyLib = api.CreateStandardModuleProject("DummyLib", "library")
 # dependencies
 dummyLib.AddProjects([two, three])
 # source folders
