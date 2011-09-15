@@ -5,6 +5,7 @@ import csnContext
 import csnGenerator
 import csnProject
 import csnPrebuilt
+import csnAPIImplementation
 import RollbackImporter
 import glob
 import json
@@ -145,6 +146,13 @@ class Handler:
         if not instanceName in self.cachedProjectInstance:
             projectModule = self.__GetProjectModule(_forceReload = _forceReload)
             exec "self.cachedProjectInstance[instanceName] = csnProject.ToProject(projectModule.%s)" % instanceName
+            if isinstance(self.cachedProjectInstance[instanceName], csnAPIImplementation._APIGenericProject_Base):
+                # Unwrap it from the API
+                self.cachedProjectInstance[instanceName]=self.cachedProjectInstance[instanceName]._APIGenericProject_Base__project
+            elif not isinstance(self.cachedProjectInstance[instanceName], csnProject.GenericProject):
+                # Neither wrapped nor unwrapped project?
+                raise Exception("Instance \"%s\" is not a valid CSnake project, but rather of type \"%s\"!" %
+                        (instanceName, type(self.cachedProjectInstance[instanceName]).__name__))
             relocator = csnPrebuilt.ProjectRelocator()
             relocator.Do(self.cachedProjectInstance[instanceName], self.context.GetPrebuiltBinariesFolder())
             self.UpdateRecentlyUsedCSnakeFiles()
