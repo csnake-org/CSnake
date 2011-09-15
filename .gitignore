@@ -5,3 +5,8 @@
 # Logs and databases #
 ######################
 *.log
+
+# Test config/result files #
+############################
+/tests/testslog.xml
+/tests/config
