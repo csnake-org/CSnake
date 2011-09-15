@@ -213,7 +213,7 @@ class _API_Base:
         return copy.copy(self.__version)
     
     def LoadThirdPartyModule(self, subFolder, name):
-        return csnCilab.LoadThirdPartyModule(subFolder, name)
+        return csnProject.LoadThirdPartyModule(subFolder, name)
     
     def LoadModule(self):
         # TODO
