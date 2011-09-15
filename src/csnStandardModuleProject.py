@@ -16,7 +16,9 @@ class StandardModuleProject(GenericProject):
             filename = csnProject.FindFilename()
             dirname = os.path.dirname(filename)
             _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        GenericProject.__init__(self, _name, _type, _sourceRootFolder)
+        GenericProject.__init__(self, _name=_name, _type=_type, _sourceRootFolder=_sourceRootFolder, _context=csnProject.globalCurrentContext)
+        for flag in csnProject.globalCurrentContext.GetCompiler().GetCompileFlags():
+            self.GetCompileManager().private.definitions.append(flag)
         self.applicationsProject = None
 
     def AddLibraryModules(self, _libModules):
