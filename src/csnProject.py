@@ -48,6 +48,14 @@ def Executable(_name, _sourceRootFolder = None, _categories = None):
         _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
     return Project(_name, "executable", _sourceRootFolder, _categories)
 
+def LoadThirdPartyModule(_subFolder, _name):
+    """ Loads third party module _name from subfolder _subFolder of the third party folder """
+    global globalCurrentContext
+    folderList = []
+    for thirdPartyFolder in globalCurrentContext.GetThirdPartyFolders( ):
+        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
+    return csnUtility.LoadModules(folderList, _name)
+
 class Rule:
     """ This class contains a build rule for e.g. Visual Studio, Make, etc """
     def __init__(self):

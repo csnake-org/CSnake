@@ -20,75 +20,30 @@ import glob
 ##                  generic                   ##
 ################################################
 
-# to be kept in CSnake (but we need to rename the module)
+# to be kept in CSnake (everything already copied; so in 3.0.0 we can just delete it from here)
 
 
+# Copied to csnProject.py
 def LoadThirdPartyModule(_subFolder, _name):
-    """ Loads third party module _name from subfolder _subFolder of the third party folder """
-    folderList = []
-    for thirdPartyFolder in csnProject.globalCurrentContext.GetThirdPartyFolders( ):
-        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
-    return csnUtility.LoadModules(folderList, _name)
+    """ For documentation see csnProject.LoadThirdPartyModule """
+    return csnProject.LoadThirdPartyModule(_subFolder, _name)
 
 
 # Copied to csnProject.py
 def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix = None):
-    """ 
-    Creates a header file with input vars for the given project.
-
-    @param project The calling project.
-    @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
-    @param variables Dictionary of variable/value pairs.  
-    """
-    projectNameClean = re.sub(r"[^A-Za-z0-9]", "_", _project.name)
-    if not _filename: 
-        _filename = "%s.h" % projectNameClean
-    path = "%s/%s" % (_project.GetBuildFolder(), _filename)
-    headerFile = open(path, 'w')
-    # simple '.' to '_' replace, if the method is passed we cannot use the string package.
-    size = len(_filename)
-    # should be a header...
-
-    guard = _MakeValidIdentifier(_identifier = _filename, _toUpper = True)
-    headerFile.write("#ifndef %s\n" % guard)
-    headerFile.write("#define %s\n" % guard)
-    headerFile.write("\n")
-    headerFile.write("// Automatically generated file, do not edit.\n")
-    headerFile.write("\n")
-    
-    # default variables
-    if not _variablePrefix:
-        _variablePrefix = _MakeValidIdentifier(_identifier = _project.name, _toUpper = True)
-    headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (_variablePrefix, _project.GetSourceRootFolder()))
-    headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (_variablePrefix, _project.GetBuildFolder()))
-    
-    # input variables
-    if _variables:
-        headerFile.write("\n")
-        for (key, value) in _variables:
-            headerFile.write("#define %s \"%s\"\n" % (key, value))
-    
-    headerFile.write("\n")
-    headerFile.write("#endif // %s\n" % guard)
-    headerFile.close()
+    """ For documentation see csnProject.CreateHeader """
+    _project.CreateHeader(_filename, _variables, _variablePrefix)
 
 
-# --- helpers for the functions above ---
-
-
-# Copied to csnUtility.py
-def _MakeValidIdentifier(_identifier, _toUpper = False):
-    _identifier = re.sub(r"[^A-Za-z0-9]", "_", _identifier)
-    if len(_identifier) == 0 or _identifier[0] in string.digits:
-        _identifier = "_" + _identifier
-    if _toUpper:
-        _identifier = _identifier.upper()
-    return _identifier
+# Function MakeValidIdentifier has already been deleted because it was only a helper function for the above CreateHeader
+# function, whose implementation has already been migrated.
 
 
 ################################################
 ##   generic, but imposing folder structure   ##
 ################################################
+
+# to be kept in CSnake (everything already copied; so in 3.0.0 we can just delete it from here)
 
 
 # Copied to csnStandardModuleProject.py
