@@ -2,6 +2,7 @@
 # Definition of the tests for the Version class.
 # \ingroup tests
 import unittest
+import json
 from csnVersion import Version
 
 class VersionTests(unittest.TestCase):
@@ -19,35 +20,33 @@ class VersionTests(unittest.TestCase):
         assert Version("1.2.3") < Version("2.3.4")
         assert Version("2.3.4") > Version("1.2.3")
         
-        sameVersion = [Version("43.0.0"),
-            Version("43.0"),
-            Version("43"),
-            Version(["43"]),
-            Version([43]),
-            Version([43, 0]),
-            Version([43, 0, 0])]
+        sameVersion = ["43.0.0", "43.0", "43", ["43"], [43], [43, 0], [43, 0, 0]]
         for versionA in sameVersion:
             for versionB in sameVersion:
-                assert versionA <= versionB, "%s should be <= %s" % (versionA.GetString(), versionB.GetString())
-                assert versionA >= versionB, "%s should be >= %s" % (versionA.GetString(), versionB.GetString())
-                assert versionA == versionB, "%s should be == %s" % (versionA.GetString(), versionB.GetString())
+                versionAObj = Version(versionA)
+                versionBObj = Version(versionB)
+                versionStringPair = (json.dumps(versionA), json.dumps(versionB))
+                assert versionAObj <= versionBObj, "Version(%s) should be <= Version(%s)" % versionStringPair
+                assert versionAObj >= versionBObj, "Version(%s) should be >= Version(%s)" % versionStringPair
+                assert versionAObj == versionBObj, "Version(%s) should be == Version(%s)" % versionStringPair
         
-        lowerVersionList = [Version("43 beta"), Version("43.0.0 beta"), Version(["43", "beta"]),
-                Version([43, "beta"]), Version([43, "0", 0, "beta"])]
-        higherVersionList = [Version("43"), Version("43.0.0"), Version(["43"]), Version([43, ""]),
-                Version([43]), Version([43, "0", 0])]
+        lowerVersionList = ["43 beta", "43.0.0 beta", ["43", "beta"], [43, "beta"], [43, "0", 0, "beta"]]
+        higherVersionList = ["43", "43.0.0", ["43"], [43, ""], [43], [43, "0", 0]]
         for lowerVersion in lowerVersionList:
             for higherVersion in higherVersionList:
-                assert lowerVersion < higherVersion, "%s should be < %s" % (lowerVersion.GetString(), higherVersion.GetString())
-                assert lowerVersion != higherVersion, "%s should be != %s" % (lowerVersion.GetString(), higherVersion.GetString())
+                lowerVersionObj = Version(lowerVersion)
+                higherVersionObj = Version(higherVersion)
+                versionStringPair = (json.dumps(lowerVersion), json.dumps(higherVersion))
+                assert lowerVersionObj < higherVersionObj, "%s should be < %s" % versionStringPair
+                assert lowerVersionObj != higherVersionObj, "%s should be != %s" % versionStringPair
         
-        self.awaitException('Version("")')
-        self.awaitException('Version(None)')
-        self.awaitException('Version()')
-        self.awaitException('Version([])')
-        self.awaitException('Version(["beta"])')
-        self.awaitException('Version([""])')
-        self.awaitException('Version([3, 2, 3, "dasklgjask-not-in-list-dljggaskdljkgsdl"])')
+        # A list of arguments that should not be accepted by the Version constructor
+        invalidConstructorArguments = ["", None, [], "beta", [""], [3, 2, 3, "dasklgjask-not-in-list-dljggaskdljkgsdl"],
+            "dasklgjask-not-in-list-dljggaskdljkgsdl", "1.x.3"]
+        for invalidConstructorArgument in invalidConstructorArguments:
+            self.assertRaises(Exception, Version, invalidConstructorArgument)
+        # Version constructor call without arguments should raise exception
+        self.assertRaises(Exception, Version)
         
         for numDecimals in range(0, 3):
             assert Version(Version("1.2.3.4.5.6.7/beta").GetString(numDecimals=numDecimals)) == Version("1.2.3.4.5.6.7/beta")
@@ -56,15 +55,7 @@ class VersionTests(unittest.TestCase):
         assert Version("1.2 alpha").GetString(numDecimals=2) == "1.2.0-alpha"
         assert Version("1.2 alpha").GetString(numDecimals=1) == "1.2-alpha"
         assert Version("1.2 alpha").GetString(numDecimals=0) == "1.2-alpha"
-    
-    def awaitException(self, code):
-        gotException = False
-        try:
-            exec code
-        except:
-            gotException = True
-        assert gotException, "Should have received an exception"
-        
+
 if __name__ == "__main__":
     unittest.main()
 
