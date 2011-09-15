@@ -29,6 +29,7 @@ class VersionTests(unittest.TestCase):
                 assert versionAObj <= versionBObj, "Version(%s) should be <= Version(%s)" % versionStringPair
                 assert versionAObj >= versionBObj, "Version(%s) should be >= Version(%s)" % versionStringPair
                 assert versionAObj == versionBObj, "Version(%s) should be == Version(%s)" % versionStringPair
+                assert hash(versionAObj) == hash(versionBObj), "hash(Version(%s)) should be == hash(Version(%s))" % versionStringPair
         
         lowerVersionList = ["43 beta", "43.0.0 beta", ["43", "beta"], [43, "beta"], [43, "0", 0, "beta"]]
         higherVersionList = ["43", "43.0.0", ["43"], [43, ""], [43], [43, "0", 0]]

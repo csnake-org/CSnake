@@ -24,8 +24,6 @@ class Version:
                              ""       : 0,
                              None     : 0 }
     
-    __hash__ = None
-    
     def __init__(self, version):
         """ Input version is either 
             - a string (ex:"1.22.3"),
@@ -85,4 +83,10 @@ class Version:
             return 1
         else:
             return -1
+    
+    def __hash__(self):
+        def hashFold(oldHash, number):
+            return (oldHash * 1000000 + number) % 982451653 # 982451653 is prime
+        versionNumberArray = self.__versionNumber + [Version.versionModifierValue[self.__versionModifier]]
+        return reduce(hashFold, versionNumberArray, 0)
 
