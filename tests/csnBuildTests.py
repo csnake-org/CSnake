@@ -109,6 +109,14 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
                                    "src/DummyLib/csnDummyLib.py")
         self.build( config )
 
+    def testDummyLibBuildWithAPI(self):
+        """ testDummyLibBuild: test configuring and building the DummyLib project. """
+        config = TestProjectConfig("DummyLib", "lib", "Release", 
+                                   ["src_api"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
+                                   "src_api/DummyLib/csnDummyLib.py")
+        self.build( config )
+
     def testDummyLibBuildMultiple(self):
         """ testDummyLibBuildMul: test configuring and building the DummyLib project. """
         config = TestProjectConfig("DummyLib2", "lib", "Release", 
