@@ -6,5 +6,9 @@
 import csnAPIImplementation
 
 def GetAPI(version):
-    """ Get the API corresponding to the input Version object. """
+    """ Get the API corresponding to the input version. 
+    Version can be either 
+        - a string (ex:"1.22.3"),
+        - an array of strings (ex:["1", "22", "3"]).
+        - an array of ints (ex:[1, 22, 3]). """
     return csnAPIImplementation.FindAPI(version)
