@@ -183,7 +183,7 @@ class Handler:
             # check if CMake is present
             self.CheckCMake()
         
-            nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True))
+            nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True, _includeSelf = True))
             argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
             
             if self.__ConfigureProject(argList, instance.GetBuildFolder(), nProjects):
