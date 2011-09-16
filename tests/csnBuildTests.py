@@ -81,6 +81,14 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
                                    "src/DummyExe/csnDummyExe.py")
         self.build( config )
         
+    def testDummyExeBuildWithAPI(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src_api"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
+                                   "src_api/DummyExe/csnDummyExe.py")
+        self.build( config )
+        
     def testDummyExeBuildWithSpace(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with spaces in folders. """
