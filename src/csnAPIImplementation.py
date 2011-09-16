@@ -11,6 +11,8 @@ from csnVersion import Version
 from csnProject import GenericProject
 import csnProject
 from csnStandardModuleProject import StandardModuleProject
+import os.path
+import csnUtility
 
 
 # *********************************************************************************************************************
@@ -99,57 +101,42 @@ class _APIGenericProject_Base:
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
     
-    def AddSources(self):
-        # TODO
-        pass
+    def AddSources(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
+        self.__project.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
         
-    def SetPrecompiledHeader(self, pch):
-        # TODO
-        pass
+    def SetPrecompiledHeader(self, precompiledHeader):
+        self.__project.SetPrecompiledHeader(precompiledHeader)
     
-    def AddIncludeFolders(self):
-        # TODO
-        pass
+    def AddIncludeFolders(self, includeFolders, WIN32 = 0, NOT_WIN32 = 0):
+        self.__project.AddIncludeFolders(includeFolders, WIN32, NOT_WIN32)
     
-    def AddProperties(self):
-        # TODO
-        pass
+    def AddProperties(self, properties):
+        self.__project.AddProperties(properties)
     
-    def AddLibraries(self):
-        # TODO
-        pass
+    def AddLibraries(self, libraries, WIN32 = 0, NOT_WIN32 = 0, debugOnly = 0, releaseOnly = 0):
+        self.__project.AddLibraries(libraries, WIN32, NOT_WIN32, debugOnly, releaseOnly)
     
-    def AddFilesToInstall(self):
-        # TODO
-        pass
+    def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0, WIN32 = 0, NOT_WIN32 = 0):
+        self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
     
-    def AddLibraryModules(self, modules):
-        # TODO
-        pass
+    def AddProjects(self, projects, dependency = True, includeInSolution = True):
+        self.__project.AddProjects(projects, dependency, includeInSolution)
     
-    def AddProjects(self, projects):
-        # TODO
-        pass
-    
-    def AddTests(self, param1, param2):
-        # TODO
-        pass
+    def AddTests(self, tests, cxxTestProject, enableWxWidgets = 0, dependencies = None, pch = ""):
+        self.__project.AddTests(tests, cxxTestProject, enableWxWidgets, dependencies, pch)
     
     def AddSourceToTest(self):
         # TODO
         pass
     
-    def GenerateWin32Header(self, _generate = True):
-        # TODO
-        pass
+    def GenerateWin32Header(self, generate = True):
+        self.__project.SetGenerateWin32Header(generate)
     
-    def Glob(self):
-        # TODO
-        pass
+    def Glob(self, path):
+        self.__project.Glob(path)
     
-    def AddCustomCommand(self):
-        # TODO
-        pass
+    def AddCustomCommand(self, command):
+        self.__project.AddCustomCommand(command)
     
     def CreateHeader(self, filename = None, variables = None, variablePrefix = None):
         self.__project.CreateHeader(filename, variables, variablePrefix)
@@ -170,9 +157,12 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     def __init__(self, project):
         self.__project = project
     
-    def AddApplications(self, apps):
-        # TODO
-        pass
+    def AddApplications(self, modules, pch = "", applicationDependenciesList = None, holderName = None, properties = []):
+        self.__project.AddApplications(modules, pch, applicationDependenciesList, holderName, properties)
+
+    def AddLibraryModules(self, modules):
+        self.__project.AddLibraryModules(modules)
+    
     
 class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGenericProject_2_4_5):
     
@@ -218,12 +208,20 @@ class _API_Base:
         self.__standardModuleProjectConstructor = _FindAPIStandardModuleProjectConstructor(version)
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
-    def CreateGenericProject(self, _name, _type, someMoreParameters):
-        project = GenericProject(_name, _type, someMoreParameters)
+    def CreateGenericProject(self, name, type, sourceRootFolder = None, categories = None, context = None):
+        if sourceRootFolder is None:
+            filename = csnProject.FindFilename()
+            dirname = os.path.dirname(filename)
+            sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
+        project = GenericProject(name, type, sourceRootFolder, categories, context)
         return self.__genericProjectConstructor(project)
 
-    def CreateStandardModuleProject(self, _name, _type, _sourceRootFolder = None):
-        project = StandardModuleProject(_name, _type, _sourceRootFolder = None)
+    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None):
+        if sourceRootFolder is None:
+            filename = csnProject.FindFilename()
+            dirname = os.path.dirname(filename)
+            sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
+        project = StandardModuleProject(name, type, sourceRootFolder)
         return self.__standardModuleProjectConstructor(project)
     
     def CreateVersion(self, version):
