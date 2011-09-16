@@ -13,6 +13,7 @@ import csnProject
 from csnStandardModuleProject import StandardModuleProject
 import os.path
 import csnUtility
+import types
 
 
 # *********************************************************************************************************************
@@ -120,7 +121,10 @@ class _APIGenericProject_Base:
         self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
     
     def AddProjects(self, projects, dependency = True, includeInSolution = True):
-        self.__project.AddProjects(projects, dependency, includeInSolution)
+        # unwrap the input projects before adding them
+        unwrapped = map( self.__UnwrapProject, projects)
+        # GenericProject.AddProjects only wants GenericProjects
+        self.__project.AddProjects(unwrapped, dependency, includeInSolution)
     
     def AddTests(self, tests, cxxTestProject, enableWxWidgets = 0, dependencies = None, pch = ""):
         self.__project.AddTests(tests, cxxTestProject, enableWxWidgets, dependencies, pch)
@@ -140,7 +144,15 @@ class _APIGenericProject_Base:
     
     def CreateHeader(self, filename = None, variables = None, variablePrefix = None):
         self.__project.CreateHeader(filename, variables, variablePrefix)
-
+        
+    def __UnwrapProject(self, project):
+        """ Unwrap a project from an input method or api project to a GenericProject. """
+        if type(project) == types.FunctionType:
+            project = project()
+        if isinstance(project, _APIGenericProject_Base):
+            # Funny line
+            project = project.__project
+        return project
 
 class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     
