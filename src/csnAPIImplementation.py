@@ -259,6 +259,12 @@ class _API_2_4_5(_API_Base):
 
 _apiRegister = dict()
 
+class APIError(object):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 def FindAPI(version):
     version = Version(version)
     if not version in _apiRegister:
