@@ -19,6 +19,9 @@ from aboutTests import AboutTests
 from versionTests import VersionTests
 from csnInstallTests import csnInstallTests
 from csnCilabTests import csnCilabTests
+from csnAPITests import csnAPITests
+from csnBuildDummyLibTests import csnBuildDummyLibTests
+from csnBuildDummyExeTests import csnBuildDummyExeTests
 
 def CreateConfigFileLinux():
     # find out config values
@@ -74,21 +77,22 @@ class AllTests:
         @param _outputFileName: The name of the output file.
         '''
         # create suites from unit tests
-        buildSuite = unittest.TestLoader().loadTestsFromTestCase(csnBuildTests)
-        uiSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIHandlerTests)
-        csnProjectSuite = unittest.TestLoader().loadTestsFromTestCase(csnProjectTests)
-        csnUtilitySuite = unittest.TestLoader().loadTestsFromTestCase(csnUtilityTests)
-        csnContextSuite = unittest.TestLoader().loadTestsFromTestCase(csnContextTests)
-        csnGUIOptionsSuite = unittest.TestLoader().loadTestsFromTestCase(csnGUIOptionsTests)
-        aboutSuite = unittest.TestLoader().loadTestsFromTestCase(AboutTests)
-        versionSuite = unittest.TestLoader().loadTestsFromTestCase(VersionTests)
-        installSuite = unittest.TestLoader().loadTestsFromTestCase(csnInstallTests)
-        cilabSuite = unittest.TestLoader().loadTestsFromTestCase(csnCilabTests)
+        tests = []
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnAPITests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyLibTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyExeTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnCilabTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnContextTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnGUIHandlerTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnGUIOptionsTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnInstallTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnProjectTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnUtilityTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(AboutTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(VersionTests) )
         # main suite
-        self.__suite = unittest.TestSuite([
-             buildSuite, uiSuite, csnProjectSuite, 
-             csnUtilitySuite, csnContextSuite, csnGUIOptionsSuite,
-             aboutSuite, versionSuite, installSuite, cilabSuite])
+        self.__suite = unittest.TestSuite(tests)
         # output file name
         self.__outputFileName = outputFileName
         
