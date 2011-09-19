@@ -13,3 +13,6 @@ class csnAPITests(unittest.TestCase):
         """ Test that non imported class stay private. """
         self.assertRaises(NameError, lambda : Version("1.2.3") ) #@UndefinedVariable
         self.assertRaises(NameError, lambda : csnProject.Project("name", "type") ) #@UndefinedVariable
+
+if __name__ == "__main__":
+    unittest.main() 
