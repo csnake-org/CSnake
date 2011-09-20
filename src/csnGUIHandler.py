@@ -192,8 +192,9 @@ class Handler:
                 return False
         
         for project in instance.dependenciesManager.GetProjects(_recursive = True) + [instance]:
-            for task in project.GetPostCMakeTasks():
-                task(project, _askUser)
+            if isinstance(project, csnProject.GenericProject):
+                for task in project.GetPostCMakeTasks():
+                    task(project, _askUser)
         
         return True
             

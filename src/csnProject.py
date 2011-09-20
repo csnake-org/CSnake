@@ -75,7 +75,70 @@ def ToProject(project):
         result = project()
     return result
 
-class GenericProject(object):
+class VeryGenericProject(object):
+    """ Very very generic project... """
+    def __init__(self, name, type, sourceRootFolder = None, categories = None, context = None):
+        # name
+        self.name = name
+        # type: dll, exe, tp
+        self.type = type
+        # source root folder
+        if sourceRootFolder is None:
+            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        # categories: ~name
+        self.categories = categories
+        if self.categories is None:
+            self.categories = []
+        # context
+        self.context = context
+
+        # managers
+        self.pathsManager = csnProjectPaths.Manager(self, sourceRootFolder)
+        self.dependenciesManager = csnDependencies.Manager(self)
+        self.installManager = csnInstall.Manager(self)
+
+    def AddProjects(self, _projects, _dependency = True, _includeInSolution = True): 
+        """ Add dependencies to the project. """
+        self.dependenciesManager.AddProjects(_projects, _dependency, _includeInSolution)
+
+    def GetProjects(self, _recursive = False, 
+            _onlyRequiredProjects = False, 
+            _includeSelf = False, 
+            _onlyPublicDependencies = False,
+            _onlyNonRequiredProjects = False, 
+            _filter = True):
+        """ Get the dependencies of this project in a sorted array (dependencies before dependents). """
+        return self.dependenciesManager.GetProjects(_recursive, 
+            _onlyRequiredProjects, 
+            _includeSelf, 
+            _onlyPublicDependencies,
+            _onlyNonRequiredProjects, 
+            _filter)
+        
+    def AddFilesToInstall(self, _list, _location = None, 
+              _debugOnly = 0, _releaseOnly = 0, 
+              _WIN32 = 0, _NOT_WIN32 = 0):
+        """ Add files to copy (install) to the build folder. """
+        self.installManager.AddFilesToInstall(_list, _location, 
+              _debugOnly, _releaseOnly, 
+              _WIN32, _NOT_WIN32)
+        
+    def GetBuildFolder(self):
+        """ Get the build folder. """
+        assert False, "To be implemented in subclass." 
+                
+    def MatchesFilter(self):
+        for pattern in self.context.GetFilter():
+            for string in self.categories:
+                if csnUtility.Matches(string, pattern):
+                    return True
+        return False
+
+    def GetSourceRootFolder(self):
+        return self.pathsManager.GetSourceRootFolder()
+
+
+class GenericProject(VeryGenericProject):
     """
     The constructors initialises these member variables:
     self.buildSubFolder -- Direct subfolder - within the build folder - for this project. Is either 'executable' or 'library'.
@@ -108,12 +171,9 @@ class GenericProject(object):
         the call stack. For example, if this class' constructor is called in a file d:/users/me/csnMyProject.py, then d:/users/me 
         will be set as the source root folder.
         """    
-        self.context = _context
-        self.name = _name
-        self.type = _type
         if _sourceRootFolder is None:
             _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
-        self.pathsManager = csnProjectPaths.Manager(self, _sourceRootFolder)
+        VeryGenericProject.__init__(self, _name, _type, _sourceRootFolder, _categories, _context)
 
         # Get the thirdPartyBuildFolder index
         # WARNING: this is only valid for a thirdparty projects!!!
@@ -125,13 +185,8 @@ class GenericProject(object):
                 break
             count += 1
         
-        self.installManager = csnInstall.Manager(self)
         self.rules = dict()
         self.customCommands = []
-        self.categories = _categories
-        if self.categories is None:
-            self.categories = []
-        self.dependenciesManager = csnDependencies.Manager(self)
         self.__compileManager = csnCompile.Manager(self)
         self.__compileManagerUpdates = list()
         self.installSubFolder = ""
@@ -146,9 +201,6 @@ class GenericProject(object):
         # Function called at the beginning of the CMakeList
         self.CMakeInsertBeginning = new.instancemethod(SetCMakeInsertBeginning, self)
         
-
-    def AddProjects(self, _projects, _dependency = True, _includeInSolution = True): 
-        self.dependenciesManager.AddProjects(_projects, _dependency, _includeInSolution)
 
     def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
         self.__compileManagerUpdates.append((self.__compileManager.AddSources, {
@@ -173,9 +225,6 @@ class GenericProject(object):
             "_NOT_WIN32"         : _NOT_WIN32
           }))
         
-    def AddFilesToInstall(self, _list, _location = None, _debugOnly = 0, _releaseOnly = 0, _WIN32 = 0, _NOT_WIN32 = 0):
-        self.installManager.AddFilesToInstall(_list, _location, _debugOnly, _releaseOnly, _WIN32, _NOT_WIN32)
-                
     def AddIncludeFolders(self, _listOfIncludeFolders, _WIN32 = 0, _NOT_WIN32 = 0):
         self.__compileManagerUpdates.append((self.__compileManager.AddIncludeFolders, {
             "_listOfIncludeFolders" : _listOfIncludeFolders,
@@ -207,11 +256,6 @@ class GenericProject(object):
     def Glob(self, _path):
         return self.pathsManager.Glob(_path)
     
-    def GetProjects(self, _recursive = False, _onlyRequiredProjects = False, _includeSelf = False, _onlyPublicDependencies = False,
-            _onlyNonRequiredProjects = False, _filter = True):
-        return self.dependenciesManager.GetProjects(_recursive, _onlyRequiredProjects, _includeSelf, _onlyPublicDependencies,
-            _onlyNonRequiredProjects, _filter)
-        
     def UseBefore(self, _otherProject):
         self.dependenciesManager.UseBefore(_otherProject)
 
@@ -267,27 +311,17 @@ class GenericProject(object):
     def GetSources(self):
         return self.GetCompileManager().sources
         
-    def GetSourceRootFolder(self):
-        return self.pathsManager.GetSourceRootFolder()
-
-    def MatchesFilter(self):
-        for pattern in self.context.GetFilter():
-            for string in self.categories:
-                if csnUtility.Matches(string, pattern):
-                    return True
-        return False
-    
     testProject = property(GetTestProject)
-    sourceRootFolder = property(GetSourceRootFolder)
+    #sourceRootFolder = property(GetSourceRootFolder)
 
     def Dump(self):
         dump = dict()
         for project in self.dependenciesManager.GetProjects(_recursive=True, _includeSelf=True):
-            dump[project.name] = { \
-                "compiler" : project.__compileManager.Dump(), \
-                "dependencies" : project.dependenciesManager.Dump(), \
-                "install" : project.installManager.Dump(), \
-                "paths" : project.pathsManager.Dump() \
+            dump[project.name] = {
+                #"compiler" : project.__compileManager.Dump()
+                #"dependencies" : project.dependenciesManager.Dump(), \
+                #"install" : project.installManager.Dump(), \
+                #"paths" : project.pathsManager.Dump() \
             }
         return dump
 
@@ -352,3 +386,31 @@ def SetCMakeInsertAfterTarget(self, _file):
 def SetCMakeInsertBeginning(self, _file):
     # Empty function
     return
+
+class ThirdPartyProject(VeryGenericProject):
+    """ Third Party project. """
+    def __init__(self, name, context, sourceRootFolder=None):
+        if sourceRootFolder is None:
+            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        VeryGenericProject.__init__(self, name, "third party", sourceRootFolder, None, context)
+
+        # Get the thirdPartyBuildFolder index
+        # WARNING: this is only valid for a thirdparty projects!!!
+        self.thirdPartyIndex = 0
+        count = 0
+        for folder in self.context.GetThirdPartyFolders():
+            if folder == os.path.dirname(sourceRootFolder):
+                self.thirdPartyIndex = count
+                break
+            count += 1
+        
+    def GetBuildFolder(self):
+        return self.context.GetThirdPartyBuildFolderByIndex(self.thirdPartyIndex)
+    
+    def SetUseFilePath(self, path):
+        """ Set the path of the cmake *use* file. """
+        self.pathsManager.useFilePath = path
+
+    def SetConfigFilePath(self, path):
+        """ Set the path of the cmake *config* file. """
+        self.pathsManager.configFilePath = path

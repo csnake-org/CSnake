@@ -8,7 +8,7 @@ import csnGenerator
 import copy
 import re
 from csnVersion import Version
-from csnProject import GenericProject
+from csnProject import GenericProject, ThirdPartyProject
 import csnProject
 from csnStandardModuleProject import StandardModuleProject
 import os.path
@@ -89,17 +89,51 @@ import types
 #   before mentioned (bad) call of "virtual" functions and avoids exposing internal details to the CSnake file
 # 
 
+######################
+# VeryGenericProject #
+######################
 
-##################
-# GenericProject #
-##################
-
-class _APIGenericProject_Base:
+class _APIVeryGenericProject_Base:
     
     def __init__(self, project):
         # Note: As the class _APIStandardModuleProject_2_4_5 uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
+        self.__project = project
+
+    def __UnwrapProject(self, project):
+        """ Unwrap a project from an input method or api project to a GenericProject. """
+        if type(project) == types.FunctionType:
+            project = project()
+        if isinstance(project, _APIVeryGenericProject_Base):
+            # Funny line
+            project = project.__project
+        return project
+
+    def AddProjects(self, projects, dependency = True, includeInSolution = True):
+        # unwrap the input projects before adding them
+        unwrapped = map(self.__UnwrapProject, projects)
+        # GenericProject.AddProjects only wants GenericProjects
+        self.__project.AddProjects(unwrapped, dependency, includeInSolution)
+    
+    def GetBuildFolder(self):
+        return self.__project.GetBuildFolder()
+
+    def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0, WIN32 = 0, NOT_WIN32 = 0):
+        self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
+    
+
+##################
+# GenericProject #
+##################
+
+class _APIGenericProject_Base(_APIVeryGenericProject_Base):
+    
+    def __init__(self, project):
+        # Note: As the sub class uses multiple inheritance and derives in two ways from this
+        # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
+        # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
+        _APIVeryGenericProject_Base.__init__(self, project)
         self.__project = project
     
     def AddSources(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
@@ -117,17 +151,9 @@ class _APIGenericProject_Base:
     def AddLibraries(self, libraries, WIN32 = 0, NOT_WIN32 = 0, debugOnly = 0, releaseOnly = 0):
         self.__project.AddLibraries(libraries, WIN32, NOT_WIN32, debugOnly, releaseOnly)
     
-    def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0, WIN32 = 0, NOT_WIN32 = 0):
-        self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
-    
-    def AddProjects(self, projects, dependency = True, includeInSolution = True):
-        # unwrap the input projects before adding them
-        unwrapped = map( self.__UnwrapProject, projects)
-        # GenericProject.AddProjects only wants GenericProjects
-        self.__project.AddProjects(unwrapped, dependency, includeInSolution)
-    
     def AddTests(self, tests, cxxTestProject, enableWxWidgets = 0, dependencies = None, pch = ""):
-        self.__project.AddTests(tests, cxxTestProject, enableWxWidgets, dependencies, pch)
+        testProject = self._APIVeryGenericProject_Base__UnwrapProject(cxxTestProject)
+        self.__project.AddTests(tests, testProject, enableWxWidgets, dependencies, pch)
     
     def AddSourceToTest(self):
         # TODO
@@ -145,19 +171,11 @@ class _APIGenericProject_Base:
     def CreateHeader(self, filename = None, variables = None, variablePrefix = None):
         self.__project.CreateHeader(filename, variables, variablePrefix)
         
-    def __UnwrapProject(self, project):
-        """ Unwrap a project from an input method or api project to a GenericProject. """
-        if type(project) == types.FunctionType:
-            project = project()
-        if isinstance(project, _APIGenericProject_Base):
-            # Funny line
-            project = project.__project
-        return project
-
 class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     
-    def __init__(self, version):
-        _APIGenericProject_Base.__init__(self, version)
+    def __init__(self, project):
+        _APIGenericProject_Base.__init__(self, project)
+        self.__project = project
 
 
 #########################
@@ -167,6 +185,7 @@ class _APIGenericProject_2_4_5(_APIGenericProject_Base):
 class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
     def __init__(self, project):
+        _APIGenericProject_Base.__init__(self, project)
         self.__project = project
     
     def AddApplications(self, modules, pch = "", applicationDependenciesList = None, holderName = None, properties = []):
@@ -178,10 +197,34 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
 class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGenericProject_2_4_5):
     
-    def __init__(self, version):
-        _APIGenericProject_Base.__init__(self, version)
-        _APIStandardModuleProject_Base.__init__(self, version)
+    def __init__(self, project):
+        _APIStandardModuleProject_Base.__init__(self, project)
+        self.__project = project
 
+
+
+#########################
+#   ThirdPartyProject   #
+#########################
+
+class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
+    
+    def __init__(self, project):
+        _APIVeryGenericProject_Base.__init__(self, project)
+        self.__project = project
+    
+    def SetUseFilePath(self, path):
+        self.__project.SetUseFilePath(path)
+
+    def SetConfigFilePath(self, path):
+        self.__project.SetConfigFilePath(path)
+    
+    
+class _APIThirdPartyProject_2_4_5(_APIThirdPartyProject_Base):
+    
+    def __init__(self, project):
+        _APIThirdPartyProject_Base.__init__(self, project)
+        self.__project = project
 
 #############
 #  Version  #
@@ -218,14 +261,15 @@ class _API_Base:
         self.__version = version
         self.__genericProjectConstructor = _FindAPIGenericProjectConstructor(version)
         self.__standardModuleProjectConstructor = _FindAPIStandardModuleProjectConstructor(version)
+        self.__thirdPartyProjectConstructor = _FindAPIThirdPartyProjectConstructor(version)
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
-    def CreateGenericProject(self, name, type, sourceRootFolder = None, categories = None, context = None):
+    def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename()
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        project = GenericProject(name, type, sourceRootFolder, categories, context)
+        project = GenericProject(name, type, sourceRootFolder, categories, _context=csnProject.globalCurrentContext)
         return self.__genericProjectConstructor(project)
 
     def CreateStandardModuleProject(self, name, type, sourceRootFolder = None):
@@ -235,6 +279,14 @@ class _API_Base:
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = StandardModuleProject(name, type, sourceRootFolder)
         return self.__standardModuleProjectConstructor(project)
+
+    def CreateThirdPartyProject(self, name, sourceRootFolder = None):
+        if sourceRootFolder is None:
+            filename = csnProject.FindFilename()
+            dirname = os.path.dirname(filename)
+            sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
+        project = ThirdPartyProject(name, csnProject.globalCurrentContext, sourceRootFolder)
+        return self.__thirdPartyProjectConstructor(project)
     
     def CreateVersion(self, version):
         return self.__versionConstructor(Version(version))
@@ -318,6 +370,22 @@ def _FindAPIStandardModuleProjectConstructor(version):
             # there was no API before this
             raise APIError("Unknown API version")
     return _apiStandardModuleProjectConstructorRegister[version]
+
+
+# ThirdPartyProject wrapper constructors
+
+_apiThirdPartyProjectConstructorRegister = dict()
+
+def _FindAPIThirdPartyProjectConstructor(version):
+    if not version in _apiThirdPartyProjectConstructorRegister:
+        if version > _currentCSnakeVersion:
+            raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 4, 5]):
+            _apiThirdPartyProjectConstructorRegister[version] = _APIThirdPartyProject_2_4_5
+        else:
+            # there was no API before this
+            raise APIError("Unknown API version")
+    return _apiThirdPartyProjectConstructorRegister[version]
 
 
 # Version class constructors
