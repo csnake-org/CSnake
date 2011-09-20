@@ -26,7 +26,7 @@ class csnBuildDummyLibTests(unittest.TestCase):
         """ testDummyLibBuild: test configuring and building the DummyLib project. """
         config = TestProjectConfig("DummyLib", "lib", "Release", 
                                    ["src_api"], "build",
-                                   ["thirdParty"], ["build/thirdParty"],
+                                   ["thirdParty_api"], ["build/thirdParty"],
                                    "src_api/DummyLib/csnDummyLib.py")
         BuildTest.testBuild( config )
 

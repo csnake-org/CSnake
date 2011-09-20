@@ -26,7 +26,7 @@ class csnBuildDummyExeTests(unittest.TestCase):
         """ testDummyExeBuild: test configuring and building the DummyExe project. """
         config = TestProjectConfig("DummyExe", "exe", "Release", 
                                    ["src_api"], "build",
-                                   ["thirdParty"], ["build/thirdParty"],
+                                   ["thirdParty_api"], ["build/thirdParty"],
                                    "src_api/DummyExe/csnDummyExe.py")
         BuildTest.testBuild( config )
         

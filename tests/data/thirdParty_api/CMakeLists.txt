@@ -1,0 +1,33 @@
+# Root Third Party CMakeLists file
+
+# Project definition
+# (has to be CILAB_TOOLKIT for csnake)
+PROJECT(CILAB_TOOLKIT)
+
+# Minimum cmake version
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+# List of third parties
+LIST(APPEND THIRDPARTY_LIST "Two")
+LIST(APPEND THIRDPARTY_LIST "Three")
+
+# Configure all third parties
+FOREACH(THIRDPARTY ${THIRDPARTY_LIST})
+    
+    # Reset globab vars at each iteration
+    # cmake output dirs
+    SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CILAB_TOOLKIT_BINARY_DIR}/lib")
+    SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CILAB_TOOLKIT_BINARY_DIR}/lib")
+    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CILAB_TOOLKIT_BINARY_DIR}/bin")
+    # project output dirs
+    SET(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    SET(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    SET(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    # shared libs
+    SET(BUILD_SHARED_LIBS "")
+
+    # Parse subdirs
+    MESSAGE(STATUS "Parsing project '${THIRDPARTY}' to be compiled...")
+    ADD_SUBDIRECTORY(${THIRDPARTY})
+
+ENDFOREACH(THIRDPARTY)

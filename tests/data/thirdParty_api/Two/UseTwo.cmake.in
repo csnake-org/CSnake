@@ -1,0 +1,8 @@
+# Include project include directories
+INCLUDE_DIRECTORIES(${Two_INCLUDE_DIRS})
+
+# Include project library directories
+LINK_DIRECTORIES(${Two_LIBRARY_DIRS})
+
+# Include project library directories
+LINK_LIBRARIES(${Two_LIBRARIES})
