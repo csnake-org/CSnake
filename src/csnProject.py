@@ -137,6 +137,7 @@ class VeryGenericProject(object):
     def GetSourceRootFolder(self):
         return self.pathsManager.GetSourceRootFolder()
 
+    sourceRootFolder = property(GetSourceRootFolder)
 
 class GenericProject(VeryGenericProject):
     """
@@ -312,7 +313,6 @@ class GenericProject(VeryGenericProject):
         return self.GetCompileManager().sources
         
     testProject = property(GetTestProject)
-    #sourceRootFolder = property(GetSourceRootFolder)
 
     def Dump(self):
         dump = dict()
