@@ -2,7 +2,7 @@
 from csnAPIPublic import GetAPI
 api = GetAPI("2.4.5")
 
-two = api.CreateThirdPartyProject("Two", "third party")
+two = api.CreateThirdPartyProject("Two")
 two.SetUseFilePath( "%s/Two/UseTwo.cmake" % two.GetBuildFolder() )
 two.SetConfigFilePath( "%s/Two/TwoConfig.cmake" % two.GetBuildFolder() )
 
