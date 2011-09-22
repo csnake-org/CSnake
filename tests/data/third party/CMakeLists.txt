@@ -10,6 +10,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 # List of third parties
 LIST(APPEND THIRDPARTY_LIST "Two")
 LIST(APPEND THIRDPARTY_LIST "Three")
+LIST(APPEND THIRDPARTY_LIST "Four")
+
+# Allow to find_package third parties
+SET(Three_DIR ${CILAB_TOOLKIT_BINARY_DIR}/Three)
 
 # Configure all third parties
 FOREACH(THIRDPARTY ${THIRDPARTY_LIST})
