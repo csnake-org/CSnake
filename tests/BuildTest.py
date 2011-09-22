@@ -141,7 +141,7 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
     
     # test the built executable
     ret = subprocess.call(exeFilename)
-    assert ret == 6, "The generated executable did not return the correct result."
+    assert ret == 10, "The generated executable did not return the correct result."
 
     # run tests with lib
     if testConfig.getType() == "lib":
