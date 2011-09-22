@@ -15,3 +15,6 @@ def two():
 def three():
     return api.LoadThirdPartyModule('Three', 'csnThree').three
 
+def four():
+    return api.LoadThirdPartyModule('Four', 'csnFour').four
+

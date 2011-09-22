@@ -14,7 +14,7 @@ public:
 int TestOne()
 {
 	dummy::DummyClass2 myClass;
-	if( myClass.getCount() != 6 )
+	if( myClass.getCount() != 10 )
 	{
 	   // errror
       return 1;

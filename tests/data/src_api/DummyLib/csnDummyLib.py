@@ -6,7 +6,8 @@ api = GetAPI("2.4.5")
 # define project
 dummyLib = api.CreateStandardModuleProject("DummyLib", "library")
 # dependencies
-dummyLib.AddProjects([two, three])
+# (four depends on three that should be also added implicitly)
+dummyLib.AddProjects([two, four])
 # source folders
 dummyLib.AddLibraryModules(["dummyLib"])
 # applications

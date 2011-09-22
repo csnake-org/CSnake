@@ -2,6 +2,7 @@
 
 #include <Two.h>
 #include <Three.h>
+#include <Four.h>
 
 namespace dummy
 {
@@ -11,8 +12,10 @@ DummyClass::DummyClass()
 {
 	math::Two two;
 	math::Three three;
+	math::Four four;
     m_count += two.getTwo();
     m_count += three.getThree();
+    m_count += four.getFour();
 }
 
 int DummyClass::getCount() const

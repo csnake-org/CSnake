@@ -6,7 +6,8 @@ from csnAll import *
 # define project
 dummyLib = csnCilab.CilabModuleProject("DummyLib", "library")
 # dependencies
-dummyLib.AddProjects([two, three])
+# (four depends on three that should be also added implicitly)
+dummyLib.AddProjects([two, four])
 # source folders
 dummyLib.AddLibraryModules(["dummyLib"])
 # applications
