@@ -16,3 +16,5 @@ dummyLib.AddApplications(["myApp"])
 dummyLib.AddTests(["tests/DummyTest/*.h"], cxxTest)
 # creates a dependency on thirdParty/cmakeMacros/PCHSupport_26.cmake
 dummyLib.SetPrecompiledHeader("dummyLibPCH.h")
+# add compiler definitions
+dummyLib.AddDefinitions(["-Wall -Werror"], private = 1, WIN32 = 1, NOT_WIN32 = 1)
