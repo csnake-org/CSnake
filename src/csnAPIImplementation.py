@@ -148,6 +148,9 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     def AddProperties(self, properties):
         self.__project.AddProperties(properties)
     
+    def AddDefinitions(self, listOfDefinitions, private = 0, WIN32 = 0, NOT_WIN32 = 0):
+        self.__project.AddDefinitions(listOfDefinitions, private, WIN32, NOT_WIN32)
+
     def AddLibraries(self, libraries, WIN32 = 0, NOT_WIN32 = 0, debugOnly = 0, releaseOnly = 0):
         self.__project.AddLibraries(libraries, WIN32, NOT_WIN32, debugOnly, releaseOnly)
     
