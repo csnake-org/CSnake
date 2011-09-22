@@ -1,8 +1,8 @@
 # Include project include directories
-INCLUDE_DIRECTORIES(${Four_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${Five_INCLUDE_DIRS})
 
 # Include project library directories
-LINK_DIRECTORIES(${Four_LIBRARY_DIRS})
+LINK_DIRECTORIES(${Five_LIBRARY_DIRS})
 
 # Include project library directories
-LINK_LIBRARIES(${Four_LIBRARIES})
+LINK_LIBRARIES(${Five_LIBRARIES})
