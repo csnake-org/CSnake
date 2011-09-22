@@ -902,7 +902,7 @@ class CSnakeGUIApp(wx.App):
 
     def ActionCreateCMakeFilesAndRunCMake(self, args):
         self.FindAdditionalRootFolders(True)
-        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser=AskUser(self.frame):
+        if self.__guiHandler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser=AskUser(self.frame)):
             self.__currentSolutionPath = self.__guiHandler.GetTargetSolutionPath()
             if self.options.GetAskToLaunchIDE() and not self.__runningConfigureAll:
                 self.AskToLaunchIDE(self.__currentSolutionPath)
