@@ -70,10 +70,11 @@ def ToProject(project):
     If not, it returns its argument (project). It is used to treat Project instances and functions returning a Project instance
     in the same way.
     """
-    result = project
     if type(project) == types.FunctionType:
-        result = project()
-    return result
+        project = project()
+    if hasattr(project, "_APIVeryGenericProject_Base"):
+        project = project.__APIVeryGenericProject_Base__project
+    return project
 
 class VeryGenericProject(object):
     """ Very very generic project... """
