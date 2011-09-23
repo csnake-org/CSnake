@@ -38,7 +38,6 @@ class csnBuildDummyLibTests(unittest.TestCase):
                                    "src2/DummyLib2/csnDummyLib2.py")
         BuildTest.testBuild( config )
 
-
     def testDummyLibBuildWithSpace(self):
         """ testDummyLibBuildWithSpace: test configuring and building the DummyLib project with spaces in folders. """
         config = TestProjectConfig("DummyLib", "lib", "Release", 
