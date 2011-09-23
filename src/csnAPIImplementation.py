@@ -122,6 +122,9 @@ class _APIVeryGenericProject_Base:
     def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0, WIN32 = 0, NOT_WIN32 = 0):
         self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
     
+    def Glob(self, path):
+        return self.__project.Glob(path)
+    
 
 ##################
 # GenericProject #
@@ -164,9 +167,6 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     
     def GenerateWin32Header(self, generate = True):
         self.__project.SetGenerateWin32Header(generate)
-    
-    def Glob(self, path):
-        self.__project.Glob(path)
     
     def AddCustomCommand(self, command):
         self.__project.AddCustomCommand(command)

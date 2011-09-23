@@ -97,6 +97,12 @@ class VeryGenericProject(object):
         self.dependenciesManager = csnDependencies.Manager(self)
         self.installManager = csnInstall.Manager(self)
 
+    def GetSourceRootFolder(self):
+        return self.pathsManager.GetSourceRootFolder()
+
+    # sourceRootFolder property
+    sourceRootFolder = property(GetSourceRootFolder)
+
     def AddProjects(self, _projects, _dependency = True, _includeInSolution = True): 
         """ Add dependencies to the project. """
         self.dependenciesManager.AddProjects(_projects, _dependency, _includeInSolution)
@@ -134,10 +140,9 @@ class VeryGenericProject(object):
                     return True
         return False
 
-    def GetSourceRootFolder(self):
-        return self.pathsManager.GetSourceRootFolder()
-
-    sourceRootFolder = property(GetSourceRootFolder)
+    def Glob(self, _path):
+        return self.pathsManager.Glob(_path)
+    
 
 class GenericProject(VeryGenericProject):
     """
@@ -254,10 +259,8 @@ class GenericProject(VeryGenericProject):
             "_releaseOnly"     : _releaseOnly
           }))
         
-    def Glob(self, _path):
-        return self.pathsManager.Glob(_path)
-    
     def UseBefore(self, _otherProject):
+        """ Was useful when projects were not sorted, not anymore... """
         self.dependenciesManager.UseBefore(_otherProject)
 
     def AddRule(self, description, output, command, depends, workingDirectory = "."):
