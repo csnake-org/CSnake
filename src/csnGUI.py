@@ -38,16 +38,16 @@ class AskUser:
         self.__questionType = wx.YES_NO
         self.__frame = frame
     
-    def QuestionYesNo():
+    def QuestionYesNo(self):
         return wx.YES_NO
     
-    def AnswerYes():
+    def AnswerYes(self):
         return wx.ID_YES
     
-    def AnswerNo():
+    def AnswerNo(self):
         return wx.ID_NO
     
-    def SetType(questionType):
+    def SetType(self, questionType):
         self.__questionType = questionType
     
     def Ask(self, message, defaultAnswer):
