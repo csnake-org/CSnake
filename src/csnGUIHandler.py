@@ -305,7 +305,9 @@ class Handler:
             if self.IsCanceled(): return result
             count += 1
             (targetName, target) = (member[0], member[1])
-            if isinstance(target, csnProject.GenericProject):
+            if isinstance(target, csnProject.VeryGenericProject):
+                result.append(targetName)
+            elif isinstance(target, csnAPIImplementation._APIVeryGenericProject_Base):
                 result.append(targetName)
         
         return result
