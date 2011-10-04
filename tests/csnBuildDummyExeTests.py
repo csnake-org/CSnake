@@ -30,6 +30,30 @@ class csnBuildDummyExeTests(unittest.TestCase):
                                    "src_api/DummyExe/csnDummyExe.py")
         BuildTest.testBuild( config )
         
+    def testDummyExeBuildMix(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src_api"], "build",
+                                   ["thirdParty"], ["build/thirdParty"],
+                                   "src_api/DummyExe/csnDummyExe.py")
+        BuildTest.testBuild( config )
+
+    def testDummyExeBuildMix2(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src"], "build",
+                                   ["thirdParty_api"], ["build/thirdParty"],
+                                   "src/DummyExe/csnDummyExe.py")
+        BuildTest.testBuild( config )
+
+    def testDummyExeBuildMix3(self):
+        """ testDummyExeBuild: test configuring and building the DummyExe project. """
+        config = TestProjectConfig("DummyExe", "exe", "Release", 
+                                   ["src_mix"], "build",
+                                   ["thirdParty_api"], ["build/thirdParty"],
+                                   "src_mix/DummyExe/csnDummyExe.py")
+        BuildTest.testBuild( config )
+
     def testDummyExeBuildWithSpace(self):
         """ testDummyExeBuild: test configuring and building the DummyExe project
         with spaces in folders. """
