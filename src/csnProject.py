@@ -72,8 +72,8 @@ def ToProject(project):
     """
     if type(project) == types.FunctionType:
         project = project()
-    if hasattr(project, "_APIVeryGenericProject_Base"):
-        project = project.__APIVeryGenericProject_Base__project
+    if hasattr(project, "_APIVeryGenericProject_Base__project"):
+        project = project._APIVeryGenericProject_Base__project
     return project
 
 class VeryGenericProject(object):
