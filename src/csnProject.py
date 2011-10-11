@@ -344,18 +344,26 @@ class GenericProject(VeryGenericProject):
         """ 
         Creates a header file with input vars for the given project.
     
-        @param project The calling project.
-        @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
-        @param variables Dictionary of variable/value pairs.  
+        @param _filename The header file name (will be created in the projects' build folder), defaults to project name
+        @param _variables Dictionary of variable/value pairs
+        @param _variablesPrefix Prefix for the names of the variables in parameter _variables, defaults to project name
         """
+        self.header = (_filename, _variables, _variablePrefix)
+        self.AddCustomCommand(self.CreateHeaderDo)
+    
+    def CreateHeaderDo(self, ignoredProject):
+        (filename, variables, variablePrefix) = self.header
         projectNameClean = re.sub(r"[^A-Za-z0-9]", "_", self.name)
-        if not _filename: 
-            _filename = "%s.h" % projectNameClean
-        path = "%s/%s" % (self.GetBuildFolder(), _filename)
+        if not filename: 
+            filename = "%s.h" % projectNameClean
+        path = "%s/%s" % (self.GetBuildFolder(), filename)
+        
+        # TODO: Only create the header, if it either doesn't exist or source has changed
+        # TODO: Create directory, if it doesn't exist
         headerFile = open(path, 'w')
         
         # header
-        guard = MakeValidIdentifier(_identifier = _filename, _toUpper = True)
+        guard = MakeValidIdentifier(_identifier = filename, _toUpper = True)
         headerFile.write("#ifndef %s\n" % guard)
         headerFile.write("#define %s\n" % guard)
         headerFile.write("\n")
@@ -363,15 +371,15 @@ class GenericProject(VeryGenericProject):
         headerFile.write("\n")
         
         # default variables
-        if not _variablePrefix:
-            _variablePrefix = MakeValidIdentifier(_identifier = self.name, _toUpper = True)
-        headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (_variablePrefix, self.GetSourceRootFolder()))
-        headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (_variablePrefix, self.GetBuildFolder()))
+        if not variablePrefix:
+            variablePrefix = MakeValidIdentifier(_identifier = self.name, _toUpper = True)
+        headerFile.write("#define %s_FOLDER \"%s/..\"\n" % (variablePrefix, self.GetSourceRootFolder()))
+        headerFile.write("#define %s_BUILD_FOLDER \"%s\"\n" % (variablePrefix, self.GetBuildFolder()))
         
         # input variables
-        if _variables:
+        if variables:
             headerFile.write("\n")
-            for (key, value) in _variables:
+            for (key, value) in variables:
                 headerFile.write("#define %s \"%s\"\n" % (key, value))
         
         headerFile.write("\n")
