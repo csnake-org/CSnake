@@ -89,6 +89,15 @@ import types
 #   before mentioned (bad) call of "virtual" functions and avoids exposing internal details to the CSnake file
 # 
 
+def _UnwrapProject(project):
+    """ Unwrap a project from an input method or api project to a GenericProject. """
+    if type(project) == types.FunctionType:
+        project = project()
+    if isinstance(project, _APIVeryGenericProject_Base):
+        # Funny line
+        project = project._APIVeryGenericProject_Base__project
+    return project
+
 ######################
 # VeryGenericProject #
 ######################
@@ -101,18 +110,9 @@ class _APIVeryGenericProject_Base:
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
 
-    def __UnwrapProject(self, project):
-        """ Unwrap a project from an input method or api project to a GenericProject. """
-        if type(project) == types.FunctionType:
-            project = project()
-        if isinstance(project, _APIVeryGenericProject_Base):
-            # Funny line
-            project = project.__project
-        return project
-
     def AddProjects(self, projects, dependency = True, includeInSolution = True):
         # unwrap the input projects before adding them
-        unwrapped = map(self.__UnwrapProject, projects)
+        unwrapped = map(_UnwrapProject, projects)
         # GenericProject.AddProjects only wants GenericProjects
         self.__project.AddProjects(unwrapped, dependency, includeInSolution)
     
@@ -158,7 +158,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         self.__project.AddLibraries(libraries, WIN32, NOT_WIN32, debugOnly, releaseOnly)
     
     def AddTests(self, tests, cxxTestProject, enableWxWidgets = 0, dependencies = None, pch = ""):
-        testProject = self._APIVeryGenericProject_Base__UnwrapProject(cxxTestProject)
+        testProject = _UnwrapProject(cxxTestProject)
         self.__project.AddTests(tests, testProject, enableWxWidgets, dependencies, pch)
     
     def AddSourceToTest(self):
@@ -290,6 +290,17 @@ class _API_Base:
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = ThirdPartyProject(name, csnProject.globalCurrentContext, sourceRootFolder)
         return self.__thirdPartyProjectConstructor(project)
+    
+    def RewrapProject(self, project):
+        project = _UnwrapProject(project)
+        if isinstance(project, GenericProject):
+            return self.__genericProjectConstructor(project)
+        elif isinstance(project, StandardModuleProject):
+            return self.__standardModuleProjectConstructor(project)
+        elif isinstance(project, ThirdPartyProject):
+            return self.__thirdPartyProjectConstructor(project)
+        else:
+            raise APIError("Unknown project type")
     
     def CreateVersion(self, version):
         return self.__versionConstructor(Version(version))
