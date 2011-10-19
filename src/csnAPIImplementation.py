@@ -89,6 +89,7 @@ import types
 #   before mentioned (bad) call of "virtual" functions and avoids exposing internal details to the CSnake file
 # 
 
+
 def _UnwrapProject(project):
     """ Unwrap a project from an input method or api project to a GenericProject. """
     if type(project) == types.FunctionType:
@@ -97,6 +98,7 @@ def _UnwrapProject(project):
         # Funny line
         project = project._APIVeryGenericProject_Base__project
     return project
+
 
 ######################
 # VeryGenericProject #
@@ -205,7 +207,6 @@ class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGeneri
         self.__project = project
 
 
-
 #########################
 #   ThirdPartyProject   #
 #########################
@@ -222,12 +223,51 @@ class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
     def SetConfigFilePath(self, path):
         self.__project.SetConfigFilePath(path)
     
-    
+
 class _APIThirdPartyProject_2_4_5(_APIThirdPartyProject_Base):
     
     def __init__(self, project):
         _APIThirdPartyProject_Base.__init__(self, project)
         self.__project = project
+
+
+##################
+#    Compiler    #
+##################
+
+class _APICompiler_Base:
+    
+    def __init__(self, compiler):
+        self.__compiler = compiler
+    
+    def GetName(self):
+        return self.__compiler.GetName()
+    
+    def TargetIsWindows(self):
+        return self.__compiler.IsForPlatform(_WIN32 = True, _NOT_WIN32 = False)
+    
+    def TargetIsUnix(self):
+        return self.__compiler.IsForPlatform(_WIN32 = False, _NOT_WIN32 = True)
+    
+    def TargetIsLinux(self):
+        return self.__compiler.TargetIsLinux()
+    
+    def TargetIsMac(self):
+        return self.__compiler.TargetIsMac()
+    
+    def TargetIs32Bits(self):
+        return self.__compiler.TargetIs32Bits()
+    
+    def TargetIs64Bits(self):
+        return self.__compiler.TargetIs64Bits()
+    
+
+class _APICompiler_2_4_5(_APICompiler_Base):
+    
+    def __init__(self, compiler):
+        _APICompiler_Base.__init__(self, compiler)
+        self.__compiler = compiler
+
 
 #############
 #  Version  #
@@ -265,6 +305,8 @@ class _API_Base:
         self.__genericProjectConstructor = _FindAPIGenericProjectConstructor(version)
         self.__standardModuleProjectConstructor = _FindAPIStandardModuleProjectConstructor(version)
         self.__thirdPartyProjectConstructor = _FindAPIThirdPartyProjectConstructor(version)
+        self.__compilerConstructor = _FindAPICompilerConstructor(version)
+        self.__compiler = None
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
     def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None):
@@ -317,7 +359,12 @@ class _API_Base:
     def LoadModule(self):
         # TODO
         pass
-
+    
+    def GetCompiler(self):
+        if not self.__compiler:
+            self.__compiler = self.__compilerConstructor(csnProject.globalCurrentContext.GetCompiler())
+        return self.__compiler
+    
 
 class _API_2_4_5(_API_Base):
     
@@ -416,4 +463,20 @@ def _FindAPIVersionConstructor(version):
             # there was no API before this
             raise APIError("Unknown API version")
     return _apiVersionConstructorRegister[version]
+
+
+# Compiler wrapper constructors
+
+_apiCompilerConstructorRegister = dict()
+
+def _FindAPICompilerConstructor(version):
+    if not version in _apiCompilerConstructorRegister:
+        if version > _currentCSnakeVersion:
+            raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 4, 5]):
+            _apiCompilerConstructorRegister[version] = _APICompiler_2_4_5
+        else:
+            # there was no API before this
+            raise APIError("Unknown API version")
+    return _apiCompilerConstructorRegister[version]
 

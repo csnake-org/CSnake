@@ -45,7 +45,7 @@ class Manager:
         for sourceFile in _listOfSourceFiles:
             sources = self.project.Glob(sourceFile)
             if _checkExists and not len(sources):
-                raise IOError, "Path file not found %s" % (sourceFile)
+                raise IOError, "Path file not found %s for project %s" % (sourceFile, self.project.name)
             if not len(sources) and _forceAdd:
                 sources = [sourceFile]
             
