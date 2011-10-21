@@ -15,12 +15,17 @@ import re
 
 globalCurrentContext = None
 
-def FindFilename():
-    frame = inspect.currentframe(2)
+def FindFilename(level = 0):
+    """
+    level - 0: Find filename of the script calling FindFilename (default),
+            1: Find filename of the script calling the function that calls FindFilename,
+            x: Find filename of the script calling FindFilename indirectly through x+1 function calls
+    """
+    frame = inspect.currentframe(1+level)
     try:
         if frame is None:
             # inspect.currentframe is not available with all python interpreters, so use inspect.stack as fallback option
-            filename = inspect.stack()[2][1]
+            filename = inspect.stack()[1+level][1]
         else:
             filename = inspect.getframeinfo(frame)[0]
     finally:
@@ -30,22 +35,22 @@ def FindFilename():
 
 def Project(_name, _type, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
     return globalCurrentContext.CreateProject(_name, _type, _sourceRootFolder, _categories)
 
 def Dll(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
     return Project(_name, "dll", _sourceRootFolder, _categories)
 
 def Library(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
     return Project(_name, "library", _sourceRootFolder, _categories)
 
 def Executable(_name, _sourceRootFolder = None, _categories = None):
     if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
     return Project(_name, "executable", _sourceRootFolder, _categories)
 
 def LoadThirdPartyModule(_subFolder, _name):
@@ -86,7 +91,7 @@ class VeryGenericProject(object):
         self.type = type
         # source root folder
         if sourceRootFolder is None:
-            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         # categories: ~name
         self.categories = categories
         if self.categories is None:
@@ -180,7 +185,7 @@ class GenericProject(VeryGenericProject):
         will be set as the source root folder.
         """    
         if _sourceRootFolder is None:
-            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+            _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         VeryGenericProject.__init__(self, _name, _type, _sourceRootFolder, _categories, _context)
 
         # Get the thirdPartyBuildFolder index
@@ -431,7 +436,7 @@ class ThirdPartyProject(VeryGenericProject):
     """ Third Party project. """
     def __init__(self, name, context, sourceRootFolder=None):
         if sourceRootFolder is None:
-            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename()))
+            sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         VeryGenericProject.__init__(self, name, "third party", sourceRootFolder, None, context)
 
         # Get the thirdPartyBuildFolder index

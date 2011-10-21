@@ -254,7 +254,7 @@ class _APICompiler_Base:
     
     def TargetIsUnix(self):
         return self.__compiler.IsForPlatform(_WIN32 = False, _NOT_WIN32 = True)
-    
+
     def TargetIsLinux(self):
         return self.__compiler.TargetIsLinux()
     
@@ -317,7 +317,7 @@ class _API_Base:
     
     def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None):
         if sourceRootFolder is None:
-            filename = csnProject.FindFilename()
+            filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = GenericProject(name, type, sourceRootFolder, categories, _context=csnProject.globalCurrentContext)
@@ -325,7 +325,7 @@ class _API_Base:
 
     def CreateStandardModuleProject(self, name, type, sourceRootFolder = None):
         if sourceRootFolder is None:
-            filename = csnProject.FindFilename()
+            filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = StandardModuleProject(name, type, sourceRootFolder)
@@ -333,7 +333,7 @@ class _API_Base:
 
     def CreateThirdPartyProject(self, name, sourceRootFolder = None):
         if sourceRootFolder is None:
-            filename = csnProject.FindFilename()
+            filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = ThirdPartyProject(name, csnProject.globalCurrentContext, sourceRootFolder)
@@ -370,6 +370,14 @@ class _API_Base:
         if not self.__compiler:
             self.__compiler = self.__compilerConstructor(csnProject.globalCurrentContext.GetCompiler())
         return self.__compiler
+    
+    def FindScriptFilename(self, level = 0):
+        """
+        level - 0: Find filename of the script calling FindScriptFilename (default),
+                1: Find filename of the script calling the function that calls FindScriptFilename,
+                x: Find filename of the script calling FindScriptFilename indirectly through x+1 function calls
+        """
+        return csnProject.FindFilename(1+level)
     
 
 class _API_2_4_5(_API_Base):
