@@ -175,6 +175,12 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     
     def CreateHeader(self, filename = None, variables = None, variablePrefix = None):
         self.__project.CreateHeader(filename, variables, variablePrefix)
+    
+    def AddCMakeInsertBeforeTarget(self, callback, parameters = {}):
+        self.__project.AddCMakeInsertBeforeTarget(callback, self, parameters)
+    
+    def AddCMakeInsertAfterTarget(self, callback, parameters = {}):
+        self.__project.AddCMakeInsertAfterTarget(callback, self, parameters)
         
 class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     

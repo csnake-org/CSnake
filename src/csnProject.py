@@ -76,6 +76,7 @@ def ToProject(project):
         project = project._APIVeryGenericProject_Base__project
     return project
 
+# Going to be renamed to "GenericProject" in 3.0
 class VeryGenericProject(object):
     """ Very very generic project... """
     def __init__(self, name, type, sourceRootFolder = None, categories = None, context = None):
@@ -144,7 +145,7 @@ class VeryGenericProject(object):
     def Glob(self, _path):
         return self.pathsManager.Glob(_path)
     
-
+# Going to be renamed to "CompiledProject" in 3.0
 class GenericProject(VeryGenericProject):
     """
     The constructors initialises these member variables:
@@ -200,7 +201,10 @@ class GenericProject(VeryGenericProject):
         self.testsManager = csnTests.Manager(self)
         self.properties = []
         self.__postCMakeTasks = []
-
+        self.listCmakeInsertBeforeTarget = list()
+        self.listCmakeInsertAfterTarget = list()
+        self.listCmakeInsertBeginning = list()
+        
         # Function called before "ADD_LIBARRY"
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
         # Function called after "ADD_LIBARRY"
@@ -385,18 +389,42 @@ class GenericProject(VeryGenericProject):
         headerFile.write("\n")
         headerFile.write("#endif // %s\n" % guard)
         headerFile.close()
+    
+    def AddCMakeInsertBeforeTarget(self, callback, wrappedProject, parameters = {}):
+        self.listCmakeInsertBeforeTarget.append((callback, wrappedProject, parameters))
+    
+    def AddCMakeInsertAfterTarget(self, callback, wrappedProject, parameters = {}):
+        self.listCmakeInsertAfterTarget.append((callback, wrappedProject, parameters))
+    
+    def AddCMakeInsertBeginning(self, callback, wrappedProject, parameters = {}):
+        self.listCmakeInsertBeginning.append((callback, wrappedProject, parameters))
 
 
 def SetCMakeInsertBeforeTarget(self, _file):
-    # Empty function
+    for (callback, wrappedProject, parameters) in self.listCmakeInsertBeforeTarget:
+        result = callback(wrappedProject, **parameters)
+        if isinstance(result, str) or isinstance(result, unicode):
+            _file.write("\n# Start code from callback function '%s'\n" % callback.__name__)
+            _file.write(result)
+            _file.write("\n# End code from callback function '%s'\n\n" % callback.__name__)
     return
 
 def SetCMakeInsertAfterTarget(self, _file):
-    # Empty function
+    for (callback, wrappedProject, parameters) in self.listCmakeInsertAfterTarget:
+        result = callback(wrappedProject, **parameters)
+        if isinstance(result, str) or isinstance(result, unicode):
+            _file.write("\n# Start code from callback function '%s'\n" % callback.__name__)
+            _file.write(result)
+            _file.write("\n# End code from callback function '%s'\n\n" % callback.__name__)
     return
 
 def SetCMakeInsertBeginning(self, _file):
-    # Empty function
+    for (callback, wrappedProject, parameters) in self.listCmakeInsertBeginning:
+        result = callback(wrappedProject, **parameters)
+        if isinstance(result, str) or isinstance(result, unicode):
+            _file.write("\n# Start code from callback function '%s'\n" % callback.__name__)
+            _file.write(result)
+            _file.write("\n# End code from callback function '%s'\n\n" % callback.__name__)
     return
 
 class ThirdPartyProject(VeryGenericProject):
