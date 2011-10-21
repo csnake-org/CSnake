@@ -210,6 +210,9 @@ class GenericProject(VeryGenericProject):
         self.listCmakeInsertAfterTarget = list()
         self.listCmakeInsertBeginning = list()
         
+        for flag in globalCurrentContext.GetCompiler().GetCompileFlags():
+            self.__compileManager.private.definitions.append(flag)
+        
         # Function called before "ADD_LIBARRY"
         self.CMakeInsertBeforeTarget = new.instancemethod(SetCMakeInsertBeforeTarget, self)
         # Function called after "ADD_LIBARRY"
