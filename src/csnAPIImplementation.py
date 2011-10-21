@@ -144,6 +144,9 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     def AddSources(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
         self.__project.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
         
+    def GetSources(self):
+        return self.__project.GetSources()
+        
     def SetPrecompiledHeader(self, precompiledHeader):
         self.__project.SetPrecompiledHeader(precompiledHeader)
     
@@ -370,6 +373,9 @@ class _API_Base:
         if not self.__compiler:
             self.__compiler = self.__compilerConstructor(csnProject.globalCurrentContext.GetCompiler())
         return self.__compiler
+    
+    def GetDummyCppFilename(self):
+        return csnUtility.GetDummyCppFilename()
     
     def FindScriptFilename(self, level = 0):
         """
