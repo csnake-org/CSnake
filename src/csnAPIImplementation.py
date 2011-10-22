@@ -166,9 +166,8 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         testProject = _UnwrapProject(cxxTestProject)
         self.__project.AddTests(tests, testProject, enableWxWidgets, dependencies, pch)
     
-    def AddSourceToTest(self):
-        # TODO
-        pass
+    def AddSourceToTest(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
+        self.__project.testProject.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
     
     def GenerateWin32Header(self, generate = True):
         self.__project.SetGenerateWin32Header(generate)
