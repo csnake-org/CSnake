@@ -384,6 +384,10 @@ class _API_Base:
         """
         return csnProject.FindFilename(1+level)
     
+    def FindSourceRootFolder(self, level = 0):
+        """ level - see function FindScriptFilename """
+        return csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename(1+level)))
+    
 
 class _API_2_4_5(_API_Base):
     
