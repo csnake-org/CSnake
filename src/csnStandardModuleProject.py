@@ -11,12 +11,12 @@ from csnProject import GenericProject
 class StandardModuleProject(GenericProject):
     """ GenericProject with applications and modules in specific folders. """
 
-    def __init__(self, _name, _type, _sourceRootFolder = None):
+    def __init__(self, _name, _type, _sourceRootFolder = None, _categories = None):
         if _sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        GenericProject.__init__(self, _name=_name, _type=_type, _sourceRootFolder=_sourceRootFolder, _context=csnProject.globalCurrentContext)
+        GenericProject.__init__(self, _name=_name, _type=_type, _sourceRootFolder=_sourceRootFolder, _categories=_categories, _context=csnProject.globalCurrentContext)
         self.applicationsProject = None
 
     def AddLibraryModules(self, _libModules):

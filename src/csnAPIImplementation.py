@@ -95,7 +95,6 @@ def _UnwrapProject(project):
     if type(project) == types.FunctionType:
         project = project()
     if isinstance(project, _APIVeryGenericProject_Base):
-        # Funny line
         project = project._APIVeryGenericProject_Base__project
     return project
 
@@ -325,12 +324,12 @@ class _API_Base:
         project = GenericProject(name, type, sourceRootFolder, categories, _context=csnProject.globalCurrentContext)
         return self.__genericProjectConstructor(project)
 
-    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None):
+    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None, categories = None):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        project = StandardModuleProject(name, type, sourceRootFolder)
+        project = StandardModuleProject(name, type, sourceRootFolder, categories)
         return self.__standardModuleProjectConstructor(project)
 
     def CreateThirdPartyProject(self, name, sourceRootFolder = None):
