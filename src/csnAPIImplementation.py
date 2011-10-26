@@ -14,6 +14,7 @@ from csnStandardModuleProject import StandardModuleProject
 import os.path
 import csnUtility
 import types
+import new
 
 
 # *********************************************************************************************************************
@@ -98,6 +99,16 @@ def _UnwrapProject(project):
         project = project._APIVeryGenericProject_Base__project
     return project
 
+def _UnwrapProjectAndCustomMemberFunctions(project):
+    """ Unwrap a project from an input method or api project to a GenericProject and return its custom member functions. """
+    if type(project) == types.FunctionType:
+        project = project()
+    customMemberFunctions = None
+    if isinstance(project, _APIVeryGenericProject_Base):
+        customMemberFunctions = project._APIVeryGenericProject_Base__customMemberFunctions
+        project = project._APIVeryGenericProject_Base__project
+    return (customMemberFunctions, project)
+
 
 ######################
 # VeryGenericProject #
@@ -110,6 +121,7 @@ class _APIVeryGenericProject_Base:
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
+        self.__customMemberFunctions = dict()
 
     def AddProjects(self, projects, dependency = True, includeInSolution = True):
         # unwrap the input projects before adding them
@@ -126,6 +138,14 @@ class _APIVeryGenericProject_Base:
     def Glob(self, path):
         return self.__project.Glob(path)
     
+    def AddCustomMemberFunction(self, name, function):
+        # Bind the function to this object
+        function = new.instancemethod(function, self)
+        # Add it to object
+        self.__dict__[name] = function
+        # Remember the bound function (in order to transfer it to a rewrapped project, if necessary)
+        self.__customMemberFunctions[name] = function
+
 
 ##################
 # GenericProject #
@@ -341,15 +361,24 @@ class _API_Base:
         return self.__thirdPartyProjectConstructor(project)
     
     def RewrapProject(self, project):
-        project = _UnwrapProject(project)
+        # Remove the old wrapper
+        (customMemberFunctions, project) = _UnwrapProjectAndCustomMemberFunctions(project)
+        # Add a new wrapper (depending on the project type)
         if isinstance(project, GenericProject):
-            return self.__genericProjectConstructor(project)
+            project = self.__genericProjectConstructor(project)
         elif isinstance(project, StandardModuleProject):
-            return self.__standardModuleProjectConstructor(project)
+            project = self.__standardModuleProjectConstructor(project)
         elif isinstance(project, ThirdPartyProject):
-            return self.__thirdPartyProjectConstructor(project)
+            project = self.__thirdPartyProjectConstructor(project)
         else:
             raise APIError("Unknown project type")
+        # Add the custom member functions to the new wrapper
+        for name, function in customMemberFunctions.iteritems():
+            # Note: No need to bind the function to the new project wrapper - it's better to pass the object using a
+            #       wrapper of the API version with which the project was created
+            project.__dict__[name] = function
+        project._APIVeryGenericProject_Base__customMemberFunctions = customMemberFunctions
+        return project
     
     def CreateVersion(self, version):
         return self.__versionConstructor(Version(version))
