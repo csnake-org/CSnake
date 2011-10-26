@@ -122,6 +122,9 @@ class _APIVeryGenericProject_Base:
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
         self.__customMemberFunctions = dict()
+    
+    def GetName(self):
+        return self.__project.name
 
     def AddProjects(self, projects, dependency = True, includeInSolution = True):
         # unwrap the input projects before adding them
