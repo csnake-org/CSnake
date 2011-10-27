@@ -117,7 +117,7 @@ def _UnwrapProjectAndCustomMemberFunctions(project):
 class _APIVeryGenericProject_Base:
     
     def __init__(self, project):
-        # Note: As the class _APIStandardModuleProject_2_4_5 uses multiple inheritance and derives in two ways from this
+        # Note: As the class _APIStandardModuleProject_2_5_0 uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
@@ -211,7 +211,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     def AddCMakeInsertAfterTarget(self, callback, parameters = {}):
         self.__project.AddCMakeInsertAfterTarget(callback, self, parameters)
         
-class _APIGenericProject_2_4_5(_APIGenericProject_Base):
+class _APIGenericProject_2_5_0(_APIGenericProject_Base):
     
     def __init__(self, project, apiVersion):
         _APIGenericProject_Base.__init__(self, project, apiVersion)
@@ -235,7 +235,7 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
         self.__project.AddLibraryModules(modules)
     
     
-class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGenericProject_2_4_5):
+class _APIStandardModuleProject_2_5_0(_APIStandardModuleProject_Base, _APIGenericProject_2_5_0):
     
     def __init__(self, project, apiVersion):
         _APIStandardModuleProject_Base.__init__(self, project, apiVersion)
@@ -259,7 +259,7 @@ class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
         self.__project.SetConfigFilePath(path)
     
 
-class _APIThirdPartyProject_2_4_5(_APIThirdPartyProject_Base):
+class _APIThirdPartyProject_2_5_0(_APIThirdPartyProject_Base):
     
     def __init__(self, project):
         _APIThirdPartyProject_Base.__init__(self, project)
@@ -297,7 +297,7 @@ class _APICompiler_Base:
         return self.__compiler.TargetIs64Bits()
     
 
-class _APICompiler_2_4_5(_APICompiler_Base):
+class _APICompiler_2_5_0(_APICompiler_Base):
     
     def __init__(self, compiler):
         _APICompiler_Base.__init__(self, compiler)
@@ -320,7 +320,7 @@ class _APIVersion_Base:
         return self.__version.__cmp__(other.__version)
 
 
-class _APIVersion_2_4_5(_APIVersion_Base):
+class _APIVersion_2_5_0(_APIVersion_Base):
     
     def __init__(self, version):
         _APIVersion_Base.__init__(self, version)
@@ -425,7 +425,7 @@ class _API_Base:
         return csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename(1+level)))
     
 
-class _API_2_4_5(_API_Base):
+class _API_2_5_0(_API_Base):
     
     def __init__(self, version):
         _API_Base.__init__(self, version)
@@ -452,8 +452,8 @@ def FindAPI(version):
     if not version in _apiRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiRegister[version] = _API_2_4_5(version)
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiRegister[version] = _API_2_5_0(version)
         else:
             # there was no API before this
             raise APIError("Unknown API version")
@@ -468,8 +468,8 @@ def _FindAPIGenericProjectConstructor(version):
     if not version in _apiGenericProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiGenericProjectConstructorRegister[version] = _APIGenericProject_2_4_5
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiGenericProjectConstructorRegister[version] = _APIGenericProject_2_5_0
         else:
             # there was no API before this
             raise APIError("Unknown API version")
@@ -484,8 +484,8 @@ def _FindAPIStandardModuleProjectConstructor(version):
     if not version in _apiStandardModuleProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiStandardModuleProjectConstructorRegister[version] = _APIStandardModuleProject_2_4_5
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiStandardModuleProjectConstructorRegister[version] = _APIStandardModuleProject_2_5_0
         else:
             # there was no API before this
             raise APIError("Unknown API version")
@@ -500,8 +500,8 @@ def _FindAPIThirdPartyProjectConstructor(version):
     if not version in _apiThirdPartyProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiThirdPartyProjectConstructorRegister[version] = _APIThirdPartyProject_2_4_5
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiThirdPartyProjectConstructorRegister[version] = _APIThirdPartyProject_2_5_0
         else:
             # there was no API before this
             raise APIError("Unknown API version")
@@ -516,8 +516,8 @@ def _FindAPIVersionConstructor(version):
     if not version in _apiVersionConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiVersionConstructorRegister[version] = _APIVersion_2_4_5
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiVersionConstructorRegister[version] = _APIVersion_2_5_0
         else:
             # there was no API before this
             raise APIError("Unknown API version")
@@ -532,8 +532,8 @@ def _FindAPICompilerConstructor(version):
     if not version in _apiCompilerConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
-        elif version >= Version([2, 4, 5]):
-            _apiCompilerConstructorRegister[version] = _APICompiler_2_4_5
+        elif version >= Version([2, 5, 0, "beta"]):
+            _apiCompilerConstructorRegister[version] = _APICompiler_2_5_0
         else:
             # there was no API before this
             raise APIError("Unknown API version")

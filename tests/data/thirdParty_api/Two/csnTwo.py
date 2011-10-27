@@ -1,6 +1,6 @@
 # Csnake project configuration
 from csnAPIPublic import GetAPI
-api = GetAPI("2.4.5")
+api = GetAPI("2.5.0-beta")
 
 two = api.CreateThirdPartyProject("Two")
 two.SetUseFilePath( "%s/Two/UseTwo.cmake" % two.GetBuildFolder() )
