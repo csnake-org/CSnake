@@ -4,7 +4,7 @@ import exceptions
 import re
 
 class Version:
-    versionModifierValue = { "alpha"  : -10000,
+    versionModifierValue = { "alpha"  : -15000,
                              "alpha1" : -15000,
                              "alpha2" : -14999,
                              "alpha3" : -14998,
@@ -70,7 +70,11 @@ class Version:
     
     def GetString(self, numDecimals = 2):
         zeroes = [0 for i in range(0, numDecimals + 1 - len(self.__versionNumber))]
-        return "%s-%s" % (".".join(map(str, self.__versionNumber + zeroes)), self.__versionModifier)
+        mainVersionString = ".".join(map(str, self.__versionNumber + zeroes))
+        if self.__versionModifier:
+            return "%s-%s" % (mainVersionString, self.__versionModifier)
+        else:
+            return mainVersionString
     
     def __cmp__(self, other):
         commonLength = min(len(self.__versionNumber), len(other.__versionNumber))
