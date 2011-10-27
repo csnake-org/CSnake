@@ -156,12 +156,13 @@ class _APIVeryGenericProject_Base:
 
 class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     
-    def __init__(self, project):
+    def __init__(self, project, apiVersion):
         # Note: As the sub class uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         _APIVeryGenericProject_Base.__init__(self, project)
         self.__project = project
+        self.__apiVersion = apiVersion
     
     def AddSources(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
         self.__project.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
@@ -188,8 +189,12 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         testProject = _UnwrapProject(cxxTestProject)
         self.__project.AddTests(tests, testProject, enableWxWidgets, dependencies, pch)
     
-    def AddSourceToTest(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
-        self.__project.testProject.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
+    def GetTestProject(self):
+        testProject = self.__project.testProject
+        if testProject:
+            return _FindAPIGenericProjectConstructor(self.__apiVersion)(testProject, self.__apiVersion)
+        else:
+            raise APIError("No test present!")
     
     def GenerateWin32Header(self, generate = True):
         self.__project.SetGenerateWin32Header(generate)
@@ -208,8 +213,8 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         
 class _APIGenericProject_2_4_5(_APIGenericProject_Base):
     
-    def __init__(self, project):
-        _APIGenericProject_Base.__init__(self, project)
+    def __init__(self, project, apiVersion):
+        _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
 
@@ -219,8 +224,8 @@ class _APIGenericProject_2_4_5(_APIGenericProject_Base):
 
 class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
-    def __init__(self, project):
-        _APIGenericProject_Base.__init__(self, project)
+    def __init__(self, project, apiVersion):
+        _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
     
     def AddApplications(self, modules, pch = "", applicationDependenciesList = None, holderName = None, properties = []):
@@ -232,8 +237,8 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
 class _APIStandardModuleProject_2_4_5(_APIStandardModuleProject_Base, _APIGenericProject_2_4_5):
     
-    def __init__(self, project):
-        _APIStandardModuleProject_Base.__init__(self, project)
+    def __init__(self, project, apiVersion):
+        _APIStandardModuleProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
 
@@ -345,7 +350,7 @@ class _API_Base:
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = GenericProject(name, type, sourceRootFolder, categories, _context=csnProject.globalCurrentContext)
-        return self.__genericProjectConstructor(project)
+        return self.__genericProjectConstructor(project, self.__version)
 
     def CreateStandardModuleProject(self, name, type, sourceRootFolder = None, categories = None):
         if sourceRootFolder is None:
@@ -353,7 +358,7 @@ class _API_Base:
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = StandardModuleProject(name, type, sourceRootFolder, categories)
-        return self.__standardModuleProjectConstructor(project)
+        return self.__standardModuleProjectConstructor(project, self.__version)
 
     def CreateThirdPartyProject(self, name, sourceRootFolder = None):
         if sourceRootFolder is None:
@@ -368,9 +373,9 @@ class _API_Base:
         (customMemberFunctions, project) = _UnwrapProjectAndCustomMemberFunctions(project)
         # Add a new wrapper (depending on the project type)
         if isinstance(project, GenericProject):
-            project = self.__genericProjectConstructor(project)
+            project = self.__genericProjectConstructor(project, self.__version)
         elif isinstance(project, StandardModuleProject):
-            project = self.__standardModuleProjectConstructor(project)
+            project = self.__standardModuleProjectConstructor(project, self.__version)
         elif isinstance(project, ThirdPartyProject):
             project = self.__thirdPartyProjectConstructor(project)
         else:
