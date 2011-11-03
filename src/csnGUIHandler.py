@@ -1,5 +1,6 @@
 ## @package csnGUIHandler
 # Definition of GUI handling classes. 
+import csnAPIPublic # not used here, but necessary in order to keep the function GetAPI working after the rollback handler has been executed (e.g. in callback functions registered via AddPostCMakeTasks)
 import csnUtility
 import csnContext
 import csnGenerator

@@ -210,7 +210,14 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     
     def AddCMakeInsertAfterTarget(self, callback, parameters = {}):
         self.__project.AddCMakeInsertAfterTarget(callback, self, parameters)
-        
+    
+    def AddPostCMakeTasks(self, tasks):
+        tasksWithWrappedProject=[]
+        for task in tasks:
+            tasksWithWrappedProject.append(lambda _, askUser : task(self, askUser))
+        self.__project.AddPostCMakeTasks(tasksWithWrappedProject)
+    
+
 class _APIGenericProject_2_5_0(_APIGenericProject_Base):
     
     def __init__(self, project, apiVersion):
