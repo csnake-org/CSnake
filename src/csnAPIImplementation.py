@@ -379,7 +379,7 @@ class _API_Base:
         elif isinstance(project, ThirdPartyProject):
             project = self.__thirdPartyProjectConstructor(project)
         else:
-            raise APIError("Unknown project type")
+            raise APIError("Unknown project type: %s" % str(type(project)))
         # Add the custom member functions to the new wrapper
         for name, function in customMemberFunctions.iteritems():
             # Note: No need to bind the function to the new project wrapper - it's better to pass the object using a
@@ -451,12 +451,13 @@ def FindAPI(version):
     version = Version(version)
     if not version in _apiRegister:
         if version > _currentCSnakeVersion:
-            raise APIError("Your CSnake version is too old to compile this code!")
+            raise APIError("Your CSnake version is too old to compile this code! Demanded API version: %s - CSnake version: %s"
+                % (version.GetString(), _currentCSnakeVersion.GetString()))
         elif version >= Version([2, 5, 0, "beta"]):
             _apiRegister[version] = _API_2_5_0(version)
         else:
             # there was no API before this
-            raise APIError("Unknown API version")
+            raise APIError("Unknown API version: %s" % version.GetString())
     return _apiRegister[version]
 
 
