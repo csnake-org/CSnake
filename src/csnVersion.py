@@ -34,7 +34,7 @@ class Version:
         elif isinstance(version, list):
             self.__GetVersionFromArray(version)
         else:
-            raise AssertionError("The input version is neither a string or an array.")
+            raise AssertionError("The input version is neither a string nor an array.")
         assert self.__versionModifier in Version.versionModifierValue
         
     def __GetVersionFromArray(self, versionArray):

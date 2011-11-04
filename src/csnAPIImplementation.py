@@ -116,11 +116,12 @@ def _UnwrapProjectAndCustomMemberFunctions(project):
 
 class _APIVeryGenericProject_Base:
     
-    def __init__(self, project):
+    def __init__(self, project, apiVersion):
         # Note: As the class _APIStandardModuleProject_2_5_0 uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
         self.__project = project
+        self.__apiVersion = apiVersion
         self.__customMemberFunctions = dict()
     
     def GetName(self):
@@ -148,7 +149,18 @@ class _APIVeryGenericProject_Base:
         self.__dict__[name] = function
         # Remember the bound function (in order to transfer it to a rewrapped project, if necessary)
         self.__customMemberFunctions[name] = function
-
+    
+    def GetProjects(self, recursive = False, onlyRequiredProjects = False, includeSelf = False, filter = True):
+        """ Get the dependencies of this project in a sorted array (dependencies before dependents). """
+        projects = self.__project.dependenciesManager.GetProjects(_recursive = recursive,
+            _onlyRequiredProjects = onlyRequiredProjects,
+            _includeSelf = includeSelf,
+            _onlyPublicDependencies = False,
+            _onlyNonRequiredProjects = False,
+            _filter = filter)
+        api = FindAPI(self.__apiVersion)
+        return map(api.RewrapProject, projects)
+    
 
 ##################
 # GenericProject #
@@ -160,7 +172,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         # Note: As the sub class uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
-        _APIVeryGenericProject_Base.__init__(self, project)
+        _APIVeryGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
         self.__apiVersion = apiVersion
     
@@ -255,8 +267,8 @@ class _APIStandardModuleProject_2_5_0(_APIStandardModuleProject_Base, _APIGeneri
 
 class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
     
-    def __init__(self, project):
-        _APIVeryGenericProject_Base.__init__(self, project)
+    def __init__(self, project, apiVersion):
+        _APIVeryGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
     
     def SetUseFilePath(self, path):
@@ -268,8 +280,8 @@ class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
 
 class _APIThirdPartyProject_2_5_0(_APIThirdPartyProject_Base):
     
-    def __init__(self, project):
-        _APIThirdPartyProject_Base.__init__(self, project)
+    def __init__(self, project, apiVersion):
+        _APIThirdPartyProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
 
@@ -373,7 +385,7 @@ class _API_Base:
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         project = ThirdPartyProject(name, csnProject.globalCurrentContext, sourceRootFolder)
-        return self.__thirdPartyProjectConstructor(project)
+        return self.__thirdPartyProjectConstructor(project, self.__version)
     
     def RewrapProject(self, project):
         # Remove the old wrapper
@@ -384,7 +396,7 @@ class _API_Base:
         elif isinstance(project, StandardModuleProject):
             project = self.__standardModuleProjectConstructor(project, self.__version)
         elif isinstance(project, ThirdPartyProject):
-            project = self.__thirdPartyProjectConstructor(project)
+            project = self.__thirdPartyProjectConstructor(project, self.__version)
         else:
             raise APIError("Unknown project type: %s" % str(type(project)))
         # Add the custom member functions to the new wrapper
@@ -456,7 +468,8 @@ class APIError(Exception):
         return repr(self.value)
 
 def FindAPI(version):
-    version = Version(version)
+    if not isinstance(version, Version):
+        version = Version(version)
     if not version in _apiRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code! Demanded API version: %s - CSnake version: %s"
