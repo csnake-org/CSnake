@@ -229,6 +229,12 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
             tasksWithWrappedProject.append(lambda _, askUser : task(self, askUser))
         self.__project.AddPostCMakeTasks(tasksWithWrappedProject)
     
+    def GetBuildResultsFolder(self, configurationName):
+        if configurationName:
+            return self.__project.GetBuildResultsFolder(configurationName)
+        else:
+            return self.__project.GetBuildResultsFolder()
+    
 
 class _APIGenericProject_2_5_0(_APIGenericProject_Base):
     
