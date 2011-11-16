@@ -6,7 +6,6 @@
 import csnGenerator
 
 import copy
-import re
 from csnVersion import Version
 from csnProject import GenericProject, ThirdPartyProject
 import csnProject
@@ -46,7 +45,7 @@ import new
 # Changing functionality:
 # -----------------------
 # 
-# If you want to change the behaviour of a function, keep both versions of the functionality and execute one or the
+# If you want to change the behavior of a function, keep both versions of the functionality and execute one or the
 # other depending on the API version. No warnings are necessary.
 # 
 # Implementation summary:
@@ -85,7 +84,7 @@ import new
 #   API to changes [...]") or to add a warning, if a function will be removed in future API versions (and is therefore
 #   probably harmful).
 # - Avoid calling public (and therefore in C++ terminology "virtual") functions, they will likely be overridden in the
-#   future, so you can't rely on their exact behaviour.
+#   future, so you can't rely on their exact behavior.
 # - Within this module it is allowed to access private members of other (unrelated) and superclasses. This avoids the
 #   before mentioned (bad) call of "virtual" functions and avoids exposing internal details to the CSnake file
 # 
@@ -150,14 +149,14 @@ class _APIVeryGenericProject_Base:
         # Remember the bound function (in order to transfer it to a rewrapped project, if necessary)
         self.__customMemberFunctions[name] = function
     
-    def GetProjects(self, recursive = False, onlyRequiredProjects = False, includeSelf = False, filter = True):
+    def GetProjects(self, recursive = False, onlyRequiredProjects = False, includeSelf = False, applyFilter = True):
         """ Get the dependencies of this project in a sorted array (dependencies before dependents). """
         projects = self.__project.dependenciesManager.GetProjects(_recursive = recursive,
             _onlyRequiredProjects = onlyRequiredProjects,
             _includeSelf = includeSelf,
             _onlyPublicDependencies = False,
             _onlyNonRequiredProjects = False,
-            _filter = filter)
+            _filter = applyFilter)
         api = FindAPI(self.__apiVersion)
         return map(api.RewrapProject, projects)
     
@@ -369,27 +368,27 @@ class _API_Base:
         self.__compiler = None
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
-    def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None, showInProjectTree = False):
+    def CreateCompiledProject(self, name, projectType, sourceRootFolder = None, categories = None, showInProjectTree = False):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         if categories:
             showInProjectTree = True
-        project = GenericProject(name, type, sourceRootFolder, [name] if showInProjectTree else None, _context=csnProject.globalCurrentContext)
+        project = GenericProject(name, projectType, sourceRootFolder, [name] if showInProjectTree else None, _context=csnProject.globalCurrentContext)
         if categories:
             superCategory = " / ".join(categories)
             project.context.SetSuperSubCategory(superCategory, name)
         return self.__genericProjectConstructor(project, self.__version)
 
-    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None, categories = None, showInProjectTree = False):
+    def CreateStandardModuleProject(self, name, projectType, sourceRootFolder = None, categories = None, showInProjectTree = False):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
         if categories:
             showInProjectTree = True
-        project = StandardModuleProject(name, type, sourceRootFolder, [name] if showInProjectTree else None)
+        project = StandardModuleProject(name, projectType, sourceRootFolder, [name] if showInProjectTree else None)
         if categories:
             superCategory = " / ".join(categories)
             project.context.SetSuperSubCategory(superCategory, name)
