@@ -369,20 +369,30 @@ class _API_Base:
         self.__compiler = None
         self.__versionConstructor = _FindAPIVersionConstructor(version)
     
-    def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None):
+    def CreateCompiledProject(self, name, type, sourceRootFolder = None, categories = None, showInProjectTree = False):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        project = GenericProject(name, type, sourceRootFolder, categories, _context=csnProject.globalCurrentContext)
+        if categories:
+            showInProjectTree = True
+        project = GenericProject(name, type, sourceRootFolder, [name] if showInProjectTree else None, _context=csnProject.globalCurrentContext)
+        if categories:
+            superCategory = " / ".join(categories)
+            project.context.SetSuperSubCategory(superCategory, name)
         return self.__genericProjectConstructor(project, self.__version)
 
-    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None, categories = None):
+    def CreateStandardModuleProject(self, name, type, sourceRootFolder = None, categories = None, showInProjectTree = False):
         if sourceRootFolder is None:
             filename = csnProject.FindFilename(1)
             dirname = os.path.dirname(filename)
             sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-        project = StandardModuleProject(name, type, sourceRootFolder, categories)
+        if categories:
+            showInProjectTree = True
+        project = StandardModuleProject(name, type, sourceRootFolder, [name] if showInProjectTree else None)
+        if categories:
+            superCategory = " / ".join(categories)
+            project.context.SetSuperSubCategory(superCategory, name)
         return self.__standardModuleProjectConstructor(project, self.__version)
 
     def CreateThirdPartyProject(self, name, sourceRootFolder = None):
