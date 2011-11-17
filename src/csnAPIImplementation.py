@@ -135,8 +135,8 @@ class _APIVeryGenericProject_Base:
     def GetBuildFolder(self):
         return self.__project.GetBuildFolder()
 
-    def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0, WIN32 = 0, NOT_WIN32 = 0):
-        self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, WIN32, NOT_WIN32)
+    def AddFilesToInstall(self, filesToInstall, location = None, debugOnly = 0, releaseOnly = 0):
+        self.__project.AddFilesToInstall(filesToInstall, location, debugOnly, releaseOnly, True, True)
     
     def Glob(self, path):
         return self.__project.Glob(path)
@@ -184,17 +184,17 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     def SetPrecompiledHeader(self, precompiledHeader):
         self.__project.SetPrecompiledHeader(precompiledHeader)
     
-    def AddIncludeFolders(self, includeFolders, WIN32 = 0, NOT_WIN32 = 0):
-        self.__project.AddIncludeFolders(includeFolders, WIN32, NOT_WIN32)
+    def AddIncludeFolders(self, includeFolders):
+        self.__project.AddIncludeFolders(includeFolders, True, True)
     
     def AddProperties(self, properties):
         self.__project.AddProperties(properties)
     
-    def AddDefinitions(self, listOfDefinitions, private = 0, WIN32 = 0, NOT_WIN32 = 0):
-        self.__project.AddDefinitions(listOfDefinitions, private, WIN32, NOT_WIN32)
+    def AddDefinitions(self, listOfDefinitions, private = 0):
+        self.__project.AddDefinitions(listOfDefinitions, private, True, True)
 
-    def AddLibraries(self, libraries, WIN32 = 0, NOT_WIN32 = 0, debugOnly = 0, releaseOnly = 0):
-        self.__project.AddLibraries(libraries, WIN32, NOT_WIN32, debugOnly, releaseOnly)
+    def AddLibraries(self, libraries, debugOnly = 0, releaseOnly = 0):
+        self.__project.AddLibraries(libraries, True, True, debugOnly, releaseOnly)
     
     def AddTests(self, tests, cxxTestProject, enableWxWidgets = 0, dependencies = None, pch = ""):
         testProject = _UnwrapProject(cxxTestProject)
