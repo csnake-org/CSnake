@@ -225,7 +225,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         """
         Adds source files to the project that will be compiled.
         sources     - List of source files
-        sourceGroup - Name of the Visual Studio project sub folder (overrides defaut source/header folder if non-empty)
+        sourceGroup - Name of the Visual Studio project sub folder (overrides default source/header folder if non-empty)
         checkExists - Check if the files really exist before adding them (throws an exception, if they don't exist)
         forceAdd    - Force the addition of the files even if they do not exist (needs 'checkExists' to be set to false).
         """
