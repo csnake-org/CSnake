@@ -221,17 +221,15 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         self.__project = project
         self.__apiVersion = apiVersion
     
-    def AddSources(self, sources, moc = 0, ui = 0, sourceGroup = "", checkExists = 1, forceAdd = 0):
+    def AddSources(self, sources, sourceGroup = "", checkExists = 1, forceAdd = 0):
         """
         Adds source files to the project that will be compiled.
         sources     - List of source files
-        moc         - TODO: document this!
-        ui          - TODO: document this!
         sourceGroup - Name of the Visual Studio project sub folder (overrides defaut source/header folder if non-empty)
         checkExists - Check if the files really exist before adding them (throws an exception, if they don't exist)
         forceAdd    - Force the addition of the files even if they do not exist (needs 'checkExists' to be set to false).
         """
-        self.__project.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
+        self.__project.AddSources(sources, _moc = False, _ui = False, sourceGroup, checkExists, forceAdd)
         
     def GetSources(self):
         """
