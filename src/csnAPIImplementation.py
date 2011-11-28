@@ -227,9 +227,9 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         sources     - List of source files
         moc         - TODO: document this!
         ui          - TODO: document this!
-        sourceGroup - TODO: document this!
-        checkExists - Check, if the files really exist before adding them (throws an exception, if they don't exist)
-        forceAdd    - TODO: document this!
+        sourceGroup - Name of the Visual Studio project sub folder (overrides defaut source/header folder if non-empty)
+        checkExists - Check if the files really exist before adding them (throws an exception, if they don't exist)
+        forceAdd    - Force the addition of the files even if they do not exist (needs 'checkExists' to be set to false).
         """
         self.__project.AddSources(sources, moc, ui, sourceGroup, checkExists, forceAdd)
         
@@ -384,8 +384,8 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
         pch - If not "", this is the include file used to generate a precompiled header for each application
         applicationDependenciesList - List of dependencies for the applications that are not yet covered by the
                                       dependencies of the library itself
-        holderName - TODO: document this!
-        properties - TODO: document this!
+        holderName - Applications' name prefix.
+        properties - A list of properties in the format of the macro ADD_PROPERTY for the application projects.
         """
         self.__project.AddApplications(modules, pch, applicationDependenciesList, holderName, properties)
 
