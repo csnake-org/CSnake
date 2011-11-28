@@ -634,10 +634,6 @@ class _API_Base:
         """
         return csnProject.LoadThirdPartyModule(subFolder, name)
     
-    def LoadModule(self):
-        # TODO: Remove this
-        pass
-    
     def GetCompiler(self):
         """ Returns an object containing information about the build system, compiler and target platform. """
         if not self.__compiler:
