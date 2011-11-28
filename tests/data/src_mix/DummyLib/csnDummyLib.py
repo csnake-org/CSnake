@@ -20,4 +20,7 @@ found = dummyLib.Glob("*PCH.h")
 pchFile = os.path.basename(found[0])
 dummyLib.SetPrecompiledHeader(pchFile)
 # add compiler definitions
-dummyLib.AddDefinitions(["-Wall -Werror"], private = 1)
+if api.GetCompiler().TargetIsWindows():
+    dummyLib.AddDefinitions(["-W4 -WX"], private = 1)
+else:
+    dummyLib.AddDefinitions(["-Wall -Werror"], private = 1)

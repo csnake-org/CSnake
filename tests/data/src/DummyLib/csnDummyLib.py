@@ -20,5 +20,6 @@ found = dummyLib.Glob("*PCH.h")
 pchFile = os.path.basename(found[0])
 dummyLib.SetPrecompiledHeader(pchFile)
 # add compiler definitions
-dummyLib.AddDefinitions(["-Wall -Werror"], _private = 1, _WIN32 = 1, _NOT_WIN32 = 1)
+dummyLib.AddDefinitions(["-Wall -Werror"], _private = 1, _WIN32 = 0, _NOT_WIN32 = 1)
+dummyLib.AddDefinitions(["-W4 -WX"], _private = 1, _WIN32 = 1, _NOT_WIN32 = 0)
 # search for some files
