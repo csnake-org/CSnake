@@ -229,7 +229,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         checkExists - Check if the files really exist before adding them (throws an exception, if they don't exist)
         forceAdd    - Force the addition of the files even if they do not exist (needs 'checkExists' to be set to false).
         """
-        self.__project.AddSources(sources, _moc = False, _ui = False, sourceGroup, checkExists, forceAdd)
+        self.__project.AddSources(sources, False, False, sourceGroup, checkExists, forceAdd)
         
     def GetSources(self):
         """
