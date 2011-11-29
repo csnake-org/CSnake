@@ -7,24 +7,70 @@ import csnBuild
 import os.path
 import new
 import inspect
+import re
+import string
+import glob
 
+
+# WARNING: Don't use the functions of this module, they are deprecated and still there just for backwards compatibility,
+#          but will be gone in CSnake 3.0.0. So, please, use the API now!
+
+
+################################################
+##                  generic                   ##
+################################################
+
+# to be kept in CSnake (everything already copied; so in 3.0.0 we can just delete it from here)
+
+
+# Copied to csnProject.py
 def LoadThirdPartyModule(_subFolder, _name):
-    """ Loads third party module _name from subfolder _subFolder of the third party folder """
-    folderList = []
-    for thirdPartyFolder in csnProject.globalCurrentContext.GetThirdPartyFolders( ):
-        folderList.append( "%s/%s" % (thirdPartyFolder, _subFolder) )
-    return csnUtility.LoadModules(folderList, _name)
+    """ For documentation see csnProject.LoadThirdPartyModule """
+    return csnProject.LoadThirdPartyModule(_subFolder, _name)
 
+
+# Copied to csnProject.py
+def CreateHeader(_project, _filename = None, _variables = None, _variablePrefix = None):
+    """ For documentation see csnProject.CreateHeader """
+    _project.CreateHeader(_filename, _variables, _variablePrefix)
+
+
+# Function MakeValidIdentifier has already been deleted because it was only a helper function for the above CreateHeader
+# function, whose implementation has already been migrated.
+
+
+################################################
+##   generic, but imposing folder structure   ##
+################################################
+
+# to be kept in CSnake (everything already copied; so in 3.0.0 we can just delete it from here)
+
+
+# Copied to csnStandardModuleProject.py
+def StandardModuleProject(_name, _type, _sourceRootFolder = None):
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename(1)))
+
+    project = csnProject.Project(_name, _type, _sourceRootFolder)
+    project.applicationsProject = None
+    project.AddLibraryModules = new.instancemethod(_AddLibraryModulesMemberFunction, project)
+    project.AddApplications = new.instancemethod(_AddApplicationsMemberFunction, project)
+    return project
+
+
+# Copied to csnStandardModuleProject.py
 def AddApplications(_holderProject, _applicationDependenciesList, _modules, _modulesFolder, _pch = "", _holderName=None, _properties = []):
     """ 
     Creates application projects and adds them to _holderProject (using _holderProject.AddProject). The holder
     project does not depend on these application projects.
+
     It is assumed that _modules is a list containing subfolders of _modulesFolder.
     Each subfolder in _modules should contain source files (.cpp, .cxx or .cc), where each source file corresponds to a single application.
     Hence, each source file is used to create a new application project. For example, assuming that the _modulesFolder
     is called 'Applications', the file 'Applications/Small/Tiny.cpp' will be used to build the 'Tiny' application.
     
     _applicationDependenciesList - List of projects that each new application project is dependent on.
+
     _modulesFolder - Folder containing subfolders with applications.
     _modules = List of subfolders of _modulesFolder that should be processed.
     _pch - If not "", this is the C++ include file which is used for building a precompiled header file for each application.
@@ -57,20 +103,94 @@ def AddApplications(_holderProject, _applicationDependenciesList, _modules, _mod
                 app.SetPrecompiledHeader(_pch)
             _holderProject.AddProjects([app])
 
+
+# --- helpers for the functions above ---
+
+
+# Copied to csnStandardModuleProject.py
+def _AddLibraryModulesMemberFunction(self, _libModules):
+    """ 
+
+    Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
+    It is assumed that the root folder of self has a subfolder called libmodules. The subfolders of libmodules should
+    contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
+    If the src folder has a subfolder called 'stub', it is also added to the source tree.
+    _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
+
+    """
+    # add sources
+    sourceRootFolder = self.GetSourceRootFolder()
+    includeFileExtensions = csnUtility.GetIncludeFileExtensions()
+    sourceFileExtensions = csnUtility.GetSourceFileExtensions()
+    for libModule in _libModules:
+        for stub in ("/stub", ""):
+            srcFolder = "libmodules/%s/src%s" % (libModule, stub)
+            srcFolderAbs = "%s/%s" % (sourceRootFolder, srcFolder)
+
+            if( os.path.exists(srcFolderAbs) ):
+                self.AddIncludeFolders([srcFolder])
+                for extension in sourceFileExtensions:
+                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+                for extension in includeFileExtensions:
+                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+    
+    for libModule in _libModules:
+        for stub in ("/stub", ""):
+            includeFolder = "libmodules/%s/include%s" % (libModule, stub)
+            includeFolderAbs = "%s/%s" % (sourceRootFolder, includeFolder)
+            if( os.path.exists(includeFolderAbs) ):
+                self.AddIncludeFolders([includeFolder])
+                for extension in includeFileExtensions:
+                    self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
+
+
+# Copied to csnStandardModuleProject.py
+def _AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
+    """
+    Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
+
+    _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
+    _pch - If not "", this is the include file used to generate a precompiled header for each application.
+    """
+    dependencies = [self]
+    if not _applicationDependenciesList is None:
+        dependencies.extend(_applicationDependenciesList)
+        
+    if _holderName is None:
+        _holderName = "%sApplications" % self.name
+        
+    csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
+    if self.applicationsProject is None:
+        self.applicationsProject = csnBuild.Project(self.name + "Applications", "container", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
+        #self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
+        self.applicationsProject.AddProjects([self])
+        self.AddProjects([self.applicationsProject], _dependency = 0)
+    
+    # look for an 'applications' or 'Applications' folder
+    _modulesFolder = "%s/applications" % self.GetSourceRootFolder()
+    if not os.path.exists(_modulesFolder):
+        _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
+    AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
+    
+
+################################################
+##          cilab/cistib/insigneo             ##
+################################################
+
+# to be copied to Gimias resp. Toolkit repository before CSnake 3.0.0
+# and to be removed from here for CSnake 3.0.0
+
+
 def CilabModuleProject(_name, _type, _sourceRootFolder = None):
     if _sourceRootFolder is None:
-        filename = csnProject.FindFilename()
+        filename = csnProject.FindFilename(1)
         dirname = os.path.dirname(filename)
         _sourceRootFolder = csnUtility.NormalizePath(dirname, _correctCase = False)
-    project = csnProject.Project(_name, _type, _sourceRootFolder)
-    project.applicationsProject = None
-    project.AddLibraryModules = new.instancemethod(AddLibraryModulesMemberFunction, project)
-    project.AddApplications = new.instancemethod(AddApplicationsMemberFunction, project)
-    return project
+    return StandardModuleProject(_name = _name, _type = _type, _sourceRootFolder = _sourceRootFolder)
 
 def CommandLinePlugin(_name, _holderProject = None):
     """ Create a command line plugin project. """
-    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
+    _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename(1)))
     
     # command line lib
     projectLibName = "%sLib" % _name
@@ -128,104 +248,7 @@ def CreateCMakeCLPPost(self, _file):
         # GenerateCLP should be a dependency of the project, no need to find package
         _file.write( "GENERATECLP( ${CLP}_SOURCE \"%s\" )\n" % xmlFile )
 
-def AddLibraryModulesMemberFunction(self, _libModules):
-    """ 
-    Adds source files (anything matching *.c??) and public include folders to self, using a set of libmodules. 
-    It is assumed that the root folder of self has a subfolder called libmodules. The subfolders of libmodules should
-    contain a subfolder called src (e.g. for mymodule, this would be libmodules/mymodule/src).
-    If the src folder has a subfolder called 'stub', it is also added to the source tree.
-    _libModules - a list of subfolders of the libmodules folder that should be 'added' to self.
-    """
-    # add sources
-    sourceRootFolder = self.GetSourceRootFolder()
-    includeFileExtensions = csnUtility.GetIncludeFileExtensions()
-    sourceFileExtensions = csnUtility.GetSourceFileExtensions()
-    for libModule in _libModules:
-        for stub in ("/stub", ""):
-            srcFolder = "libmodules/%s/src%s" % (libModule, stub)
-            srcFolderAbs = "%s/%s" % (sourceRootFolder, srcFolder)
-            if( os.path.exists(srcFolderAbs) ):
-                self.AddIncludeFolders([srcFolder])
-                for extension in sourceFileExtensions:
-                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-                for extension in includeFileExtensions:
-                    self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
-    
-    for libModule in _libModules:
-        for stub in ("/stub", ""):
-            includeFolder = "libmodules/%s/include%s" % (libModule, stub)
-            includeFolderAbs = "%s/%s" % (sourceRootFolder, includeFolder)
-            if( os.path.exists(includeFolderAbs) ):
-                self.AddIncludeFolders([includeFolder])
-                for extension in includeFileExtensions:
-                    self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
-        
-def AddApplicationsMemberFunction(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
-    """
-    Creates extra CSnake projects, each project building one application in the 'Applications' subfolder of the current project.
-    _modules - List of the subfolders within the 'Applications' subfolder that must be scanned for applications.
-    _pch - If not "", this is the include file used to generate a precompiled header for each application.
-    """
-    dependencies = [self]
-    if not _applicationDependenciesList is None:
-        dependencies.extend(_applicationDependenciesList)
-        
-    if _holderName is None:
-        _holderName = "%sApplications" % self.name
-        
-    csnProject.globalCurrentContext.SetSuperSubCategory("Applications", _holderName)
-    if self.applicationsProject is None:
-        self.applicationsProject = csnBuild.Project(self.name + "Applications", "container", _sourceRootFolder = self.GetSourceRootFolder(), _categories = [_holderName])
-        #self.applicationsProject.AddSources([csnUtility.GetDummyCppFilename()], _sourceGroup = "CSnakeGeneratedFiles")
-        self.applicationsProject.AddProjects([self])
-        self.AddProjects([self.applicationsProject], _dependency = 0)
-    
-    # look for an 'applications' or 'Applications' folder
-    _modulesFolder = "%s/applications" % self.GetSourceRootFolder()
-    if not os.path.exists(_modulesFolder):
-        _modulesFolder = "%s/Applications" % self.GetSourceRootFolder()
-    AddApplications(self.applicationsProject, dependencies, _modules, _modulesFolder, _pch, _holderName, _properties)
-    
-def GimiasPluginProject(_name, _sourceRootFolder = None):
-    """
-    This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
-    modules to the plugin.
-    """
-    if _sourceRootFolder is None:
-        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename()))
-    pluginName = "GIMIAS%s" % _name
-    project = csnProject.Project(
-        _name, 
-        _type = "dll", 
-        _sourceRootFolder = _sourceRootFolder, 
-        _categories = [pluginName]
-    )
-    project.applicationsProject = None
-    project.installSubFolder = "plugins/%s/lib" % _name
-    project.AddIncludeFolders(["."])
-    project.AddWidgetModules = new.instancemethod(AddWidgetModulesMemberFunction, project)
-    project.context.SetSuperSubCategory("Plugins", pluginName)
-
-    # Windows debug
-    installFolder = "%s/debug" % project.installSubFolder
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
-    installFolder = installFolder + "/Filters/"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
-    
-    # Windows release
-    installFolder = "%s/release" % project.installSubFolder
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
-    installFolder = installFolder + "/Filters/"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
-
-    # Linux
-    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _NOT_WIN32 = 1 )
-    installFolder = project.installSubFolder + "/Filters"
-    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
-    
-    return project
-
-def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
+def _AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, _useQt = 0):
     """ 
     Similar to AddCilabLibraryModules, but this time the source code in the widgets folder is added to self.
     _useQt - If true, adds build rules for the ui and moc files .
@@ -251,38 +274,108 @@ def AddWidgetModulesMemberFunction(self, _widgetModules, _holdingFolder = None, 
             for extension in csnUtility.GetIncludeFileExtensions():
                 self.AddSources(["%s/*.%s" % (includeFolder, extension)], _moc = _useQt and extension == "h", _checkExists = 0, _sourceGroup = "Widgets")
 
-def CreateToolkitHeader(project, filename = None, variables = None):
-    """ 
+def GimiasPluginProject(_name, _sourceRootFolder = None):
+    """
+    This class is used to build a plugin coming from the CilabApps/Plugins folder. Use AddWidgetModules to add widget
+    modules to the plugin.
+
+    """
+    if _sourceRootFolder is None:
+        _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(csnProject.FindFilename(1)))
+    pluginName = "GIMIAS%s" % _name
+    project = csnProject.Project(
+        _name, 
+        _type = "dll", 
+        _sourceRootFolder = _sourceRootFolder, 
+        _categories = [pluginName]
+    )
+    project.applicationsProject = None
+    project.installSubFolder = "plugins/%s/lib" % _name
+    project.AddIncludeFolders(["."])
+    project.AddWidgetModules = new.instancemethod(_AddWidgetModulesMemberFunction, project)
+    project.context.SetSuperSubCategory("Plugins", pluginName)
+
+    # Windows debug
+    installFolder = "%s/debug" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _debugOnly = 1, _WIN32 = 1 )
+    
+    # Windows release
+    installFolder = "%s/release" % project.installSubFolder
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
+    installFolder = installFolder + "/Filters/"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _releaseOnly = 1, _WIN32 = 1 )
+
+    # Linux
+    project.installManager.AddFilesToInstall( project.Glob( "plugin.xml" ), project.installSubFolder, _NOT_WIN32 = 1 )
+
+    installFolder = project.installSubFolder + "/Filters"
+    project.installManager.AddFilesToInstall( project.Glob( "Filters/*.xml" ), installFolder, _NOT_WIN32 = 1 )
+    
+    return project
+
+def CreateToolkitHeader(_project, _filename = None, _variables = None):
+    """
     Creates a header file with input vars for the given project.
+    
     @param project The calling project.
     @param filename The header file name (will be created in the projects' build folder), defaults to "CISTIBToolkit.h".
     @param variables Dictionary of variable/value pairs.  
-     """
-    if not filename: 
-        filename = "CISTIBToolkit.h"
-    path = "%s/%s" % (project.GetBuildFolder(), filename)
-    headerFile = open(path, 'w')
-    # simple '.' to '_' replace, if the method is passed we cannot use the string package.
-    size = len(filename)
-    # should be a header...
-    guard = "%s_H" % filename[0:size-2].upper()
-    headerFile.write("#ifndef %s\n" % guard)
-    headerFile.write("#define %s\n" % guard)
-    headerFile.write("\n")
-    headerFile.write("// Automatically generated file, do not edit.\n")
-    headerFile.write("\n")
+    """
+    if not _filename:
+        _filename = "CISTIBToolkit.h"
+    CreateHeader(_project = _project, _filename = _filename, _variables = _variables, _variablePrefix = "CISTIB_TOOLKIT")
+
+
+### The following code goes to csnGIMIAS.py:
+
+### <!-- START
+
+def GetListOfSpuriousPluginDlls(project):
+    """
+    Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration.
+    """
+    result = []
+
+    configuredPluginNames = [pluginProject.name.lower() for pluginProject in project.GetProjects(_recursive = True) ]
+    for configuration in ("Debug", "Release"):
+        pluginsFolder = "%s/bin/%s/plugins/*" % (project.context.GetBuildFolder(), configuration)
+
+        for pluginFolder in glob.glob( pluginsFolder ):
+            pluginName = os.path.basename(pluginFolder)
+            if not os.path.isdir(pluginFolder) or pluginName.lower() in configuredPluginNames:
+                continue
+                
+            searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+            if os.path.exists( searchPath ):
+                result.append( searchPath )
+            searchPath = string.Template("$folder/lib/$config/lib$name.so").substitute(folder = pluginFolder, config = configuration, name = pluginName )
+            if os.path.exists( searchPath ):
+                result.append( searchPath )
+                
+    return result
+
+def RemoveSpuriousPluginDlls(project, askUser):
+    spuriousDlls = GetListOfSpuriousPluginDlls(project)
     
-    # default variables
-    headerFile.write("#define CISTIB_TOOLKIT_FOLDER \"%s/..\"\n" % project.GetSourceRootFolder())
-    headerFile.write("#define CISTIB_TOOLKIT_BUILD_FOLDER \"%s\"\n" % project.GetBuildFolder())
-    
-    # input variables
-    if variables:
-        headerFile.write("\n")
-        for (key, value) in variables:
-            headerFile.write("#define %s \"%s\"\n" % (key, value))
-    
-    headerFile.write("\n")
-    headerFile.write("#endif // %s\n" % guard)
-    headerFile.close()
+    if len(spuriousDlls) == 0:
+        return
+        
+    dllMessage = ""
+    for x in spuriousDlls:
+        dllMessage += ("%s\n" % x)
+        
+    message = "In the build results folder, CSnake found GIMIAS plugins that have not been configured.\nThe following plugin dlls may crash GIMIAS:\n%sDelete them?" % dllMessage
+    askUser.SetType(askUser.QuestionYesNo())
+    if askUser.Ask(message, askUser.AnswerYes()) == askUser.AnswerNo():
+        return
+        
+    for dll in spuriousDlls:
+        os.remove(dll)
+
+#gimias.AddPostCMakeTasks([RemoveSpuriousPluginDlls])
+
+### END -->
+
 

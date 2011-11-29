@@ -2,6 +2,6 @@
 import csnCilab
 from csnAll import *
 
-def four():
-    return csnCilab.LoadThirdPartyModule('Four', 'csnFour').four
+def five():
+    return csnCilab.LoadThirdPartyModule('Five', 'csnFive').five
 

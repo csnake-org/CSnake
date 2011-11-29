@@ -4,7 +4,7 @@ import exceptions
 import re
 
 class Version:
-    versionModifierValue = { "alpha"  : -10000,
+    versionModifierValue = { "alpha"  : -15000,
                              "alpha1" : -15000,
                              "alpha2" : -14999,
                              "alpha3" : -14998,
@@ -24,19 +24,17 @@ class Version:
                              ""       : 0,
                              None     : 0 }
     
-    __hash__ = None
-    
-    def __init__(self, versionString = None, versionArray = None):
-        if versionString:
-            if versionArray:
-                raise exceptions.Exception("You cannot pass the version number as both a string and an array!")
-            else:
-                self.__GetVersionFromString(versionString)
+    def __init__(self, version):
+        """ Input version is either 
+            - a string (ex:"1.22.3"),
+            - an array of strings (ex:["1", "22", "3"]).
+            - an array of ints (ex:[1, 22, 3]). """
+        if isinstance(version, str):
+            self.__GetVersionFromString(version)
+        elif isinstance(version, list):
+            self.__GetVersionFromArray(version)
         else:
-            if versionArray:
-                self.__GetVersionFromArray(versionArray)
-            else:
-                raise exceptions.Exception("You have to pass the version number in one format!")
+            raise AssertionError("The input version is neither a string nor an array.")
         assert self.__versionModifier in Version.versionModifierValue
         
     def __GetVersionFromArray(self, versionArray):
@@ -72,7 +70,11 @@ class Version:
     
     def GetString(self, numDecimals = 2):
         zeroes = [0 for i in range(0, numDecimals + 1 - len(self.__versionNumber))]
-        return "%s-%s" % (".".join(map(str, self.__versionNumber + zeroes)), self.__versionModifier)
+        mainVersionString = ".".join(map(str, self.__versionNumber + zeroes))
+        if self.__versionModifier:
+            return "%s-%s" % (mainVersionString, self.__versionModifier)
+        else:
+            return mainVersionString
     
     def __cmp__(self, other):
         commonLength = min(len(self.__versionNumber), len(other.__versionNumber))
@@ -85,4 +87,10 @@ class Version:
             return 1
         else:
             return -1
+    
+    def __hash__(self):
+        def hashFold(oldHash, number):
+            return (oldHash * 1000000 + number) % 982451653 # 982451653 is prime
+        versionNumberArray = self.__versionNumber + [Version.versionModifierValue[self.__versionModifier]]
+        return reduce(hashFold, versionNumberArray, 0)
 

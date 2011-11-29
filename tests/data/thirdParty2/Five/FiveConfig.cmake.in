@@ -1,0 +1,12 @@
+# The project include file directories.
+SET(Five_INCLUDE_DIRS "@Five_INCLUDE_DIRS@")
+
+# The project library directories.
+# Includes project libs directory and OTHER libs directories
+SET(Five_LIBRARY_DIRS "@Five_LIBRARY_DIRS@")
+
+# This includes all libraries (.lib, .so, .a) that the project generates.
+SET(Five_LIBRARIES "@Five_LIBRARIES@")
+
+# Location of the project use file.
+SET(Five_USE_FILE "@Five_USE_FILE@")

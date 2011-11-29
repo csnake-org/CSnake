@@ -1,5 +1,5 @@
 # Library name
-SET(LIBRARY_NAME FourLib)
+SET(LIBRARY_NAME ThreeLib)
 
 # File list
 FILE(GLOB SOURCES "*.cpp" "*.h")
