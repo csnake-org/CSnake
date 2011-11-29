@@ -869,7 +869,6 @@ class CSnakeGUIApp(wx.App):
         # run the action
         if self.DoActions([self.ActionCreateCMakeFilesAndRunCMake]):
             xrc.XRCCTRL(self.panelContext, "btnLaunchIDE").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").Disable()
         
     def OnConfigureThirdPartyFolder(self, event):
         # check situation
@@ -878,7 +877,6 @@ class CSnakeGUIApp(wx.App):
         # run the action
         if self.DoActions([self.ActionConfigureThirdPartyFolders]):
             xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnConfigureThirdPartyFolder").Disable()
         
     def OnInstallFilesToBuildFolder(self, event):
         # check situation
@@ -889,7 +887,6 @@ class CSnakeGUIApp(wx.App):
         # run the action
         if self.DoActions([self.ActionInstallFilesToBuildFolder]):
             xrc.XRCCTRL(self.panelContext, "btnCreateCMakeFilesAndRunCMake").SetFocus()
-            xrc.XRCCTRL(self.panelContext, "btnInstallFilesToBuildFolder").Disable()
 
     def ActionUpdateListOfTargets(self, args):
         oldInstance = self.context.GetInstance()
