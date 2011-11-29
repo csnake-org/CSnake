@@ -50,7 +50,7 @@ class Writer:
         self.file.write( "\n" )
         for dependencyProject in dependencyProjects:
             staticLibUsingAnotherLib = self.project.type == "library" and dependencyProject.type != "executable" 
-            noSources = len(dependencyProject.GetSources()) == 0 
+            noSources = (not isinstance(dependencyProject, csnProject.GenericProject)) or len(dependencyProject.GetSources()) == 0 
             if (csnUtility.IsWindowsPlatform() and staticLibUsingAnotherLib) or noSources: 
                 continue
             else:

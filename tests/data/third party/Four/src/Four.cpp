@@ -3,15 +3,15 @@
 namespace math
 {
 
-Four::Four() 
-: m_Four( 4 )
+Four::Four()
+: Three()
 {
 	// does nothing.
 }
 
 int Four::getFour() const
 {
-   return m_Four;
+   return getThree() + 1;
 }
 
 } // namespace math

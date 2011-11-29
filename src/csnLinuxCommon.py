@@ -1,6 +1,8 @@
 ## @package csnLinuxCommon
 # Definition of LinuxCommon csnCompiler.Compiler. 
 import csnCompiler
+import platform
+import csnUtility
 
 class LinuxCommon(csnCompiler.Compiler):
     """ Abstract Linux compiler. """
@@ -12,7 +14,9 @@ class LinuxCommon(csnCompiler.Compiler):
         return ["-fPIC"]
         
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
-        return _NOT_WIN32 or (not _WIN32 and not _NOT_WIN32)
+        return (((not csnUtility.IsWindowsPlatform()) and _NOT_WIN32) # Unix match
+            or (csnUtility.IsWindowsPlatform() and _WIN32) # Cygwin match
+            or (not _WIN32 and not _NOT_WIN32)) # Nothing demanded
 
     def GetOutputSubFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
@@ -37,5 +41,17 @@ class LinuxCommon(csnCompiler.Compiler):
     
     def GetAllowedConfigurations(self):
         return ["Debug", "Release"]
+    
+    def TargetIs32Bits(self):
+        return platform.architecture()[0]=="32bit"
+    
+    def TargetIs64Bits(self):
+        return platform.architecture()[0]=="64bit"
+    
+    def TargetIsMac(self):
+        return csnUtility.IsMacPlatform()
+    
+    def TargetIsLinux(self):
+        return csnUtility.IsLinuxPlatform()
 
 

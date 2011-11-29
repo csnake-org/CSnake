@@ -1,10 +1,12 @@
 ## @package csnGUIHandler
 # Definition of GUI handling classes. 
+import csnAPIPublic # not used here, but necessary in order to keep the function GetAPI working after the rollback handler has been executed (e.g. in callback functions registered via AddPostCMakeTasks)
 import csnUtility
 import csnContext
 import csnGenerator
 import csnProject
 import csnPrebuilt
+import csnAPIImplementation
 import RollbackImporter
 import glob
 import json
@@ -145,6 +147,13 @@ class Handler:
         if not instanceName in self.cachedProjectInstance:
             projectModule = self.__GetProjectModule(_forceReload = _forceReload)
             exec "self.cachedProjectInstance[instanceName] = csnProject.ToProject(projectModule.%s)" % instanceName
+            if isinstance(self.cachedProjectInstance[instanceName], csnAPIImplementation._APIGenericProject_Base):
+                # Unwrap it from the API
+                self.cachedProjectInstance[instanceName]=self.cachedProjectInstance[instanceName]._APIGenericProject_Base__project
+            elif not isinstance(self.cachedProjectInstance[instanceName], csnProject.GenericProject):
+                # Neither wrapped nor unwrapped project?
+                raise Exception("Instance \"%s\" is not a valid CSnake project, but rather of type \"%s\"!" %
+                        (instanceName, type(self.cachedProjectInstance[instanceName]).__name__))
             relocator = csnPrebuilt.ProjectRelocator()
             relocator.Do(self.cachedProjectInstance[instanceName], self.context.GetPrebuiltBinariesFolder())
             self.UpdateRecentlyUsedCSnakeFiles()
@@ -161,7 +170,7 @@ class Handler:
         dumpFile.close()
         instance.dependenciesManager.WriteDependencyStructureToXML("%s/projectStructure.xml" % instance.GetBuildFolder())
 
-    def ConfigureProjectToBuildFolder(self, _alsoRunCMake):
+    def ConfigureProjectToBuildFolder(self, _alsoRunCMake, _askUser = None):
         """ 
         Configures the project to the build folder.
         """
@@ -180,9 +189,13 @@ class Handler:
             
             if self.__ConfigureProject(argList, instance.GetBuildFolder(), nProjects):
                 self.generator.PostProcess(instance)
-                return True
             else:
                 return False
+        
+        for project in instance.dependenciesManager.GetProjects(_recursive = True) + [instance]:
+            if isinstance(project, csnProject.GenericProject):
+                for task in project.GetPostCMakeTasks():
+                    task(project, _askUser)
         
         return True
             
@@ -293,38 +306,13 @@ class Handler:
             if self.IsCanceled(): return result
             count += 1
             (targetName, target) = (member[0], member[1])
-            if isinstance(target, csnProject.GenericProject):
+            if isinstance(target, csnProject.VeryGenericProject):
+                result.append(targetName)
+            elif isinstance(target, csnAPIImplementation._APIVeryGenericProject_Base):
                 result.append(targetName)
         
         return result
         
-    def GetListOfSpuriousPluginDlls(self, _reuseInstance = False):
-        """
-        Returns a list of filenames containing those GIMIAS plugin dlls which are not built by the current configuration.
-        """
-        result = []
-        instance = self.__GetProjectInstance(not _reuseInstance)
-        if not instance.name.lower() == "gimias":
-            return result
-    
-        configuredPluginNames = [project.name.lower() for project in instance.GetProjects(_recursive = 1) ]
-        for configuration in ("Debug", "Release"):
-            pluginsFolder = "%s/bin/%s/plugins/*" % (self.context.GetBuildFolder(), configuration)
-
-            for pluginFolder in glob.glob( pluginsFolder ):
-                pluginName = os.path.basename(pluginFolder)
-                if not os.path.isdir(pluginFolder) or pluginName.lower() in configuredPluginNames:
-                    continue
-                    
-                searchPath = string.Template("$folder/lib/$config/$name.dll").substitute(folder = pluginFolder, config = configuration, name = pluginName )
-                if os.path.exists( searchPath ):
-                    result.append( searchPath )
-                searchPath = string.Template("$folder/lib/$config/lib$name.so").substitute(folder = pluginFolder, config = configuration, name = pluginName )
-                if os.path.exists( searchPath ):
-                    result.append( searchPath )
-                    
-        return result
-
     def IsContextModified(self):
         return self.contextModified
         

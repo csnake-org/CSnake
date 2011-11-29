@@ -1,26 +1,26 @@
-#ifndef FOUR_H
-#define FOUR_H
+#ifndef FIVE_H
+#define FIVE_H
 
 // Exports
 // This is a static lib, so don't import or export anything.
-#define FOUR_EXPORT
+#define FIVE_EXPORT
 
 namespace math
 {
 
 /**
-* Four
+* Five
 * Class that returns a mysterious number.
 */
-class FOUR_EXPORT Four
+class FIVE_EXPORT Five
 {
 public:
-   Four();
-   int getFour() const;
+   Five();
+   int getFive() const;
 private:
-   int m_Four;
-}; // class Four
+   int m_Five;
+}; // class Five
 
 } // namespace math
 
-#endif // FOUR_H
+#endif // FIVE_H

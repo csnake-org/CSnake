@@ -1,7 +1,7 @@
 # Root Project CMakeLists file
 
 # Project definition
-PROJECT(Four)
+PROJECT(Five)
 
 # Parse subdirs
 ADD_SUBDIRECTORY(src)
@@ -13,7 +13,7 @@ SET(${PROJECT_NAME}_INCLUDE_DIRS "${${PROJECT_NAME}_SOURCE_DIR}/src")
 SET(${PROJECT_NAME}_LIBRARY_DIRS "${LIBRARY_OUTPUT_DIRECTORY}")
 
 # Project libraries
-SET(${PROJECT_NAME}_LIBRARIES FourLib)
+SET(${PROJECT_NAME}_LIBRARIES FiveLib)
 
 # The project "use" file var
 SET(${PROJECT_NAME}_USE_FILE "${${PROJECT_NAME}_BINARY_DIR}/Use${PROJECT_NAME}.cmake")

@@ -14,3 +14,6 @@ def two():
 def three():
     return csnCilab.LoadThirdPartyModule('Three', 'csnThree').three
 
+def four():
+    return csnCilab.LoadThirdPartyModule('Four', 'csnFour').four
+

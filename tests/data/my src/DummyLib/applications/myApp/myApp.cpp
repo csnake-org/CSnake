@@ -2,6 +2,6 @@
 
 int main() 
 {
-	dummy::DummyClass myClass;
+   dummy::DummyClass myClass;
    return myClass.getCount();
 }

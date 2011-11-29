@@ -8,13 +8,13 @@ class Compiler(csnCompiler.Compiler):
     def __init__(self):
         csnCompiler.Compiler.__init__(self)
         self.postProcessor = PostProcessor()
-
+    
     def GetCompileFlags(self):
         return [""]
-        
+    
     def IsForPlatform(self, _WIN32, _NOT_WIN32):
         return _WIN32 or (not _WIN32 and not _NOT_WIN32)
-
+    
     def GetOutputSubFolder(self, _configuration = "${CMAKE_CFG_INTDIR}"):
         """
         Returns the folder where the compiler should place binaries for _configuration.
@@ -28,7 +28,7 @@ class Compiler(csnCompiler.Compiler):
     
     def GetThirdPartySubFolder(self):
         return ""
-        
+    
     def GetBuildSubFolder(self, _projectType, _projectName):
         return "%s/%s" % (_projectType, _projectName)
     
@@ -43,7 +43,19 @@ class Compiler(csnCompiler.Compiler):
     
     def GetName(self):
         return "Visual Studio 7 .NET 2003"
-        
+    
+    def TargetIs32Bits(self):
+        return True
+    
+    def TargetIs64Bits(self):
+        return False
+    
+    def TargetIsMac(self):
+        return False
+    
+    def TargetIsLinux(self):
+        return False
+
 class PostProcessor:
     def Do(self, _project):
         """

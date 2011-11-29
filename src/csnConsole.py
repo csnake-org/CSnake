@@ -5,6 +5,64 @@ import sys
 from optparse import OptionParser
 import os.path
 
+class AskUser:
+    def __init__(self):
+        self.__questionYesNo = 1
+        self.__answerYes = 1
+        self.__answerNo = 1
+        
+        self.__questionType = self.__questionYesNo
+    
+    def QuestionYesNo():
+        return self.__questionYesNo
+    
+    def AnswerYes():
+        return self.__answerYes
+    
+    def AnswerNo():
+        return self.__answerNo
+    
+    def SetType(questionType):
+        self.__questionType = questionType
+    
+    def Ask(self, message, defaultAnswer):
+        if self.__questionType == self.__questionYesNo:
+            message = "%s (yes/no) > " % message
+            answer = ""
+            answerDictionary = { "yes" : self.__answerYes, "y" : self.answerYes, "no" : self.__answerNo, "n", self.__answerNo }
+            while not answer in answerDictionary:
+                answer = input(message).lower()
+            return answerDictionary[answer]
+        else:
+            raise Exception("Invalid question type!")
+
+class DontAskUser:
+    def QuestionYesNo():
+        return 1
+    
+    def AnswerYes():
+        return 1
+    
+    def AnswerNo():
+        return 2
+    
+    def SetType(questionType):
+        pass
+    
+    def Ask(self, message, defaultAnswer):
+        if self.__questionType == self.QuestionYesNo():
+            if defaultAnswer == self.AnswerYes():
+                answer = "yes"
+            elif defaultAnswer == self.AnswerNo():
+                answer = "no"
+            else
+                raise Exception("Invalid defaultAnswer!")
+        else:
+            raise Exception("Invalid question type!")
+        print "A project wants to ask you the following question:\n"
+        print message
+        print "\nAs you have let us know that you don't want to be bothered, we decide for you. The answer is: \"%s\"" % answer
+
 parser = OptionParser(usage="%prog contextFile [options]")
 parser.add_option("-i", "--install", dest="install", action="store_true", default=False, help="install files to build folder")
 parser.add_option("-t", "--thirdParty", dest="thirdParty", action="store_true", default=False, help="configure third party projects")
@@ -12,7 +70,9 @@ parser.add_option("-p", "--project", dest="project", action="store_true", defaul
 parser.add_option("-c", "--configure", action="store_true", default=False, help="configure all")
 parser.add_option("-b", "--build", action="store_true", default=False, help="build all")
 parser.add_option("-a", "--autoconfig", dest="autoconfig", action="store_true", default=False, help="configure third party or project depending on the context instance")
+parser.add_option("-s", "--silent", dest="silent", action="store_true", default=False, help="Don't ask any questions.")
 (commandLineOptions, commandLineArgs) = parser.parse_args()
+
 
 # check command line
 if len(commandLineArgs) != 1:
@@ -27,10 +87,15 @@ if not os.path.exists(commandLineArgs[0]):
 handler = csnGUIHandler.Handler()
 context = handler.LoadContext(commandLineArgs[0])
 
+if commandLineOptions.silent:
+    askUser = DontAskUser()
+else:
+    askUser = AskUser()
+
 # configure third parties and project (used by Gimias)
 if commandLineOptions.configure:
     handler.ConfigureThirdPartyFolders()
-    handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+    handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
 
 # build third parties and project + install files (used by Gimias)
 if commandLineOptions.build:
@@ -61,7 +126,7 @@ if commandLineOptions.install:
 if commandLineOptions.project:
     taskMsg = "ConfigureProjectToBuildFolder to %s..." % (context.GetBuildFolder())
     print "Starting task: " + taskMsg 
-    result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+    result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
     assert result, "\n\nTask failed: ConfigureProjectToBuildFolder." 
     print "Finished task: " + taskMsg + "\nYou can now build the sources in %s.\n" % handler.GetTargetSolutionPath()
 
@@ -73,7 +138,7 @@ if commandLineOptions.autoconfig:
         assert result, "\n\nTask failed: ConfigureThirdPartyFolders." 
     else:
         print "Starting task: ConfigureProjectToBuildFolder."
-        result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True)
+        result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
         assert result, "\n\nTask failed: ConfigureProjectToBuildFolder." 
         print "Starting task: InstallBinariesToBuildFolder."
         result = handler.InstallBinariesToBuildFolder()
