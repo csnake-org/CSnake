@@ -17,8 +17,8 @@ class VersionTests(unittest.TestCase):
     def testVersion(self):
         """ AboutTests: testVersion. """
         
-        self.assertLess(Version("1.2.3"), Version("2.3.4"))
-        self.assertGreater(Version("2.3.4"), Version("1.2.3"))
+        self.assertTrue(Version("1.2.3") < Version("2.3.4"))
+        self.assertTrue(Version("2.3.4") > Version("1.2.3"))
         
         sameVersion = ["43.0.0", "43.0", "43", ["43"], [43], [43, 0], [43, 0, 0]]
         for versionA in sameVersion:
@@ -26,9 +26,9 @@ class VersionTests(unittest.TestCase):
                 versionAObj = Version(versionA)
                 versionBObj = Version(versionB)
                 versionStringPair = (json.dumps(versionA), json.dumps(versionB))
-                self.assertLessEqual   (versionAObj, versionBObj, msg="Version(%s) should be <= Version(%s)" % versionStringPair)
-                self.assertGreaterEqual(versionAObj, versionBObj, msg="Version(%s) should be >= Version(%s)" % versionStringPair)
-                self.assertEqual       (versionAObj, versionBObj, msg="Version(%s) should be == Version(%s)" % versionStringPair)
+                self.assertTrue(versionAObj <= versionBObj, msg="Version(%s) should be <= Version(%s)" % versionStringPair)
+                self.assertTrue(versionAObj >= versionBObj, msg="Version(%s) should be >= Version(%s)" % versionStringPair)
+                self.assertEqual(versionAObj, versionBObj, msg="Version(%s) should be == Version(%s)" % versionStringPair)
                 self.assertEqual(hash(versionAObj), hash(versionBObj), msg="hash(Version(%s)) should be == hash(Version(%s))" % versionStringPair)
         
         lowerVersionList = ["43 beta", "43.0.0 beta", ["43", "beta"], [43, "beta"], [43, "0", 0, "beta"]]
@@ -38,7 +38,7 @@ class VersionTests(unittest.TestCase):
                 lowerVersionObj = Version(lowerVersion)
                 higherVersionObj = Version(higherVersion)
                 versionStringPair = (json.dumps(lowerVersion), json.dumps(higherVersion))
-                self.assertLess(lowerVersionObj, higherVersionObj, msg="%s should be < %s" % versionStringPair)
+                self.assertTrue(lowerVersionObj < higherVersionObj, msg="%s should be < %s" % versionStringPair)
                 self.assertNotEqual(lowerVersionObj, higherVersionObj, msg="%s should be != %s" % versionStringPair)
         
         # A list of arguments that should not be accepted by the Version constructor
