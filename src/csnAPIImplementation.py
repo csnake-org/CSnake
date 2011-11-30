@@ -356,6 +356,12 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         else:
             return self.__project.GetBuildResultsFolder()
     
+    def SetBuildResultsSubFolder(self, subfolder):
+        """
+        Sets a sub-folder of the global build results ("bin/bin") folder as build results folder for this project.
+        """
+        self.__project.installSubFolder = subfolder
+    
 
 class _APIGenericProject_2_5_0(_APIGenericProject_Base):
     
