@@ -13,23 +13,23 @@ class AskUser:
         
         self.__questionType = self.__questionYesNo
     
-    def QuestionYesNo():
+    def QuestionYesNo(self):
         return self.__questionYesNo
     
-    def AnswerYes():
+    def AnswerYes(self):
         return self.__answerYes
     
-    def AnswerNo():
+    def AnswerNo(self):
         return self.__answerNo
     
-    def SetType(questionType):
+    def SetType(self, questionType):
         self.__questionType = questionType
     
     def Ask(self, message, defaultAnswer):
         if self.__questionType == self.__questionYesNo:
             message = "%s (yes/no) > " % message
             answer = ""
-            answerDictionary = { "yes" : self.__answerYes, "y" : self.answerYes, "no" : self.__answerNo, "n", self.__answerNo }
+            answerDictionary = { "yes" : self.__answerYes, "y" : self.answerYes, "no" : self.__answerNo, "n" : self.__answerNo }
             while not answer in answerDictionary:
                 answer = input(message).lower()
             return answerDictionary[answer]
@@ -37,16 +37,16 @@ class AskUser:
             raise Exception("Invalid question type!")
 
 class DontAskUser:
-    def QuestionYesNo():
+    def QuestionYesNo(self):
         return 1
     
-    def AnswerYes():
+    def AnswerYes(self):
         return 1
     
-    def AnswerNo():
+    def AnswerNo(self):
         return 2
     
-    def SetType(questionType):
+    def SetType(self, questionType):
         pass
     
     def Ask(self, message, defaultAnswer):
@@ -55,7 +55,7 @@ class DontAskUser:
                 answer = "yes"
             elif defaultAnswer == self.AnswerNo():
                 answer = "no"
-            else
+            else:
                 raise Exception("Invalid defaultAnswer!")
         else:
             raise Exception("Invalid question type!")
@@ -144,3 +144,4 @@ if commandLineOptions.autoconfig:
         result = handler.InstallBinariesToBuildFolder()
         assert result, "\n\nTask failed: InstallBinariesToBuildFolder." 
     print "Finished task autoconfig."
+
