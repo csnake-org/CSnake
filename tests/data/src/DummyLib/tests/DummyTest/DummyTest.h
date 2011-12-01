@@ -3,6 +3,11 @@
 
 #include "DummyClass.h"
 
+#include "CISTIBToolkit.h"
+#ifndef CISTIB_TOOLKIT_FOLDER
+#error CISTIB_TOOLKIT_FOLDER is not defined. Problem with the CreateHeader csnake method.
+#endif
+
 /**
 *\brief Tests for DummyLib
 *\ingroup DummyLibTests

@@ -8,7 +8,7 @@ import os.path
 dummyLib = csnCilab.CilabModuleProject("DummyLib", "library")
 # dependencies
 # (four depends on three that should be also added implicitly)
-dummyLib.AddProjects([two, four])
+dummyLib.AddProjects([two, four, toolkit])
 # source folders
 dummyLib.AddLibraryModules(["dummyLib"])
 # applications

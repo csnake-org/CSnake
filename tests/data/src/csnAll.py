@@ -1,5 +1,6 @@
 # Project variable definitions
 import csnCilab
+import csnBuild
 
 def dummyLib():
     import DummyLib.csnDummyLib
@@ -17,3 +18,6 @@ def three():
 def four():
     return csnCilab.LoadThirdPartyModule('Four', 'csnFour').four
 
+# Toolkit header -------------------------------------------------------------------------
+toolkit = csnBuild.Project("TestToolkit", "library")
+toolkit.AddCustomCommand( csnCilab.CreateToolkitHeader )
