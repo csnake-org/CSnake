@@ -370,8 +370,9 @@ class GenericProject(VeryGenericProject):
             filename = "%s.h" % projectNameClean
         path = "%s/%s" % (self.GetBuildFolder(), filename)
         
-        # TODO: Only create the header, if it either doesn't exist or source has changed
-        # TODO: Create directory, if it doesn't exist
+        directory = os.path.dirname(path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         headerFile = open(path, 'w')
         
         # header
