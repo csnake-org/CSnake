@@ -392,8 +392,8 @@ class GenericProject(VeryGenericProject):
         # input variables
         if variables:
             headerFile.write("\n")
-            for (key, value) in variables:
-                headerFile.write("#define %s \"%s\"\n" % (key, value))
+            for (key, value) in variables.items():
+                headerFile.write("#define %s_%s %s\n" % (variablePrefix, key, value))
         
         headerFile.write("\n")
         headerFile.write("#endif // %s\n" % guard)
