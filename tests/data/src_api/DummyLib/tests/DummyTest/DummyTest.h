@@ -3,6 +3,20 @@
 
 #include "DummyClass.h"
 
+#include "ToolkitHeader.h"
+#ifndef TESTTK_FOLDER
+#error CreateHeader did not define the test *_FOLDER variable.
+#endif
+#ifndef TESTTK_BUILD_FOLDER
+#error CreateHeader did not define the test *_BUILD_FOLDER variable.
+#endif
+#ifndef TESTTK_ANSWER_TO_LIFE_THE_UNIVERSE_AND_EVERYTHING
+#error CreateHeader did not define the test variable.
+#endif
+#if TESTTK_ANSWER_TO_LIFE_THE_UNIVERSE_AND_EVERYTHING != 42
+#error The test variable does not have the good value.
+#endif
+
 /**
 *\brief Tests for DummyLib
 *\ingroup DummyLibTests

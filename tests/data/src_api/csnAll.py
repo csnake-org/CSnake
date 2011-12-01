@@ -18,3 +18,7 @@ def three():
 def four():
     return api.LoadThirdPartyModule('Four', 'csnFour').four
 
+# Toolkit header -----------------------------------
+toolkit = api.CreateCompiledProject("TestToolkit", "library")
+headerVariables = { "ANSWER_TO_LIFE_THE_UNIVERSE_AND_EVERYTHING" : "42" }
+toolkit.CreateHeader("ToolkitHeader.h", headerVariables, "TESTTK")
