@@ -605,7 +605,7 @@ class _API_Base:
             raise APIError("Unknown project type: %s" % str(type(project)))
         # Add the custom member functions to the new wrapper
         if not (customMemberFunctions is None):
-            for name, function in customMemberFunctions:
+            for name, function in customMemberFunctions.items():
                 # Note: No need to bind the function to the new project wrapper - it's better to pass the object using a
                 #       wrapper of the API version with which the project was created
                 project.__dict__[name] = function
