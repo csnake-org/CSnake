@@ -11,7 +11,7 @@ More information can be found on https://github.com/csnake-org/CSnake.
 
 Change log
 ----------
-v2.5.0beta
+v2.5.0
  * API: creation of the CSnake API
  * Line endings: regularise
  * Activate alt shortcuts in menu
