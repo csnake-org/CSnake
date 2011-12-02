@@ -145,8 +145,9 @@ class Handler:
     def __GetProjectInstance(self, _forceReload = False):
         """ Instantiates and returns the _instance in _projectPath. """
         instanceName = self.context.GetInstance()
+        reloadFiles = _forceReload or self.__CheckReloadChanges(self.cachedProjectInstanceContext, self.context.GetData())
         
-        if not instanceName in self.cachedProjectInstance:
+        if not instanceName in self.cachedProjectInstance or reloadFiles:
             projectModule = self.__GetProjectModule(_forceReload = _forceReload)
             exec "self.cachedProjectInstance[instanceName] = csnProject.ToProject(projectModule.%s)" % instanceName
             if isinstance(self.cachedProjectInstance[instanceName], csnAPIImplementation._APIGenericProject_Base):
