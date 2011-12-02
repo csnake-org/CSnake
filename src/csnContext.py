@@ -78,10 +78,10 @@ class ContextData:
         self.__thirdPartySrcAndBuildFolders = value
     
     def GetThirdPartySrcFolders(self):
-        result = []
-        for srcAndBuildFolder in self._GetThirdPartySrcAndBuildFolders():
-            result.append(srcAndBuildFolder[0])
-        return result
+        return [srcAndBuild[0] for srcAndBuild in self._GetThirdPartySrcAndBuildFolders()]
+    
+    def GetThirdPartyBuildFolders(self):
+        return [srcAndBuild[1] for srcAndBuild in self._GetThirdPartySrcAndBuildFolders()]
 
     def GetInstance(self):
         return self.__instance
