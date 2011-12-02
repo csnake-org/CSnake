@@ -19,13 +19,14 @@ v2.5.0beta
  * Version Numbers: better handling
  * Dependencies in "Select Projects" tab: show dependent projects
  * Optimization: speed optimizations
- * KDevelop Project Folder: removed
+ * KDevelop Project Folder: removed panel
  * Don't deactivate buttons in GUI
  * Verify text box content before launching actions
  * Instead of '*.compileManager.generateWin32Header = False' use '*.SetGenerateWin32Header(False)'
  * FIX: API: Bug in CreateHeader(Do)
  * FIX: API: Bug in RewrapProject
  * FIX: Keep compatibility with python 2.6
+ * FIX: Switching between 32Bit and 64Bit version of the same context file doesn't work
 
 v2.4.4
  * Add support for cmake 2.8.5
