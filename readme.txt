@@ -12,8 +12,20 @@ More information can be found on https://github.com/csnake-org/CSnake.
 Change log
 ----------
 v2.5.0beta
+ * API: creation of the CSnake API
+ * Line endings: regularise
+ * Activate alt shortcuts in menu
+ * Separate CISTIB-specific from generic code in csnCilab.py
+ * Version Numbers: better handling
+ * Dependencies in "Select Projects" tab: show dependent projects
+ * Optimization: speed optimizations
+ * KDevelop Project Folder: removed
+ * Don't deactivate buttons in GUI
+ * Verify text box content before launching actions
  * Instead of '*.compileManager.generateWin32Header = False' use '*.SetGenerateWin32Header(False)'
-
+ * FIX: API: Bug in CreateHeader(Do)
+ * FIX: API: Bug in RewrapProject
+ * FIX: Keep compatibility with python 2.6
 
 v2.4.4
  * Add support for cmake 2.8.5
