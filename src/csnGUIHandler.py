@@ -104,7 +104,9 @@ class Handler:
         """Have there been done changes to the context that justify reloading the .py files?"""
         # changes that justify reload: src, TP-src, Compiler, Compile-Mode, csn-file
         functionsToCompare = [csnContext.ContextData.GetRootFolders,
+                                csnContext.ContextData.GetBuildFolder,
                                 csnContext.ContextData.GetThirdPartySrcFolders,
+                                csnContext.ContextData.GetThirdPartyBuildFolders,
                                 csnContext.ContextData.GetCompilername,
                                 csnContext.ContextData.GetConfigurationName,
                                 csnContext.ContextData.GetCsnakeFile]
