@@ -1,0 +1,35 @@
+# Folder structure.
+/**
+
+\page folderstruct Folder Structure
+
+This is the typical folder structure that CSnake supports.
+
+\section modules Modules
+A module folder should at least have the following directory structure (for a module named _Sample_):
+
+\li \c applications: executable code from the library, where to put your 'main's (WARNING: applications name should not contain more that 60 chars). Using default csnake settings, for a \c MyLib lib and an application called \c MyAppName, the final application name will be \c MyLibApplications_MyAppName)
+\li \c libmodules (or src): where to put your code
+\li \c tests: where to put your test code
+\li \c csnSample.py: CSnake configuration file
+\li \c csnSampleApps.py: CSnake configuration file for applications
+\li \c __init__.py: python locator file
+
+The \c libmodules directory contains the source code for the module (divided in conceptually different sub-modules depending on their functionality). The \c applications directory contains subfolders with source files implementing applications and demos (each source file implements a separate demo or application executable). An application is a fast and simple way to present the module's functionality to a user as a command line program. The \c applications directory is optional and may be removed if this is desired.
+
+\section thirdparty ThirdParty
+
+The thirdParty directory contains code for third party libraries. Third party code is code that comes from a third party and that is not expected to be modified. Special CMake files (called wrappers) that allow CMake to build the third party code in the same way as the libraries is necessary. The Third Party directory has the following structure (for a 'Sample' project):
+
+\li \c CMakeLists.txt: CMake wrapper configuration file,
+\li \c csnSample.py: CSnake configuration file, defines the project for CSnake to use,
+\li \c SampleConfig.cmake.in: CMake project configuration file template, defines the 'SAMPLE_INCLUDE_DIRS', 'SAMPLE_LIBRARY_DIRS', 'SAMPLE_LIBRARIES' and 'SAMPLE_USE_FILE' variables. These variables are available for all third parties projects,
+\li \c UseSample.cmake.in: CMake use file template, used to find Sample project specifics when it is a dependency. Should contain 'INCLUDE_DIRECTORIES', 'LINK_DIRECTORIES' and 'LINK_LIBRARIES' directives,
+\li \c Sample
+<ul>
+  <li> \c CMakeLists.txt: original Sample project CMake configuration file,</li>
+  <li> source code: Sample project source code and folders.</li>
+</ul>
+  
+
+*/

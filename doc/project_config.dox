@@ -1,4 +1,4 @@
-# Project configuration example.
+# Project configuration.
 /**
 
 \page projectconfig Project configuration
@@ -62,7 +62,7 @@ myDll = \link csnAPIImplementation._API_2_5_0.CreateStandardModuleProject api.Cr
 
 <span class="preprocessor"># Add source folders</span>
 myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddLibraryModules AddLibraryModules\endlink([<span class="stringliteral">"folder"</span>])
-<span class="preprocessor"># Add Depencencies</span>
+<span class="preprocessor"># Add depencencies</span>
 myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddProjects AddProjects\endlink([itk])
 <span class="preprocessor"># Add applications</span>
 myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddApplications AddApplications\endlink([<span class="stringliteral">"myApp"</span>])
