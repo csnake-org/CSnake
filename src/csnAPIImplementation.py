@@ -1,7 +1,7 @@
 ## @package csnAPIImplementation
 # Private implementation of API functions for the communication between csnake files and csnake.
 # ATTENTION: DON'T IMPORT THIS DIRECTLY FROM CSNAKE FILES!!!
-
+# \ingroup api
 
 import csnGenerator
 

@@ -1,5 +1,6 @@
 ## @package csnAPIPublic
 # API for the communication between csnake files and csnake
+# \ingroup api
 
 # This is the only CSnake module that should be imported by CSnake files.
 

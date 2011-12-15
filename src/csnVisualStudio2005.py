@@ -1,5 +1,6 @@
 ## @package csnVisualStudio2005
 # Definition of the csnVisualStudio2005 compilers. 
+# \ingroup compiler
 import csnCompiler
 import os
 

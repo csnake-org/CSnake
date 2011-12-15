@@ -1,5 +1,6 @@
 ## @package csnVisualStudio2003
 # Definition of the csnVisualStudio2003 compiler. 
+# \ingroup compiler
 import csnCompiler
 import os
 

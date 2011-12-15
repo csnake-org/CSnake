@@ -1,5 +1,6 @@
 ## @package csnVisualStudio2010
 # Definition of the csnVisualStudio2010 compilers. 
+# \ingroup compiler
 import csnCompiler
 import os
 

@@ -1,5 +1,6 @@
 ## @package csnVisualStudio2008
 # Definition of the csnVisualStudio2008 compilers. 
+# \ingroup compiler
 import csnCompiler
 import os
 

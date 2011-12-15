@@ -6,6 +6,13 @@
 
 /**
 
+\defgroup api API
+API related packages.
+
+\defgroup compiler Compiler
+Compiler related packages.
+
 \defgroup tests Tests
+Test related packages.
 
 */

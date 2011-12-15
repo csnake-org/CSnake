@@ -1,5 +1,6 @@
 ## @package csnCompiler
 # Definition of the Compiler class. 
+# \ingroup compiler
 
 class Compiler:
     """ Abstract Compiler. """

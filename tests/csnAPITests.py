@@ -1,3 +1,6 @@
+## @package csnAPITests
+# Definition of the csnAPITests class.
+# \ingroup tests
 import csnAPIPublic #@UnusedImport (in theory...)
 import unittest
 

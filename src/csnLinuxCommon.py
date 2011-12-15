@@ -1,5 +1,6 @@
 ## @package csnLinuxCommon
 # Definition of LinuxCommon csnCompiler.Compiler. 
+# \ingroup compiler
 import csnCompiler
 import platform
 import csnUtility

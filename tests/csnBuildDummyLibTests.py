@@ -1,5 +1,5 @@
-## @package csnBuildTests
-# Definition of the csnBuildTests class.
+## @package csnBuildDummyLibTests
+# Definition of the csnBuildDummyLibTests class.
 # \ingroup tests
 import unittest
 from TestProjectConfig import TestProjectConfig

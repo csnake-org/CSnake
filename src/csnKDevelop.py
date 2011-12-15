@@ -1,5 +1,6 @@
 ## @package csnKDevelop
 # Definition of Linux csnCompiler.Compiler. 
+# \ingroup compiler
 import os
 import csnUtility
 from csnLinuxCommon import LinuxCommon
