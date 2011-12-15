@@ -1,0 +1,136 @@
+# Project configuration example.
+/**
+
+\page projectconfig Project configuration
+
+This is an example usage of the CSnake API to configure a project and third parties.
+To find out more details about methods, follow the links embedded in the code.
+
+\section load Load the API
+
+Loading the API is done with the GetAPI method of the \c csnAPIPublic package.
+\code
+from csnAPIPublic import GetAPI
+api = GetAPI("2.5.0")
+\endcode
+
+\section depend Dependencies
+
+Dependency project internal variables need to be defined in a file, for example \c csnDepends.py.
+Variable need to be created, either for another local project or a third party. 
+For a local project, the variable will be found in the \c csn file that was used to configure it. 
+You need to first import it (thus the need for the \c __init__.py in order for python to find files)
+using the \c FolderName.FileName syntax and then return the variable using \c FolderName.FileName.VarName syntax.
+The same for a third party (that needs to include a \c csn configuration file), but the loading is 
+done via a CSnake API method.
+
+Here is the resulting code:
+
+\code
+from csnAPIPublic import GetAPI
+api = GetAPI("2.5.0")
+\endcode
+
+<!-- Problems with \link in pre... -->
+
+<pre class="fragment">
+<span class="preprocessor"># A local library</span>
+<span class="keyword">def</span> dummyLib():
+    <span class="keyword">import</span> DummyLib.csnDummyLib
+    <span class="keyword">return</span> DummyLib.csnDummyLib.dummyLib
+
+<span class="preprocessor"># A third party</span>
+<span class="keyword">def</span> itk():
+    <span class="keyword">return</span> api.\link csnAPIImplementation._API_2_5_0.LoadThirdPartyModule LoadThirdPartyModule\endlink(<span class="stringliteral">'ITK'</span>, <span class="stringliteral">'csnITK'</span>).itk
+</pre>
+
+\section proj Project
+
+To create our project configuration, first we include the file where the dependency variables are defined.
+Then we get the api with a specific version number. The CSnake API allows you to create your project (usually a \c StandardModule).
+The project can then be configured using standard methods.
+
+\code
+from csnDepends import *
+from csnAPIPublic import GetAPI
+api = GetAPI("2.5.0")
+\endcode
+
+<pre class="fragment">
+<span class="preprocessor"># Create the project</span>
+myDll = \link csnAPIImplementation._API_2_5_0.CreateStandardModuleProject api.CreateStandardModuleProject\endlink(<span class="stringliteral">"MyDll"</span>, <span class="stringliteral">"dll"</span>)
+
+<span class="preprocessor"># Add source folders</span>
+myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddLibraryModules AddLibraryModules\endlink([<span class="stringliteral">"folder"</span>])
+<span class="preprocessor"># Add Depencencies</span>
+myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddProjects AddProjects\endlink([itk])
+<span class="preprocessor"># Add applications</span>
+myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddApplications AddApplications\endlink([<span class="stringliteral">"myApp"</span>])
+<span class="preprocessor"># Add tests</span>
+myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddTests AddTests\endlink([<span class="stringliteral">"tests/DummyTest/*.h"</span>], cxxTest)
+<span class="preprocessor"># Add compiler definitions</span>
+myDll.\link csnAPIImplementation._APIStandardModuleProject_2_5_0.AddDefinitions AddDefinitions\endlink([<span class="stringliteral">"-Wall -Werror"</span>], private = 1)
+</pre>
+
+\section tp Third Party
+
+Third parties are quickly configured (the main configuration is done in the \c CMakeLists.txt) using the API method to create
+a third party and specifying the location of core CMake files.
+
+\code
+from csnAPIPublic import GetAPI
+api = GetAPI("2.5.0")
+\endcode
+
+<pre class="fragment">
+<span class="preprocessor"># Create the third party</span>
+itk = \link csnAPIImplementation._API_2_5_0.CreateThirdPartyProject api.CreateThirdPartyProject\endlink(<span class="stringliteral">"ITK"</span>)
+
+<span class="preprocessor"># Set the built use file location</span>
+itk.\link csnAPIImplementation._APIThirdPartyProject_2_5_0.SetUseFilePath SetUseFilePath\endlink(<span class="stringliteral">"%s/ITK-3.20/UseITK-3.20.cmake"</span> % itk.\link csnAPIImplementation._APIThirdPartyProject_2_5_0.GetBuildFolder GetBuildFolder\endlink())
+<span class="preprocessor"># Set the config file location</span>
+itk.\link csnAPIImplementation._APIThirdPartyProject_2_5_0.SetConfigFilePath SetConfigFilePath\endlink(<span class="stringliteral">"%s/ITK-3.20/ITK-3.20Config.cmake"</span> % itk.\link csnAPIImplementation._APIThirdPartyProject_2_5_0.GetBuildFolder GetBuildFolder\endlink())
+</pre>
+
+\section usefull Usefull methods
+
+\subsection getcompiler Build Folder
+
+As seen in the previous code example, it is possible to retrieve the project build folder using the project
+\link csnAPIImplementation._APIVeryGenericProject_Base.GetBuildFolder GetBuildFolder\endlink method.
+
+\subsection compiler Compiler
+
+The API \link csnAPIImplementation._API_2_5_0.GetCompiler GetCompiler\endlink method returns a 
+\link csnAPIImplementation._APICompiler_2_5_0 Compiler\endlink object that can give
+information on the compiler name, the target platform and the target architecture.
+
+<pre class="fragment">
+<span class="preprocessor"># Compiler check</span>
+
+if api.\link csnAPIImplementation._API_2_5_0.GetCompiler GetCompiler\endlink().\link csnAPIImplementation._APICompiler_2_5_0.TargetIsWindows TargetIsWindows\endlink():
+    <span class="preprocessor"># Do something sensible...</span>
+</pre>
+
+\subsection version Version
+
+The API \link csnAPIImplementation._API_2_5_0.GetChosenAPIVersion GetChosenAPIVersion\endlink method returns a 
+\link csnAPIImplementation._APIVersion_2_5_0 Version\endlink object that can easily be compared with others.
+This can be usefull to check the CSnake API version and adapt to it.
+
+<pre class="fragment">
+<span class="preprocessor"># Version check</span>
+
+if api.\link csnAPIImplementation._API_2_5_0.GetChosenAPIVersion GetChosenAPIVersion\endlink() < Version("2.3.4"):
+    <span class="preprocessor"># Do something sensible...</span>
+</pre>
+
+\section links Links
+
+The \c List of all members link at the bottom of the collaboration diagram is your friend for a full list 
+of the available methods for:
+
+\li the API: \link csnAPIImplementation._API_2_5_0 \endlink,
+\li a generic project: \link csnAPIImplementation._APIGenericProject_2_5_0 \endlink,
+\li a third Party: \link csnAPIImplementation._APIThirdPartyProject_2_5_0 \endlink.
+*/

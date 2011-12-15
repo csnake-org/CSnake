@@ -4,10 +4,22 @@
 \mainpage CSnake
 
 \section introduction_sec Introduction
-Helper tool for library compilation configuration. Main links:
-\li <a href="https://github.com/csnake-org/CSnake">source</a>,
-\li <a href="https://github.com/csnake-org/CSnake/wiki">wiki</a>,
-\li <a href="https://github.com/csnake-org/CSnake/issues">issues</a>.
+Helper tool for library compilation configuration. Hosted on GitHub, 
+the main links are:
+<a href="https://github.com/csnake-org/CSnake">source</a>,
+<a href="https://github.com/csnake-org/CSnake/wiki">wiki</a>
+and <a href="https://github.com/csnake-org/CSnake/issues">issues</a>.
+
+The wiki contains user oriented help like the 
+<a href="https://github.com/csnake-org/CSnake/wiki/Install-And-Run">Install and run</a>
+information and the 
+<a href="https://github.com/csnake-org/CSnake/wiki/User-Guide">User Guide</a>.
+
+Developers configuring their project using CSnake can refer to the 
+\ref projectconfig page for useful API methods description.
+
+CSnake Developers can refer to the <a href="https://github.com/csnake-org/CSnake/wiki/Developer-Guide">Developer guide</a>
+for help on useful tools.
 
 \section details_sec Details
 \li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
