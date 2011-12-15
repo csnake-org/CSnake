@@ -1,5 +1,5 @@
 [About]
 name = CSnake
-version = 2.5.0
+version = 2.5.1-beta
 description = Helper tool for library compilation configuration.
 author = UPF CISTIB SSD Team
