@@ -2,7 +2,7 @@
 from csnAll import *
 from csnAPIPublic import GetAPI
 import os.path
-api = GetAPI("2.5.0-beta")
+api = GetAPI("2.5.0")
 
 # define project
 dummyLib = api.CreateStandardModuleProject("DummyLib", "library")

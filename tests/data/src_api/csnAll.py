@@ -1,6 +1,6 @@
 # Project variable definitions
 from csnAPIPublic import GetAPI
-api = GetAPI("2.5.0-beta")
+api = GetAPI("2.5.0")
 
 def dummyLib():
     import DummyLib.csnDummyLib

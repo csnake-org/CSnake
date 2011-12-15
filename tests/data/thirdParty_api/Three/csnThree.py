@@ -1,6 +1,6 @@
 # Csnake project configuration
 from csnAPIPublic import GetAPI
-api = GetAPI("2.5.0-beta")
+api = GetAPI("2.5.0")
 
 three = api.CreateThirdPartyProject("Three")
 three.SetUseFilePath( "%s/Three/UseThree.cmake" % three.GetBuildFolder() )
