@@ -3,7 +3,8 @@
 
 \page folderstruct Folder Structure
 
-This is the typical folder structure that CSnake supports.
+This is the typical folder structure that CSnake supports. Another good place for examples is 
+the 'tests>data' folder where different possible layouts.
 
 \section modules Modules
 A module folder should at least have the following directory structure (for a module named _Sample_):
