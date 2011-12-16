@@ -1,9 +1,9 @@
-"""
-XML Test Runner for PyUnit
-"""
-
+## @package xmlrunner 
+# XML Test Runner for PyUnit.
+#
 # Written by Sebastian Rittau <srittau@jroger.in-berlin.de> and placed in
 # the Public Domain. With contributions by Paolo Borelli and others.
+# \ingrou tests
 
 from __future__ import with_statement
 
