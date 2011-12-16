@@ -1,6 +1,10 @@
 ## @package csnAPIImplementation
-# Private implementation of API functions for the communication between csnake files and csnake.
+# Private implementation of API functions for the communication between CSnake 
+# configuration files and CSnake.
 # ATTENTION: DON'T IMPORT THIS DIRECTLY FROM CSNAKE FILES!!!
+#
+# For guidance about the maintenance of this API please refer to the wiki page:
+# https://github.com/csnake-org/CSnake/wiki/Api-maintenance
 # \ingroup api
 
 import csnGenerator
@@ -14,84 +18,10 @@ import os.path
 import csnUtility
 import types
 import new
-
-
-# *********************************************************************************************************************
-# *                                              Maintenance of this API                                              *
-# *********************************************************************************************************************
-# 
-# 
-# Adding functionality:
-# ---------------------
-# 
-# The new functionality should be available for everyone. But you should give a warning, if people want to use a
-# functionality that did not exist in the version that the user specified because that means that the user didn't choose
-# the adequate API version (his code would crash, if it was really used with the version that he specified).
-# 
-# Note: Once added a functionality to the API in a release, it is hard to remove it again. You never get really rid of
-# it, see below section "Removing functionality". So before adding stuff to the API, let it go for a day or two and
-# think it over again after that time. Does it really make sense to add this function? Doesn't it expose too much CSnake
-# internals to the user? Will refactoring be equally simple after adding the function? Could the function possibly break
-# stuff?
-# 
-# Implementation summary:
-# - Older versions: Warning + Functionality (Add a method to API*Base that gives a warning and class (statically) the
-#                   implementation in the subclass. Check if that static call is possible: The method of the subclass
-#                   may rely on new class members that your base class doesn't have.)
-# - Newer versions: Functionality (override the above defined new method in a new subclass and implement the
-#                   functionality there)
-# 
-# 
-# Changing functionality:
-# -----------------------
-# 
-# If you want to change the behavior of a function, keep both versions of the functionality and execute one or the
-# other depending on the API version. No warnings are necessary.
-# 
-# Implementation summary:
-# - Older versions: Old Functionality (already implemented in old class versions, no need to touch it)
-# - Newer versions: New Functionality (override method in a new subclass)
-# 
-# 
-# Removing functionality:
-# -----------------------
-# 
-# Normally you only want to remove functionality, if having the specified functionality breaks stuff, i.e. it's not an
-# issue of the implementation, the problem exists because of the specified functionality itself, it cannot be fixed by
-# changing its implementation. Unfortunately, for the sake of backwards compatibility, in old API versions you still
-# need to keep the functionality and maintain it (so watch out when adding stuff, you won't get rid of it afterwards!).
-# As you normally only remove functionality in severe cases, you should both give a warning in older API versions (the
-# user should stop using the functionality, if he has the possibility to do so) and throw an exception, if people try
-# to use the function in newer versions (so in those versions it's actually removed).
-# 
-# Implementation summary:
-# - Older versions: Functionality + Warning (add the warning to the method implementation in all old versions)
-# - Newer versions: Exception (override method in a new subclass: throw exception)
-# 
-# 
-# Adapting the API to changes in the CSnake core:
-# -----------------------------------------------
-# 
-# Adapt (all versions of) the API implementation so that the functionality (seen from the point of view of the CSnake
-# file) in every version of the API stays the same as before the change.
-# 
-# 
-# General Hints:
-# --------------
-# 
-# - Extend/modify/remove functionality creating new subclasses of the latest versions of the classes.
-# - Only modify older versions of classes, if that is necessary to keep its original functionality (see "Adapting the
-#   API to changes [...]") or to add a warning, if a function will be removed in future API versions (and is therefore
-#   probably harmful).
-# - Avoid calling public (and therefore in C++ terminology "virtual") functions, they will likely be overridden in the
-#   future, so you can't rely on their exact behavior.
-# - Within this module it is allowed to access private members of other (unrelated) and superclasses. This avoids the
-#   before mentioned (bad) call of "virtual" functions and avoids exposing internal details to the CSnake file
-# 
-
+ 
 
 def _UnwrapProject(project):
-    """ Unwrap a project from an input method or api project to a GenericProject. """
+    """ Unwrap a project from an input method or API project to a GenericProject. """
     if type(project) == types.FunctionType:
         project = project()
     if isinstance(project, _APIVeryGenericProject_Base):
@@ -99,7 +29,9 @@ def _UnwrapProject(project):
     return project
 
 def _UnwrapProjectAndCustomMemberFunctions(project):
-    """ Unwrap a project from an input method or api project to a GenericProject and return its custom member functions. """
+    """ Unwrap a project from an input method or API project to a GenericProject
+    and return its custom member functions. 
+    """
     if type(project) == types.FunctionType:
         project = project()
     customMemberFunctions = None
@@ -108,14 +40,17 @@ def _UnwrapProjectAndCustomMemberFunctions(project):
         project = project._APIVeryGenericProject_Base__project
     return (customMemberFunctions, project)
 
-
-######################
-# VeryGenericProject #
-######################
+################################################
 
 class _APIVeryGenericProject_Base:
+    """ Base class for the very generic project interface. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         # Note: As the class _APIStandardModuleProject_2_5_0 uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
@@ -206,14 +141,17 @@ class _APIVeryGenericProject_Base:
         api = FindAPI(self.__apiVersion)
         return map(api.RewrapProject, projects)
     
-
-##################
-# GenericProject #
-##################
+################################################
 
 class _APIGenericProject_Base(_APIVeryGenericProject_Base):
+    """ Base class for the generic project interface. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         # Note: As the sub class uses multiple inheritance and derives in two ways from this
         # class, it is possible that this constructor is called two times. This wouldn't hurt in its current
         # implementation. If you plan to change this constructor, make sure it won't hurt after your change, either.
@@ -364,19 +302,28 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
     
 
 class _APIGenericProject_2_5_0(_APIGenericProject_Base):
+    """ Implementation of the generic project interface for version 2.5.0. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
-
-#########################
-# StandardModuleProject #
-#########################
+################################################
 
 class _APIStandardModuleProject_Base(_APIGenericProject_Base):
+    """ Base class for the standard module project interface. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
     
@@ -405,19 +352,28 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
     
 class _APIStandardModuleProject_2_5_0(_APIStandardModuleProject_Base, _APIGenericProject_2_5_0):
+    """ Implementation of the standard module project interface for version 2.5.0. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         _APIStandardModuleProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
-
-#########################
-#   ThirdPartyProject   #
-#########################
+################################################
 
 class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
+    """ Base class for the third party project interface. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         _APIVeryGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
     
@@ -437,19 +393,27 @@ class _APIThirdPartyProject_Base(_APIVeryGenericProject_Base):
     
 
 class _APIThirdPartyProject_2_5_0(_APIThirdPartyProject_Base):
+    """ Implementation of the third party project interface for version 2.5.0. """
     
     def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
         _APIThirdPartyProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
-
-##################
-#    Compiler    #
-##################
+################################################
 
 class _APICompiler_Base:
+    """ Base class for the compiler interface. """
     
     def __init__(self, compiler):
+        """
+        Constructor.
+        compiler - The compiler object.
+        """
         self.__compiler = compiler
     
     def GetName(self):
@@ -482,19 +446,22 @@ class _APICompiler_Base:
     
 
 class _APICompiler_2_5_0(_APICompiler_Base):
+    """ Implementation of the compiler interface for version 2.5.0. """ 
     
     def __init__(self, compiler):
         _APICompiler_Base.__init__(self, compiler)
         self.__compiler = compiler
 
-
-#############
-#  Version  #
-#############
+################################################
 
 class _APIVersion_Base:
+    """ Base class for the version interface. """
     
     def __init__(self, version):
+        """ 
+        Constructor.
+        version - The string representing a version number.
+        """
         self.__version = version
         
     def GetString(self, numDecimals):
@@ -515,21 +482,28 @@ class _APIVersion_Base:
 
 
 class _APIVersion_2_5_0(_APIVersion_Base):
+    """ Implementation of the version interface for version 2.5.0. """ 
     
     def __init__(self, version):
+        """ 
+        Constructor.
+        version -- The string representing a version number.
+        """
         _APIVersion_Base.__init__(self, version)
 
-
+## Current CSnake version
 _currentCSnakeVersion = Version(csnGenerator.version)
 
-
-#############
-#    API    #
-#############
+################################################
 
 class _API_Base:
+    """ Base class for the main API interface. """    
     
     def __init__(self, version):
+        """ 
+        Constructor.
+        version - The version of the API
+        """
         self.__version = version
         self.__genericProjectConstructor = _FindAPIGenericProjectConstructor(version)
         self.__standardModuleProjectConstructor = _FindAPIStandardModuleProjectConstructor(version)
@@ -666,28 +640,35 @@ class _API_Base:
     
 
 class _API_2_5_0(_API_Base):
+    """ Implementation of the main API interface for version 2.5.0. """ 
     
     def __init__(self, version):
+        """ 
+        Constructor.
+        version - The version of the API
+        """
         _API_Base.__init__(self, version)
-
 
 ######################
 # Constructor Caches #
 ######################
-# In order to not have to search and/or instantiate the same class over and over again, we maintain caches
+# In order to not have to search and/or instantiate the same class over and over again,
+# we maintain caches
 
-
-# API objects
-
+## API constructors
 _apiRegister = dict()
 
 class APIError(Exception):
+    """ API version compatibility error. """
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
 def FindAPI(version):
+    """Find a main API.
+    version - The API version to look for 
+    """
     if not isinstance(version, Version):
         version = Version(version)
     if not version in _apiRegister:
@@ -702,11 +683,13 @@ def FindAPI(version):
     return _apiRegister[version]
 
 
-# GenericProject wrapper constructors
-
+## GenericProject wrapper constructors
 _apiGenericProjectConstructorRegister = dict()
 
 def _FindAPIGenericProjectConstructor(version):
+    """Find an _APIGenericProject constructor.
+    version - The API version to look for 
+    """
     if not version in _apiGenericProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -718,11 +701,13 @@ def _FindAPIGenericProjectConstructor(version):
     return _apiGenericProjectConstructorRegister[version]
 
 
-# StandardModuleProject wrapper constructors
-
+## StandardModuleProject wrapper constructors
 _apiStandardModuleProjectConstructorRegister = dict()
 
 def _FindAPIStandardModuleProjectConstructor(version):
+    """Find an _APIStandardModuleProject constructor.
+    version - The API version to look for 
+    """
     if not version in _apiStandardModuleProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -734,11 +719,13 @@ def _FindAPIStandardModuleProjectConstructor(version):
     return _apiStandardModuleProjectConstructorRegister[version]
 
 
-# ThirdPartyProject wrapper constructors
-
+## ThirdPartyProject wrapper constructors
 _apiThirdPartyProjectConstructorRegister = dict()
 
 def _FindAPIThirdPartyProjectConstructor(version):
+    """Find an _APIThirdPartyProject constructor.
+    version - The API version to look for 
+    """
     if not version in _apiThirdPartyProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -750,11 +737,13 @@ def _FindAPIThirdPartyProjectConstructor(version):
     return _apiThirdPartyProjectConstructorRegister[version]
 
 
-# Version class constructors
-
+## Version class constructors
 _apiVersionConstructorRegister = dict()
 
 def _FindAPIVersionConstructor(version):
+    """Find an _APIVersion constructor.
+    version - The API version to look for 
+    """
     if not version in _apiVersionConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -766,11 +755,13 @@ def _FindAPIVersionConstructor(version):
     return _apiVersionConstructorRegister[version]
 
 
-# Compiler wrapper constructors
-
+## Compiler wrapper constructors
 _apiCompilerConstructorRegister = dict()
 
 def _FindAPICompilerConstructor(version):
+    """Find an _APICompiler constructor.
+    version - The API version to look for 
+    """
     if not version in _apiCompilerConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
@@ -780,4 +771,3 @@ def _FindAPICompilerConstructor(version):
             # there was no API before this
             raise APIError("Unknown API version")
     return _apiCompilerConstructorRegister[version]
-
