@@ -510,7 +510,6 @@ class Handler:
         count = 0
         while True:
             line = sub.stdout.readline()
-            sub.stdout.flush()
             if not line:
                 break
             sys.stdout.write(line)
