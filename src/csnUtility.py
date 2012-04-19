@@ -220,7 +220,9 @@ def GetDefaultCMakePath():
     """ Get the path to CMake. """
     path = None
     if IsWindowsPlatform():
-        versions = [ r"2.8.5", r"2.8.4", r"2.8.3", r"2.8.2", r"2.8.1", r"2.8.0" ]
+        versions = []
+        for i in range(0,9):
+            versions.append(r"2.8.%s" % i)
         key_names = []
         for version in versions:
             key_names.append(r"SOFTWARE\Wow6432Node\Kitware\CMake %s" % version) # typical windows XP
