@@ -53,6 +53,10 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
     # load context
     context = handler.LoadContext(testConfig.getContextFileName())
     
+    # clean up before test
+    if os.path.exists( csnProject.globalCurrentContext.GetBuildFolder() ): 
+        shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
+
     # configure and compile third parties
     ret = handler.ConfigureThirdPartyFolders()
     assert ret == True, "CMake returned with an error message while configuring the third parties."
