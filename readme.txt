@@ -9,6 +9,8 @@ It is mainly used to configure the building of the GIMIAS (http://www.gimias.org
 
 More information can be found on https://github.com/csnake-org/CSnake.
 
+Download from: https://github.com/downloads/csnake-org/CSnake/CSnake-2.5.0-Setup.exe
+
 Change log
 ----------
 v2.5.1-beta
