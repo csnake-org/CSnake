@@ -187,13 +187,12 @@ class GenericProject(VeryGenericProject):
         if _sourceRootFolder is None:
             _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         VeryGenericProject.__init__(self, _name, _type, _sourceRootFolder, _categories, _context)
-
-        # Get the thirdPartyBuildFolder index
-        # WARNING: this is only valid for a thirdparty projects!!!
+        
+        # TODO: Remove this code in CSnake 3.0. Then this process is done exclusively in the subclass for third parties.
         self.thirdPartyIndex = 0
         count = 0
         for folder in self.context.GetThirdPartyFolders():
-            if folder == os.path.dirname(_sourceRootFolder):
+            if csnUtility.NormalizePath(folder) == os.path.dirname(_sourceRootFolder):
                 self.thirdPartyIndex = count
                 break
             count += 1
@@ -442,17 +441,16 @@ class ThirdPartyProject(VeryGenericProject):
         if sourceRootFolder is None:
             sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         VeryGenericProject.__init__(self, name, "third party", sourceRootFolder, None, context)
-
+        
         # Get the thirdPartyBuildFolder index
-        # WARNING: this is only valid for a thirdparty projects!!!
         self.thirdPartyIndex = 0
         count = 0
         for folder in self.context.GetThirdPartyFolders():
-            if folder == os.path.dirname(sourceRootFolder):
+            if csnUtility.NormalizePath(folder) == os.path.dirname(sourceRootFolder):
                 self.thirdPartyIndex = count
                 break
             count += 1
-        
+    
     def GetBuildFolder(self):
         return self.context.GetThirdPartyBuildFolderByIndex(self.thirdPartyIndex)
     
