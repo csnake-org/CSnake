@@ -10,6 +10,8 @@ import csnVisualStudio2003
 import csnVisualStudio2005
 import csnVisualStudio2008
 import csnVisualStudio2010
+import csnVisualStudio2012
+import csnNMake
 from csnListener import ChangeEvent
 import os.path
 import shutil
@@ -202,6 +204,9 @@ class Context(object):
         self.RegisterCompiler(csnVisualStudio2008.Compiler64())
         self.RegisterCompiler(csnVisualStudio2010.Compiler32())
         self.RegisterCompiler(csnVisualStudio2010.Compiler64())
+        self.RegisterCompiler(csnVisualStudio2012.Compiler32())
+        self.RegisterCompiler(csnVisualStudio2012.Compiler64())
+        self.RegisterCompiler(csnNMake.Compiler())
         
         self.__subCategoriesOf = dict()
 
