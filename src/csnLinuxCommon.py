@@ -40,6 +40,9 @@ class LinuxCommon(csnCompiler.Compiler):
             "-D", "CMAKE_CXX_FLAGS=-fPIC"
         ]
     
+    def GetProjectCMakeParameters(self):
+        return []
+    
     def GetAllowedConfigurations(self):
         return ["Debug", "Release"]
     
