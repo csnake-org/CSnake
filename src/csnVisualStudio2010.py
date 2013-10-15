@@ -36,6 +36,9 @@ class Compiler(csnCompiler.Compiler):
     def GetThirdPartyCMakeParameters(self):
         return []
     
+    def GetProjectCMakeParameters(self):
+        return []
+    
     def GetAllowedConfigurations(self):
         return ["DebugAndRelease"]
     

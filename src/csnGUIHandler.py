@@ -188,8 +188,12 @@ class Handler:
             self.CheckCMake()
         
             nProjects = len(instance.dependenciesManager.GetProjects(_recursive = True, _includeSelf = True))
-            argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
-            
+            #argList = [self.context.GetCmakePath(), "-G", self.context.GetCompiler().GetName(), instance.GetCMakeListsFilename()]
+            argList = [self.context.GetCmakePath(), \
+                  "-G", self.context.GetCompiler().GetName()] + \
+                  self.context.GetCompiler().GetProjectCMakeParameters() + \
+                  [instance.GetCMakeListsFilename()]
+
             if self.__ConfigureProject(argList, instance.GetBuildFolder(), nProjects):
                 self.generator.PostProcess(instance)
             else:
