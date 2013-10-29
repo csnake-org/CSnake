@@ -208,6 +208,8 @@ def GetDefaultVisualStudioPath( generator ):
         value_names = [r"9.0"]
     elif generator.startswith('Visual Studio 10'): #2010
         value_names = [r"10.0"]
+    elif generator.startswith('Visual Studio 11'): #2012
+        value_names = [r"11.0"]
     path_end = r"Common7\IDE\devenv.exe"
     try:
         path = SearchWindowsProgramPath( key_names, value_names, path_end )
