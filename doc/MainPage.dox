@@ -24,11 +24,11 @@ information and the
 for help on useful tools.
 
 \section details_sec Details
-\li Library maintainer: Yves Martelli (ymartelli@cistib.upf.edu)
+\li Library maintainer: Yves (yves.martelli@upf.edu)
 \li Library license: Open Source, BSD License (see \ref license information)
 
 \section depends_sec Dependencies
-\li Python: version 2.6 (http://www.python.org)
+\li Python: version 2.7 (http://www.python.org)
 \li WxPython: version 2.8 (http://www.wxpython.org)
 \li CMake: version 2.8 (http://www.cmake.org)
 
