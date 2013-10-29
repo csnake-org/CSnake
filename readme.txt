@@ -13,8 +13,10 @@ Download from: https://github.com/csnake-org/CSnake/releases or https://github.c
 
 Change log
 ----------
-v2.5.1-beta
- * ...
+v2.5.1
+ * Add support for visual studio 11 (2012) (#91)
+ * Fixes #87 (#88)
+ * Bug with identifiying the build folder for third party projects (#87)
  
 v2.5.0
  * API: creation of the CSnake API
