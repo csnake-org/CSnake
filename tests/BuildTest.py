@@ -6,6 +6,7 @@ import csnProject
 import csnGUIHandler
 import shutil
 import subprocess
+from time import sleep
 
 def testBuild(testConfig):
     """
@@ -30,7 +31,7 @@ compilername = Visual Studio 10 Win64
 configurationname = DebugAndRelease
 
 # General settings
-pythonpath = C:/Program Files/Python27/python.exe
+pythonpath = C:/Python27/python.exe
 cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
 idepath = C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/devenv.exe
 version = 2.1
@@ -160,6 +161,9 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
         ret = subprocess.call(testExeFilename)
         assert ret == 0, "The generated test did not return the correct result."
     
+    
+    # give time (in seconds) for external task to end and release files and folders
+    sleep(1)
     # clean up
     shutil.rmtree( csnProject.globalCurrentContext.GetBuildFolder() )
     os.remove(testConfig.getContextFileName())
