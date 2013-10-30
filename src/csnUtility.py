@@ -223,7 +223,7 @@ def GetDefaultCMakePath():
     path = None
     if IsWindowsPlatform():
         versions = []
-        for i in range(0,9):
+        for i in range(0,20):
             versions.append(r"2.8.%s" % i)
         key_names = []
         for version in versions:

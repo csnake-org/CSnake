@@ -61,7 +61,7 @@ class csnUtilityTests(unittest.TestCase):
             path_end1 = r"\bin\cmake.exe"
             # typical windows XP key names for cmake
             key_names1 = []
-            for i in range(0,9):
+            for i in range(0,20):
                 key_names1.append(r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.%s" % i)
             value_names1 = [r""]
             resPath1 = csnUtility.SearchWindowsProgramPath(key_names1, value_names1, path_end1)
