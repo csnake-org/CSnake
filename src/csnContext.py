@@ -758,7 +758,7 @@ class Context(object):
         
         # Check that the new folder doesn't have the same structure than the old ones
         newRootFolderSubdirs = []
-        excludedFolders = ["CVS", ".svn", "data"]
+        excludedFolders = ["CVS", ".svn", "data", ".git"]
         csnUtility.GetDirs( newRootFolder, newRootFolderSubdirs, excludedFolders )
         for oldRootFolder in self.__data.GetRootFolders():
             oldRootFolderSubdirs = []
