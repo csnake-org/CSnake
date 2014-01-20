@@ -3,6 +3,8 @@
 
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
+import wxversion
+wxversion.select('2.8')
 
 from wx import xrc
 import csnGUIHandler
