@@ -1,18 +1,19 @@
---------------
 CSnake readme
---------------
+=============
+
 CSnake is a build system based on CMake. It is meant to simplify the configuration 
-process of libraries. It was initially developed by the 
+process of libraries. It was initially developed by the (ex)
 Center for Computational Imaging & Simulation Technologies In Biomedicine (CISTIB), 
-based in Barcelona, Spain. 
-It is mainly used to configure the building of the GIMIAS (http://www.gimias.org/) software.
+of the Universitat Pompeu Fabra (UPF), based in Barcelona, Spain. 
+It is mainly used to configure the building of the [GIMIAS](http://www.gimias.org/) software.
 
-More information can be found on https://github.com/csnake-org/CSnake.
+More information can be found on the [github page](https://github.com/csnake-org/CSnake).
 
-Download from: https://github.com/csnake-org/CSnake/releases or https://github.com/csnake-org/CSnake/downloads
+Download the installer from the [releases](https://github.com/csnake-org/CSnake/releases) page.
 
 Change log
 ----------
+
 v2.5.1
  * Add support for visual studio 11 (2012) (#91)
  * Fixes #87 (#88)
@@ -98,7 +99,6 @@ v2.3.3
  * Fix install files after configure third parties 
 
 v2.3.2
-
  * Fix dependency mechanism (linux build failures)
  * Fix multiple src/third party folder support for linux
  * Fix install files to build folder for multiple src/third party
@@ -111,12 +111,10 @@ toolkit. Project using the first method can be configured only if the toolkit th
 - be careful: all third party source folder should have a specific associated bin folder (they cannot use the same one)
 
 v2.3.1
-
  * Changed application folder to lower case a (still working for both cases)
  * Reverted application suffix to old one (Applications)
 
 v2.3.0:
-
  * Multiple source / third party folders
  * Added automated tests for main functionalities
  * Automatic building of executable for windows
@@ -127,13 +125,11 @@ v2.3.0:
  * Automatically configure thirdparty folders when adding a Gimias root folder
  * Configure all: one click to: Configure third party / Build third party / Configure CMake files / Build CMake files / Install files to build folder 
 
-Bug fix
-
+Bug fix:
  * CSnake build type (0004): The CSnake build type 'Release' and 'Debug' do not 
    work when compiling under Windows, only the 'DebugAndRelease?' does. 
    Either fix it or remove the option. Under Linux, it is not propagated to CMake 
    for the first build and needs to be set manually. 
-
 
 Installation
 ------------
