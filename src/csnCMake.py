@@ -4,6 +4,9 @@ import csnUtility
 import os
 import csnProject
 
+def Quote(string):
+    return '"%s"' % string.replace('"', '\\"')
+
 class Writer:
     """ Class responsible for writing the CMake related files."""
     def __init__(self, _project):
@@ -61,13 +64,15 @@ class Writer:
             for project in self.project.dependenciesManager.ProjectsToUse():
                 # iterate over filesToInstall to be copied in this mode
                 for location in project.installManager.filesToInstall[mode].keys():
-                    files = ""
-                    for fileToInstall in project.installManager.filesToInstall[mode][location]:
-                        files += "%s " % csnUtility.NormalizePath(fileToInstall)
-                    if files != "":
+                    filesToInstall = project.installManager.filesToInstall[mode][location]
+                    if len(filesToInstall):
+                        filesToInstall = map(csnUtility.NormalizePath, filesToInstall)
+                        filesToInstall = map(Quote, filesToInstall)
+                        filesToInstallList = "\n    ".join(filesToInstall)
                         destination = "%s/%s" % (self.project.context.GetInstallFolder(), location)
                         self.file.write( "\n# Rule for installing files in location %s\n" % destination)
-                        self.file.write("INSTALL(FILES %s DESTINATION \"%s\" CONFIGURATIONS %s)\n" % (files, destination, mode.upper()))
+                        self.file.write("INSTALL(FILES %s\n    DESTINATION \"%s\"\n    CONFIGURATIONS %s)\n"
+                                % (filesToInstallList, destination, mode.upper()))
     
     def __CreateCMakeSection_IncludeConfigAndUseFiles(self):
         """ Include the use file and config file for any dependency project, and finally also
