@@ -34,7 +34,11 @@ class csnUtilityTests(unittest.TestCase):
         
     def testCorrectPath(self):
         """ csnUtilityTests: test CorrectPath function. """
-        root = "data/my src/"
+        # check where we are
+        res = ""
+        if os.path.exists( "tests/data" ):
+            res = "tests/"
+        root = res + "data/my src/"
         refPathRoot = root + "DummyLib"
         refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
