@@ -6,4 +6,4 @@ env:
 - PYTHONPATH=src
 
 script: 
-- python -m unittest tests.aboutTests tests.csnAPITests tests.csnGUIHandlerTests tests.csnGUIOptionsTests tests.versionTests
+- python -m unittest tests.aboutTests tests.csnAPITests tests.csnContextTests tests.csnGUIHandlerTests tests.csnGUIOptionsTests tests.versionTests
