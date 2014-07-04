@@ -10,3 +10,5 @@ It is mainly used to configure the building of the [GIMIAS](http://www.gimias.or
 More information can be found on the [github page](https://github.com/csnake-org/CSnake).
 
 Download the installer from the [releases](https://github.com/csnake-org/CSnake/releases) page.
+
+[![Build Status](https://travis-ci.org/csnake-org/CSnake.svg?branch=master)](https://travis-ci.org/csnake-org/CSnake)
