@@ -2,5 +2,8 @@ language: python
 python:
 - "2.7"
 
+env:
+- PYTHONPATH=src
+
 script: 
 - python -m unittest tests.aboutTests tests.csnAPITests tests.csnGUIHandlerTests tests.csnGUIOptionsTests tests.versionTests
