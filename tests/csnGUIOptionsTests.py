@@ -11,11 +11,9 @@ class csnGUIOptionsTests(unittest.TestCase):
     
     def setUp(self):
         """ Run before test. """
-        # check where we are
-        if os.path.isfile( "options00a.txt" ):
-            self.resPath = '.';
-        elif os.path.isfile( "tests/options00a.txt" ):
-            self.resPath = 'tests';
+
+    def tearDown(self):
+        """ Run after test. """
 
     def testReadOptions00(self):
         ''' csnContextTests: test read from options v0.0. '''
@@ -42,11 +40,9 @@ class csnGUIOptionsTests(unittest.TestCase):
         
     def ReadOptionsTest(self, version, inputFilename):
         ''' csnContextTests: test read options. '''
-        # append resource path to file name
-        inputFile = self.resPath + "/" + inputFilename
         # create a copy of the input file
         filename = "test_%s" % inputFilename
-        shutil.copy(inputFile, filename)
+        shutil.copy(inputFilename, filename)
         
         # try to read the file
         options = Options()

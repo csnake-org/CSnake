@@ -12,11 +12,6 @@ class csnContextTests(unittest.TestCase):
     
     def setUp(self):
         """ Run before test. """
-        # check where we are
-        if os.path.isfile( "options00a.txt" ):
-            self.resPath = '.';
-        elif os.path.isfile( "tests/options00a.txt" ):
-            self.resPath = 'tests';
 
     def tearDown(self):
         """ Run after test. """
@@ -25,7 +20,7 @@ class csnContextTests(unittest.TestCase):
         ''' csnContextTests: test read from context v0.0. '''
         # this version needs the options file
         newFilename = "options"
-        shutil.copy(self.resPath + "/options00a.txt", newFilename)
+        shutil.copy("options00a.txt", newFilename)
         # test the context conversion
         self.ReadContextTest(0.0, "context00a.txt")
         # clean up
@@ -41,7 +36,7 @@ class csnContextTests(unittest.TestCase):
         ''' csnContextTests: test read from context v1.0. '''
         # this version needs the options file
         newFilename = "options"
-        shutil.copy(self.resPath + "/options00a.txt", newFilename)
+        shutil.copy("options00a.txt", newFilename)
         # test the context conversion
         self.ReadContextTest(1.0, "context10a.txt")
         # clean up
@@ -103,11 +98,9 @@ class csnContextTests(unittest.TestCase):
     
     def ReadContextTest(self, version, inputFilename):
         ''' csnContextTests: test read context. '''
-        # append resource path to file name
-        inputFile = self.resPath + "/" + inputFilename
         # create a copy of the input file
         filename = "test_%s" % inputFilename
-        shutil.copy(inputFile, filename)
+        shutil.copy(inputFilename, filename)
         
         # try to read the new one
         context = Context()
