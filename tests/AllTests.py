@@ -89,8 +89,6 @@ class AllTests:
         # create suites from unit tests
         tests = []
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnAPITests) )
-        #tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyLibTests) )
-        #tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyExeTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnCilabTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnContextTests) )
@@ -101,6 +99,9 @@ class AllTests:
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnUtilityTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(AboutTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(VersionTests) )
+        # long...
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyLibTests) )
+        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyExeTests) )
         # main suite
         self.__suite = unittest.TestSuite(tests)
         # output mode
