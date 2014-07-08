@@ -1,7 +1,7 @@
 [CSnake]
 version = 1.1
-contextfilename = E:\devel\src\toolkit\module_clean.CSnakeGUI
+contextfilename = C:\devel\src\toolkit\module_clean.CSnakeGUI
 asktolaunchide = True
-recentcontext0 = E:\devel\src\toolkit\clean.CSnakeGUI
-recentcontext1 = E:\devel\src\toolkit\devel.CSnakeGUI
-recentcontext2 = E:\devel\src\toolkit\stable.CSnakeGUI
+recentcontext0 = C:\devel\src\toolkit\clean.CSnakeGUI
+recentcontext1 = C:\devel\src\toolkit\devel.CSnakeGUI
+recentcontext2 = C:\devel\src\toolkit\stable.CSnakeGUI
