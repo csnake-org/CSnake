@@ -23,12 +23,21 @@ from csnAPITests import csnAPITests
 from csnBuildDummyLibTests import csnBuildDummyLibTests
 from csnBuildDummyExeTests import csnBuildDummyExeTests
 
-def CreateConfigFileLinux():
+def CreateConfigFile():
     # find out config values
-    csnakeTestPath = "/".join(os.path.realpath(__file__).split("/")[0:-1])
+    csnakeTestPath = os.path.dirname(os.path.realpath(__file__))
     csnakeTestDataPath = os.path.join(csnakeTestPath, "data")
-    pythonPath = csnUtility.SearchUnixProgramPath("python")
-    cmakePath = csnUtility.SearchUnixProgramPath("cmake")
+    if not csnUtility.IsWindowsPlatform():
+        csnakeTestPath = "/" + csnakeTestPath
+        csnakeTestDataPath = "/" + csnakeTestDataPath
+        compiler = "Unix Makefiles"
+        idepath = "."
+    else:
+        # cmake does not like backslashes
+        csnakeTestPath = csnakeTestPath.replace('\\', '/')
+        csnakeTestDataPath = csnakeTestDataPath.replace('\\', '/')
+        compiler = "Visual Studio 11 Win64"
+        idepath = csnUtility.GetDefaultVisualStudioPath(compiler)
     values = {
             "csnakefile"            : csnakeTestDataPath,
             "instance"              : "",
@@ -36,11 +45,11 @@ def CreateConfigFileLinux():
             "testrunnertemplate"    : "xmlRunner.tpl",
             "installfolder"         : csnakeTestPath,
             "buildfolder"           : csnakeTestPath,
-            "compiler"              : "Unix Makefiles",
+            "compiler"              : compiler,
             "configurationname"     : "Release",
-            "pythonpath"            : pythonPath,
-            "cmakepath"             : cmakePath,
-            "idepath"               : ".",
+            "pythonpath"            : csnUtility.GetDefaultPythonPath(),
+            "cmakepath"             : csnUtility.GetDefaultCMakePath(),
+            "idepath"               : idepath,
             "version"               : "2.1",
             "rootfolder0"           : csnakeTestDataPath,
             "thirdpartyrootfolder"  : csnakeTestDataPath,
@@ -71,16 +80,17 @@ def CreateConfigFileLinux():
 
 class AllTests:
     """ Class to create all test suites to ease running them all at once. """
-    def __init__(self, outputFileName):
+    def __init__(self, mode, outputFileName):
         ''' 
         Initialise the class: create test suite.
+        @param _mode: The output mode: text|xml.
         @param _outputFileName: The name of the output file.
         '''
         # create suites from unit tests
         tests = []
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnAPITests) )
-        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyLibTests) )
-        tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyExeTests) )
+        #tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyLibTests) )
+        #tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildDummyExeTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnBuildTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnCilabTests) )
         tests.append( unittest.TestLoader().loadTestsFromTestCase(csnContextTests) )
@@ -93,28 +103,38 @@ class AllTests:
         tests.append( unittest.TestLoader().loadTestsFromTestCase(VersionTests) )
         # main suite
         self.__suite = unittest.TestSuite(tests)
+        # output mode
+        self.__mode = mode
         # output file name
         self.__outputFileName = outputFileName
         
     def run(self):
-        """ Run the main suite. Output as xml. """
-        # output file
-        outputFile = open(self.__outputFileName, 'w')
+        """ Run the main suite. """
+        # output
+        if len(self.__outputFileName) != 0:
+            output = open(self.__outputFileName, 'w')
+        else:
+            output = sys.stderr
         # test runner
-        runner = xmlrunner.XMLTestRunner(outputFile)
+        if self.__mode == "xml":
+            runner = xmlrunner.XMLTestRunner(output)
+        else:
+            runner = unittest.TextTestRunner(output)
         # run tests
         result = runner.run(self.__suite)
         # close output
-        outputFile.close()
+        if len(self.__outputFileName) != 0:
+            output.close()
         # return result (1 for success)
         return result.wasSuccessful()
  
 def usage():
     ''' Usage for main method.'''
-    print "Usage: ", sys.argv[0], " [-o filename]"
-    print "-c / --createConfigLinux: Create config file for linux."
-    print "-h: help."
-    print "-o: test output file name, default to 'testslog.xml'."
+    print "Usage: ", sys.argv[0], " [-o filename -l -m xml]"
+    print "-h / --help: help."
+    print "-l / --localConfig: Use a local config file (in 'tests/config/csnake_context.txt', if not present, automatically created)."
+    print "-m / --mode: test output mode: xml|txt (default to txt)."
+    print "-o / --output: test output file name (if not present, default to stderr)."
    
 def main():
     '''
@@ -123,28 +143,37 @@ def main():
     '''
     # extract the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "cho:", ["createConfigLinux", "help", "output="]) #@UnusedVariable
+        opts, args = getopt.getopt(sys.argv[1:], "hlm:o:", ["help", "localConfig", "mode=", "output="]) #@UnusedVariable
     except getopt.GetoptError:
         usage()
         return 2
     # process the command line arguments
-    outputFileName = "testslog.xml"
+    outputFileName = ""
+    localConfig = False
+    mode = "txt"
     for opt, arg in opts:
-        if opt in ("-c", "--createConfigLinux"):
-            return CreateConfigFileLinux()
-        elif opt in ("-h", "--help"):
+        if opt in ("-h", "--help"):
             usage()
             return 0
-        elif opt == '-o':
+        elif opt in ("-l", "--localConfig"):
+            localConfig = True
+        elif opt in ('-m', "--mode"):
+            mode = arg
+        elif opt in ('-o', "--output"):
             outputFileName = arg
+    # create config if needed
+    if not localConfig:
+        CreateConfigFile()
     # run the tests
-    tests = AllTests(outputFileName)
+    tests = AllTests(mode, outputFileName)
     res = tests.run()
-    print "\nTests results can be found in '%s'." % outputFileName
-    if res:
-        print "\n== All Tests Successful! =="
-    else:
-        print "\n== Failed Tests! =="
+    # print summary if all goes in file
+    if len( outputFileName ) != 0:
+        print "\nTests results can be found in '%s'." % outputFileName
+        if res:
+            print "\n== All Tests Successful! =="
+        else:
+            print "\n== Failed Tests! =="
     # return result (0 for success)
     return not res
 
