@@ -1,24 +1,24 @@
 [RecentlyUsedCSnakeFiles]
 instance0 = dcmAPI
-csnakefile0 = E:/devel/src/toolkit/clean/src/cilabModules/DcmAPI/csnDcmAPI.py
+csnakefile0 = C:/devel/src/toolkit/clean/src/cilabModules/DcmAPI/csnDcmAPI.py
 
 [CSnake]
-installfolder = E:/devel/bin/toolkit/clean/install
+installfolder = C:/devel/bin/toolkit/clean/install
 filter = BaseLibVTKTests;CILabMacrosTests;RegLibTests
 testrunnertemplate = normalRunner.tpl
-buildfolder = E:/devel/bin/toolkit/clean
-csnakefile = E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py
-idepath = D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe
-prebuiltbinariesfolder = E:/devel/bin/toolkit/prebuilt
+buildfolder = C:/devel/bin/toolkit/clean
+csnakefile = C:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py
+idepath = C:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe
+prebuiltbinariesfolder = C:/devel/bin/toolkit/prebuilt
 instance = baseLib
 configurationname = DebugAndRelease
 version = 2.0
-thirdpartyrootfolder = E:/devel/src/toolkit/clean/thirdParty
+thirdpartyrootfolder = C:/devel/src/toolkit/clean/thirdParty
 pythonpath = C:/Program Files (x86)/Python 2.6/python.exe
 cmakepath = C:/Program Files (x86)/CMake 2.8/bin/cmake.exe
-thirdpartybuildfolder = E:/devel/bin/toolkit/clean/thirdParty
+thirdpartybuildfolder = C:/devel/bin/toolkit/clean/thirdParty
 compiler = Visual Studio 9 2008 Win64
 
 [RootFolders]
-rootfolder0 = E:/devel/src/toolkit/clean/src
+rootfolder0 = C:/devel/src/toolkit/clean/src
 

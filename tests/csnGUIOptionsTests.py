@@ -32,11 +32,11 @@ class csnGUIOptionsTests(unittest.TestCase):
 
     def ValuesTest(self, version, options):
         self.assertEqual( options.GetAskToLaunchIDE(), True )
-        self.assertEqual( options.GetContextFilename(), "E:\\devel\\src\\toolkit\\module_clean.CSnakeGUI" )
+        self.assertEqual( options.GetContextFilename(), "C:\\devel\\src\\toolkit\\module_clean.CSnakeGUI" )
         if version >= 1.1:
-            self.assertEqual( options.GetRecentContextPath(0), "E:\\devel\\src\\toolkit\\clean.CSnakeGUI" )
-            self.assertEqual( options.GetRecentContextPath(1), "E:\\devel\\src\\toolkit\\devel.CSnakeGUI" )
-            self.assertEqual( options.GetRecentContextPath(2), "E:\\devel\\src\\toolkit\\stable.CSnakeGUI" )
+            self.assertEqual( options.GetRecentContextPath(0), "C:\\devel\\src\\toolkit\\clean.CSnakeGUI" )
+            self.assertEqual( options.GetRecentContextPath(1), "C:\\devel\\src\\toolkit\\devel.CSnakeGUI" )
+            self.assertEqual( options.GetRecentContextPath(2), "C:\\devel\\src\\toolkit\\stable.CSnakeGUI" )
         
     def ReadOptionsTest(self, version, inputFilename):
         ''' csnContextTests: test read options. '''

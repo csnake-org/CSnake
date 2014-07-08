@@ -65,33 +65,33 @@ class csnContextTests(unittest.TestCase):
 
     def ValuesTest(self, version, context):
         # [CSnake]
-        self.assertEqual( context.GetInstallFolder(), "E:/devel/bin/toolkit/clean/install" )
+        self.assertEqual( context.GetInstallFolder(), "C:/devel/bin/toolkit/clean/install" )
         self.assertEqual( context.GetFilter(), ["BaseLibVTKTests", "CILabMacrosTests", "RegLibTests"] )
         self.assertEqual( context.GetTestRunnerTemplate(), "normalRunner.tpl" )
-        self.assertEqual( context.GetBuildFolder(), "E:/devel/bin/toolkit/clean" )
-        self.assertEqual( context.GetCsnakeFile(), "E:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py" )
-        self.assertEqual( context.GetIdePath(), "D:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe" )
+        self.assertEqual( context.GetBuildFolder(), "C:/devel/bin/toolkit/clean" )
+        self.assertEqual( context.GetCsnakeFile(), "C:/devel/src/toolkit/clean/src/cilabModules/BaseLib/csnBaseLib.py" )
+        self.assertEqual( context.GetIdePath(), "C:/Program Files (x86)/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe" )
         self.assertEqual( context.GetCompilername(), "Visual Studio 9 2008 Win64" )
-        self.assertEqual( context.GetPrebuiltBinariesFolder(), "E:/devel/bin/toolkit/prebuilt" )                  
+        self.assertEqual( context.GetPrebuiltBinariesFolder(), "C:/devel/bin/toolkit/prebuilt" )                  
         self.assertEqual( context.GetInstance(), "baseLib" )                  
         self.assertEqual( context.GetConfigurationName(), "DebugAndRelease" )                  
         self.assertEqual( context.GetCmakePath(), "C:/Program Files (x86)/CMake 2.8/bin/cmake.exe" )                  
         self.assertEqual( context.GetPythonPath(), "C:/Program Files (x86)/Python 2.6/python.exe" )                  
         # changed if the value of the context file does not correspond to a valid folder
-        self.assertEqual( context.GetKdevelopProjectFolder(), "E:/devel/bin/toolkit/clean/kdevelop/DebugAndRelease" )
+        self.assertEqual( context.GetKdevelopProjectFolder(), "C:/devel/bin/toolkit/clean/kdevelop/DebugAndRelease" )
                    
         # [ThirdPartyBuildFolders]
-        self.assertEqual( context.GetThirdPartyBuildFolders(), ["E:/devel/bin/toolkit/clean/thirdParty"] )
+        self.assertEqual( context.GetThirdPartyBuildFolders(), ["C:/devel/bin/toolkit/clean/thirdParty"] )
         # [RootFolders]
-        self.assertEqual( context.GetRootFolders(), ["E:/devel/src/toolkit/clean/src"] )
+        self.assertEqual( context.GetRootFolders(), ["C:/devel/src/toolkit/clean/src"] )
         # [ThirdPartyFolders]
-        self.assertEqual( context.GetThirdPartyFolders(), ["E:/devel/src/toolkit/clean/thirdParty"] )
+        self.assertEqual( context.GetThirdPartyFolders(), ["C:/devel/src/toolkit/clean/thirdParty"] )
 
         if version >= 2.0:
             # [RecentlyUsedCSnakeFiles]
             recentContext = Context()
             recentContext.SetInstance("dcmAPI")
-            recentContext.SetCsnakeFile("E:/devel/src/toolkit/clean/src/cilabModules/DcmAPI/csnDcmAPI.py")
+            recentContext.SetCsnakeFile("C:/devel/src/toolkit/clean/src/cilabModules/DcmAPI/csnDcmAPI.py")
             recents = context.GetRecentlyUsed()
             self.assertTrue( len(recents), 1 )
             self.assertTrue( recentContext.GetData().Equal(recents[0]) )
