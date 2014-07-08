@@ -7,4 +7,4 @@ env:
 
 script: 
 - cd tests
-- python -m unittest aboutTests csnAPITests csnContextTests csnGUIHandlerTests csnGUIOptionsTests csnUtilityTests versionTests
+- python -m AllTests
