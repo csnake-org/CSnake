@@ -79,7 +79,7 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
             compileArgList.append("/build")
             compileArgList.append(mode)
             # build path
-            buildPath = testConfig.getTpBinDirs()[index]
+            buildPath = context.GetThirdPartyBuildFolderByIndex(index)
             # run compiler
             ret = subprocess.call(compileArgList, cwd=buildPath)
             assert ret == 0, "The compiler returned with an error message while compiling the third parties."
@@ -115,7 +115,7 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
     compileArgList = []
     if( context.GetCompilername().find("Visual Studio") != -1 ):
         # build path
-        buildPath = "%s/%s" % (testConfig.getBuildPath(), testConfig.getName())
+        buildPath = "%s/%s/%s" % (context.GetBuildFolder(), testConfig.getBuildTypeFolder(), testConfig.getName())
         # compiler
         compileArgList.append(context.GetIdePath())
         # solution file
@@ -129,7 +129,7 @@ thirdpartybuildfolder0 = PATH_TO_CSNAKE/tests
     elif( context.GetCompilername().find("KDevelop3") != -1 or
           context.GetCompilername().find("Makefile") != -1 ):
         # build path
-        buildPath = "%s/%s/%s" % (testConfig.getBuildPath(), testConfig.getBuildMode(), testConfig.getName())
+        buildPath = "%s/%s/%s/%s" % (context.GetBuildFolder(), testConfig.getBuildTypeFolder(), testConfig.getBuildMode(), testConfig.getName())
         # make
         compileArgList.append("make")
         compileArgList.append("-s")

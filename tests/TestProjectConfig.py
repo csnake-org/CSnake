@@ -71,12 +71,12 @@ class TestProjectConfig():
             exeName = self.getName() + "Applications_myApp"
         return exeName
 
-    def getBuildPath(self):
+    def getBuildTypeFolder(self):
         if self.__type == "exe":
-            buildPath = "%s/executable" % self.__binDir
+            folder = "executable"
         elif self.__type == "lib":
-            buildPath = "%s/library" % self.__binDir
-        return buildPath
+            folder = "library"
+        return folder
         
     
     def getTemplateContextFileName(self):
@@ -148,8 +148,8 @@ class TestProjectConfig():
         # modify: third party bin folder
         oldValue = cf.get(tpBinSectionName, "thirdpartybuildfolder0")
         count = 0
-        for srcDir in self.__tpBinDirs:
-            newValue = oldValue + "/" + srcDir
+        for binDir in self.__tpBinDirs:
+            newValue = oldValue + "/" + binDir
             option = "thirdpartybuildfolder%s" % count
             cf.set(tpBinSectionName, option, newValue )
             count += 1
