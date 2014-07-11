@@ -58,8 +58,9 @@ class Manager:
         _skipCVS - If true, folders called CVS and .svn are automatically skipped. 
         """
         excludedFolderList = ("CVS", ".svn")
-        for mode in ("Debug", "Release"):
-            for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
+        for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
+            project.installManager.filesToInstallResolved = dict()
+            for mode in ("Debug", "Release"):
                 filesToInstall = dict()
                 for location in project.installManager.filesToInstall[mode].keys():
                     for dllPattern in project.installManager.filesToInstall[mode][location]:
@@ -85,7 +86,7 @@ class Manager:
                                         filesToInstall[normalizedLocation] = []
                                     filesToInstall[normalizedLocation].append(csnUtility.NormalizePath(file))
                     
-                project.installManager.filesToInstall[mode] = filesToInstall
+                project.installManager.filesToInstallResolved[mode] = filesToInstall
  
     def InstallBinariesToBuildFolder(self):
         """ 
@@ -111,11 +112,11 @@ class Manager:
             os.path.exists(outputFolder) or os.makedirs(outputFolder)
             for project in self.project.GetProjects(_recursive = 1, _includeSelf = True):
                 n2 = len(self.project.GetProjects(_recursive = 1, _includeSelf = True))
-                for location in project.installManager.filesToInstall[mode].keys():
-                    n3 = len(project.installManager.filesToInstall[mode].keys())
-                    for file in project.installManager.filesToInstall[mode][location]:
+                for location, files in project.installManager.filesToInstallResolved[mode].iteritems():
+                    n3 = len(project.installManager.filesToInstallResolved[mode].keys())
+                    for file in files:
                         # progress
-                        n4 = len(project.installManager.filesToInstall[mode][location])
+                        n4 = len(files)
                         if increment == 100:
                             increment /= n1*n2*n3*n4
                         # destination folder
