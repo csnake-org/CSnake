@@ -62,9 +62,8 @@ class Writer:
     def __WriteInstallCommands(self):
         for mode in ("Debug", "Release"):
             for project in self.project.dependenciesManager.ProjectsToUse():
-                # iterate over filesToInstall to be copied in this mode
-                for location in project.installManager.filesToInstall[mode].keys():
-                    filesToInstall = project.installManager.filesToInstall[mode][location]
+                # iterate over filesToInstallResolved to be copied in this mode
+                for location, filesToInstall in project.installManager.filesToInstallResolved[mode].iteritems():
                     if len(filesToInstall):
                         filesToInstall = map(csnUtility.NormalizePath, filesToInstall)
                         filesToInstall = map(Quote, filesToInstall)
