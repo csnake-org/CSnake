@@ -4,7 +4,9 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 import wxversion
-wxversion.select('2.8')
+import sys
+if not getattr(sys, 'frozen', False):
+    wxversion.select('2.8')
 
 from wx import xrc
 import csnGUIHandler
@@ -15,7 +17,6 @@ from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
 import os.path
-import sys
 import shutil
 import string
 import time
