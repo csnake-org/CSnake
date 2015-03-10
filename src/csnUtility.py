@@ -183,7 +183,7 @@ def GetSourceFileExtensions():
     return ["cxx", "cc", "cpp"]
     
 def GetIncludeFileExtensions():
-    return ["h", "hpp", "txx"]
+    return ["h", "hpp", "txx", "hxx"]
 
 def GetDirs( startDir, outDirs, excludedFoldersList ):
     directories = [startDir]
