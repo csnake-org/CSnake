@@ -1269,6 +1269,8 @@ class CSnakeGUIApp(wx.App):
             result.append("Visual Studio 10 Win64")
             result.append("Visual Studio 11")
             result.append("Visual Studio 11 Win64")
+            result.append("Visual Studio 12")
+            result.append("Visual Studio 12 Win64")
             result.append("NMake Makefiles")
         result.append("KDevelop3")
         result.append("Unix Makefiles")
