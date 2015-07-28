@@ -39,9 +39,9 @@ class StandardModuleProject(GenericProject):
                 if( os.path.exists(srcFolderAbs) ):
                     self.AddIncludeFolders([srcFolder])
                     for extension in sourceFileExtensions:
-                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Source")
                     for extension in includeFileExtensions:
-                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0)
+                        self.AddSources(["%s/*.%s" % (srcFolder, extension)], _checkExists = 0, _sourceGroup = "Source")
         
         for libModule in _libModules:
             for stub in ("/stub", ""):
@@ -50,7 +50,7 @@ class StandardModuleProject(GenericProject):
                 if( os.path.exists(includeFolderAbs) ):
                     self.AddIncludeFolders([includeFolder])
                     for extension in includeFileExtensions:
-                        self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0)
+                        self.AddSources(["%s/*.%s" % (includeFolder, extension)], _checkExists = 0, _sourceGroup = "Source")
         
     def AddApplications(self, _modules, _pch="", _applicationDependenciesList=None, _holderName=None, _properties = []):
         """
