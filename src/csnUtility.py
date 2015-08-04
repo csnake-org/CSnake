@@ -183,7 +183,7 @@ def GetSourceFileExtensions():
     return ["cxx", "cc", "cpp"]
     
 def GetIncludeFileExtensions():
-    return ["h", "hpp", "txx"]
+    return ["h", "hpp", "txx", "hxx"]
 
 def GetDirs( startDir, outDirs, excludedFoldersList ):
     directories = [startDir]
@@ -210,12 +210,21 @@ def GetDefaultVisualStudioPath( generator ):
         value_names = [r"10.0"]
     elif generator.startswith('Visual Studio 11'): #2012
         value_names = [r"11.0"]
+    elif generator.startswith('Visual Studio 12'): #2013
+        value_names = [r"12.0"]
     path_end = r"Common7\IDE\devenv.exe"
     try:
         path = SearchWindowsProgramPath( key_names, value_names, path_end )
     except OSError:
         path = None
-        
+    
+    if(path is None):
+        path_end = r"Common7\IDE\WDExpress.exe"
+        try:
+            path = SearchWindowsProgramPath( key_names, value_names, path_end )
+        except OSError:
+            path = None
+    
     return path
 
 def GetDefaultCMakePath():
@@ -345,3 +354,12 @@ def MakeValidIdentifier(_identifier, _toUpper = False):
         _identifier = _identifier.upper()
     return _identifier
 
+def SearchSubFolder2Levels( folder, nameLevel1, nameLevel2 ):
+	""" Get the csnake folder. """
+	defaultThirdPartyFolders = [ ]
+	for filename1 in os.listdir(folder):
+		if( filename1.find(nameLevel1) > -1 ):
+			for filename2 in os.listdir(folder+"/"+filename1):
+				if( filename2.find(nameLevel2) > -1 ):
+					defaultThirdPartyFolders.append( folder + "/" + filename1 + "/" + filename2 )
+	return defaultThirdPartyFolders

@@ -4,7 +4,9 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 import wxversion
-wxversion.select('2.8')
+import sys
+if not getattr(sys, 'frozen', False):
+    wxversion.select('2.8')
 
 from wx import xrc
 import csnGUIHandler
@@ -15,7 +17,6 @@ from csnListener import ChangeListener, ProgressListener, ProgressEvent
 import csnBuild
 import csnUtility
 import os.path
-import sys
 import shutil
 import string
 import time
@@ -1056,17 +1057,14 @@ class CSnakeGUIApp(wx.App):
             self.context.AddRootFolder( folder )
             
             # Automatically find thirdparty folder
-            defaultThirdPartyFolder = folder + "/../thirdParty/"
-            defaultThirdPartyFolder = csnUtility.NormalizePath( defaultThirdPartyFolder )
-            if not os.path.isdir( defaultThirdPartyFolder ):
-                defaultThirdPartyFolder = folder + "/thirdparties/"
-                defaultThirdPartyFolder = csnUtility.NormalizePath( defaultThirdPartyFolder )
-
-            if os.path.isdir( defaultThirdPartyFolder ):
-                message = "Found thirdparty folder: %s. Do you want to add it?" % defaultThirdPartyFolder
-                dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
-                if dlg.ShowModal() == wx.ID_YES:
-                    self.AddThirdPartyFolder( defaultThirdPartyFolder )
+            defaultThirdPartyFolders = csnUtility.SearchSubFolder2Levels( folder, 'src', 'tp' )
+            
+            for defaultThirdPartyFolder in defaultThirdPartyFolders:
+                if os.path.isdir( defaultThirdPartyFolder ):
+                    message = "Found thirdparty folder: %s. Do you want to add it?" % defaultThirdPartyFolder
+                    dlg = wx.MessageDialog(self.frame, message, 'Question', style = wx.YES_NO | wx.ICON_QUESTION)
+                    if dlg.ShowModal() == wx.ID_YES:
+                        self.AddThirdPartyFolder( defaultThirdPartyFolder )
         except Exception, error:
             self.Error(str(error))
     
@@ -1093,8 +1091,14 @@ class CSnakeGUIApp(wx.App):
     def AddThirdPartyFolder(self, folder): # wxGlade: CSnakeGUIFrame.<event_handler>
         """
         Add folder where CSnake files must be searched to context.thirdPartyFolders.
+        Example:
+		Thirdparty source folder: K:/Code/src/lb1/srclb/tp
+		Thirdparty build folder: K:/Code/bin/b1_vs11_64e/tp_lb
         """
-        rootBuildFolder = self.context.GetBuildFolder() + "/thirdParty"
+        projectNameAr = folder.split('/')
+        projectNameAr.reverse()
+        projectName = projectNameAr[1].split('src')[1]
+        rootBuildFolder = self.context.GetBuildFolder() + "/tp_"+ projectName
         newBuildFolder = rootBuildFolder
         alreadyUsed = True
         index = 0
@@ -1268,6 +1272,8 @@ class CSnakeGUIApp(wx.App):
             result.append("Visual Studio 10 Win64")
             result.append("Visual Studio 11")
             result.append("Visual Studio 11 Win64")
+            result.append("Visual Studio 12")
+            result.append("Visual Studio 12 Win64")
             result.append("NMake Makefiles")
         result.append("KDevelop3")
         result.append("Unix Makefiles")
