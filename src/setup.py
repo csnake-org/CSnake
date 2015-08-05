@@ -15,7 +15,7 @@ class exeSetup():
         # Resources of the setup script
         self.resources = []
         # Files at root level
-        self.__addToResources("../readme.txt", ".")
+        self.__addToResources("../readme.md", ".")
         self.__addToResources("../license.txt", ".")
         # Resource files to add to bin folder.
         self.__addToResources(pathToResources, "resources")
