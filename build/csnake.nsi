@@ -21,7 +21,7 @@
 !define REG_APP_PATH "Software\${APP_NAME}"
 !define REG_UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 !define DISPLAY_ICON_PATH "$INSTDIR\resources\Laticauda_colubrina.ico"
-!define INSTALL_SIZE 66400
+!define INSTALL_SIZE 33200
 
 !define INSTALLER_NAME "${APP_NAME}-${VERSION}-Setup.exe"
 
