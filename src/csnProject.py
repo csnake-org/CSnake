@@ -220,7 +220,7 @@ class GenericProject(VeryGenericProject):
         self.CMakeInsertBeginning = new.instancemethod(SetCMakeInsertBeginning, self)
         
 
-    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "", _checkExists = 1, _forceAdd = 0):
+    def AddSources(self, _listOfSourceFiles, _moc = 0, _ui = 0, _sourceGroup = "Source Files", _checkExists = 1, _forceAdd = 0):
         self.__compileManagerUpdates.append((self.__compileManager.AddSources, {
             "_listOfSourceFiles" : _listOfSourceFiles,
             "_moc"               : _moc,
