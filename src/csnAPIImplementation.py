@@ -198,6 +198,10 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         """
         self.__project.AddDefinitions(listOfDefinitions, private, True, True)
 
+    def AddLibraryFolders(self, libraryFolders):
+	""" Adds a library folder to the project """
+	self.__project.AddLibraryFolders(libraryFolders, True, True)
+		
     def AddLibraries(self, libraries, debugOnly = 0, releaseOnly = 0):
         """
         Adds additional external libraries that this project has to link against; debugOnly and releaseOnly are not

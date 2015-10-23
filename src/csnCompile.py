@@ -100,7 +100,7 @@ class Manager:
         If an item has a relative path, then it will be prefixed with _sourceRootFolder.
         Added library paths must exist on the filesystem.
         """
-        if not self.project.context.IsForPlatform(_WIN32, _NOT_WIN32):
+        if not self.project.context.GetCompiler().IsForPlatform(_WIN32, _NOT_WIN32):
             return
         for libraryFolder in _listOfLibraryFolders:
             for folder in self.project.Glob(libraryFolder):
