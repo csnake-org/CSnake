@@ -234,6 +234,8 @@ def GetDefaultCMakePath():
         versions = []
         for i in range(0,20):
             versions.append(r"2.8.%s" % i)
+        versions.append(r"2.8.12.1")
+        versions.append(r"2.8.12.2")
         key_names = []
         for version in versions:
             key_names.append(r"SOFTWARE\Wow6432Node\Kitware\CMake %s" % version) # typical windows XP
