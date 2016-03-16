@@ -5,6 +5,7 @@ import sys
 import GlobDirectoryWalker
 import shutil
 import inspect
+import os
 import os.path
 import logging.config
 import string
@@ -26,6 +27,17 @@ def CorrectPath(path):
         return os.path.join(firstCorrected, secondCorrected)
     else:
         return first
+
+def IsSameFileOrDirectory(path1, path2):
+    """
+    Checks, if two paths are referring to the same physical file or directory.
+    Returns True, if both paths are referring to the same physical file or directory.
+    Returns False, if they refer to different files/directories or at least one file or directory doesn't exist.
+    """
+    try:
+        return os.stat(path1) == os.stat(path2)
+    except:
+        return False
 
 def NormalizePath(path, _correctCase = True):
     path = os.path.normpath(path)
