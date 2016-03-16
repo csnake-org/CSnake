@@ -10,7 +10,7 @@
 !define COMP_NAME "csnake-org"
 !define WEB_SITE "https://github.com/csnake-org/CSnake"
 !define VERSION_MAJOR 2
-!define VERSION_MINOR 6
+!define VERSION_MINOR 7
 !define VERSION_BUILD 0
 !define VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}.0"
 !define COPYRIGHT "${COMP_NAME} © 2015"
