@@ -5,7 +5,6 @@ import sys
 import GlobDirectoryWalker
 import shutil
 import inspect
-import os
 import os.path
 import logging.config
 import string
@@ -34,10 +33,19 @@ def IsSameFileOrDirectory(path1, path2):
     Returns True, if both paths are referring to the same physical file or directory.
     Returns False, if they refer to different files/directories or at least one file or directory doesn't exist.
     """
-    try:
-        return os.stat(path1) == os.stat(path2)
-    except:
-        return False
+    if hasattr(os.path, "samefile"):
+        # check based on "os.path.samefile", which checks the file system inode
+        # this is pretty robust (against multiple mounts, symlinks, etc.),
+        # as long as the file system is local (we can't get a remote server's
+        # internal inode, so this may e.g. report false negatives on SMB mounts)
+        try:
+            return os.path.samefile(path1, path2)
+        except:
+            return False
+    else:
+        # The best we can do without "os.path.samefile":
+        # Normalize the format and letter case of the string and compare the results
+        return NormalizePath(path1, True) == NormalizePath(path2, True)
 
 def NormalizePath(path, _correctCase = True):
     path = os.path.normpath(path)
