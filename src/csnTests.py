@@ -63,9 +63,8 @@ class Manager:
         depends = []
         for source in self.testProject.GetSources():
             if os.path.splitext(source)[1] in (".h", ".hpp"):
-                depend = "\"%s\"" % source
-                depends.append( depend )
-                command += depend
+                depends.append( '"%s"' % source )
+                command += ' "%s"' % source
         self.testProject.AddRule("Create test runner", self.testRunnerSourceFile, command, depends)
         self.testProject.AddCMakeInsertAfterTarget(CustomCMakeLinesTest, self.testProject)
         self.holdingProject.AddCMakeInsertBeginning(CustomCMakeLinesTestHoldingProject, self.holdingProject)
