@@ -317,6 +317,32 @@ class _APIGenericProject_2_5_0(_APIGenericProject_Base):
         _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
 
+class _APIGenericProject_2_7_0(_APIGenericProject_2_5_0):
+    """ Implementation of the generic project interface for version 2.5.0. """
+    
+    def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
+        _APIGenericProject_Base.__init__(self, project, apiVersion)
+        self.__project = project
+    
+    def AddCMakeInsertBeginning(self, callback, parameters = {}):
+        """
+        Registers a callback function that is called when writing the project's CMakeLists.txt and that can return
+        a text as string that is included in the CMakeLists.txt relatively early (guaranteed before including
+        other projects or this project itself).
+        callback   - callback function to be called when writing the CMakeLists.txt
+        parameters - optional set of parameters to pass to the callback function (map: parameter-name -> value); in
+                     addition to them the reference project is given to the callback function as first parameter, wrapped
+                     with the API version with that this function was called
+        """
+        self.__project.AddCMakeInsertBeginning(callback, self, parameters)
+    
+
+
 ################################################
 
 class _APIStandardModuleProject_Base(_APIGenericProject_Base):
@@ -356,6 +382,18 @@ class _APIStandardModuleProject_Base(_APIGenericProject_Base):
     
     
 class _APIStandardModuleProject_2_5_0(_APIStandardModuleProject_Base, _APIGenericProject_2_5_0):
+    """ Implementation of the standard module project interface for version 2.5.0. """
+    
+    def __init__(self, project, apiVersion):
+        """
+        Constructor.
+        project - The project to wrap
+        apiVersion - The version of the API 
+        """
+        _APIStandardModuleProject_Base.__init__(self, project, apiVersion)
+        self.__project = project
+
+class _APIStandardModuleProject_2_7_0(_APIStandardModuleProject_Base, _APIGenericProject_2_7_0):
     """ Implementation of the standard module project interface for version 2.5.0. """
     
     def __init__(self, project, apiVersion):
@@ -697,6 +735,8 @@ def _FindAPIGenericProjectConstructor(version):
     if not version in _apiGenericProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 7, 0, "beta"]):
+            _apiGenericProjectConstructorRegister[version] = _APIGenericProject_2_7_0
         elif version >= Version([2, 5, 0, "beta"]):
             _apiGenericProjectConstructorRegister[version] = _APIGenericProject_2_5_0
         else:
@@ -715,6 +755,8 @@ def _FindAPIStandardModuleProjectConstructor(version):
     if not version in _apiStandardModuleProjectConstructorRegister:
         if version > _currentCSnakeVersion:
             raise APIError("Your CSnake version is too old to compile this code!")
+        elif version >= Version([2, 7, 0, "beta"]):
+            _apiStandardModuleProjectConstructorRegister[version] = _APIStandardModuleProject_2_7_0
         elif version >= Version([2, 5, 0, "beta"]):
             _apiStandardModuleProjectConstructorRegister[version] = _APIStandardModuleProject_2_5_0
         else:
