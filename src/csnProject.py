@@ -188,14 +188,16 @@ class GenericProject(VeryGenericProject):
             _sourceRootFolder = csnUtility.NormalizePath(os.path.dirname(FindFilename(1)))
         VeryGenericProject.__init__(self, _name, _type, _sourceRootFolder, _categories, _context)
         
-        # TODO: Remove this code in CSnake 3.0. Then this process is done exclusively in the subclass for third parties.
-        self.thirdPartyIndex = 0
+        # TODO: Remove this code as soon as possible. This process should be done exclusively in the subclass for third parties.
+        self.thirdPartyIndex = -1
         count = 0
         for folder in self.context.GetThirdPartyFolders():
-            if csnUtility.NormalizePath(folder) == os.path.dirname(_sourceRootFolder):
+            if csnUtility.IsSameFileOrDirectory(folder, os.path.dirname(_sourceRootFolder)):
                 self.thirdPartyIndex = count
                 break
             count += 1
+        if self.thirdPartyIndex < 0 and self.type == "third party":
+            raise Exception("Could not find any thirdparty folder for this project.")
         
         self.rules = dict()
         self.customCommands = []
@@ -443,13 +445,15 @@ class ThirdPartyProject(VeryGenericProject):
         VeryGenericProject.__init__(self, name, "third party", sourceRootFolder, None, context)
         
         # Get the thirdPartyBuildFolder index
-        self.thirdPartyIndex = 0
+        self.thirdPartyIndex = -1
         count = 0
         for folder in self.context.GetThirdPartyFolders():
-            if csnUtility.NormalizePath(folder) == os.path.dirname(sourceRootFolder):
+            if csnUtility.IsSameFileOrDirectory(folder, os.path.dirname(sourceRootFolder)):
                 self.thirdPartyIndex = count
                 break
             count += 1
+        if self.thirdPartyIndex < 0:
+            raise Exception("Could not find any thirdparty folder for this project.")
     
     def GetBuildFolder(self):
         return self.context.GetThirdPartyBuildFolderByIndex(self.thirdPartyIndex)

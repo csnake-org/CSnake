@@ -13,11 +13,20 @@ if sys.platform == 'win32':
 if sys.platform != 'win32':
     import commands
 
-def CorrectPath(path):
+
+def CorrectPathCase(path):
+    # Note: It might (?) be more robust/efficient to use "os.path.normcase"
+    # here, but that might break backwards compatibility.
+    # The function "os.path.normcase" normalizes always to lower case on
+    # case sensitive systems, whereas "CorrectPathCase" normalizes to the
+    # "real" letter casing in the file system. Old config files may still
+    # contain the old normalized values, which may break the comparison
+    # with new normalized values.
+    
     (first,second) = os.path.split(path)
     
     if second != "":
-        firstCorrected = CorrectPath(first)
+        firstCorrected = CorrectPathCase(first)
         secondCorrected = second
         if os.path.exists(first):
             for name in os.listdir(first):
@@ -27,10 +36,30 @@ def CorrectPath(path):
     else:
         return first
 
+def IsSameFileOrDirectory(path1, path2):
+    """
+    Checks, if two paths are referring to the same physical file or directory.
+    Returns True, if both paths are referring to the same physical file or directory.
+    Returns False, if they refer to different files/directories or at least one file or directory doesn't exist.
+    """
+    if hasattr(os.path, "samefile"):
+        # check based on "os.path.samefile", which checks the file system inode
+        # this is pretty robust (against multiple mounts, symlinks, etc.),
+        # as long as the file system is local (we can't get a remote server's
+        # internal inode, so this may e.g. report false negatives on SMB mounts)
+        try:
+            return os.path.samefile(path1, path2)
+        except:
+            return False
+    else:
+        # The best we can do without "os.path.samefile":
+        # Normalize the format and letter case of the string and compare the results
+        return NormalizePath(path1, True) == NormalizePath(path2, True)
+
 def NormalizePath(path, _correctCase = True):
     path = os.path.normpath(path)
     if _correctCase:
-        path = CorrectPath(path)
+        path = CorrectPathCase(path)
     path = path.replace("\\", "/")
     return path
 

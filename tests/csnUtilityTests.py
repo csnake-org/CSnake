@@ -32,27 +32,27 @@ class csnUtilityTests(unittest.TestCase):
         self.assertTrue( csnUtility.HasBackSlash("c:\\hallo") )
         self.assertFalse( csnUtility.HasBackSlash("c://hallo") )
         
-    def testCorrectPath(self):
+    def testCorrectPathCase(self):
         """ csnUtilityTests: test CorrectPath function. """
         # check where we are
         root = "data/my src/"
         refPathRoot = root + "DummyLib"
         refPath = os.path.normpath( refPathRoot + "/libmodules" )
         
-        self.assertEqual( csnUtility.CorrectPath(""), "" )
-        self.assertEqual( csnUtility.CorrectPath("."), "." )
+        self.assertEqual( csnUtility.CorrectPathCase(""), "" )
+        self.assertEqual( csnUtility.CorrectPathCase("."), "." )
         testPath1 = root + "DummyLib/libmodules"
-        self.assertEqual( csnUtility.CorrectPath(testPath1), refPath )
+        self.assertEqual( csnUtility.CorrectPathCase(testPath1), refPath )
         testPath2 = root + "DummyLib/liBmoDules"
-        self.assertEqual( csnUtility.CorrectPath(testPath2), refPath )      
+        self.assertEqual( csnUtility.CorrectPathCase(testPath2), refPath )      
         testPath3 = root + "DuMMyLib/libmodules"
-        self.assertEqual( csnUtility.CorrectPath(testPath3), refPath )      
+        self.assertEqual( csnUtility.CorrectPathCase(testPath3), refPath )      
         refPath4 = os.path.normpath( root + "DummyLib/doEsnoTexist" )
         testPath4 = root + "DuMMyLib/doEsnoTexist"
-        self.assertEqual( csnUtility.CorrectPath(testPath4), refPath4 )        
+        self.assertEqual( csnUtility.CorrectPathCase(testPath4), refPath4 )        
         refPath5 = os.path.normpath( "doEs/nOt/eXist" )
         testPath5 = "doEs/nOt/eXist"
-        self.assertEqual( csnUtility.CorrectPath(testPath5), refPath5 )  
+        self.assertEqual( csnUtility.CorrectPathCase(testPath5), refPath5 )  
         
     def testSearchProgramPath(self):
         if csnUtility.IsWindowsPlatform():
