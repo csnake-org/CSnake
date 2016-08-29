@@ -198,10 +198,6 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         """
         self.__project.AddDefinitions(listOfDefinitions, private, True, True)
 
-    def AddLibraryFolders(self, libraryFolders):
-	""" Adds a library folder to the project """
-	self.__project.AddLibraryFolders(libraryFolders, True, True)
-		
     def AddLibraries(self, libraries, debugOnly = 0, releaseOnly = 0):
         """
         Adds additional external libraries that this project has to link against; debugOnly and releaseOnly are not
@@ -329,6 +325,10 @@ class _APIGenericProject_2_7_0(_APIGenericProject_2_5_0):
         _APIGenericProject_Base.__init__(self, project, apiVersion)
         self.__project = project
     
+    def AddLibraryFolders(self, libraryFolders):
+        """ Adds a library folder to the project """
+        self.__project.AddLibraryFolders(libraryFolders, True, True)
+
     def AddCMakeInsertBeginning(self, callback, parameters = {}):
         """
         Registers a callback function that is called when writing the project's CMakeLists.txt and that can return
