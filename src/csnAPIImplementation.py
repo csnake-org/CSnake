@@ -159,7 +159,7 @@ class _APIGenericProject_Base(_APIVeryGenericProject_Base):
         self.__project = project
         self.__apiVersion = apiVersion
     
-    def AddSources(self, sources, sourceGroup = "", checkExists = 1, forceAdd = 0):
+    def AddSources(self, sources, sourceGroup = "Source Files", checkExists = 1, forceAdd = 0):
         """
         Adds source files to the project that will be compiled.
         sources     - List of source files
