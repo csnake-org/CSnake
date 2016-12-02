@@ -12,3 +12,5 @@ More information can be found on the [github page](https://github.com/csnake-org
 Download the installer from the [releases](https://github.com/csnake-org/CSnake/releases) page.
 
 [![Build Status](https://travis-ci.org/csnake-org/CSnake.svg?branch=master)](https://travis-ci.org/csnake-org/CSnake)
+
+We would like to thank all the authors: @mnieber, @ivmartel, @msteghofer, @xplanes, Pedro Omedas, Luigi Carotenuto, @jojeda-galgo, Chiara Riccobene, Jakub Lyco, Ludovic Humbert, imena.
