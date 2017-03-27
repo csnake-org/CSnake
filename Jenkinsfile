@@ -5,6 +5,12 @@ pipeline {
         test_bat = 'cmake --version & set PYTHONPATH=../src & cd tests & python -m AllTests -m xml -o results.xml'
     }
     stages {
+        stage('Start') {
+            steps {
+                echo 'Starting CSnake build...'
+            } // steps
+        } // stage('Start')
+    
         stage('Test') {
             steps {
                 parallel (
@@ -40,6 +46,26 @@ pipeline {
                 ) // parallel
             } // steps
         } // stage('Test')
+        
+        stage('Doc') {
+            agent { label 'linux' }
+            steps {
+                sh 'cd doc; doxygen --version; doxygen Doxyfile.doxy'
+            } // steps
+            post {
+                success {
+                    // publish html
+                    publishHTML target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'doc/html',
+                        reportFiles: 'index.html',
+                        reportName: 'Code Documentation'
+                    ]
+                }
+            }
+        } // stage('Doc')
     }
     post {
         always {
