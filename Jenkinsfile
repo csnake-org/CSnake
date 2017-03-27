@@ -37,7 +37,7 @@ pipeline {
                     },
 
                     'windows cmake28': {
-                        node( 'win10 && cmake28' ) {
+                        node( 'windows && cmake28' ) {
                             git 'https://github.com/csnake-org/CSnake.git'
                             bat "${env.test_bat}"
                         }
@@ -57,7 +57,7 @@ pipeline {
                     node( 'linux && cmake34' ) {
                         junit 'tests/results.xml'
                     }
-                    node( 'win10 && cmake28' ) {
+                    node( 'windows && cmake28' ) {
                         junit 'tests/results.xml'
                     }
                 }
