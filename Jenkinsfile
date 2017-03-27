@@ -45,6 +45,23 @@ pipeline {
                     
                 ) // parallel
             } // steps
+            post {
+                always {
+                    // collect test results
+                    node( 'linux && cmake28' ) {
+                        junit 'tests/results.xml'
+                    }
+                    node( 'linux && cmake30' ) {
+                        junit 'tests/results.xml'
+                    }
+                    node( 'linux && cmake34' ) {
+                        junit 'tests/results.xml'
+                    }
+                    node( 'win10 && cmake28' ) {
+                        junit 'tests/results.xml'
+                    }
+                }
+            }
         } // stage('Test')
         
         stage('Doc') {
@@ -66,21 +83,5 @@ pipeline {
                 }
             }
         } // stage('Doc')
-    }
-    post {
-        always {
-            node( 'linux && cmake28' ) {
-                junit 'tests/results.xml'
-            }
-            node( 'linux && cmake30' ) {
-                junit 'tests/results.xml'
-            }
-            node( 'linux && cmake34' ) {
-                junit 'tests/results.xml'
-            }
-            node( 'win10 && cmake28' ) {
-                junit 'tests/results.xml'
-            }
-        }
     }
 }
