@@ -67,8 +67,10 @@ def UnNormalizePath(path):
     return os.path.normpath(path).replace("/", "\\")
 
 def RemovePrefixFromPath(path, prefix):
-    prefix = os.path.commonprefix([NormalizePath(path), NormalizePath(prefix)] )
-    return path[len(prefix):]
+    pathNormalized = NormalizePath(path)
+    prefixNormalized = NormalizePath(prefix)
+    commonPrefix = os.path.commonprefix( [pathNormalized, prefixNormalized] )
+    return pathNormalized[len(commonPrefix):]
 
 def CopyFolder(fromFolder, toFolder, excludedFolderList = None):
     if excludedFolderList is None:
