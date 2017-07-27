@@ -51,10 +51,10 @@ pipeline {
                     node( 'linux && cmake28' ) {
                         junit 'tests/results.xml'
                     }
-                    node( 'linux && cmake30' ) {
+                    node( 'linux && cmake35' ) {
                         junit 'tests/results.xml'
                     }
-                    node( 'linux && cmake34' ) {
+                    node( 'linux && cmake38' ) {
                         junit 'tests/results.xml'
                     }
                     node( 'windows && cmake28' ) {
