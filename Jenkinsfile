@@ -22,15 +22,15 @@ pipeline {
                         }
                     },
                     
-                    'linux cmake30': {
-                        node( 'linux && cmake30' ) {
+                    'linux cmake35': {
+                        node( 'linux && cmake35' ) {
                             git 'https://github.com/csnake-org/CSnake.git'
                             sh "${env.test_shell}"
                         }
                     },
 
-                    'linux cmake34': {
-                        node( 'linux && cmake34' ) {
+                    'linux cmake38': {
+                        node( 'linux && cmake38' ) {
                             git 'https://github.com/csnake-org/CSnake.git'
                             sh "${env.test_shell}"
                         }
