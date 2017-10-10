@@ -1,71 +1,68 @@
 pipeline {
     agent none
-    environment { 
-        test_shell = 'cmake --version; export PYTHONPATH=../src; cd tests; python -m AllTests -m xml -o results.xml'
-        test_bat = 'cmake --version & set PYTHONPATH=../src & cd tests & python -m AllTests -m xml -o results.xml'
+    environment {
+        scmUrl = 'https://github.com/csnake-org/CSnake.git'
+        testShell = 'cmake --version; export PYTHONPATH=../src; cd tests; python -m AllTests -m xml -o results.xml'
+        testBat = 'cmake --version & set PYTHONPATH=../src & cd tests & python -m AllTests -m xml -o results.xml'
+        testResults = 'tests/results.xml'
     }
     stages {
-        stage('Start') {
-            steps {
-                echo 'Starting CSnake build...'
-            } // steps
-        } // stage('Start')
-    
         stage('Test') {
-            steps {
-                parallel (
-                
-                    'linux cmake28': {
-                        node( 'linux && cmake28' ) {
-                            git 'https://github.com/csnake-org/CSnake.git'
-                            sh "${env.test_shell}"
-                        }
-                    },
-                    
-                    'linux cmake35': {
-                        node( 'linux && cmake35' ) {
-                            git 'https://github.com/csnake-org/CSnake.git'
-                            sh "${env.test_shell}"
-                        }
-                    },
-
-                    'linux cmake38': {
-                        node( 'linux && cmake38' ) {
-                            git 'https://github.com/csnake-org/CSnake.git'
-                            sh "${env.test_shell}"
-                        }
-                    },
-
-                    'windows cmake28': {
-                        node( 'windows && cmake28' ) {
-                            git 'https://github.com/csnake-org/CSnake.git'
-                            bat "${env.test_bat}"
-                        }
+            parallel {
+                stage('linux cmake28') {
+                    agent { label 'linux && cmake28' }
+                    steps {
+                        git scmUrl
+                        sh "${env.testShell}"
                     }
-                    
-                ) // parallel
-            } // steps
-            post {
-                always {
-                    // collect test results
-                    node( 'linux && cmake28' ) {
-                        junit 'tests/results.xml'
-                    }
-                    node( 'linux && cmake35' ) {
-                        junit 'tests/results.xml'
-                    }
-                    node( 'linux && cmake38' ) {
-                        junit 'tests/results.xml'
-                    }
-                    node( 'windows && cmake28' ) {
-                        junit 'tests/results.xml'
+                    post {
+                        always {
+                            junit testResults
+                        }
                     }
                 }
-            }
+                stage('linux cmake35') {
+                    agent { label 'linux && cmake35' }
+                    steps {
+                        git scmUrl
+                        sh "${env.testShell}"
+                    }
+                    post {
+                        always {
+                            junit testResults
+                        }
+                    }
+                }
+                stage('linux cmake38') {
+                    agent { label 'linux && cmake38' }
+                    steps {
+                        git scmUrl
+                        sh "${env.testShell}"
+                    }
+                    post {
+                        always {
+                            junit testResults
+                        }
+                    }
+                }
+                stage('windows cmake28') {
+                    agent { label 'windows && cmake28' }
+                    steps {
+                        git scmUrl
+                        bat "${env.testBat}"
+                    }
+                    post {
+                        always {
+                            junit testResults
+                        }
+                    }
+                }
+            } // parallel
         } // stage('Test')
         
         stage('Doc') {
             agent { label 'linux' }
+            when { branch 'master' }
             steps {
                 sh 'cd doc; doxygen --version; doxygen Doxyfile.doxy'
             } // steps
