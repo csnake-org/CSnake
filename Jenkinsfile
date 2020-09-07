@@ -45,8 +45,8 @@ pipeline {
                         }
                     }
                 }
-                stage('windows cmake28') {
-                    agent { label 'windows && cmake28' }
+                stage('windows cmake38') {
+                    agent { label 'windows && cmake38' }
                     steps {
                         git scmUrl
                         bat "${env.testBat}"
