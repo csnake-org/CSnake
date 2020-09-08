@@ -273,6 +273,7 @@ def GetDefaultCMakePath():
         for version in versions:
             key_names.append(r"SOFTWARE\Wow6432Node\Kitware\CMake %s" % version) # typical windows XP
             key_names.append(r"SOFTWARE\Kitware\CMake %s" % version) #typical windows vista, 7
+        key_names.append(r"SOFTWARE\Kitware\CMake") #CMake 3.8 in Windows 10
         value_names = [r""]
         path_end = r"\bin\cmake.exe"
         try:
