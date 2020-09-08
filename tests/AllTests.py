@@ -63,8 +63,7 @@ def CreateConfigFile():
     
     # replace values
     for key, value in values.items():
-		print '%s: %s' % (key, value)
-		configFileString = configFileString.replace("@%s@" % key, value)
+        configFileString = configFileString.replace("@%s@" % key, value)
     
     # write config file
     configdir = os.path.join(csnakeTestPath, "config")
