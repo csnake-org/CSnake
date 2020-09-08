@@ -36,7 +36,7 @@ def CreateConfigFile():
         # cmake does not like backslashes
         csnakeTestPath = csnakeTestPath.replace('\\', '/')
         csnakeTestDataPath = csnakeTestDataPath.replace('\\', '/')
-        compiler = "Visual Studio 11 Win64"
+        compiler = "Visual Studio 15 Win64"
         idepath = csnUtility.GetDefaultVisualStudioPath(compiler)
     values = {
             "csnakefile"            : csnakeTestDataPath,
@@ -63,7 +63,8 @@ def CreateConfigFile():
     
     # replace values
     for key, value in values.items():
-        configFileString = configFileString.replace("@%s@" % key, value)
+		print '%s: %s' % (key, value)
+		configFileString = configFileString.replace("@%s@" % key, value)
     
     # write config file
     configdir = os.path.join(csnakeTestPath, "config")
