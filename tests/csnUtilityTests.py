@@ -58,7 +58,7 @@ class csnUtilityTests(unittest.TestCase):
         if csnUtility.IsWindowsPlatform():
             # Hoping there is a cmake on the test machine
             # Default path for cmake
-            refPath1 = r"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe"
+            refPath1 = r"C:\Program Files\CMake\bin\cmake.exe"
             path_end1 = r"\bin\cmake.exe"
             # typical windows XP key names for cmake
             key_names1 = []
@@ -66,6 +66,7 @@ class csnUtilityTests(unittest.TestCase):
                 key_names1.append(r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.%s" % i)
             key_names1.append(r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.12.1")
             key_names1.append(r"SOFTWARE\Wow6432Node\Kitware\CMake 2.8.12.2")
+            key_names1.append(r"SOFTWARE\Wow6432Node\Kitware\CMake")
             value_names1 = [r""]
             resPath1 = csnUtility.SearchWindowsProgramPath(key_names1, value_names1, path_end1)
             self.assertEqual( resPath1, refPath1 )
