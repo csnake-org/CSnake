@@ -94,14 +94,24 @@ else:
 
 # configure third parties and project (used by Gimias)
 if commandLineOptions.configure:
-    handler.ConfigureThirdPartyFolders()
-    handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
+    result = handler.ConfigureThirdPartyFolders()
+    assert result, "\n\n[CSnake] Task failed: ConfigureThirdPartyFolders." 
+    print "\n\n[CSnake] Task finished successfully: ConfigureThirdPartyFolders.\n"
+    result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
+    assert result, "\n\n[CSnake] Task failed: ConfigureProjectToBuildFolder." 
+    print "\n\n[CSnake] Task finished successfully: ConfigureProjectToBuildFolder.\n"
 
 # build third parties and project + install files (used by Gimias)
 if commandLineOptions.build:
-    handler.BuildMultiple(handler.GetThirdPartySolutionPaths(), context.GetConfigurationName(), True)
-    handler.Build(handler.GetTargetSolutionPath(), context.GetConfigurationName(), False)
-    handler.InstallBinariesToBuildFolder()
+    result = handler.BuildMultiple(handler.GetThirdPartySolutionPaths(), context.GetConfigurationName(), True)
+    assert result, "\n\n[CSnake] Task failed: BuildMultiple." 
+    print "\n\n[CSnake] Task finished successfully: BuildMultiple.\n"
+    result = handler.Build(handler.GetTargetSolutionPath(), context.GetConfigurationName(), False)
+    assert result, "\n\n[CSnake] Task failed: Build." 
+    print "\n\n[CSnake] Task finished successfully: Build.\n"
+    result = handler.InstallBinariesToBuildFolder()
+    assert result, "\n\n[CSnake] Task failed: InstallBinariesToBuildFolder." 
+    print "\n\n[CSnake] Task finished successfully: InstallBinariesToBuildFolder.\n"
 
 # configure third parties
 if commandLineOptions.thirdParty:
