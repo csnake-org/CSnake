@@ -71,8 +71,8 @@ parser.add_option("-c", "--configure", action="store_true", default=False, help=
 parser.add_option("-b", "--build", action="store_true", default=False, help="build all")
 parser.add_option("-a", "--autoconfig", dest="autoconfig", action="store_true", default=False, help="configure third party or project depending on the context instance")
 parser.add_option("-s", "--silent", dest="silent", action="store_true", default=False, help="Don't ask any questions.")
+parser.add_option("-C", "--configureall", dest="configureall", action="store_true", default=False, help="Same as configure and build")
 (commandLineOptions, commandLineArgs) = parser.parse_args()
-
 
 # check command line
 if len(commandLineArgs) != 1:
@@ -155,3 +155,15 @@ if commandLineOptions.autoconfig:
         assert result, "\n\nTask failed: InstallBinariesToBuildFolder." 
     print "Finished task autoconfig."
 
+if commandLineOptions.configureall:
+    result = handler.ConfigureThirdPartyFolders()
+    assert result, "\n\n[CSnake] Task failed: ConfigureThirdPartyFolders." 
+    result = handler.BuildMultiple(handler.GetThirdPartySolutionPaths(), context.GetConfigurationName(), True)
+    assert result, "\n\n[CSnake] Task failed: BuildMultiple."
+    result = handler.ConfigureProjectToBuildFolder(_alsoRunCMake = True, _askUser = askUser)
+    assert result, "\n\nTask failed: ConfigureProjectToBuildFolder." 
+    result = handler.Build(handler.GetTargetSolutionPath(), context.GetConfigurationName(), False)
+    assert result, "\n\n[CSnake] Task failed: Build." 
+    result = handler.InstallBinariesToBuildFolder()
+    assert result, "\n\n[CSnake] Task failed: InstallBinariesToBuildFolder." 
+   
